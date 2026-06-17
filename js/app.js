@@ -109,6 +109,7 @@ document.addEventListener('alpine:init', () => {
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
     perfilAberto: true, // perfil do cliente (recolhível)
     enriqLoading: false, enriqMsg: '', // enriquecimento a partir do site
+    secCli: 'doc', // seção aberta no acordeão do modal de cliente
 
     // dados
     clients: [], leads: [], proposals: [], finance: [], projects: [],

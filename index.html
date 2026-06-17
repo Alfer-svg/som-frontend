@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=18">
+  <link rel="stylesheet" href="css/styles.css?v=19">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -504,9 +504,9 @@
 <div class="modal-backdrop" x-show="modal==='client'" @click.self="modal=null" x-cloak>
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
-    <div class="modal-body grid grid-2" style="gap:14px">
-      <!-- DOCUMENTO -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase">📄 Documento</div>
+    <div class="modal-body" style="display:block">
+      <div @click="secCli=secCli==='doc'?'':'doc'" class="accH"><span>📄 Documento</span><span class="accX" x-text="secCli==='doc'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='doc'">
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche Receita + endereço</span></label>
         <div class="flex gap-2"><input class="form-input" x-model="editing.cnpj" placeholder="00.000.000/0000-00" @keydown.enter.prevent="buscarCnpj()"><button class="btn btn-primary" @click="buscarCnpj()" :disabled="cnpjLoading" x-text="cnpjLoading?'…':'🔎 Buscar'"></button></div>
         <div class="fs-12" x-show="cnpjMsg" :style="cnpjMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cnpjMsg"></div>
@@ -516,8 +516,9 @@
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome Fantasia / Empresa *</label><input class="form-input" x-model="editing.empresa"></div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Slogan da empresa</label><input class="form-input" x-model="editing.slogan"></div>
 
-      <!-- ENDEREÇO -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">📍 Endereço</div>
+      </div>
+      <div @click="secCli=secCli==='end'?'':'end'" class="accH"><span>📍 Endereço</span><span class="accX" x-text="secCli==='end'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='end'">
       <div class="form-group"><label class="form-label">CEP <span class="text-3">— preenche endereço</span></label>
         <div class="flex gap-2"><input class="form-input" x-model="editing.cep" placeholder="00000-000" @keydown.enter.prevent="buscarCep()"><button class="btn btn-primary" @click="buscarCep()" :disabled="cepLoading" x-text="cepLoading?'…':'🔎'"></button></div>
         <div class="fs-12" x-show="cepMsg" :style="cepMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cepMsg"></div>
@@ -529,8 +530,9 @@
       <div class="form-group"><label class="form-label">Cidade</label><input class="form-input" x-model="editing.cidade"></div>
       <div class="form-group"><label class="form-label">UF</label><input class="form-input" x-model="editing.uf" maxlength="2" placeholder="SP"></div>
 
-      <!-- CONTATO -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">👤 Contato</div>
+      </div>
+      <div @click="secCli=secCli==='contato'?'':'contato'" class="accH"><span>👤 Contato</span><span class="accX" x-text="secCli==='contato'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='contato'">
       <div class="form-group"><label class="form-label">Nome do contato</label><input class="form-input" x-model="editing.contato"></div>
       <div class="form-group"><label class="form-label">Cargo</label><input class="form-input" x-model="editing.cargo" placeholder="Sócio, Marketing…"></div>
       <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" x-model="editing.whatsapp"></div>
@@ -538,8 +540,10 @@
       <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" type="email" x-model="editing.email"></div>
       <div class="form-group"><label class="form-label">Instagram</label><input class="form-input" x-model="editing.instagram" placeholder="@"></div>
 
-      <!-- RESPONSÁVEIS / CONTATOS -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">👥 Responsáveis / Contatos <span class="text-3" style="font-weight:400;text-transform:none">(até 5 — pra estreitar o relacionamento)</span></div>
+      </div>
+      <div @click="secCli=secCli==='resp'?'':'resp'" class="accH"><span>👥 Responsáveis / Contatos</span><span class="accX" x-text="secCli==='resp'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='resp'">
+      <div style="grid-column:1/-1" class="text-3 fs-12">Até 5 — pra estreitar o relacionamento</div>
       <template x-for="(r,i) in (editing.responsaveis||[])" :key="r.id">
         <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div class="form-group" style="margin:0"><label class="form-label">Nome</label><input class="form-input" x-model="r.nome"></div>
@@ -556,8 +560,9 @@
       </template>
       <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addResponsavel()" :disabled="(editing.responsaveis||[]).length>=5" x-text="(editing.responsaveis||[]).length>=5 ? 'Máximo de 5 responsáveis' : '+ Adicionar responsável'"></button></div>
 
-      <!-- COMERCIAL -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">💼 Comercial</div>
+      </div>
+      <div @click="secCli=secCli==='com'?'':'com'" class="accH"><span>💼 Comercial</span><span class="accX" x-text="secCli==='com'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='com'">
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Serviços contratados</label>
         <div class="flex" style="flex-wrap:wrap;gap:8px">
           <template x-for="s in SERVICOS" :key="s">
@@ -571,8 +576,9 @@
       <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><option>Ativo</option><option>Inativo</option></select></div>
       <div class="form-group"><label class="form-label">Cliente desde</label><input class="form-input" type="date" x-model="editing.desde"></div>
 
-      <!-- REDES SOCIAIS -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">📱 Redes sociais — % de preenchimento/qualidade</div>
+      </div>
+      <div @click="secCli=secCli==='redes'?'':'redes'" class="accH"><span>📱 Redes sociais</span><span class="accX" x-text="secCli==='redes'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='redes'">
       <template x-for="r in REDES" :key="r.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
           <label class="flex items-center gap-2" style="width:150px;cursor:pointer;font-size:13px"><input type="checkbox" x-model="editing.redes[r.id].tem"> <img :src="redeIcon(r)" width="15" height="15" :alt="r.label"> <span x-text="r.label"></span></label>
@@ -581,8 +587,9 @@
         </div>
       </template>
 
-      <!-- SITE / DOMÍNIO / HOSPEDAGEM -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">🌐 Site, domínio e hospedagem</div>
+      </div>
+      <div @click="secCli=secCli==='site'?'':'site'" class="accH"><span>🌐 Site, domínio e hospedagem</span><span class="accX" x-text="secCli==='site'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='site'">
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">URL do site</label><input class="form-input" x-model="editing.site.url" placeholder="https://"></div>
       <div class="form-group" style="grid-column:1/-1">
         <button type="button" class="btn btn-primary btn-sm" @click="puxarDoSite()" :disabled="enriqLoading" x-text="enriqLoading?'🔎 lendo o site…':'✨ Puxar do site (redes, GMN, domínio, contato)'"></button>
@@ -595,8 +602,9 @@
       <div class="form-group"><label class="form-label">Hospedagem — provedor/local</label><input class="form-input" x-model="editing.hospedagem.provedor" placeholder="Vercel, Hostgator…"></div>
       <div class="form-group"><label class="form-label">Hospedagem — vencimento</label><input class="form-input" type="date" x-model="editing.hospedagem.vencimento"></div>
 
-      <!-- TRÁFEGO PAGO -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">📣 Tráfego Pago (Google & Meta Ads)</div>
+      </div>
+      <div @click="secCli=secCli==='trafego'?'':'trafego'" class="accH"><span>📣 Tráfego Pago (Google & Meta Ads)</span><span class="accX" x-text="secCli==='trafego'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='trafego'">
       <template x-for="a in ADS" :key="a.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
           <label class="flex items-center gap-2" style="width:150px;cursor:pointer;font-size:13px"><input type="checkbox" x-model="editing.ads[a.id].ativo"> <img :src="redeIcon(a)" width="15" height="15" :alt="a.label"> <span x-text="a.label"></span></label>
@@ -605,8 +613,9 @@
         </div>
       </template>
 
-      <!-- OBJETIVOS / MÉTRICAS -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">🎯 Métricas / Objetivos do cliente</div>
+      </div>
+      <div @click="secCli=secCli==='metricas'?'':'metricas'" class="accH"><span>🎯 Métricas / Objetivos</span><span class="accX" x-text="secCli==='metricas'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='metricas'">
       <template x-for="(o,i) in editing.objetivos" :key="o.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
           <input class="form-input" style="flex:1" x-model="o.nome" placeholder="Objetivo (ex.: Seguidores no Instagram)">
@@ -618,8 +627,9 @@
       </template>
       <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addObjetivo()">+ Adicionar objetivo</button></div>
 
-      <!-- BRIEFING / ONBOARDING (espelha o onboarding da Maracatu Digital) -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:10px">📋 Briefing / Onboarding</div>
+      </div>
+      <div @click="secCli=secCli==='brief'?'':'brief'" class="accH"><span>📋 Briefing / Onboarding</span><span class="accX" x-text="secCli==='brief'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='brief'">
 
       <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Público</div>
       <div class="form-group"><label class="form-label">Faixa etária</label><input class="form-input" x-model="editing.briefing.publico.faixaEtaria" placeholder="ex.: 25-45"></div>
@@ -657,8 +667,10 @@
       <div class="form-group"><label class="form-label">Manual de marca (link)</label><input class="form-input" x-model="editing.briefing.ativos.manual" placeholder="https://"></div>
       <div class="form-group"><label class="form-label">Drive de fotos/vídeos (link)</label><input class="form-input" x-model="editing.briefing.ativos.drive" placeholder="https://"></div>
 
-      <!-- DOCUMENTOS -->
-      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">📎 Documentos <span class="text-3" style="font-weight:400;text-transform:none">(links — contrato, proposta, apresentação…)</span></div>
+      </div>
+      <div @click="secCli=secCli==='docs'?'':'docs'" class="accH"><span>📎 Documentos</span><span class="accX" x-text="secCli==='docs'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='docs'">
+      <div style="grid-column:1/-1" class="text-3 fs-12">Links — contrato, proposta, apresentação…</div>
       <template x-for="(d,i) in (editing.documentos||[])" :key="d.id">
         <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;grid-template-columns:160px 1fr;gap:8px">
           <div class="form-group" style="margin:0"><label class="form-label">Tipo</label><select class="form-select" x-model="d.tipo"><template x-for="t in TIPOS_DOC" :key="t"><option :value="t" x-text="t"></option></template></select></div>
@@ -668,8 +680,11 @@
         </div>
       </template>
       <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addDocumento()">+ Adicionar documento</button></div>
-
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
+      </div>
+      <div @click="secCli=secCli==='notas'?'':'notas'" class="accH"><span>📝 Notas internas</span><span class="accX" x-text="secCli==='notas'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='notas'">
+        <div class="form-group" style="grid-column:1/-1"><textarea class="form-textarea" x-model="editing.notas" placeholder="Anotações internas sobre o cliente…"></textarea></div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirCliente(editing)">Excluir</button>
@@ -792,6 +807,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=18"></script>
+<script src="js/app.js?v=19"></script>
 </body>
 </html>
