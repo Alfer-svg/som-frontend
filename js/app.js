@@ -91,6 +91,10 @@ const briefingMerge = (b) => { const v = briefingVazio(); b = b || {}; return {
 // Responsável/contato do cliente (até 5 por cliente). Salvo em dados.responsaveis.
 const respVazio = () => ({ id: '', nome: '', cargo: '', whatsapp: '', email: '', nascimento: '', instagram: '', linkedin: '', seguindo: false, notas: '' });
 const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => ({ ...respVazio(), ...r, id: r.id || MD.uid() }));
+// Documentos do cliente (links — contrato, proposta, etc.). Salvo em dados.documentos.
+const TIPOS_DOC = ['Contrato', 'Proposta', 'Apresentação', 'Relatório', 'Briefing', 'Identidade visual', 'Outro'];
+const docVazio = () => ({ id: '', nome: '', tipo: 'Contrato', url: '' });
+const docMerge = (arr) => (Array.isArray(arr) ? arr : []).map(d => ({ ...docVazio(), ...d, id: d.id || MD.uid() }));
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('app', () => ({
@@ -210,7 +214,7 @@ document.addEventListener('alpine:init', () => {
         dominio: { provedor: '', vencimento: '' },
         hospedagem: { provedor: '', vencimento: '' },
         ads: adsVazio(),
-        objetivos: [], briefing: briefingVazio(), responsaveis: [],
+        objetivos: [], briefing: briefingVazio(), responsaveis: [], documentos: [],
         mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
@@ -225,7 +229,7 @@ document.addEventListener('alpine:init', () => {
         hospedagem: { provedor: '', vencimento: '', ...(c.hospedagem || {}) },
         ads: { google: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).google || {}) }, meta: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).meta || {}) } },
         objetivos: (c.objetivos || []).map(o => ({ id: o.id || MD.uid(), nome: o.nome || '', alvo: +o.alvo || 0, atual: +o.atual || 0, unidade: o.unidade || '' })),
-        slogan: c.slogan || '', briefing: briefingMerge(c.briefing), responsaveis: respMerge(c.responsaveis),
+        slogan: c.slogan || '', briefing: briefingMerge(c.briefing), responsaveis: respMerge(c.responsaveis), documentos: docMerge(c.documentos),
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -266,6 +270,29 @@ document.addEventListener('alpine:init', () => {
     buscaPessoa(r, empresa) { return 'https://www.google.com/search?q=' + encodeURIComponent([r.nome, empresa, 'instagram linkedin'].filter(Boolean).join(' ')); },
     // Responsáveis com pelo menos uma rede preenchida (lista "a seguir").
     respComRede(c) { return (c.responsaveis || []).filter(r => (r.instagram && r.instagram.trim()) || (r.linkedin && r.linkedin.trim())); },
+    // ── Documentos ──
+    addDocumento() { if (!Array.isArray(this.editing.documentos)) this.editing.documentos = []; this.editing.documentos.push({ ...docVazio(), id: MD.uid() }); },
+    removeDocumento(i) { this.editing.documentos.splice(i, 1); },
+    // ── Resumo de saúde do cliente ──
+    saudeCliente(c) {
+      const partes = [];
+      if (this.redesDoCliente(c).length) partes.push(this.mediaRedes(c));
+      if (c.site && c.site.url) partes.push(Math.round((((c.site.seo) || 0) + ((c.site.sgo) || 0)) / 2));
+      const objs = c.objetivos || []; if (objs.length) partes.push(Math.round(objs.reduce((a, o) => a + this.progressoObj(o), 0) / objs.length));
+      const score = partes.length ? Math.round(partes.reduce((a, b) => a + b, 0) / partes.length) : null;
+      return { score, sinal: score == null ? '⚪' : (score >= 70 ? '🟢' : score >= 40 ? '🟡' : '🔴') };
+    },
+    saudeAlertas(c) {
+      const a = [];
+      if (!(c.responsaveis || []).length) a.push('Sem responsáveis');
+      if (!this.briefingItens(c).length) a.push('Briefing vazio');
+      const aniv = (c.responsaveis || []).filter(r => { const d = this.diasAniver(r.nascimento); return d != null && d <= 30; }).length;
+      if (aniv) a.push('🎂 ' + aniv + ' aniversário(s) ≤30d');
+      const naoSeg = this.respComRede(c).filter(r => !r.seguindo).length;
+      if (naoSeg) a.push('📲 ' + naoSeg + ' pra seguir');
+      if (!(c.documentos || []).length) a.push('Sem documentos');
+      return a;
+    },
     diasAniver(nasc) { if (!nasc) return null; const d = new Date(nasc + 'T00:00:00'); if (isNaN(d.getTime())) return null; const h = new Date(); h.setHours(0, 0, 0, 0); let p = new Date(h.getFullYear(), d.getMonth(), d.getDate()); if (p < h) p = new Date(h.getFullYear() + 1, d.getMonth(), d.getDate()); return Math.round((p - h) / 86400000); },
     idadeDe(nasc) { if (!nasc) return null; const d = new Date(nasc + 'T00:00:00'); if (isNaN(d.getTime())) return null; const h = new Date(); let a = h.getFullYear() - d.getFullYear(); const m = h.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && h.getDate() < d.getDate())) a--; return a; },
     mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
@@ -416,7 +443,7 @@ document.addEventListener('alpine:init', () => {
     async ganharLead(l) {
       l.stage = 'Ganho'; this.persist('leads', this.leads);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
+        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
         try { await this.api('POST', '/clientes', { empresa: l.empresa, dados }); await this.carregarClientes(); } catch (e) { alert('Lead ganho, mas falhou ao criar o cliente: ' + e.message); }
       }
       this.modal = null;

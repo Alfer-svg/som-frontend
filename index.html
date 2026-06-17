@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=14">
+  <link rel="stylesheet" href="css/styles.css?v=15">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -251,6 +251,26 @@
                 <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
               </div>
 
+              <!-- RESUMO DE SAÚDE -->
+              <div class="card" style="box-shadow:none;background:var(--surface-2);padding:12px;margin-bottom:10px">
+                <div class="flex items-center gap-3" style="flex-wrap:wrap">
+                  <span style="font-size:28px;line-height:1" x-text="saudeCliente(monitorCliente).sinal"></span>
+                  <div>
+                    <div class="fs-12 text-3" style="text-transform:uppercase;letter-spacing:.5px;font-weight:700">Saúde do cliente</div>
+                    <div class="fw-800 fs-18" x-text="saudeCliente(monitorCliente).score!=null ? (saudeCliente(monitorCliente).score+'%') : 'sem dados'"></div>
+                  </div>
+                  <div class="flex gap-2" style="flex-wrap:wrap;margin-left:auto">
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="redesDoCliente(monitorCliente).length" x-text="'📱 '+mediaRedes(monitorCliente)+'%'"></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="monitorCliente.site&&monitorCliente.site.url" x-text="'🌐 '+Math.round((((monitorCliente.site.seo)||0)+((monitorCliente.site.sgo)||0))/2)+'%'"></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-text="'👥 '+((monitorCliente.responsaveis||[]).length)"></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-text="'📎 '+((monitorCliente.documentos||[]).length)"></span>
+                  </div>
+                </div>
+                <div class="flex gap-2" style="flex-wrap:wrap;margin-top:8px" x-show="saudeAlertas(monitorCliente).length">
+                  <template x-for="al in saudeAlertas(monitorCliente)" :key="al"><span class="badge" style="background:#fef3c7;color:#92400e" x-text="'⚠️ '+al"></span></template>
+                </div>
+              </div>
+
               <div class="ficha-sec-title">👥 Responsáveis / Contatos</div>
               <template x-for="r in (monitorCliente.responsaveis||[])" :key="r.id">
                 <div style="padding:8px 0;border-bottom:1px solid var(--border)">
@@ -354,6 +374,16 @@
                 </template>
               </div>
               <div x-show="!briefingItens(monitorCliente).length && !briefingAtivos(monitorCliente).length" class="text-3" style="padding:6px 0">Briefing ainda não preenchido. Use "Editar ficha do cliente".</div>
+
+              <div class="ficha-sec-title">📎 Documentos</div>
+              <template x-for="d in (monitorCliente.documentos||[])" :key="d.id">
+                <div class="flex items-center gap-2" style="padding:7px 0;border-bottom:1px solid var(--border)">
+                  <span class="badge" style="background:#e0e7ff;color:#3730a3;min-width:96px;justify-content:center" x-text="d.tipo"></span>
+                  <span class="fs-12 fw-700" style="flex:1;min-width:0" x-text="d.nome||'—'"></span>
+                  <a x-show="d.url" :href="d.url" target="_blank" class="btn btn-ghost btn-sm">abrir ↗</a>
+                </div>
+              </template>
+              <div x-show="!(monitorCliente.documentos||[]).length" class="text-3" style="padding:4px 0">Nenhum documento anexado.</div>
 
               <div class="ficha-sec-title">🔐 Acessos — logins e senhas das contas do cliente <span class="text-3" style="font-weight:400;text-transform:none">(uso interno · cifrados · liberados por senha master)</span></div>
               <div class="flex items-center gap-2 mb-2">
@@ -577,6 +607,18 @@
       <div class="form-group"><label class="form-label">Manual de marca (link)</label><input class="form-input" x-model="editing.briefing.ativos.manual" placeholder="https://"></div>
       <div class="form-group"><label class="form-label">Drive de fotos/vídeos (link)</label><input class="form-input" x-model="editing.briefing.ativos.drive" placeholder="https://"></div>
 
+      <!-- DOCUMENTOS -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">📎 Documentos <span class="text-3" style="font-weight:400;text-transform:none">(links — contrato, proposta, apresentação…)</span></div>
+      <template x-for="(d,i) in (editing.documentos||[])" :key="d.id">
+        <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;grid-template-columns:160px 1fr;gap:8px">
+          <div class="form-group" style="margin:0"><label class="form-label">Tipo</label><select class="form-select" x-model="d.tipo"><template x-for="t in TIPOS_DOC" :key="t"><option :value="t" x-text="t"></option></template></select></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Nome</label><input class="form-input" x-model="d.nome" placeholder="Ex.: Contrato 2026"></div>
+          <div class="form-group" style="grid-column:1/-1;margin:0"><label class="form-label">Link</label><input class="form-input" x-model="d.url" placeholder="https://"></div>
+          <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeDocumento(i)">🗑 remover</button></div>
+        </div>
+      </template>
+      <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addDocumento()">+ Adicionar documento</button></div>
+
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
     </div>
     <div class="modal-foot">
@@ -683,6 +725,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=14"></script>
+<script src="js/app.js?v=15"></script>
 </body>
 </html>
