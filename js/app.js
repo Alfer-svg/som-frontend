@@ -57,6 +57,7 @@ document.addEventListener('alpine:init', () => {
     modal: null, // 'lead' | 'client' | 'finance' | 'project'
     editing: {},
     cnpjLoading: false, cnpjMsg: '',
+    cepLoading: false, cepMsg: '',
 
     init() {
       this.clients   = MD.get('som_clients', []);
@@ -102,8 +103,16 @@ document.addEventListener('alpine:init', () => {
 
     // ───────────────── COMERCIAL: clientes ─────────────────
     get clientesFiltrados() { const q = this.busca.toLowerCase(); return this.clients.filter(c => !q || (c.empresa + ' ' + (c.razaoSocial || '') + ' ' + (c.contato || '')).toLowerCase().includes(q)); },
-    novoCliente() { this.editing = { id: '', cnpj: '', razaoSocial: '', empresa: '', contato: '', email: '', whatsapp: '', cidade: '', endereco: '', servico: '', mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '' }; this.cnpjMsg = ''; this.modal = 'client'; },
-    editarCliente(c) { this.editing = { ...c }; this.cnpjMsg = ''; this.modal = 'client'; },
+    novoCliente() {
+      this.editing = {
+        id: '', cnpj: '', razaoSocial: '', empresa: '', inscEstadual: '',
+        cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
+        contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
+        servico: '', mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
+      };
+      this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
+    },
+    editarCliente(c) { this.editing = { ...c }; this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client'; },
     salvarCliente() {
       const e = this.editing;
       if (!e.empresa) return alert('Informe o nome/empresa do cliente.');
@@ -126,14 +135,47 @@ document.addEventListener('alpine:init', () => {
         e.cnpj = fmtCNPJ(raw);
         e.razaoSocial = d.razao_social || e.razaoSocial;
         e.empresa = d.nome_fantasia || d.razao_social || e.empresa;
-        e.cidade = [d.municipio, d.uf].filter(Boolean).join(' / ') || e.cidade;
-        if ('endereco' in e) e.endereco = [d.descricao_tipo_de_logradouro, d.logradouro, d.numero, d.bairro].filter(Boolean).join(', ') || e.endereco;
+        // endereço estruturado (quando o objeto tiver esses campos — cliente)
+        if ('cep' in e && d.cep) e.cep = String(d.cep).replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2');
+        if ('logradouro' in e) e.logradouro = [d.descricao_tipo_de_logradouro, d.logradouro].filter(Boolean).join(' ') || e.logradouro;
+        if ('numero' in e && d.numero) e.numero = d.numero;
+        if ('complemento' in e && d.complemento) e.complemento = d.complemento;
+        if ('bairro' in e && d.bairro) e.bairro = d.bairro;
+        if ('uf' in e && d.uf) e.uf = d.uf;
+        e.cidade = d.municipio || e.cidade;
+        if ('endereco' in e) e.endereco = [d.descricao_tipo_de_logradouro, d.logradouro, d.numero, d.bairro].filter(Boolean).join(', ') || e.endereco; // legado (lead)
         if (!e.email && d.email) e.email = String(d.email).toLowerCase();
         if (!e.whatsapp && d.ddd_telefone_1) e.whatsapp = String(d.ddd_telefone_1).replace(/\D/g, '');
         if (!e.contato && Array.isArray(d.qsa) && d.qsa[0]) e.contato = d.qsa[0].nome_socio || '';
         this.cnpjMsg = '✓ Preenchido: ' + (d.razao_social || '') + (d.descricao_situacao_cadastral ? ' (' + d.descricao_situacao_cadastral + ')' : '');
       } catch (err) { this.cnpjMsg = '⚠ ' + (err.message || 'Não foi possível consultar.'); }
       finally { this.cnpjLoading = false; }
+    },
+
+    // Auto-preenche o endereço a partir do CEP (BrasilAPI, com fallback ViaCEP).
+    async buscarCep() {
+      const raw = (this.editing.cep || '').replace(/\D/g, '');
+      if (raw.length !== 8) { this.cepMsg = '⚠ CEP precisa ter 8 dígitos.'; return; }
+      this.cepLoading = true; this.cepMsg = 'Buscando endereço…';
+      const e = this.editing;
+      e.cep = raw.replace(/^(\d{5})(\d{3})$/, '$1-$2');
+      try {
+        let rua, bairro, cidade, uf;
+        const r = await fetch('https://brasilapi.com.br/api/cep/v2/' + raw);
+        if (r.ok) { const d = await r.json(); rua = d.street; bairro = d.neighborhood; cidade = d.city; uf = d.state; }
+        else { // fallback ViaCEP
+          const r2 = await fetch('https://viacep.com.br/ws/' + raw + '/json/');
+          const d2 = await r2.json();
+          if (d2.erro) throw new Error('CEP não encontrado.');
+          rua = d2.logradouro; bairro = d2.bairro; cidade = d2.localidade; uf = d2.uf;
+        }
+        if (rua) e.logradouro = rua;
+        if (bairro) e.bairro = bairro;
+        if (cidade) e.cidade = cidade;
+        if (uf) e.uf = uf;
+        this.cepMsg = '✓ ' + [rua, bairro].filter(Boolean).join(', ') + ' — ' + [cidade, uf].filter(Boolean).join('/');
+      } catch (err) { this.cepMsg = '⚠ ' + (err.message || 'Não foi possível consultar o CEP.'); }
+      finally { this.cepLoading = false; }
     },
 
     // ───────────────── FINANCEIRO ─────────────────

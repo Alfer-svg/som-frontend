@@ -239,17 +239,40 @@
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche automático</span></label>
+      <!-- DOCUMENTO -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase">📄 Documento</div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche Receita + endereço</span></label>
         <div class="flex gap-2"><input class="form-input" x-model="editing.cnpj" placeholder="00.000.000/0000-00" @keydown.enter.prevent="buscarCnpj()"><button class="btn btn-primary" @click="buscarCnpj()" :disabled="cnpjLoading" x-text="cnpjLoading?'…':'🔎 Buscar'"></button></div>
         <div class="fs-12" x-show="cnpjMsg" :style="cnpjMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cnpjMsg"></div>
       </div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Razão Social</label><input class="form-input" x-model="editing.razaoSocial"></div>
+      <div class="form-group"><label class="form-label">Razão Social</label><input class="form-input" x-model="editing.razaoSocial"></div>
+      <div class="form-group"><label class="form-label">Inscrição Estadual</label><input class="form-input" x-model="editing.inscEstadual" placeholder="Isento / nº"></div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome Fantasia / Empresa *</label><input class="form-input" x-model="editing.empresa"></div>
-      <div class="form-group"><label class="form-label">Contato</label><input class="form-input" x-model="editing.contato"></div>
-      <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" x-model="editing.whatsapp"></div>
-      <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" x-model="editing.email"></div>
+
+      <!-- ENDEREÇO -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">📍 Endereço</div>
+      <div class="form-group"><label class="form-label">CEP <span class="text-3">— preenche endereço</span></label>
+        <div class="flex gap-2"><input class="form-input" x-model="editing.cep" placeholder="00000-000" @keydown.enter.prevent="buscarCep()"><button class="btn btn-primary" @click="buscarCep()" :disabled="cepLoading" x-text="cepLoading?'…':'🔎'"></button></div>
+        <div class="fs-12" x-show="cepMsg" :style="cepMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cepMsg"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="editing.numero"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Logradouro</label><input class="form-input" x-model="editing.logradouro"></div>
+      <div class="form-group"><label class="form-label">Complemento</label><input class="form-input" x-model="editing.complemento"></div>
+      <div class="form-group"><label class="form-label">Bairro</label><input class="form-input" x-model="editing.bairro"></div>
       <div class="form-group"><label class="form-label">Cidade</label><input class="form-input" x-model="editing.cidade"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Endereço</label><input class="form-input" x-model="editing.endereco"></div>
+      <div class="form-group"><label class="form-label">UF</label><input class="form-input" x-model="editing.uf" maxlength="2" placeholder="SP"></div>
+
+      <!-- CONTATO -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">👤 Contato</div>
+      <div class="form-group"><label class="form-label">Nome do contato</label><input class="form-input" x-model="editing.contato"></div>
+      <div class="form-group"><label class="form-label">Cargo</label><input class="form-input" x-model="editing.cargo" placeholder="Sócio, Marketing…"></div>
+      <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" x-model="editing.whatsapp"></div>
+      <div class="form-group"><label class="form-label">Telefone</label><input class="form-input" x-model="editing.telefone"></div>
+      <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" type="email" x-model="editing.email"></div>
+      <div class="form-group"><label class="form-label">Instagram</label><input class="form-input" x-model="editing.instagram" placeholder="@"></div>
+
+      <!-- COMERCIAL -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">💼 Comercial</div>
       <div class="form-group"><label class="form-label">Serviço contratado</label><select class="form-select" x-model="editing.servico"><option value="">Selecione…</option><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
       <div class="form-group"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="editing.mensalidade"></div>
       <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><option>Ativo</option><option>Inativo</option></select></div>
