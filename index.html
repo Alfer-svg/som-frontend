@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=16">
+  <link rel="stylesheet" href="css/styles.css?v=17">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -251,6 +251,22 @@
                   <div class="text-3 fs-12" x-text="([monitorCliente.cidade, monitorCliente.uf].filter(Boolean).join('/')) || '—'"></div>
                 </div>
                 <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
+              </div>
+
+              <!-- PERFIL DO CLIENTE (uso interno) -->
+              <div class="card" style="box-shadow:none;border:1px solid var(--border);padding:0;margin-bottom:10px;overflow:hidden">
+                <div class="flex items-center gap-2" style="padding:11px 14px;cursor:pointer;background:var(--surface-2)" @click="perfilAberto=!perfilAberto">
+                  <span class="fw-800 fs-12" style="text-transform:uppercase;letter-spacing:.5px">🧠 Perfil do cliente <span class="text-3" style="font-weight:400;text-transform:none">· uso interno, pra balizar os contatos</span></span>
+                  <span style="margin-left:auto;font-size:14px" x-text="perfilAberto?'▾':'▸'"></span>
+                </div>
+                <div x-show="perfilAberto" style="padding:10px 14px 12px">
+                  <template x-for="bl in perfilCliente(monitorCliente)" :key="bl.titulo">
+                    <div style="padding:5px 0;border-bottom:1px solid var(--border)">
+                      <span class="fs-12 fw-700" x-text="bl.icon+' '+bl.titulo+': '"></span><span class="fs-12" x-text="bl.texto"></span>
+                    </div>
+                  </template>
+                  <div x-show="!perfilCliente(monitorCliente).length" class="text-3 fs-12">Perfil ainda incompleto — preencha o briefing e os responsáveis que ele se forma sozinho.</div>
+                </div>
               </div>
 
               <!-- RESUMO DE SAÚDE -->
@@ -771,6 +787,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=16"></script>
+<script src="js/app.js?v=17"></script>
 </body>
 </html>
