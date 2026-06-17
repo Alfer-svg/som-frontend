@@ -24,7 +24,7 @@
       <template x-for="item in [
         {id:'dashboard',ico:'📊',label:'Dashboard',desc:'Visão geral: KPIs de clientes, receita, funil de vendas e projetos.'},
         {id:'crm',ico:'🎯',label:'CRM',desc:'Funil de vendas — gerencie os leads do primeiro contato ao fechamento.'},
-        {id:'comercial',ico:'🤝',label:'Comercial',desc:'Cadastro de clientes (com CNPJ automático), serviços e mensalidades.'},
+        {id:'comercial',ico:'👥',label:'Clientes',desc:'Cadastro completo de clientes (CNPJ + CEP automáticos), serviços, redes e mensalidade.'},
         {id:'financeiro',ico:'💰',label:'Financeiro',desc:'Receitas e despesas, contas a receber e a pagar, saldo do mês.'},
         {id:'operacional',ico:'🚀',label:'Operacional',desc:'Projetos e entregas da agência, em kanban por status.'},
         {id:'monitoramento',ico:'🩺',label:'Monitoramento',desc:'Saúde de cada cliente: serviços, redes sociais e condição (sinais 🟢🟡🔴).'}]" :key="item.id">
@@ -41,7 +41,7 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Comercial — Clientes',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes'}[page]"></div>
+        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes'}[page]"></div>
       </div>
       <div class="spacer"></div>
       <div class="search" x-show="page!=='dashboard'">
