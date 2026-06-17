@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=5">
+  <link rel="stylesheet" href="css/styles.css?v=6">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -278,6 +278,16 @@
               </template>
               <div x-show="!adsAtivos(monitorCliente).length" class="text-3">Sem campanhas de tráfego pago.</div>
 
+              <div class="ficha-sec-title">🎯 Métricas / Objetivos do cliente</div>
+              <template x-for="o in (monitorCliente.objetivos||[])" :key="o.id">
+                <div class="rede-row">
+                  <span class="rede-nome" style="width:175px" x-text="o.nome||'—'"></span>
+                  <div class="progress" style="flex:1"><div :style="'width:'+progressoObj(o)+'%;background:'+corScore(progressoObj(o))"></div></div>
+                  <span style="white-space:nowrap;font-size:12px;font-weight:800;margin-left:10px" :style="'color:'+corScore(progressoObj(o))" x-text="(o.atual||0)+' / '+(o.alvo||0)+(o.unidade?(' '+o.unidade):'')+' · '+progressoObj(o)+'%'"></span>
+                </div>
+              </template>
+              <div x-show="!(monitorCliente.objetivos||[]).length" class="text-3">Nenhum objetivo definido pra este cliente.</div>
+
               <div class="mt-3"><button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)">✏️ Editar ficha do cliente</button></div>
             </div>
           </template>
@@ -401,6 +411,19 @@
         </div>
       </template>
 
+      <!-- OBJETIVOS / MÉTRICAS -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">🎯 Métricas / Objetivos do cliente</div>
+      <template x-for="(o,i) in editing.objetivos" :key="o.id">
+        <div class="flex items-center gap-2" style="grid-column:1/-1">
+          <input class="form-input" style="flex:1" x-model="o.nome" placeholder="Objetivo (ex.: Seguidores no Instagram)">
+          <input class="form-input" type="number" style="width:90px" x-model.number="o.atual" placeholder="atual">
+          <input class="form-input" type="number" style="width:90px" x-model.number="o.alvo" placeholder="meta">
+          <input class="form-input" style="width:80px" x-model="o.unidade" placeholder="un.">
+          <button type="button" class="btn btn-ghost btn-icon" @click="removeObjetivo(i)">🗑</button>
+        </div>
+      </template>
+      <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addObjetivo()">+ Adicionar objetivo</button></div>
+
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
     </div>
     <div class="modal-foot">
@@ -454,6 +477,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=5"></script>
+<script src="js/app.js?v=6"></script>
 </body>
 </html>

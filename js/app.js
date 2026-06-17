@@ -132,6 +132,7 @@ document.addEventListener('alpine:init', () => {
         dominio: { provedor: '', vencimento: '' },
         hospedagem: { provedor: '', vencimento: '' },
         ads: adsVazio(),
+        objetivos: [],
         mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
@@ -145,6 +146,7 @@ document.addEventListener('alpine:init', () => {
         dominio: { provedor: '', vencimento: '', ...(c.dominio || {}) },
         hospedagem: { provedor: '', vencimento: '', ...(c.hospedagem || {}) },
         ads: { google: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).google || {}) }, meta: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).meta || {}) } },
+        objetivos: (c.objetivos || []).map(o => ({ id: o.id || MD.uid(), nome: o.nome || '', alvo: +o.alvo || 0, atual: +o.atual || 0, unidade: o.unidade || '' })),
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -155,6 +157,9 @@ document.addEventListener('alpine:init', () => {
     txtVenc(d) { const n = this.diasVenc(d); if (n === null) return 'sem data'; return n < 0 ? ('vencido há ' + (-n) + 'd') : n === 0 ? 'vence hoje' : ('vence em ' + n + 'd'); },
     corSaldo(n) { n = +n || 0; return n <= 0 ? '#dc2626' : n < 200 ? '#f59e0b' : '#16a34a'; },
     adsAtivos(c) { return ADS.filter(a => c.ads && c.ads[a.id] && c.ads[a.id].ativo); },
+    progressoObj(o) { return o && +o.alvo > 0 ? Math.min(100, Math.round((+o.atual || 0) / +o.alvo * 100)) : 0; },
+    addObjetivo() { if (!this.editing.objetivos) this.editing.objetivos = []; this.editing.objetivos.push({ id: MD.uid(), nome: '', alvo: 0, atual: 0, unidade: '' }); },
+    removeObjetivo(i) { this.editing.objetivos.splice(i, 1); },
     clienteServicos(c) { return (c.servicos && c.servicos.length) ? c.servicos : (c.servico ? [c.servico] : []); },
     redesDoCliente(c) { return REDES.filter(r => c.redes && c.redes[r.id] && c.redes[r.id].tem); },
     mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
@@ -255,7 +260,7 @@ document.addEventListener('alpine:init', () => {
     ganharLead(l) {
       l.stage = 'Ganho'; this.persist('leads', this.leads);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        this.clients.unshift({ id: MD.uid(), cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas });
+        this.clients.unshift({ id: MD.uid(), cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas });
         this.persist('clients', this.clients);
       }
       this.modal = null;
