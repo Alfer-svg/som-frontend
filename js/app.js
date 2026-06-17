@@ -53,6 +53,7 @@ const REDES = [
   { id: 'youtube',   label: 'YouTube',   slug: 'youtube',   cor: 'FF0000' },
   { id: 'linkedin',  label: 'LinkedIn',  slug: 'linkedin',  cor: '0A66C2' },
   { id: 'facebook',  label: 'Facebook',  slug: 'facebook',  cor: '1877F2' },
+  { id: 'gmn',       label: 'Google Meu Negócio', slug: 'google', cor: '4285F4' },
 ];
 // URL do logo oficial da rede (Simple Icons), colorido pela marca.
 const redeIcon = (r) => `https://cdn.simpleicons.org/${r.slug}/${r.cor}`;
