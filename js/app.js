@@ -63,14 +63,18 @@ const ADS = [
   { id: 'meta',   label: 'Meta Ads',   slug: 'meta',      cor: '0866FF' },
 ];
 const adsVazio = () => ({ google: { ativo: false, qualidade: 0, saldo: 0 }, meta: { ativo: false, qualidade: 0, saldo: 0 } });
+
+// Itens comuns pra guardar acesso (login/senha) no cofre.
+const ITENS_CRED = ['Instagram', 'Facebook', 'TikTok', 'YouTube', 'LinkedIn', 'Google Ads', 'Meta Business', 'Google Analytics', 'Search Console', 'Hospedagem', 'Domínio', 'Site / WordPress', 'E-mail', 'Outro'];
 const redesVazias = () => Object.fromEntries(REDES.map(r => [r.id, { tem: false, score: 0 }]));
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('app', () => ({
     page: 'dashboard',
-    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, REDES, ADS,
+    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, REDES, ADS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
+    credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
 
     // dados
     clients: [], leads: [], proposals: [], finance: [], projects: [],
@@ -137,7 +141,7 @@ document.addEventListener('alpine:init', () => {
 
     // helpers de formatação expostos ao template
     fmtDate: MD.fmtDate, fmtCur: MD.fmtCur, daysDiff: MD.daysDiff, redeIcon,
-    go(p) { this.page = p; this.busca = ''; },
+    go(p) { this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); },
     persist(key, arr) { MD.set('som_' + key, arr); },
 
     // ───────────────── DASHBOARD ─────────────────
@@ -213,6 +217,12 @@ document.addEventListener('alpine:init', () => {
     redesDoCliente(c) { return REDES.filter(r => c.redes && c.redes[r.id] && c.redes[r.id].tem); },
     mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
     get monitorCliente() { const list = this.clientesFiltrados; if (!list.length) return null; return list.find(c => c.id === this.monitorSel) || list[0]; },
+    async abrirMonitor(id) { this.monitorSel = id; await this.carregarCredenciais(id); },
+    async carregarCredenciais(clienteId) { this.revelar = {}; if (!clienteId) { this.credenciais = []; return; } try { this.credenciais = (await this.api('GET', '/credenciais/cliente/' + clienteId)) || []; } catch { this.credenciais = []; } },
+    novaCredencial() { const c = this.monitorCliente; this.credForm = { id: '', clienteId: c && c.id, item: 'Instagram', login: '', senha: '', url: '', notas: '' }; this.credModal = true; },
+    editarCredencial(c) { this.credForm = { ...c }; this.credModal = true; },
+    async salvarCredencial() { const f = this.credForm; if (!f.clienteId && this.monitorCliente) f.clienteId = this.monitorCliente.id; if (!f.item) return alert('Informe o item.'); try { await this.api('POST', '/credenciais', f); await this.carregarCredenciais(f.clienteId); this.credModal = false; } catch (e) { alert(e.message); } },
+    async excluirCredencial(c) { if (!confirm('Excluir o acesso "' + (c.item || '') + '"?')) return; try { await this.api('DELETE', '/credenciais/' + c.id); await this.carregarCredenciais(c.clienteId); } catch (e) { alert(e.message); } },
     async salvarCliente() {
       const e = this.editing;
       if (!e.empresa) return alert('Informe o nome/empresa do cliente.');
