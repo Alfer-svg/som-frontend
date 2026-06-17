@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOM — Sistema Operacional Maracatu</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+<body x-data="app()" x-cloak>
+<div class="app">
+
+  <!-- ───────── SIDEBAR ───────── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">SOM</div>
+      <div>
+        <div class="brand-name">SOM</div>
+        <div class="brand-sub">Sistema Operacional Maracatu</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <template x-for="item in [
+        {id:'dashboard',ico:'📊',label:'Dashboard'},
+        {id:'crm',ico:'🎯',label:'CRM'},
+        {id:'comercial',ico:'🤝',label:'Comercial'},
+        {id:'financeiro',ico:'💰',label:'Financeiro'},
+        {id:'operacional',ico:'🚀',label:'Operacional'}]" :key="item.id">
+        <div class="nav-item" :class="page===item.id?'active':''" @click="go(item.id)">
+          <span class="nav-icon" x-text="item.ico"></span>
+          <span x-text="item.label"></span>
+        </div>
+      </template>
+    </nav>
+    <div class="sidebar-foot">Maracatu Digital Intelligence<br>MVP · dados locais</div>
+  </aside>
+
+  <!-- ───────── MAIN ───────── -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Comercial — Clientes',financeiro:'Financeiro',operacional:'Operacional — Projetos'}[page]"></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="search" x-show="page!=='dashboard'">
+        <span class="ico">🔎</span>
+        <input type="text" placeholder="Buscar…" x-model="busca">
+      </div>
+      <button class="btn btn-primary" x-show="page==='crm'" @click="novoLead()">+ Lead</button>
+      <button class="btn btn-primary" x-show="page==='comercial'" @click="novoCliente()">+ Cliente</button>
+      <button class="btn btn-primary" x-show="page==='financeiro'" @click="novoLancamento('receita')">+ Lançamento</button>
+      <button class="btn btn-primary" x-show="page==='operacional'" @click="novoProjeto()">+ Projeto</button>
+    </header>
+
+    <div class="content">
+
+      <!-- ========== DASHBOARD ========== -->
+      <section x-show="page==='dashboard'">
+        <div class="grid grid-4 mb-4">
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#ede9fe">🤝</span> Clientes ativos</div><div class="kpi-value" x-text="clientesAtivos"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#dcfce7">💰</span> Receita do mês</div><div class="kpi-value text-green" x-text="fmtCur(receitaMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#dbeafe">🎯</span> Leads no funil</div><div class="kpi-value" x-text="leadsAbertos"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#fef3c7">🚀</span> Projetos ativos</div><div class="kpi-value" x-text="projetosAndamento"></div></div>
+        </div>
+        <div class="grid grid-4 mb-4">
+          <div class="card kpi"><div class="kpi-label">MRR (recorrente)</div><div class="kpi-value fs-22" x-text="fmtCur(mrr)"></div></div>
+          <div class="card kpi"><div class="kpi-label">A receber</div><div class="kpi-value fs-22 text-green" x-text="fmtCur(aReceber)"></div></div>
+          <div class="card kpi"><div class="kpi-label">A pagar</div><div class="kpi-value fs-22 text-red" x-text="fmtCur(aPagar)"></div></div>
+          <div class="card kpi"><div class="kpi-label">Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
+        </div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="card-title mb-3">Funil — leads por estágio</div>
+            <template x-for="s in STAGES" :key="s.id">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="dot" :style="'background:'+s.color"></span>
+                <span class="fs-12" style="width:110px" x-text="s.ico+' '+s.id"></span>
+                <div class="progress" style="flex:1"><div :style="'width:'+(leads.length?(leadsDoEstagio(s.id).length/leads.length*100):0)+'%'"></div></div>
+                <span class="fs-12 fw-700" style="width:24px;text-align:right" x-text="leadsDoEstagio(s.id).length"></span>
+              </div>
+            </template>
+          </div>
+          <div class="card">
+            <div class="card-title mb-3">Próximos vencimentos</div>
+            <template x-if="finance.filter(f=>f.status!=='pago').length===0"><div class="empty">Nada pendente 🎉</div></template>
+            <template x-for="f in finance.filter(f=>f.status!=='pago').slice(0,8)" :key="f.id">
+              <div class="flex items-center justify-between mb-2">
+                <div><div class="fw-700 fs-12" x-text="f.descricao"></div><div class="text-3 fs-12" x-text="(f.tipo==='receita'?'Receber · ':'Pagar · ')+fmtDate(f.vencimento)"></div></div>
+                <div class="fw-700 fs-12" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="fmtCur(f.valor)"></div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== CRM (kanban) ========== -->
+      <section x-show="page==='crm'">
+        <div class="kanban">
+          <template x-for="s in STAGES" :key="s.id">
+            <div class="kanban-col">
+              <div class="kanban-head">
+                <span class="dot" :style="'background:'+s.color"></span>
+                <span class="fw-700 fs-12" x-text="s.ico+' '+s.id"></span>
+                <span class="count" x-text="leadsDoEstagio(s.id).length"></span>
+              </div>
+              <template x-for="l in leadsDoEstagio(s.id)" :key="l.id">
+                <div class="kanban-card" @click="editarLead(l)">
+                  <div class="fw-700" x-text="l.empresa"></div>
+                  <div class="text-3 fs-12" x-text="l.contato||'—'"></div>
+                  <div class="flex items-center justify-between mt-2">
+                    <span class="badge" style="background:#f1f2f7;color:var(--text-2)" x-show="l.servico" x-text="l.servico"></span>
+                    <span class="fw-700 fs-12 text-primary" x-show="l.valor" x-text="fmtCur(l.valor)"></span>
+                  </div>
+                </div>
+              </template>
+              <button class="kanban-add" @click="novoLead(s.id)">+ Adicionar</button>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- ========== COMERCIAL (clientes) ========== -->
+      <section x-show="page==='comercial'">
+        <template x-if="clientesFiltrados.length===0"><div class="card empty">Nenhum cliente ainda. Clique em <b>+ Cliente</b>.</div></template>
+        <div class="card" x-show="clientesFiltrados.length">
+          <table class="table">
+            <thead><tr><th>Cliente</th><th>CNPJ</th><th>Serviço</th><th>Mensalidade</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="c in clientesFiltrados" :key="c.id">
+                <tr>
+                  <td><div class="fw-700" x-text="c.empresa"></div><div class="text-3 fs-12" x-text="(c.contato||'')+(c.cidade?' · '+c.cidade:'')"></div></td>
+                  <td class="fs-12 text-2" x-text="c.cnpj||'—'"></td>
+                  <td><span class="badge" style="background:#ede9fe;color:#6d28d9" x-show="c.servico" x-text="c.servico"></span></td>
+                  <td class="fw-700" x-text="fmtCur(c.mensalidade)"></td>
+                  <td><span class="badge" :style="c.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="c.status"></span></td>
+                  <td><button class="btn btn-ghost btn-sm" @click="editarCliente(c)">Editar</button></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========== FINANCEIRO ========== -->
+      <section x-show="page==='financeiro'">
+        <div class="grid grid-4 mb-4">
+          <div class="card kpi"><div class="kpi-label">Receita do mês</div><div class="kpi-value fs-22 text-green" x-text="fmtCur(receitaMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label">Despesa do mês</div><div class="kpi-value fs-22 text-red" x-text="fmtCur(despesaMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label">Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label">A receber / A pagar</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
+        </div>
+        <div class="flex gap-2 mb-3">
+          <button class="btn btn-primary" @click="novoLancamento('receita')">+ Receita</button>
+          <button class="btn btn-ghost" @click="novoLancamento('despesa')">+ Despesa</button>
+        </div>
+        <template x-if="finance.length===0"><div class="card empty">Sem lançamentos. Adicione uma receita ou despesa.</div></template>
+        <div class="card" x-show="finance.length">
+          <table class="table">
+            <thead><tr><th>Descrição</th><th>Categoria</th><th>Cliente</th><th>Vencimento</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="f in financeFiltrado" :key="f.id">
+                <tr>
+                  <td class="fw-700" x-text="(f.tipo==='receita'?'↑ ':'↓ ')+f.descricao"></td>
+                  <td class="fs-12 text-2" x-text="f.categoria"></td>
+                  <td class="fs-12 text-2" x-text="f.cliente||'—'"></td>
+                  <td class="fs-12 text-2" x-text="fmtDate(f.vencimento)"></td>
+                  <td class="fw-700" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="fmtCur(f.valor)"></td>
+                  <td><span class="badge" @click="togglePago(f)" style="cursor:pointer" :style="f.status==='pago'?'background:#dcfce7;color:#16a34a':'background:#fef3c7;color:#b45309'" x-text="f.status==='pago'?'Pago':'Pendente'"></span></td>
+                  <td><button class="btn btn-ghost btn-sm" @click="editarLancamento(f)">Editar</button></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========== OPERACIONAL (projetos kanban) ========== -->
+      <section x-show="page==='operacional'">
+        <div class="kanban">
+          <template x-for="s in PROJ_STATUS" :key="s.id">
+            <div class="kanban-col">
+              <div class="kanban-head"><span class="dot" :style="'background:'+s.color"></span><span class="fw-700 fs-12" x-text="s.id"></span><span class="count" x-text="projetosDoStatus(s.id).length"></span></div>
+              <template x-for="p in projetosDoStatus(s.id)" :key="p.id">
+                <div class="kanban-card" @click="editarProjeto(p)">
+                  <div class="fw-700" x-text="p.nome"></div>
+                  <div class="text-3 fs-12" x-text="p.cliente||'—'"></div>
+                  <div class="flex items-center justify-between mt-2">
+                    <span class="badge" style="background:#ede9fe;color:#6d28d9" x-show="p.servico" x-text="p.servico"></span>
+                    <span class="fs-12 text-3" x-show="p.prazo" x-text="'⏰ '+fmtDate(p.prazo)"></span>
+                  </div>
+                  <div class="progress mt-2"><div :style="'width:'+(p.progresso||0)+'%'"></div></div>
+                </div>
+              </template>
+              <button class="kanban-add" @click="novoProjeto(s.id)">+ Adicionar</button>
+            </div>
+          </template>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════ MODAIS ═══════════ -->
+
+<!-- LEAD -->
+<div class="modal-backdrop" x-show="modal==='lead'" @click.self="modal=null" x-cloak>
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Lead':'Novo Lead'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-body grid grid-2" style="gap:14px">
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche automático</span></label>
+        <div class="flex gap-2"><input class="form-input" x-model="editing.cnpj" placeholder="00.000.000/0000-00" @keydown.enter.prevent="buscarCnpj()"><button class="btn btn-primary" @click="buscarCnpj()" :disabled="cnpjLoading" x-text="cnpjLoading?'…':'🔎'"></button></div>
+        <div class="fs-12" x-show="cnpjMsg" :style="cnpjMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cnpjMsg"></div>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Empresa / Lead *</label><input class="form-input" x-model="editing.empresa"></div>
+      <div class="form-group"><label class="form-label">Contato</label><input class="form-input" x-model="editing.contato"></div>
+      <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" x-model="editing.whatsapp"></div>
+      <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" x-model="editing.email"></div>
+      <div class="form-group"><label class="form-label">Cidade</label><input class="form-input" x-model="editing.cidade"></div>
+      <div class="form-group"><label class="form-label">Serviço de interesse</label><select class="form-select" x-model="editing.servico"><option value="">—</option><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Origem</label><select class="form-select" x-model="editing.origem"><template x-for="o in ORIGENS"><option x-text="o"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Estágio</label><select class="form-select" x-model="editing.stage"><template x-for="s in STAGES"><option :value="s.id" x-text="s.id"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Valor estimado (R$)</label><input class="form-input" type="number" x-model="editing.valor"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" x-show="editing.id" @click="excluirLead(editing)">Excluir</button>
+      <button class="btn btn-ghost" x-show="editing.id && editing.stage!=='Ganho'" @click="ganharLead(editing)">🏆 Ganhar → cliente</button>
+      <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
+      <button class="btn btn-primary" @click="salvarLead()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENTE -->
+<div class="modal-backdrop" x-show="modal==='client'" @click.self="modal=null" x-cloak>
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-body grid grid-2" style="gap:14px">
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche automático</span></label>
+        <div class="flex gap-2"><input class="form-input" x-model="editing.cnpj" placeholder="00.000.000/0000-00" @keydown.enter.prevent="buscarCnpj()"><button class="btn btn-primary" @click="buscarCnpj()" :disabled="cnpjLoading" x-text="cnpjLoading?'…':'🔎 Buscar'"></button></div>
+        <div class="fs-12" x-show="cnpjMsg" :style="cnpjMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cnpjMsg"></div>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Razão Social</label><input class="form-input" x-model="editing.razaoSocial"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome Fantasia / Empresa *</label><input class="form-input" x-model="editing.empresa"></div>
+      <div class="form-group"><label class="form-label">Contato</label><input class="form-input" x-model="editing.contato"></div>
+      <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" x-model="editing.whatsapp"></div>
+      <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" x-model="editing.email"></div>
+      <div class="form-group"><label class="form-label">Cidade</label><input class="form-input" x-model="editing.cidade"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Endereço</label><input class="form-input" x-model="editing.endereco"></div>
+      <div class="form-group"><label class="form-label">Serviço contratado</label><select class="form-select" x-model="editing.servico"><option value="">Selecione…</option><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="editing.mensalidade"></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><option>Ativo</option><option>Inativo</option></select></div>
+      <div class="form-group"><label class="form-label">Cliente desde</label><input class="form-input" type="date" x-model="editing.desde"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" x-show="editing.id" @click="excluirCliente(editing)">Excluir</button>
+      <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
+      <button class="btn btn-primary" @click="salvarCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FINANCEIRO -->
+<div class="modal-backdrop" x-show="modal==='finance'" @click.self="modal=null" x-cloak>
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+(editing.tipo==='receita'?'Receita':'Despesa')"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-body grid grid-2" style="gap:14px">
+      <div class="form-group"><label class="form-label">Tipo</label><select class="form-select" x-model="editing.tipo"><option value="receita">Receita</option><option value="despesa">Despesa</option></select></div>
+      <div class="form-group"><label class="form-label">Valor (R$)</label><input class="form-input" type="number" x-model="editing.valor"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição *</label><input class="form-input" x-model="editing.descricao"></div>
+      <div class="form-group"><label class="form-label">Categoria</label><select class="form-select" x-model="editing.categoria"><template x-for="c in FIN_CATEGORIAS"><option x-text="c"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" list="cli-list"><datalist id="cli-list"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+      <div class="form-group"><label class="form-label">Vencimento</label><input class="form-input" type="date" x-model="editing.vencimento"></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" x-show="editing.id" @click="excluirLancamento(editing)">Excluir</button>
+      <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
+      <button class="btn btn-primary" @click="salvarLancamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROJETO -->
+<div class="modal-backdrop" x-show="modal==='project'" @click.self="modal=null" x-cloak>
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Projeto':'Novo Projeto'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-body grid grid-2" style="gap:14px">
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do projeto *</label><input class="form-input" x-model="editing.nome"></div>
+      <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" list="cli-list2"><datalist id="cli-list2"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+      <div class="form-group"><label class="form-label">Serviço</label><select class="form-select" x-model="editing.servico"><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Responsável</label><input class="form-input" x-model="editing.responsavel"></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in PROJ_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Prazo</label><input class="form-input" type="date" x-model="editing.prazo"></div>
+      <div class="form-group"><label class="form-label">Progresso (%)</label><input class="form-input" type="number" min="0" max="100" x-model="editing.progresso"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" x-show="editing.id" @click="excluirProjeto(editing)">Excluir</button>
+      <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
+      <button class="btn btn-primary" @click="salvarProjeto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
