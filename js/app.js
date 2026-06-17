@@ -273,6 +273,13 @@ document.addEventListener('alpine:init', () => {
         };
         const hosp = r.hospedagem || {};
         this.editing.hospedagem = { ...this.editing.hospedagem, provedor: this.editing.hospedagem.provedor || hosp.provedor || '' };
+        if (typeof r.seo === 'number' || typeof r.sgo === 'number') {
+          this.editing.site = {
+            ...this.editing.site,
+            seo: typeof r.seo === 'number' ? r.seo : this.editing.site.seo,
+            sgo: typeof r.sgo === 'number' ? r.sgo : this.editing.site.sgo,
+          };
+        }
         if (r.email || r.telefone) {
           const resp = Array.isArray(this.editing.responsaveis) ? [...this.editing.responsaveis] : [];
           if (!resp.length) resp.push({ ...respVazio(), id: MD.uid() });
@@ -284,6 +291,8 @@ document.addEventListener('alpine:init', () => {
         addR('TikTok', redes.tiktok); addR('YouTube', redes.youtube); addR('Google Meu Negócio', redes.gmn);
         addR('Domínio (provedor)', dom.provedor); addR('Vencimento do domínio', dom.vencimento);
         addR('Hospedagem', hosp.provedor);
+        if (typeof r.seo === 'number') addR('SEO on-page', r.seo + '%' + ((r.seoFaltam && r.seoFaltam.length) ? ' — falta: ' + r.seoFaltam.join(', ') : ''));
+        if (typeof r.sgo === 'number') addR('SGO on-page', r.sgo + '%' + ((r.sgoFaltam && r.sgoFaltam.length) ? ' — falta: ' + r.sgoFaltam.join(', ') : ''));
         addR('E-mail', r.email); addR('Telefone', r.telefone);
         this.enriqResult = res;
         this.enriqMsg = res.length ? '' : 'Não achei dados no site (confira a URL ou preencha à mão).';
