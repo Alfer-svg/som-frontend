@@ -120,16 +120,30 @@ document.addEventListener('alpine:init', () => {
         id: '', cnpj: '', razaoSocial: '', empresa: '', inscEstadual: '',
         cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
         contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
-        servicos: [], redes: redesVazias(), mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
+        servicos: [], redes: redesVazias(),
+        site: { url: '', seo: 0, sgo: 0 },
+        dominio: { provedor: '', vencimento: '' },
+        hospedagem: { provedor: '', vencimento: '' },
+        mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
     editarCliente(c) {
-      this.editing = { ...c, servicos: c.servicos || (c.servico ? [c.servico] : []), redes: { ...redesVazias(), ...(c.redes || {}) } };
+      this.editing = {
+        ...c,
+        servicos: c.servicos || (c.servico ? [c.servico] : []),
+        redes: { ...redesVazias(), ...(c.redes || {}) },
+        site: { url: '', seo: 0, sgo: 0, ...(c.site || {}) },
+        dominio: { provedor: '', vencimento: '', ...(c.dominio || {}) },
+        hospedagem: { provedor: '', vencimento: '', ...(c.hospedagem || {}) },
+      };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
     // sinalização de condição por % (0-100)
     corScore(n) { n = +n || 0; return n >= 80 ? '#16a34a' : n >= 40 ? '#f59e0b' : '#dc2626'; },
+    diasVenc(d) { if (!d) return null; return Math.ceil((new Date(d + 'T00:00:00').getTime() - Date.now()) / 86400000); },
+    corVenc(d) { const n = this.diasVenc(d); if (n === null) return 'var(--text-3)'; return n < 0 ? '#dc2626' : n <= 30 ? '#f59e0b' : '#16a34a'; },
+    txtVenc(d) { const n = this.diasVenc(d); if (n === null) return 'sem data'; return n < 0 ? ('vencido há ' + (-n) + 'd') : n === 0 ? 'vence hoje' : ('vence em ' + n + 'd'); },
     clienteServicos(c) { return (c.servicos && c.servicos.length) ? c.servicos : (c.servico ? [c.servico] : []); },
     redesDoCliente(c) { return REDES.filter(r => c.redes && c.redes[r.id] && c.redes[r.id].tem); },
     mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
@@ -230,7 +244,7 @@ document.addEventListener('alpine:init', () => {
     ganharLead(l) {
       l.stage = 'Ganho'; this.persist('leads', this.leads);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        this.clients.unshift({ id: MD.uid(), cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas });
+        this.clients.unshift({ id: MD.uid(), cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas });
         this.persist('clients', this.clients);
       }
       this.modal = null;
