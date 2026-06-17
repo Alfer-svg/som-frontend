@@ -22,12 +22,12 @@
     </div>
     <nav class="nav">
       <template x-for="item in [
-        {id:'dashboard',ico:'📊',label:'Dashboard'},
-        {id:'crm',ico:'🎯',label:'CRM'},
-        {id:'comercial',ico:'🤝',label:'Comercial'},
-        {id:'financeiro',ico:'💰',label:'Financeiro'},
-        {id:'operacional',ico:'🚀',label:'Operacional'}]" :key="item.id">
-        <div class="nav-item" :class="page===item.id?'active':''" @click="go(item.id)">
+        {id:'dashboard',ico:'📊',label:'Dashboard',desc:'Visão geral: KPIs de clientes, receita, funil de vendas e projetos.'},
+        {id:'crm',ico:'🎯',label:'CRM',desc:'Funil de vendas — gerencie os leads do primeiro contato ao fechamento.'},
+        {id:'comercial',ico:'🤝',label:'Comercial',desc:'Cadastro de clientes (com CNPJ automático), serviços e mensalidades.'},
+        {id:'financeiro',ico:'💰',label:'Financeiro',desc:'Receitas e despesas, contas a receber e a pagar, saldo do mês.'},
+        {id:'operacional',ico:'🚀',label:'Operacional',desc:'Projetos e entregas da agência, em kanban por status.'}]" :key="item.id">
+        <div class="nav-item" :class="page===item.id?'active':''" @click="go(item.id)" :title="item.desc">
           <span class="nav-icon" x-text="item.ico"></span>
           <span x-text="item.label"></span>
         </div>
@@ -99,10 +99,11 @@
         <div class="kanban">
           <template x-for="s in STAGES" :key="s.id">
             <div class="kanban-col">
-              <div class="kanban-head">
+              <div class="kanban-head" :title="s.desc" style="cursor:help">
                 <span class="dot" :style="'background:'+s.color"></span>
                 <span class="fw-700 fs-12" x-text="s.ico+' '+s.id"></span>
                 <span class="count" x-text="leadsDoEstagio(s.id).length"></span>
+                <span class="fs-12 text-3">ⓘ</span>
               </div>
               <template x-for="l in leadsDoEstagio(s.id)" :key="l.id">
                 <div class="kanban-card" @click="editarLead(l)">

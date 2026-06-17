@@ -25,14 +25,14 @@ function fmtCNPJ(raw) { return (raw || '').replace(/\D/g, '').replace(/^(\d{2})(
 
 /* ---------- CRM: pipeline padrão de agência (8 estágios) ---------- */
 const STAGES = [
-  { id: 'Novo',        ico: '🎯', color: '#6366f1' },
-  { id: 'Contatado',   ico: '📞', color: '#f59e0b' },
-  { id: 'Qualificado', ico: '⭐', color: '#8b5cf6' },
-  { id: 'Reunião',     ico: '🤝', color: '#0ea5e9' },
-  { id: 'Proposta',    ico: '📄', color: '#f97316' },
-  { id: 'Negociação',  ico: '💬', color: '#db2777' },
-  { id: 'Ganho',       ico: '🏆', color: '#16a34a' },
-  { id: 'Perdido',     ico: '✕',  color: '#dc2626' },
+  { id: 'Novo',        ico: '🎯', color: '#6366f1', desc: 'Lead recém-capturado, ainda sem nenhum contato.' },
+  { id: 'Contatado',   ico: '📞', color: '#f59e0b', desc: 'Primeiro contato já feito (mensagem, ligação ou e-mail).' },
+  { id: 'Qualificado', ico: '⭐', color: '#8b5cf6', desc: 'Tem fit: necessidade, orçamento e quem decide confirmados.' },
+  { id: 'Reunião',     ico: '🤝', color: '#0ea5e9', desc: 'Reunião ou diagnóstico agendado / realizado.' },
+  { id: 'Proposta',    ico: '📄', color: '#f97316', desc: 'Proposta comercial enviada, aguardando retorno.' },
+  { id: 'Negociação',  ico: '💬', color: '#db2777', desc: 'Ajustes finais de escopo, preço e condições.' },
+  { id: 'Ganho',       ico: '🏆', color: '#16a34a', desc: 'Fechou! O lead vira cliente ativo.' },
+  { id: 'Perdido',     ico: '✕',  color: '#dc2626', desc: 'Não avançou — registre o motivo pra aprender e melhorar.' },
 ];
 const SERVICOS = ['Redes Sociais', 'Campanhas ADS', 'Sites & Apps', 'Audiovisual', 'Branding', 'SEO / Growth', 'Marketing Político', 'Consultoria'];
 const ORIGENS = ['Instagram', 'Indicação', 'Google', 'WhatsApp', 'Prospecção ativa', 'Site', 'Evento', 'Outros'];
