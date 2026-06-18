@@ -54,6 +54,20 @@ const PROJ_STATUS = [
   { id: 'Concluído',    color: '#16a34a' },
 ];
 const FIN_CATEGORIAS = ['Mensalidade', 'Mídia/ADS', 'Projeto pontual', 'Salários', 'Ferramentas', 'Impostos', 'Infra', 'Outros'];
+// Orçamentos (propostas comerciais) — status do funil de proposta.
+const ORC_STATUS = [
+  { id: 'Rascunho', color: '#8a8ba3' },
+  { id: 'Enviado',  color: '#2563eb' },
+  { id: 'Aprovado', color: '#16a34a' },
+  { id: 'Recusado', color: '#dc2626' },
+];
+// Contratos — situação da vigência.
+const CONTR_STATUS = [
+  { id: 'Ativo',     color: '#16a34a' },
+  { id: 'Pausado',   color: '#f59e0b' },
+  { id: 'Encerrado', color: '#8a8ba3' },
+];
+const PERIODICIDADES = ['Mensal', 'Único', 'Trimestral', 'Anual'];
 // Redes que a Maracatu trabalha. score = nível de preenchimento/qualidade do perfil (0-100).
 const REDES = [
   { id: 'instagram', label: 'Instagram', slug: 'instagram', cor: 'E4405F' },
@@ -109,7 +123,8 @@ const docMerge = (arr) => (Array.isArray(arr) ? arr : []).map(d => ({ ...docVazi
 document.addEventListener('alpine:init', () => {
   Alpine.data('app', () => ({
     page: 'dashboard',
-    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, REDES, ADS, ITENS_CRED,
+    comOpen: true, // grupo "Comercial" (CRM + Clientes) aberto na barra lateral
+    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, REDES, ADS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
@@ -121,7 +136,7 @@ document.addEventListener('alpine:init', () => {
     secCli: 'empresa', // seção aberta no acordeão do modal de cliente
 
     // dados
-    clients: [], leads: [], proposals: [], finance: [], projects: [],
+    clients: [], leads: [], proposals: [], contracts: [], finance: [], projects: [],
 
     // modais
     modal: null, // 'lead' | 'client' | 'finance' | 'project'
@@ -140,6 +155,7 @@ document.addEventListener('alpine:init', () => {
       // CRM / financeiro / operacional ainda locais (migram numa próxima fase)
       this.leads     = MD.get('som_leads', []);
       this.proposals = MD.get('som_proposals', []);
+      this.contracts = MD.get('som_contracts', []);
       this.finance   = MD.get('som_finance', []);
       this.projects  = MD.get('som_projects', []);
       if (this.token) { this.carregarClientes(); this.carregarOnboardings(); }
@@ -576,6 +592,38 @@ document.addEventListener('alpine:init', () => {
     },
     moverProjeto(p, status) { p.status = status; if (status === 'Concluído') p.progresso = 100; this.persist('projects', this.projects); },
     excluirProjeto(p) { if (!confirm('Excluir o projeto ' + p.nome + '?')) return; this.projects = this.projects.filter(x => x.id !== p.id); this.persist('projects', this.projects); this.modal = null; },
+
+    // ───────────────── COMERCIAL: orçamentos (propostas) ─────────────────
+    // Numeração automática: ORC-AAAA-NNN / CT-AAAA-NNN (sequencial por ano).
+    proximoNumero(pref, arr) { const ano = MD.today().slice(0, 4); const n = (arr || []).filter(x => (x.numero || '').includes('-' + ano + '-')).length + 1; return pref + '-' + ano + '-' + String(n).padStart(3, '0'); },
+    get orcamentosFiltrados() { const q = this.busca.toLowerCase(); return [...this.proposals].sort((a, b) => (b.data || '').localeCompare(a.data || '')).filter(o => !q || ((o.numero || '') + ' ' + (o.cliente || '') + ' ' + (o.descricao || '')).toLowerCase().includes(q)); },
+    orcStatusInfo(s) { return ORC_STATUS.find(x => x.id === s) || ORC_STATUS[0]; },
+    novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', descricao: '', valor: 0, status: 'Rascunho', data: MD.today(), validade: '', observacoes: '' }; this.modal = 'orcamento'; },
+    editarOrcamento(o) { this.editing = { ...o }; this.modal = 'orcamento'; },
+    salvarOrcamento() {
+      const e = this.editing; if (!e.cliente && !e.descricao) return alert('Informe ao menos o cliente ou a descrição.');
+      if (e.id) { const i = this.proposals.findIndex(x => x.id === e.id); if (i > -1) this.proposals[i] = { ...e }; }
+      else { e.id = MD.uid(); this.proposals.unshift({ ...e }); }
+      this.persist('proposals', this.proposals); this.modal = null;
+    },
+    excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; this.proposals = this.proposals.filter(x => x.id !== o.id); this.persist('proposals', this.proposals); this.modal = null; },
+    // Cria um contrato já preenchido a partir de um orçamento.
+    gerarContrato(o) { this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || '', objeto: o.descricao || '', valor: +o.valor || 0, periodicidade: 'Mensal', inicio: MD.today(), meses: 12, status: 'Ativo', observacoes: 'Gerado a partir do orçamento ' + (o.numero || '') }; this.modal = 'contrato'; },
+
+    // ───────────────── COMERCIAL: contratos ─────────────────
+    get contratosFiltrados() { const q = this.busca.toLowerCase(); return [...this.contracts].sort((a, b) => (b.inicio || '').localeCompare(a.inicio || '')).filter(c => !q || ((c.numero || '') + ' ' + (c.cliente || '') + ' ' + (c.objeto || '')).toLowerCase().includes(q)); },
+    contrStatusInfo(s) { return CONTR_STATUS.find(x => x.id === s) || CONTR_STATUS[0]; },
+    // Data-fim = início + vigência (meses).
+    contrFim(c) { if (!c.inicio || !+c.meses) return ''; const d = new Date(c.inicio + 'T00:00:00'); d.setMonth(d.getMonth() + (+c.meses || 0)); return d.toISOString().slice(0, 10); },
+    novoContrato() { this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: '', objeto: '', valor: 0, periodicidade: 'Mensal', inicio: MD.today(), meses: 12, status: 'Ativo', observacoes: '' }; this.modal = 'contrato'; },
+    editarContrato(c) { this.editing = { ...c }; this.modal = 'contrato'; },
+    salvarContrato() {
+      const e = this.editing; if (!e.cliente && !e.objeto) return alert('Informe ao menos o cliente ou o objeto.');
+      if (e.id) { const i = this.contracts.findIndex(x => x.id === e.id); if (i > -1) this.contracts[i] = { ...e }; }
+      else { e.id = MD.uid(); this.contracts.unshift({ ...e }); }
+      this.persist('contracts', this.contracts); this.modal = null;
+    },
+    excluirContrato(c) { if (!confirm('Excluir o contrato ' + (c.numero || '') + '?')) return; this.contracts = this.contracts.filter(x => x.id !== c.id); this.persist('contracts', this.contracts); this.modal = null; },
 
     // converte lead Ganho → cliente
     async ganharLead(l) {
