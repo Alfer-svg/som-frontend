@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=29">
+  <link rel="stylesheet" href="css/styles.css?v=30">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -46,8 +46,8 @@
         <span class="nav-icon">📊</span><span>Dashboard</span>
       </div>
 
-      <!-- Comercial (grupo: CRM + Clientes) -->
-      <div class="nav-item" :class="(page==='crm'||page==='comercial')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM) e cadastro de clientes.">
+      <!-- Comercial (grupo: CRM + Orçamentos + Contratos) -->
+      <div class="nav-item" :class="(page==='crm'||page==='orcamentos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM), orçamentos e contratos.">
         <span class="nav-icon">💼</span>
         <span>Comercial</span>
         <span class="nav-caret" x-text="comOpen?'▾':'▸'"></span>
@@ -56,15 +56,17 @@
         <div class="nav-item nav-subitem" :class="page==='crm'?'active':''" @click="go('crm')" title="Funil de vendas — gerencie os leads do primeiro contato ao fechamento.">
           <span class="nav-icon">🎯</span><span>CRM</span>
         </div>
-        <div class="nav-item nav-subitem" :class="page==='comercial'?'active':''" @click="go('comercial')" title="Cadastro completo de clientes (CNPJ + CEP automáticos), serviços, redes e mensalidade.">
-          <span class="nav-icon">👥</span><span>Clientes</span>
-        </div>
         <div class="nav-item nav-subitem" :class="page==='orcamentos'?'active':''" @click="go('orcamentos')" title="Orçamentos e propostas comerciais enviadas aos clientes.">
           <span class="nav-icon">📄</span><span>Orçamentos</span>
         </div>
         <div class="nav-item nav-subitem" :class="page==='contratos'?'active':''" @click="go('contratos')" title="Contratos ativos e encerrados, com vigência e valor.">
           <span class="nav-icon">📝</span><span>Contratos</span>
         </div>
+      </div>
+
+      <!-- Clientes (top-level) -->
+      <div class="nav-item" :class="page==='comercial'?'active':''" @click="go('comercial')" title="Cadastro completo de clientes (CNPJ + CEP automáticos), serviços, redes e mensalidade.">
+        <span class="nav-icon">👥</span><span>Clientes</span>
       </div>
 
       <!-- Demais módulos -->
@@ -939,6 +941,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=29"></script>
+<script src="js/app.js?v=30"></script>
 </body>
 </html>
