@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=30">
+  <link rel="stylesheet" href="css/styles.css?v=32">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -206,16 +206,16 @@
         <template x-if="proposals.length===0"><div class="card empty">Nenhum orçamento ainda. Clique em “+ Orçamento” pra criar a primeira proposta.</div></template>
         <div class="card" x-show="proposals.length">
           <table class="table">
-            <thead><tr><th>Número</th><th>Cliente</th><th>Descrição</th><th>Data</th><th>Validade</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Número</th><th>Cliente</th><th>Projeto</th><th>Serviços</th><th>Data</th><th>Mensalidade</th><th>Status</th><th></th></tr></thead>
             <tbody>
               <template x-for="o in orcamentosFiltrados" :key="o.id">
                 <tr>
                   <td class="fw-700" x-text="o.numero||'—'"></td>
                   <td x-text="o.cliente||'—'"></td>
-                  <td class="fs-12 text-2" x-text="o.descricao||'—'"></td>
+                  <td class="fs-12 text-2" x-text="o.projeto||'—'"></td>
+                  <td class="fs-12 text-2" x-text="((o.servicos||[]).filter(s=>s.nome).length||0)+' serviço(s)'"></td>
                   <td class="fs-12 text-2" x-text="fmtDate(o.data)"></td>
-                  <td class="fs-12 text-2" x-text="o.validade?fmtDate(o.validade):'—'"></td>
-                  <td class="fw-700 text-green" x-text="fmtCur(o.valor)"></td>
+                  <td class="fw-700 text-green" x-text="fmtCur(orcTotal(o))+'/mês'"></td>
                   <td><span class="badge" :style="'background:'+orcStatusInfo(o.status).color+'22;color:'+orcStatusInfo(o.status).color" x-text="o.status"></span></td>
                   <td><button class="btn btn-ghost btn-sm" @click="editarOrcamento(o)">Editar</button></td>
                 </tr>
@@ -800,24 +800,45 @@
   </div>
 </div>
 
-<!-- ORÇAMENTO -->
+<!-- ORÇAMENTO / PROPOSTA -->
 <div class="modal-backdrop" x-show="modal==='orcamento'" @click.self="modal=null" x-cloak>
-  <div class="modal">
-    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Orçamento'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
-    <div class="modal-body grid grid-2" style="gap:14px">
-      <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="editing.numero"></div>
-      <div class="form-group"><label class="form-label">Valor (R$)</label><input class="form-input" type="number" x-model="editing.valor"></div>
-      <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
-      <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in ORC_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
-      <div class="form-group"><label class="form-label">Data</label><input class="form-input" type="date" x-model="editing.data"></div>
-      <div class="form-group"><label class="form-label">Validade</label><input class="form-input" type="date" x-model="editing.validade"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição / escopo</label><textarea class="form-textarea" x-model="editing.descricao" placeholder="O que está sendo proposto (serviços, entregas, condições)…"></textarea></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Observações</label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
+  <div class="modal" style="max-width:700px">
+    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Nova ')+'Proposta'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-body">
+      <div class="grid grid-2" style="gap:14px">
+        <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="editing.numero"></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in ORC_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">Projeto</label><input class="form-input" x-model="editing.projeto" placeholder="Ex.: Gestão de Redes + Tráfego"></div>
+        <div class="form-group"><label class="form-label">Contato</label><input class="form-input" x-model="editing.contato"></div>
+        <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" x-model="editing.email"></div>
+        <div class="form-group"><label class="form-label">Data</label><input class="form-input" type="date" x-model="editing.data"></div>
+        <div class="form-group"><label class="form-label">Validade (dias)</label><input class="form-input" type="number" min="0" x-model="editing.validade"></div>
+        <div class="form-group"><label class="form-label">Vigência (meses)</label><input class="form-input" type="number" min="1" x-model="editing.vigenciaMeses"></div>
+        <div class="form-group"><label class="form-label">Forma de pagamento</label><select class="form-select" x-model="editing.formaPagamento"><template x-for="p in FORMAS_PAGAMENTO"><option x-text="p"></option></template></select></div>
+      </div>
+      <label class="form-label" style="margin-top:16px;display:block">Serviços incluídos</label>
+      <template x-for="(s,i) in editing.servicos" :key="s.id">
+        <div class="card" style="padding:12px;margin-bottom:10px">
+          <div class="flex gap-2" style="align-items:flex-end">
+            <div class="form-group" style="flex:1"><label class="form-label">Serviço</label><input class="form-input" x-model="s.nome" list="serv-list"></div>
+            <div class="form-group" style="width:150px"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="s.valor"></div>
+            <button class="btn btn-icon btn-ghost" @click="removeServicoOrc(i)" title="Remover serviço">🗑️</button>
+          </div>
+          <div class="form-group" style="margin-top:8px"><label class="form-label">Escopo (1 item por linha)</label><textarea class="form-textarea" rows="3" x-model="s.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
+        </div>
+      </template>
+      <datalist id="serv-list"><template x-for="sv in SERVICOS"><option :value="sv"></option></template></datalist>
+      <div class="flex" style="justify-content:space-between;align-items:center;margin:6px 0 4px">
+        <button class="btn btn-ghost btn-sm" @click="addServicoOrc()">+ Serviço</button>
+        <div class="fw-700">Mensalidade total: <span class="text-green" x-text="fmtCur(orcTotal(editing))+'/mês'"></span></div>
+      </div>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">Observações</label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirOrcamento(editing)">Excluir</button>
       <button class="btn btn-ghost" x-show="editing.id" @click="imprimirDoc('orcamento', editing)" title="Gerar PDF / imprimir">🖨️ PDF</button>
-      <button class="btn btn-ghost" x-show="editing.id" @click="gerarContrato(editing)" title="Criar um contrato já preenchido a partir deste orçamento">→ Gerar contrato</button>
+      <button class="btn btn-ghost" x-show="editing.id" @click="gerarContrato(editing)" title="Criar um contrato a partir desta proposta">→ Gerar contrato</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarOrcamento()">Salvar</button>
     </div>
@@ -826,23 +847,38 @@
 
 <!-- CONTRATO -->
 <div class="modal-backdrop" x-show="modal==='contrato'" @click.self="modal=null" x-cloak>
-  <div class="modal">
+  <div class="modal" style="max-width:700px">
     <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Contrato'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
-    <div class="modal-body grid grid-2" style="gap:14px">
-      <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="editing.numero"></div>
-      <div class="form-group"><label class="form-label">Valor (R$)</label><input class="form-input" type="number" x-model="editing.valor"></div>
-      <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" list="cli-ct"><datalist id="cli-ct"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
-      <div class="form-group"><label class="form-label">Periodicidade</label><select class="form-select" x-model="editing.periodicidade"><template x-for="p in PERIODICIDADES"><option x-text="p"></option></template></select></div>
-      <div class="form-group"><label class="form-label">Início</label><input class="form-input" type="date" x-model="editing.inicio"></div>
-      <div class="form-group"><label class="form-label">Vigência (meses)</label><input class="form-input" type="number" min="0" x-model="editing.meses"></div>
-      <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in CONTR_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Objeto do contrato</label><textarea class="form-textarea" x-model="editing.objeto" placeholder="Serviços contratados e escopo…"></textarea></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Observações</label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
+    <div class="modal-body">
+      <div class="grid grid-2" style="gap:14px">
+        <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="editing.numero"></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in CONTR_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Cliente (CONTRATANTE)</label><input class="form-input" x-model="editing.cliente" list="cli-ct"><datalist id="cli-ct"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">CNPJ / CPF</label><input class="form-input" x-model="editing.documento"></div>
+        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Endereço da CONTRATANTE</label><input class="form-input" x-model="editing.endereco"></div>
+        <div class="form-group"><label class="form-label">Representante</label><input class="form-input" x-model="editing.representante"></div>
+        <div class="form-group"><label class="form-label">Projeto</label><input class="form-input" x-model="editing.projeto"></div>
+        <div class="form-group"><label class="form-label">Valor (R$)</label><input class="form-input" type="number" x-model="editing.valor"></div>
+        <div class="form-group"><label class="form-label">Periodicidade</label><select class="form-select" x-model="editing.periodicidade"><template x-for="p in PERIODICIDADES"><option x-text="p"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Início</label><input class="form-input" type="date" x-model="editing.inicio"></div>
+        <div class="form-group"><label class="form-label">Vigência (meses)</label><input class="form-input" type="number" min="1" x-model="editing.meses"></div>
+        <div class="form-group"><label class="form-label">Forma de pagamento</label><select class="form-select" x-model="editing.formaPagamento"><template x-for="p in FORMAS_PAGAMENTO"><option x-text="p"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Dia de vencimento</label><input class="form-input" type="number" min="1" max="28" x-model="editing.diaVencimento"></div>
+        <div class="form-group"><label class="form-label">Fidelidade (meses)</label><input class="form-input" type="number" min="0" x-model="editing.fidelidadeMeses"></div>
+        <div class="form-group"><label class="form-label">Multa rescisória (%)</label><input class="form-input" type="number" min="0" max="100" x-model="editing.multaPercentual"></div>
+        <div class="form-group"><label class="form-label">Índice de reajuste</label><input class="form-input" x-model="editing.indiceReajuste" placeholder="IPCA"></div>
+        <div class="form-group"><label class="form-label">Foro (comarca)</label><input class="form-input" x-model="editing.foro"></div>
+        <div class="form-group"><label class="form-label">Aprovação tácita (dias úteis)</label><input class="form-input" type="number" min="0" x-model="editing.aprovacaoDias"></div>
+        <div class="form-group"><label class="form-label">Suspende após atraso (dias)</label><input class="form-input" type="number" min="0" x-model="editing.suspensaoDias"></div>
+      </div>
+      <label class="flex gap-2" style="align-items:center;margin-top:12px;cursor:pointer"><input type="checkbox" x-model="editing.politico"> <span class="fs-13">Cliente eleitoral/político (inclui Anexo II — regras do TSE)</span></label>
+      <div class="form-group" style="margin-top:12px"><label class="form-label">Objeto / serviços contratados</label><textarea class="form-textarea" rows="4" x-model="editing.objeto" placeholder="1 item por linha…"></textarea></div>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">Observações</label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirContrato(editing)">Excluir</button>
       <button class="btn btn-ghost" x-show="editing.id" @click="imprimirDoc('contrato', editing)" title="Gerar PDF / imprimir">🖨️ PDF</button>
-      <button class="btn btn-ghost" x-show="editing.id" @click="lancarContratoFinanceiro(editing)" title="Lançar o valor no Financeiro como receita">💰 Lançar no Financeiro</button>
+      <button class="btn btn-ghost" x-show="editing.id" @click="lancarContratoFinanceiro(editing)" title="Gera todas as mensalidades do contrato no Financeiro (a receber)">→ Gerar Financeiro</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarContrato()">Salvar</button>
     </div>
@@ -941,6 +977,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=30"></script>
+<script src="js/app.js?v=32"></script>
 </body>
 </html>

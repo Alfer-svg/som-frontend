@@ -68,6 +68,18 @@ const CONTR_STATUS = [
   { id: 'Encerrado', color: '#8a8ba3' },
 ];
 const PERIODICIDADES = ['Mensal', 'Único', 'Trimestral', 'Anual'];
+const FORMAS_PAGAMENTO = ['Boleto', 'Pix', 'Cartão de crédito', 'Transferência/TED'];
+// Dados oficiais da agência (cabeçalho/rodapé de proposta e contrato).
+const EMPRESA = {
+  nome: 'Maracatu Digital Intelligence',
+  cnpj: '44.258.426/0001-15',
+  email: 'laura@maracatumktdigital.com',
+  fone: '(81) 99914-3099',
+  endereco: 'Av. A, 4165 – Torre 2, Sl 620 – Paiva, Cabo de Santo Agostinho – PE · CEP 54522-005',
+  cidade: 'Cabo de Santo Agostinho/PE',
+};
+// Texto institucional fixo da proposta (modelo Bella Napoli).
+const PROPOSTA_INTRO = 'É com satisfação que encaminhamos esta proposta comercial para a sua avaliação. A proposta foi elaborada segundo as melhores práticas profissionais, a fim de atender aos altos padrões de qualidade de serviço. As informações contidas neste documento são confidenciais e de propriedade da Maracatu Digital Intelligence.\n\nEm um mundo que vive quase 100% conectado, a Maracatu Digital Intelligence nasceu para tornar a sua presença on-line cada vez mais forte. Somos uma agência de marketing digital com foco em RESULTADOS. Unimos vibrações, ferramentas atuais, inteligência de mercado e muita criatividade para elevar o potencial do seu negócio.';
 // Redes que a Maracatu trabalha. score = nível de preenchimento/qualidade do perfil (0-100).
 const REDES = [
   { id: 'instagram', label: 'Instagram', slug: 'instagram', cor: 'E4405F' },
@@ -124,7 +136,7 @@ document.addEventListener('alpine:init', () => {
   Alpine.data('app', () => ({
     page: 'dashboard',
     comOpen: true, // grupo "Comercial" (CRM + Clientes) aberto na barra lateral
-    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, REDES, ADS, ITENS_CRED,
+    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, EMPRESA, REDES, ADS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
@@ -596,30 +608,49 @@ document.addEventListener('alpine:init', () => {
     // ───────────────── COMERCIAL: orçamentos (propostas) ─────────────────
     // Numeração automática: ORC-AAAA-NNN / CT-AAAA-NNN (sequencial por ano).
     proximoNumero(pref, arr) { const ano = MD.today().slice(0, 4); const n = (arr || []).filter(x => (x.numero || '').includes('-' + ano + '-')).length + 1; return pref + '-' + ano + '-' + String(n).padStart(3, '0'); },
-    get orcamentosFiltrados() { const q = this.busca.toLowerCase(); return [...this.proposals].sort((a, b) => (b.data || '').localeCompare(a.data || '')).filter(o => !q || ((o.numero || '') + ' ' + (o.cliente || '') + ' ' + (o.descricao || '')).toLowerCase().includes(q)); },
+    get orcamentosFiltrados() { const q = this.busca.toLowerCase(); return [...this.proposals].sort((a, b) => (b.data || '').localeCompare(a.data || '')).filter(o => !q || ((o.numero || '') + ' ' + (o.cliente || '') + ' ' + (o.projeto || '') + ' ' + (o.descricao || '')).toLowerCase().includes(q)); },
     orcStatusInfo(s) { return ORC_STATUS.find(x => x.id === s) || ORC_STATUS[0]; },
-    novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', descricao: '', valor: 0, status: 'Rascunho', data: MD.today(), validade: '', observacoes: '' }; this.modal = 'orcamento'; },
-    editarOrcamento(o) { this.editing = { ...o }; this.modal = 'orcamento'; },
+    // Total mensal = soma dos serviços (fallback no campo valor legado de orçamentos antigos).
+    orcTotal(o) { const s = o && o.servicos; if (Array.isArray(s) && s.length) return s.reduce((a, x) => a + (+x.valor || 0), 0); return +(o && o.valor) || 0; },
+    servicoVazio() { return { id: MD.uid(), nome: '', valor: 0, escopo: '' }; },
+    novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', contato: '', email: '', projeto: '', servicos: [this.servicoVazio()], vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, status: 'Rascunho', data: MD.today(), validade: 30, observacoes: '' }; this.modal = 'orcamento'; },
+    editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, validade: 30, ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, escopo: '', ...s })); this.modal = 'orcamento'; },
+    addServicoOrc() { if (!Array.isArray(this.editing.servicos)) this.editing.servicos = []; this.editing.servicos.push(this.servicoVazio()); },
+    removeServicoOrc(i) { this.editing.servicos.splice(i, 1); if (!this.editing.servicos.length) this.editing.servicos.push(this.servicoVazio()); },
+    // Preenche contato/e-mail a partir do cliente selecionado.
+    autoPreencherClienteOrc() { const c = this.clients.find(c => c.empresa === this.editing.cliente); if (c) { if (!this.editing.contato) this.editing.contato = c.contato || ''; if (!this.editing.email) this.editing.email = c.email || ''; } },
     salvarOrcamento() {
-      const e = this.editing; if (!e.cliente && !e.descricao) return alert('Informe ao menos o cliente ou a descrição.');
+      const e = this.editing; if (!e.cliente && !(e.servicos || []).some(s => s.nome)) return alert('Informe o cliente e ao menos um serviço.');
+      e.valor = this.orcTotal(e); // mantém o total no campo legado (Financeiro/contrato leem daqui)
       let saved;
       if (e.id) { const i = this.proposals.findIndex(x => x.id === e.id); if (i > -1) { this.proposals[i] = { ...e }; saved = this.proposals[i]; } }
       else { e.id = MD.uid(); saved = { ...e }; this.proposals.unshift(saved); }
       this.persist('proposals', this.proposals); this.modal = null;
-      // Ao APROVAR, oferece lançar no Financeiro (uma vez só — guarda financeId pra não duplicar).
       if (saved && saved.status === 'Aprovado' && !saved.financeId) this.lancarOrcamentoFinanceiro(saved);
     },
     excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; this.proposals = this.proposals.filter(x => x.id !== o.id); this.persist('proposals', this.proposals); this.modal = null; },
-    // Cria um contrato já preenchido a partir de um orçamento.
-    gerarContrato(o) { this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || '', objeto: o.descricao || '', valor: +o.valor || 0, periodicidade: 'Mensal', inicio: MD.today(), meses: 12, status: 'Ativo', observacoes: 'Gerado a partir do orçamento ' + (o.numero || '') }; this.modal = 'contrato'; },
+    // Validade como DATA (a partir de data + N dias) pra exibir no documento.
+    validadeData(o) { const dias = +o.validade || 0; const base = o.data ? new Date(o.data + 'T00:00:00') : new Date(); base.setDate(base.getDate() + dias); return base.toISOString().slice(0, 10); },
+    // Cronograma de cobranças: N parcelas mensais a partir da data, no valor total.
+    cronograma(o) {
+      const meses = +o.vigenciaMeses || 1; const total = this.orcTotal(o); const base = o.data ? new Date(o.data + 'T00:00:00') : new Date(); const out = [];
+      for (let i = 0; i < meses; i++) { const d = new Date(base.getTime()); d.setMonth(d.getMonth() + i); out.push({ n: i + 1, venc: d.toISOString().slice(0, 10), valor: total }); }
+      return out;
+    },
+    // Cria um CONTRATO completo já preenchido a partir de um orçamento.
+    gerarContrato(o) {
+      const serv = (o.servicos || []).map(s => '• ' + (s.nome || '') + (s.valor ? (' — ' + MD.fmtCur(s.valor) + '/mês') : '')).join('\n');
+      this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || '', documento: '', endereco: '', representante: o.contato || '', projeto: o.projeto || '', objeto: serv || o.descricao || '', servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: o.numero || '', status: 'Ativo', observacoes: '' };
+      this.modal = 'contrato';
+    },
 
     // ───────────────── COMERCIAL: contratos ─────────────────
     get contratosFiltrados() { const q = this.busca.toLowerCase(); return [...this.contracts].sort((a, b) => (b.inicio || '').localeCompare(a.inicio || '')).filter(c => !q || ((c.numero || '') + ' ' + (c.cliente || '') + ' ' + (c.objeto || '')).toLowerCase().includes(q)); },
     contrStatusInfo(s) { return CONTR_STATUS.find(x => x.id === s) || CONTR_STATUS[0]; },
     // Data-fim = início + vigência (meses).
     contrFim(c) { if (!c.inicio || !+c.meses) return ''; const d = new Date(c.inicio + 'T00:00:00'); d.setMonth(d.getMonth() + (+c.meses || 0)); return d.toISOString().slice(0, 10); },
-    novoContrato() { this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: '', objeto: '', valor: 0, periodicidade: 'Mensal', inicio: MD.today(), meses: 12, status: 'Ativo', observacoes: '' }; this.modal = 'contrato'; },
-    editarContrato(c) { this.editing = { ...c }; this.modal = 'contrato'; },
+    novoContrato() { this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: '', documento: '', endereco: '', representante: '', projeto: '', objeto: '', valor: 0, periodicidade: 'Mensal', formaPagamento: 'Boleto', diaVencimento: 5, inicio: MD.today(), meses: 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: '', status: 'Ativo', observacoes: '' }; this.modal = 'contrato'; },
+    editarContrato(c) { this.editing = { documento: '', endereco: '', representante: '', projeto: '', formaPagamento: 'Boleto', diaVencimento: 5, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: '', ...c }; this.modal = 'contrato'; },
     salvarContrato() {
       const e = this.editing; if (!e.cliente && !e.objeto) return alert('Informe ao menos o cliente ou o objeto.');
       if (e.id) { const i = this.contracts.findIndex(x => x.id === e.id); if (i > -1) this.contracts[i] = { ...e }; }
@@ -631,66 +662,150 @@ document.addEventListener('alpine:init', () => {
     // ── Lançar no Financeiro (orçamento aprovado / mensalidade de contrato) ──
     lancarOrcamentoFinanceiro(o, silent) {
       if (o.financeId && this.finance.some(f => f.id === o.financeId)) { if (!silent) alert('Esse orçamento já foi lançado no Financeiro.'); return; }
-      if (!silent && !confirm('Lançar ' + MD.fmtCur(o.valor) + ' no Financeiro como receita a receber?')) return;
-      const f = { id: MD.uid(), tipo: 'receita', descricao: 'Orçamento ' + (o.numero || '') + (o.cliente ? (' — ' + o.cliente) : ''), valor: +o.valor || 0, categoria: 'Projeto pontual', cliente: o.cliente || '', status: 'pendente', vencimento: o.validade || MD.today(), data: MD.today() };
+      const tot = this.orcTotal(o);
+      if (!silent && !confirm('Lançar ' + MD.fmtCur(tot) + ' no Financeiro como receita a receber?')) return;
+      const f = { id: MD.uid(), tipo: 'receita', descricao: 'Proposta ' + (o.numero || '') + (o.cliente ? (' — ' + o.cliente) : ''), valor: tot, categoria: 'Mensalidade', cliente: o.cliente || '', status: 'pendente', vencimento: this.validadeData(o), data: MD.today() };
       this.finance.unshift(f); this.persist('finance', this.finance);
       o.financeId = f.id; const i = this.proposals.findIndex(x => x.id === o.id); if (i > -1) { this.proposals[i] = { ...o }; this.persist('proposals', this.proposals); }
       if (!silent) alert('Lançado no Financeiro ✅');
     },
+    // Cronograma de cobranças do CONTRATO: parcelas conforme periodicidade × vigência,
+    // no dia de vencimento, valor = valor do contrato.
+    cronogramaContrato(c) {
+      const dia = Math.min(28, Math.max(1, +c.diaVencimento || 5)); const total = +c.valor || 0;
+      const step = c.periodicidade === 'Trimestral' ? 3 : c.periodicidade === 'Anual' ? 12 : 1; // Mensal = 1
+      const n = c.periodicidade === 'Único' ? 1 : Math.max(1, Math.ceil((+c.meses || 1) / step));
+      const base = c.inicio ? new Date(c.inicio + 'T00:00:00') : new Date(); const out = [];
+      for (let i = 0; i < n; i++) { const d = new Date(base.getFullYear(), base.getMonth() + i * step, dia); out.push({ n: i + 1, venc: d.toISOString().slice(0, 10), valor: total }); }
+      return out;
+    },
+    // Contrato GERA o Financeiro: cria todas as parcelas a receber (idempotente).
     lancarContratoFinanceiro(c) {
-      if (!confirm('Lançar ' + MD.fmtCur(c.valor) + (c.periodicidade === 'Mensal' ? ' (mensalidade)' : '') + ' no Financeiro como receita a receber?')) return;
-      const f = { id: MD.uid(), tipo: 'receita', descricao: 'Contrato ' + (c.numero || '') + (c.cliente ? (' — ' + c.cliente) : ''), valor: +c.valor || 0, categoria: c.periodicidade === 'Mensal' ? 'Mensalidade' : 'Projeto pontual', cliente: c.cliente || '', status: 'pendente', vencimento: c.inicio || MD.today(), data: MD.today() };
-      this.finance.unshift(f); this.persist('finance', this.finance);
-      alert('Lançado no Financeiro ✅');
+      if (!(+c.valor)) return alert('Defina o valor do contrato antes de gerar o Financeiro.');
+      if (c.financeLancado && !confirm('Este contrato já gerou lançamentos no Financeiro. Gerar de novo (pode duplicar)?')) return;
+      const sched = this.cronogramaContrato(c);
+      const cat = c.periodicidade === 'Mensal' ? 'Mensalidade' : 'Projeto pontual';
+      if (!confirm('Gerar ' + sched.length + ' lançamento(s) de ' + MD.fmtCur(c.valor) + ' no Financeiro a receber?')) return;
+      sched.forEach(p => this.finance.unshift({ id: MD.uid(), tipo: 'receita', descricao: 'Contrato ' + (c.numero || '') + (c.cliente ? (' — ' + c.cliente) : '') + (sched.length > 1 ? ' (' + p.n + '/' + sched.length + ')' : ''), valor: p.valor, categoria: cat, cliente: c.cliente || '', status: 'pendente', vencimento: p.venc, data: MD.today() }));
+      this.persist('finance', this.finance);
+      c.financeLancado = true; const i = this.contracts.findIndex(x => x.id === c.id); if (i > -1) { this.contracts[i] = { ...c }; this.persist('contracts', this.contracts); }
+      alert(sched.length + ' lançamento(s) gerado(s) no Financeiro ✅');
     },
 
-    // ── PDF / impressão (orçamento e contrato) — abre janela pronta pra "Salvar como PDF" ──
+    // ── PDF / impressão — abre janela pronta pra "Salvar como PDF" ──
     imprimirDoc(tipo, o) {
       const w = window.open('', '_blank');
       if (!w) { alert('Permita pop-ups neste site pra gerar o PDF.'); return; }
-      w.document.write(this._docHTML(tipo, o)); w.document.close(); w.focus();
+      const html = tipo === 'orcamento' ? this._propostaHTML(o) : this._contratoHTML(o);
+      w.document.write(html); w.document.close(); w.focus();
       setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
     },
-    _docHTML(tipo, o) {
-      const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
-      const isOrc = tipo === 'orcamento';
-      const titulo = isOrc ? 'ORÇAMENTO' : 'CONTRATO';
-      const rows = [];
-      if (isOrc) {
-        rows.push(['Data', MD.fmtDate(o.data)]);
-        if (o.validade) rows.push(['Validade', MD.fmtDate(o.validade)]);
-        rows.push(['Status', o.status || '—']);
-      } else {
-        rows.push(['Início', MD.fmtDate(o.inicio)]);
-        if (+o.meses) rows.push(['Vigência', o.meses + ' meses · até ' + MD.fmtDate(this.contrFim(o))]);
-        rows.push(['Periodicidade', o.periodicidade || '—']);
-        rows.push(['Status', o.status || '—']);
-      }
-      const rowsHTML = rows.map(r => `<div><span>${esc(r[0])}</span><span>${esc(r[1])}</span></div>`).join('');
-      const valorLabel = (!isOrc && o.periodicidade === 'Mensal') ? (MD.fmtCur(o.valor) + ' / mês') : MD.fmtCur(o.valor);
-      const corpo = esc(isOrc ? o.descricao : o.objeto) || '—';
-      const obs = o.observacoes ? `<h2>Observações</h2><div class="corpo">${esc(o.observacoes)}</div>` : '';
-      return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(titulo + ' ' + (o.numero || ''))}</title>
-<style>
-*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1a1a1a;margin:0;padding:40px;font-size:14px}
-.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #111;padding-bottom:16px}
-.brand{font-size:22px;font-weight:800;letter-spacing:.5px;line-height:1.1}.brand small{display:block;font-size:11px;font-weight:500;color:#666;letter-spacing:0;margin-top:3px}
-.doc-meta{text-align:right}.doc-type{font-size:12px;font-weight:700;color:#888;letter-spacing:2px}.doc-num{font-size:20px;font-weight:800}
-h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#888;margin:26px 0 6px}
-.cliente{font-size:18px;font-weight:700}
-.rows{margin:14px 0}.rows div{display:flex;padding:7px 0;border-bottom:1px solid #eee}.rows div span:first-child{width:160px;color:#666}
-.corpo{white-space:pre-wrap;line-height:1.55}
-.valor{margin-top:24px;background:#faf7e6;border:1px solid #f0e6a8;border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}.valor b{font-size:24px}
-.foot{margin-top:48px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:14px;text-align:center}
-@media print{body{padding:24px}}
-</style></head><body>
-<div class="head"><div class="brand">Maracatu Digital<small>Intelligence · Marketing Digital</small></div><div class="doc-meta"><div class="doc-type">${esc(titulo)}</div><div class="doc-num">${esc(o.numero || '')}</div></div></div>
-<h2>Cliente</h2><div class="cliente">${esc(o.cliente || '—')}</div>
-<div class="rows">${rowsHTML}</div>
-<h2>${isOrc ? 'Descrição / escopo' : 'Objeto do contrato'}</h2><div class="corpo">${corpo}</div>
-${obs}
-<div class="valor"><span>Valor${isOrc ? ' total' : ''}</span><b>${esc(valorLabel)}</b></div>
-<div class="foot">Maracatu Digital Intelligence · www.maracatumktdigital.com · +55 11 96624-9876 · Cabo de Santo Agostinho/PE &amp; Sorocaba/SP</div>
+    _esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); },
+    _cssDoc() {
+      return `*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1a1a1a;margin:0;padding:42px 46px;font-size:13px;line-height:1.5}
+.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #111;padding-bottom:14px}
+.brand{font-size:20px;font-weight:800;line-height:1.1}.brand small{display:block;font-size:10px;font-weight:500;color:#666;margin-top:3px;letter-spacing:.3px}
+.doc-meta{text-align:right}.doc-type{font-size:11px;font-weight:700;color:#888;letter-spacing:2px}.doc-num{font-size:19px;font-weight:800}.doc-meta div.sub{font-size:11px;color:#666;margin-top:2px}
+.empresa-line{font-size:10.5px;color:#777;margin-top:8px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;margin:24px 0 8px;border-bottom:1px solid #eee;padding-bottom:4px}
+.meta-cli{display:flex;flex-wrap:wrap;gap:4px 24px;margin:14px 0;font-size:13px}.meta-cli b{color:#444}
+.intro{white-space:pre-wrap;color:#333;text-align:justify}
+.serv{margin:10px 0;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.serv-head{display:flex;justify-content:space-between;font-weight:700;font-size:14px}
+.serv-val{color:#16a34a;white-space:nowrap}
+.serv ul{margin:6px 0 0;padding-left:18px;color:#555;font-size:12px}.serv li{margin:2px 0}
+.total{margin-top:14px;background:#faf7e6;border:1px solid #f0e6a8;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;font-weight:700}.total b{font-size:22px}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #eee}th{background:#f7f7f7;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:#888}
+.bloco{margin:10px 0}.bloco b{display:block;margin-bottom:2px}
+.clausula{margin:14px 0}.clausula h3{font-size:12.5px;margin:0 0 4px;color:#111}.clausula p{margin:3px 0;text-align:justify;color:#333}
+.assin{display:flex;justify-content:space-between;gap:40px;margin-top:54px}.assin div{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:11px}
+.foot{margin-top:40px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:12px;text-align:center}
+@media print{body{padding:24px}.serv,.clausula{break-inside:avoid}}`;
+    },
+    _docHead(tipo, num, subs) {
+      const e = this._esc;
+      const subsHTML = (subs || []).map(s => `<div class="sub">${e(s)}</div>`).join('');
+      return `<div class="head"><div><div class="brand">Maracatu Digital<small>INTELLIGENCE · Marketing Digital</small></div></div>
+<div class="doc-meta"><div class="doc-type">${e(tipo)}</div><div class="doc-num">Nº ${e(num)}</div>${subsHTML}</div></div>
+<div class="empresa-line">CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.email)} · ${e(EMPRESA.fone)}<br>${e(EMPRESA.endereco)}</div>`;
+    },
+    _docFoot() {
+      const e = this._esc;
+      return `<div class="foot">${e(EMPRESA.nome)} · CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.fone)} · ${e(EMPRESA.email)}</div>`;
+    },
+    // ===== PROPOSTA (modelo Bella Napoli) =====
+    _propostaHTML(o) {
+      const e = this._esc, total = this.orcTotal(o);
+      const servHTML = (o.servicos || []).filter(s => s.nome || s.valor).map((s, i) => {
+        const bullets = String(s.escopo || '').split('\n').map(x => x.replace(/^[-•\s]+/, '').trim()).filter(Boolean);
+        return `<div class="serv"><div class="serv-head"><span>${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(s.valor))}/mês</span></div>${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
+      }).join('');
+      const cron = this.cronograma(o).map(p => `<tr><td>${p.n}º mês — ${e(MD.fmtDate(p.venc))}</td><td>${e(MD.fmtCur(p.valor))}</td><td>${e(o.formaPagamento || 'Boleto')}</td></tr>`).join('');
+      const metaCli = [o.contato && `<span><b>Contato:</b> ${e(o.contato)}</span>`, o.email && `<span><b>E-mail:</b> ${e(o.email)}</span>`].filter(Boolean).join('');
+      return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Proposta ${e(o.numero)}</title><style>${this._cssDoc()}</style></head><body>
+${this._docHead('PROPOSTA', o.numero, ['Data: ' + MD.fmtDate(o.data), 'Validade: ' + (o.validade || 30) + ' dias'])}
+<div class="meta-cli"><span><b>Cliente:</b> ${e(o.cliente || '—')}</span>${metaCli}</div>
+${o.projeto ? `<div class="meta-cli"><span><b>Projeto:</b> ${e(o.projeto)}</span></div>` : ''}
+<h2>Introdução</h2><div class="intro">${e(PROPOSTA_INTRO)}</div>
+<h2>Serviços incluídos</h2>${servHTML || '<div class="intro">—</div>'}
+<div class="total"><span>MENSALIDADE TOTAL</span><b>${e(MD.fmtCur(total))}/mês</b></div>
+<h2>Vigência do contrato</h2><div class="bloco">${e(o.vigenciaMeses || 6)} meses via ${e(o.formaPagamento || 'Boleto')}</div>
+<h2>Cronograma de cobranças</h2><table><thead><tr><th>Competência / Vencimento</th><th>Mensalidade</th><th>Forma</th></tr></thead><tbody>${cron}</tbody></table>
+<h2>Considerações finais</h2>
+<div class="bloco"><b>Condições Comerciais</b>Os serviços serão remunerados por fee mensal, pelo período de vigência de ${e(o.vigenciaMeses || 6)} meses.</div>
+<div class="bloco"><b>Prazo e Rescisão</b>Início a partir da aceitação desta Proposta; vigência de ${e(o.vigenciaMeses || 6)} meses com renovação automática por iguais 6 meses. Rescisão a partir do 6º mês, com aviso prévio de 30 dias; antes do 6º mês, multa de 50% dos fees restantes.</div>
+<div class="bloco"><b>Reajuste</b>Reajuste automático após 12 meses, pela variação do IPCA.</div>
+<div class="bloco"><b>Validade da Proposta</b>Esta proposta é válida por ${e(o.validade || 30)} dias a partir da data de envio.</div>
+${o.observacoes ? `<div class="bloco"><b>Observações</b>${e(o.observacoes)}</div>` : ''}
+<div class="assin"><div>${e(EMPRESA.nome)}</div><div>${e(o.cliente || 'Cliente')}${o.contato ? '<br>' + e(o.contato) : ''}</div></div>
+${this._docFoot()}
+</body></html>`;
+    },
+    // ===== CONTRATO (prestação de serviços de marketing digital — modelo legal) =====
+    _contratoHTML(c) {
+      const e = this._esc;
+      const meses = +c.meses || 6, fid = +c.fidelidadeMeses || 6, multa = +c.multaPercentual || 50;
+      const aprov = +c.aprovacaoDias || 2, susp = +c.suspensaoDias || 10, idx = c.indiceReajuste || 'IPCA';
+      const foro = c.foro || EMPRESA.cidade, dia = +c.diaVencimento || 5;
+      const valorLabel = MD.fmtCur(c.valor) + (c.periodicidade === 'Mensal' ? '/mês' : '');
+      const objeto = String(c.objeto || '').split('\n').filter(Boolean).map(l => `<p>${e(l)}</p>`).join('') || '<p>Conforme Proposta Comercial.</p>';
+      const cl = (n, t, ps) => `<div class="clausula"><h3>CLÁUSULA ${n} — ${e(t)}</h3>${ps.map(p => `<p>${p}</p>`).join('')}</div>`;
+      const anexoPolitico = c.politico ? `${cl('ANEXO II', 'MARKETING POLÍTICO / ELEITORAL', [
+        'Aplica-se quando a CONTRATANTE for candidato(a), partido, federação ou comitê. Regido pela Lei 9.504/1997 e Resolução TSE nº 23.607/2019 e alterações.',
+        'Os serviços observarão integralmente a legislação eleitoral. <b>Todo pagamento à CONTRATADA será feito exclusivamente pela conta bancária específica de campanha</b>, e a verba de impulsionamento seguirá as regras e os limites de gastos do TSE para o cargo disputado.',
+        'A CONTRATADA fornecerá a documentação necessária à prestação de contas perante a Justiça Eleitoral. O impulsionamento ocorrerá apenas nas formas permitidas, por iniciativa e responsabilidade do candidato/partido.',
+        'A CONTRATANTE é a única responsável pelo conteúdo eleitoral, sua veracidade e a observância dos limites de gastos, respondendo por eventuais penalidades (ex.: multa de 100% sobre o excesso de gasto).',
+      ])}` : '';
+      return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Contrato ${e(c.numero)}</title><style>${this._cssDoc()}</style></head><body>
+${this._docHead('CONTRATO', c.numero, ['Início: ' + MD.fmtDate(c.inicio)])}
+<h2 style="text-align:center;border:0;color:#111;font-size:14px;margin-top:18px">Contrato de Prestação de Serviços de Marketing Digital</h2>
+<div class="bloco"><b>CONTRATADA:</b> ${e(EMPRESA.nome)}, CNPJ nº ${e(EMPRESA.cnpj)}, com sede em ${e(EMPRESA.endereco)}.</div>
+<div class="bloco"><b>CONTRATANTE:</b> ${e(c.cliente || '—')}${c.documento ? ', CNPJ/CPF nº ' + e(c.documento) : ''}${c.endereco ? ', com sede em ' + e(c.endereco) : ''}${c.representante ? ', neste ato representada por ' + e(c.representante) : ''}.</div>
+<p style="color:#333">As partes acima celebram o presente Contrato, que se regerá pelas cláusulas seguintes.</p>
+${cl('1', 'DO OBJETO', ['Prestação, pela CONTRATADA, dos serviços de marketing digital descritos na Proposta Comercial' + (c.propostaNumero ? ' nº ' + e(c.propostaNumero) : '') + ' (Anexo I), a saber:' + objeto])}
+${cl('2', 'DO ESCOPO E DAS ENTREGAS', ['O escopo, entregáveis e periodicidade são os do Anexo I (Proposta). Serviços não previstos serão objeto de orçamento e aditivo escrito. Os prazos correm a partir do recebimento das informações, materiais, aprovações e acessos sob responsabilidade da CONTRATANTE.'])}
+${cl('3', 'DA NATUREZA DA OBRIGAÇÃO', ['Os serviços constituem <b>obrigação de meio, e não de resultado</b>. A CONTRATADA empregará as melhores práticas, <b>não garantindo</b> resultados específicos (vendas, faturamento, seguidores, leads, posições, alcance ou conversões), que dependem de fatores alheios ao seu controle.'])}
+${cl('4', 'DAS OBRIGAÇÕES DA CONTRATADA', ['Executar os serviços com zelo e técnica nos prazos acordados; informar por relatórios periódicos; manter sigilo (Cláusula 13); tratar dados conforme a LGPD (Cláusula 14); submeter peças à aprovação prévia quando aplicável.'])}
+${cl('5', 'DAS OBRIGAÇÕES DA CONTRATANTE', ['Fornecer em tempo hábil informações, materiais, acessos e aprovações; <b>responsabilizar-se pela veracidade, legalidade e titularidade</b> do material que fornecer; aprovar peças nos prazos da Cláusula 6; efetuar os pagamentos; arcar com a verba de mídia (Cláusula 7).'])}
+${cl('6', 'DA APROVAÇÃO DE MATERIAIS', ['As peças que exijam aprovação serão submetidas à CONTRATANTE, que deverá se manifestar em até ' + aprov + ' dias úteis. O silêncio por esse prazo implica <b>aprovação tácita</b>, autorizando a veiculação.'])}
+${cl('7', 'DA VERBA DE MÍDIA (TRÁFEGO PAGO)', ['A remuneração da gestão de tráfego pago <b>não inclui</b> a verba de mídia, custeada pela CONTRATANTE e paga diretamente às plataformas ou reembolsada mediante comprovação. A CONTRATADA não responde por suspensão/bloqueio de contas ou anúncios decorrentes das políticas das plataformas, nem por oscilações de custo de mídia.'])}
+${cl('8', 'DO PREÇO E PAGAMENTO', ['Pela prestação dos serviços, a CONTRATANTE pagará <b>' + e(valorLabel) + '</b>, conforme o cronograma do Anexo I, via ' + e(c.formaPagamento || 'Boleto') + ', com vencimento no dia ' + dia + ' de cada competência. O atraso sujeita a CONTRATANTE a multa de 2%, juros de 1% ao mês e correção, podendo os serviços ser suspensos após ' + susp + ' dias de inadimplência.'])}
+${cl('9', 'DO REAJUSTE', ['Os valores serão reajustados anualmente, a cada 12 meses, pela variação do ' + e(idx) + ' acumulado (ou índice que o substitua).'])}
+${cl('10', 'DA VIGÊNCIA', ['Vigência de <b>' + meses + ' meses</b> a partir da assinatura, <b>renovando-se automaticamente por períodos sucessivos de 6 meses</b>, salvo manifestação em contrário com a antecedência da Cláusula 11. A vigência total não excederá 4 anos (art. 598, CC), renovável por novo ajuste.'])}
+${cl('11', 'DA RESCISÃO E DA MULTA', ['Qualquer parte poderá rescindir mediante aviso prévio escrito de no mínimo 30 dias. A rescisão imotivada pela CONTRATANTE antes do ' + fid + 'º mês sujeita-a a multa de ' + multa + '% sobre as mensalidades remanescentes do período de fidelidade. A rescisão por inadimplemento não sanado em 10 dias após notificação independe de multa, respondendo a parte inadimplente por perdas e danos. A rescisão não desobriga do pagamento dos serviços já prestados.'])}
+${cl('12', 'DA PROPRIEDADE INTELECTUAL', ['Os direitos patrimoniais sobre as peças aprovadas e <b>efetivamente pagas</b> são cedidos à CONTRATANTE para os usos contratados, a partir da quitação. Os direitos morais do autor são inalienáveis (Lei 9.610/1998). Enquanto houver valores em aberto, os materiais permanecem da CONTRATADA. A CONTRATADA poderá usar as peças em seu portfólio, salvo vedação escrita. Em sites/sistemas, transfere-se a licença de uso do produto final; código-base e ferramentas proprietárias permanecem da CONTRATADA; itens de terceiros seguem suas licenças.'])}
+${cl('13', 'DA CONFIDENCIALIDADE', ['As partes manterão sigilo sobre informações confidenciais, não as divulgando sem autorização escrita. A obrigação estende-se a sócios, empregados e subcontratados e subsiste por 5 anos após o término.'])}
+${cl('14', 'DA PROTEÇÃO DE DADOS (LGPD)', ['No tratamento de dados pessoais para execução deste Contrato, a CONTRATANTE atua como <b>CONTROLADORA</b> e a CONTRATADA como <b>OPERADORA</b> (art. 5º, VI e VII, Lei 13.709/2018), tratando os dados conforme as instruções e finalidades da CONTRATANTE. A CONTRATADA adotará medidas de segurança, manterá sigilo, comunicará incidentes sem demora, auxiliará no atendimento aos direitos dos titulares e eliminará/devolverá os dados ao término. Poderá utilizar suboperadores necessários (ex.: Google, Meta, hospedagem), garantindo proteção equivalente.'])}
+${cl('15', 'DA RESPONSABILIDADE PELO CONTEÚDO', ['A CONTRATANTE responde pela veracidade e legalidade das informações e produtos anunciados; a CONTRATADA observará a autorregulamentação publicitária (CONAR) e a legislação aplicável. Quem der causa a violação de direitos de terceiros responderá perante o prejudicado e ressarcirá a outra parte.'])}
+${cl('16', 'DA LIMITAÇÃO DE RESPONSABILIDADE', ['Salvo dolo ou culpa grave, a responsabilidade da CONTRATADA por perdas e danos limita-se ao valor dos serviços pagos nos 3 meses anteriores ao evento, excluídos lucros cessantes e danos indiretos.'])}
+${cl('17', 'DAS DISPOSIÇÕES GERAIS', ['As partes são independentes, sem vínculo societário ou trabalhista. A tolerância não importa novação. Caso fortuito e força maior excluem responsabilidade pelo período do impedimento. As comunicações usarão os contatos da qualificação/Proposta. As partes reconhecem a validade da assinatura eletrônica (MP 2.200-2/2001 e Lei 14.063/2020).'])}
+${cl('18', 'DO FORO', ['Fica eleito o foro da Comarca de ' + e(foro) + ' para dirimir as questões deste Contrato, com renúncia a qualquer outro.'])}
+${c.observacoes ? `<div class="bloco"><b>Observações</b>${e(c.observacoes)}</div>` : ''}
+<p style="margin-top:18px;color:#333">E por estarem assim justas e contratadas, firmam o presente em via eletrônica. ${e(EMPRESA.cidade)}, ${MD.fmtDate(c.inicio)}.</p>
+<div class="assin"><div>${e(EMPRESA.nome)}<br>CONTRATADA</div><div>${e(c.cliente || 'Cliente')}<br>CONTRATANTE</div></div>
+<div class="assin" style="margin-top:36px"><div>Testemunha 1 — CPF:</div><div>Testemunha 2 — CPF:</div></div>
+${anexoPolitico}
+${this._docFoot()}
 </body></html>`;
     },
 
