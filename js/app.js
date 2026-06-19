@@ -807,6 +807,7 @@ ${o.projeto ? `<div class="meta-cli"><span><b>Projeto:</b> ${e(o.projeto)}</span
 <h2>Introdução</h2><div class="intro">${e(PROPOSTA_INTRO)}</div>
 <h2>Serviços incluídos</h2>${servHTML || '<div class="intro">—</div>'}
 <div class="total"><span>MENSALIDADE TOTAL</span><b>${e(MD.fmtCur(total))}/mês</b></div>
+<div style="font-size:12px;color:#777;font-style:italic;margin:8px 2px 2px;line-height:1.5">Os valores sugeridos nesta proposta, incluindo a verba de investimento em mídia, foram definidos a partir de uma análise prévia do perfil e dos objetivos do cliente, podendo ser ajustados em conjunto conforme a estratégia acordada.</div>
 <h2>Vigência do contrato</h2><div class="bloco">${e(o.vigenciaMeses || 6)} meses via ${e(o.formaPagamento || 'Boleto')}</div>
 <h2>Cronograma de cobranças</h2><table><thead><tr><th>Competência / Vencimento</th><th>Mensalidade</th><th>Forma</th></tr></thead><tbody>${cron}</tbody></table>
 <h2>Considerações finais</h2>
