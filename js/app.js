@@ -669,7 +669,8 @@ document.addEventListener('alpine:init', () => {
       const html = this._propostaHTML({ ...o, modoAssinatura: 'digital' });
       try {
         const r = await this.api('POST', '/propostas', { numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), html, dados: o });
-        const link = location.origin.replace(/\/+$/, '') + '/proposta.html?t=' + r.token;
+        // Resolve relativo à página atual (funciona em subpasta do GitHub Pages e em localhost).
+        const link = new URL('proposta.html?t=' + r.token, location.href).href;
         this.propostaEnvio = { numero: o.numero, cliente: o.cliente || '', email: o.email || '', link };
         this.modal = 'propostaEnvio';
       } catch (e) { alert('Erro ao criar a proposta digital: ' + (e.message || e)); }
