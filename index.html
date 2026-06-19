@@ -851,6 +851,17 @@
             <div class="form-group" style="width:150px"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="s.valor"></div>
             <button class="btn btn-icon btn-ghost" @click="removeServicoOrc(i)" title="Remover serviço">🗑️</button>
           </div>
+          <div class="form-group" x-show="Array.isArray(s.redes)" style="margin-top:8px">
+            <label class="form-label">Redes incluídas</label>
+            <div class="flex" style="flex-wrap:wrap;gap:8px">
+              <template x-for="r in REDES" :key="r.id">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:5px 9px;border:1px solid var(--border,#e2e2e2);border-radius:8px" :style="(s.redes||[]).includes(r.id)?'border-color:#111;background:#1110':''">
+                  <input type="checkbox" :checked="(s.redes||[]).includes(r.id)" @change="toggleRede(s, r.id)">
+                  <img :src="redeIcon(r)" width="15" height="15" :alt="r.label"><span x-text="r.label"></span>
+                </label>
+              </template>
+            </div>
+          </div>
           <div class="form-group" style="margin-top:8px"><label class="form-label">Escopo (1 item por linha)</label><textarea class="form-textarea" rows="3" x-model="s.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
         </div>
       </template>
@@ -880,6 +891,17 @@
         <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do serviço</label><input class="form-input" x-model="editing.nome" placeholder="Ex.: Gestão de Redes Sociais"></div>
         <div class="form-group"><label class="form-label">Categoria</label><input class="form-input" x-model="editing.categoria" placeholder="Ex.: Social Media" list="cat-list"><datalist id="cat-list"><template x-for="c in [...new Set(catalogo.map(x=>x.categoria).filter(Boolean))]"><option :value="c"></option></template></datalist></div>
         <div class="form-group"><label class="form-label">Valor padrão (R$/mês)</label><input class="form-input" type="number" min="0" x-model="editing.valor"></div>
+      </div>
+      <div class="form-group" style="margin-top:10px">
+        <label class="form-label">Redes sociais incluídas (opcional)</label>
+        <div class="flex" style="flex-wrap:wrap;gap:8px">
+          <template x-for="r in REDES" :key="r.id">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;border:1px solid var(--border,#e2e2e2);border-radius:8px" :style="(editing.redes||[]).includes(r.id)?'border-color:#111;background:#1110':''">
+              <input type="checkbox" :checked="(editing.redes||[]).includes(r.id)" @change="toggleRede(editing, r.id)">
+              <img :src="redeIcon(r)" width="16" height="16" :alt="r.label"><span x-text="r.label"></span>
+            </label>
+          </template>
+        </div>
       </div>
       <div class="form-group" style="margin-top:10px"><label class="form-label">Escopo padrão (1 item por linha)</label><textarea class="form-textarea" rows="5" x-model="editing.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
     </div>

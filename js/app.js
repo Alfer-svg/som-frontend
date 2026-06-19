@@ -92,6 +92,25 @@ const REDES = [
 // URL do logo oficial da rede (Simple Icons), colorido pela marca.
 const redeIcon = (r) => `https://cdn.simpleicons.org/${r.slug}/${r.cor}`;
 
+// Catálogo inicial de serviços (semeado 1x se o catálogo estiver vazio). Valor em
+// branco — o usuário define por proposta. O serviço de redes já vem com o box de redes.
+const CATALOGO_SEED = [
+  { nome: 'Gestão de Redes Sociais', categoria: 'Social Media', valor: 0, redes: ['instagram', 'facebook', 'tiktok'],
+    escopo: 'Planejamento de conteúdo mensal\n12 a 16 criativos por mês (feed + stories)\nCopywriting e legendas\nAgendamento e publicação\nInteração e gestão de comentários e direct\nRelatório mensal de performance' },
+  { nome: 'Gestão de Tráfego Pago (Ads)', categoria: 'Tráfego Pago', valor: 0,
+    escopo: 'Estruturação de campanhas (Meta Ads e Google Ads)\nDefinição de público e segmentação\nCriação e otimização de anúncios\nAcompanhamento e otimização contínua\nGestão da verba de impulsionamento (à parte)\nRelatório mensal de resultados (CPL, ROAS)' },
+  { nome: 'Captação Audiovisual', categoria: 'Produção', valor: 0,
+    escopo: 'Diária de gravação com equipe\nCaptação de fotos e vídeos\nEdição e tratamento do material\nEntrega de Reels e cortes para as redes\nDeslocamento e diárias extras à parte' },
+  { nome: 'Criação de Sites', categoria: 'Web', valor: 0,
+    escopo: 'Site institucional responsivo\nLayout personalizado da marca\nOtimização básica de SEO\nIntegração com WhatsApp e formulários\nHospedagem e domínio à parte (1º ano)\nTreinamento de uso' },
+  { nome: 'Assessoria Digital — Campanha Eleitoral', categoria: 'Político', valor: 0,
+    escopo: 'Estratégia digital da campanha\nGestão de redes e conteúdo do candidato\nTráfego pago dentro das regras do TSE\nMonitoramento e gestão de crise\nRelatórios conforme a legislação eleitoral\nPagamento pela conta de campanha e impulsionamento nos limites do TSE' },
+  { nome: 'Branding — Identidade Visual', categoria: 'Design', valor: 0,
+    escopo: 'Briefing e pesquisa de referências\nCriação de logotipo (versões principal e secundária)\nPaleta de cores e tipografia\nManual de marca (brandbook)\nAplicações (papelaria, redes e assinaturas)' },
+  { nome: 'Outros', categoria: 'Outros', valor: 0,
+    escopo: 'Serviço personalizado — descrever o escopo na proposta' },
+];
+
 // Plataformas de tráfego pago (mesmo padrão de logo das redes).
 const ADS = [
   { id: 'google', label: 'Google Ads', slug: 'googleads', cor: '4285F4' },
@@ -171,6 +190,11 @@ document.addEventListener('alpine:init', () => {
       this.finance   = MD.get('som_finance', []);
       this.projects  = MD.get('som_projects', []);
       this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento
+      if (this.catalogo.length === 0 && !localStorage.getItem('som_catalogo_seeded')) {
+        this.catalogo = CATALOGO_SEED.map(s => ({ id: MD.uid(), ...s }));
+        this.persist('catalogo', this.catalogo);
+        localStorage.setItem('som_catalogo_seeded', '1'); // não re-semeia se o usuário apagar tudo
+      }
       if (this.token) { this.carregarClientes(); this.carregarOnboardings(); }
     },
 
@@ -647,8 +671,11 @@ document.addEventListener('alpine:init', () => {
 
     // ───────────────── COMERCIAL: catálogo de serviços ─────────────────
     get catalogoFiltrado() { const q = this.busca.toLowerCase(); return [...this.catalogo].sort((a, b) => (a.nome || '').localeCompare(b.nome || '')).filter(s => !q || ((s.nome || '') + ' ' + (s.categoria || '') + ' ' + (s.escopo || '')).toLowerCase().includes(q)); },
-    novoServico() { this.editing = { id: '', nome: '', categoria: '', valor: 0, escopo: '' }; this.modal = 'servico'; },
-    editarServico(s) { this.editing = { categoria: '', escopo: '', ...s }; this.modal = 'servico'; },
+    novoServico() { this.editing = { id: '', nome: '', categoria: '', valor: 0, escopo: '', redes: [] }; this.modal = 'servico'; },
+    editarServico(s) { this.editing = { categoria: '', escopo: '', redes: [], ...s }; if (!Array.isArray(this.editing.redes)) this.editing.redes = []; this.modal = 'servico'; },
+    // Marca/desmarca uma rede social no objeto (item do catálogo ou linha do orçamento).
+    toggleRede(obj, id) { if (!Array.isArray(obj.redes)) obj.redes = []; const i = obj.redes.indexOf(id); if (i > -1) obj.redes.splice(i, 1); else obj.redes.push(id); },
+    redesLabel(ids) { return (ids || []).map(id => { const r = REDES.find(x => x.id === id); return r ? r.label : id; }).join(', '); },
     salvarServico() {
       const e = this.editing; if (!e.nome || !e.nome.trim()) return alert('Informe o nome do serviço.');
       e.valor = +e.valor || 0;
@@ -658,7 +685,7 @@ document.addEventListener('alpine:init', () => {
     },
     excluirServico(s) { if (!confirm('Excluir o serviço "' + (s.nome || '') + '" do catálogo?')) return; this.catalogo = this.catalogo.filter(x => x.id !== s.id); this.persist('catalogo', this.catalogo); this.modal = null; },
     // No orçamento: aplica um item do catálogo na linha de serviço (preenche nome, valor e escopo).
-    aplicarCatalogo(s, id) { const it = this.catalogo.find(x => x.id === id); if (!it) return; s.nome = it.nome; s.valor = +it.valor || 0; if (it.escopo) s.escopo = it.escopo; },
+    aplicarCatalogo(s, id) { const it = this.catalogo.find(x => x.id === id); if (!it) return; s.nome = it.nome; s.valor = +it.valor || 0; if (it.escopo) s.escopo = it.escopo; if (Array.isArray(it.redes) && it.redes.length) s.redes = [...it.redes]; },
 
     // ───────────────── COMERCIAL: contratos ─────────────────
     get contratosFiltrados() { const q = this.busca.toLowerCase(); return [...this.contracts].sort((a, b) => (b.inicio || '').localeCompare(a.inicio || '')).filter(c => !q || ((c.numero || '') + ' ' + (c.cliente || '') + ' ' + (c.objeto || '')).toLowerCase().includes(q)); },
@@ -754,7 +781,8 @@ table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}th,td{te
       const e = this._esc, total = this.orcTotal(o);
       const servHTML = (o.servicos || []).filter(s => s.nome || s.valor).map((s, i) => {
         const bullets = String(s.escopo || '').split('\n').map(x => x.replace(/^[-•\s]+/, '').trim()).filter(Boolean);
-        return `<div class="serv"><div class="serv-head"><span>${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(s.valor))}/mês</span></div>${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
+        const redes = (Array.isArray(s.redes) && s.redes.length) ? `<div style="font-size:13px;color:#555;margin:2px 0 6px"><b>Redes:</b> ${e(this.redesLabel(s.redes))}</div>` : '';
+        return `<div class="serv"><div class="serv-head"><span>${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(s.valor))}/mês</span></div>${redes}${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
       }).join('');
       const cron = this.cronograma(o).map(p => `<tr><td>${p.n}º mês — ${e(MD.fmtDate(p.venc))}</td><td>${e(MD.fmtCur(p.valor))}</td><td>${e(o.formaPagamento || 'Boleto')}</td></tr>`).join('');
       const metaCli = [o.contato && `<span><b>Contato:</b> ${e(o.contato)}</span>`, o.email && `<span><b>E-mail:</b> ${e(o.email)}</span>`].filter(Boolean).join('');
