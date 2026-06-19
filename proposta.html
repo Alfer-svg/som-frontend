@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proposta — Maracatu Digital</title>
+</head>
+<body style="margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif">
+  <div id="status" style="padding:48px 24px;text-align:center;color:#666">Carregando proposta…</div>
+  <script>
+    const API = 'https://som-backend-production-01d8.up.railway.app/api';
+    const token = new URLSearchParams(location.search).get('t');
+    const elStatus = document.getElementById('status');
+    const erro = (m) => { elStatus.innerHTML = '<div style="max-width:420px;margin:0 auto"><h2 style="color:#141414">Ops…</h2><p>' + m + '</p></div>'; };
+
+    (async () => {
+      if (!token) return erro('Link inválido — token ausente.');
+      let d;
+      try {
+        const r = await fetch(API + '/public/propostas/' + encodeURIComponent(token));
+        if (!r.ok) throw new Error('not ok');
+        d = await r.json();
+      } catch (e) { return erro('Proposta não encontrada ou link expirado.'); }
+
+      // Script que conecta o botão "Estou de acordo" ao registro de aceite.
+      const aceiteScript = '<scr' + 'ipt>(function(){' +
+        'var TOKEN=' + JSON.stringify(token) + ', API=' + JSON.stringify(API) + ', JA=' + (d.status === 'ACEITA' ? 'true' : 'false') + ';' +
+        'var btn=document.getElementById("btn-aceite"); if(!btn) return;' +
+        'function aceito(){ btn.textContent="\\u2714 Proposta aceita \\u2014 obrigado!"; btn.disabled=true; btn.style.opacity=.7; btn.style.cursor="default"; }' +
+        'if(JA){ aceito(); return; }' +
+        'btn.addEventListener("click", async function(){' +
+        '  if(!confirm("Confirmar que voc\\u00ea est\\u00e1 de acordo com esta proposta?")) return;' +
+        '  btn.disabled=true; var old=btn.textContent; btn.textContent="Enviando\\u2026";' +
+        '  try{ var r=await fetch(API+"/public/propostas/"+TOKEN+"/aceitar",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"}); if(!r.ok) throw 0; aceito(); alert("Proposta aceita! Em breve voc\\u00ea recebe o contrato para assinatura."); }' +
+        '  catch(e){ btn.disabled=false; btn.textContent=old; alert("N\\u00e3o foi poss\\u00edvel registrar agora. Tente novamente."); }' +
+        '});' +
+        '})();</scr' + 'ipt>';
+
+      const html = String(d.html).replace('</body>', aceiteScript + '</body>');
+      document.open(); document.write(html); document.close();
+    })();
+  </script>
+</body>
+</html>

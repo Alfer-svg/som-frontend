@@ -177,6 +177,7 @@ document.addEventListener('alpine:init', () => {
 
     // dados
     clients: [], leads: [], proposals: [], contracts: [], finance: [], projects: [], catalogo: [],
+    propostaEnvio: null,
 
     // modais
     modal: null, // 'lead' | 'client' | 'finance' | 'project'
@@ -647,8 +648,8 @@ document.addEventListener('alpine:init', () => {
     // Total mensal = soma dos serviços (fallback no campo valor legado de orçamentos antigos).
     orcTotal(o) { const s = o && o.servicos; if (Array.isArray(s) && s.length) return s.reduce((a, x) => a + (+x.valor || 0), 0); return +(o && o.valor) || 0; },
     servicoVazio() { return { id: MD.uid(), nome: '', valor: 0, escopo: '' }; },
-    novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', contato: '', email: '', projeto: '', servicos: [this.servicoVazio()], vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, status: 'Rascunho', data: MD.today(), validade: 30, observacoes: '' }; this.modal = 'orcamento'; },
-    editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, validade: 30, ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, escopo: '', ...s })); this.modal = 'orcamento'; },
+    novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', contato: '', email: '', projeto: '', servicos: [this.servicoVazio()], vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, status: 'Rascunho', data: MD.today(), validade: 30, observacoes: '', modoAssinatura: 'presencial' }; this.modal = 'orcamento'; },
+    editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, validade: 30, modoAssinatura: 'presencial', ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, escopo: '', ...s })); this.modal = 'orcamento'; },
     addServicoOrc() { if (!Array.isArray(this.editing.servicos)) this.editing.servicos = []; this.editing.servicos.push(this.servicoVazio()); },
     removeServicoOrc(i) { this.editing.servicos.splice(i, 1); if (!this.editing.servicos.length) this.editing.servicos.push(this.servicoVazio()); },
     // Preenche contato/e-mail a partir do cliente selecionado.
@@ -663,6 +664,17 @@ document.addEventListener('alpine:init', () => {
       if (saved && saved.status === 'Aprovado' && !saved.financeId) this.lancarOrcamentoFinanceiro(saved);
     },
     excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; this.proposals = this.proposals.filter(x => x.id !== o.id); this.persist('proposals', this.proposals); this.modal = null; },
+    // Cria a proposta DIGITAL no backend (link público) e abre as opções de envio.
+    async enviarPropostaDigital(o) {
+      const html = this._propostaHTML({ ...o, modoAssinatura: 'digital' });
+      try {
+        const r = await this.api('POST', '/propostas', { numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), html, dados: o });
+        const link = location.origin.replace(/\/+$/, '') + '/proposta.html?t=' + r.token;
+        this.propostaEnvio = { numero: o.numero, cliente: o.cliente || '', email: o.email || '', link };
+        this.modal = 'propostaEnvio';
+      } catch (e) { alert('Erro ao criar a proposta digital: ' + (e.message || e)); }
+    },
+    copiarLink(txt) { navigator.clipboard?.writeText(txt).then(() => alert('Link copiado!')).catch(() => prompt('Copie o link:', txt)); },
     // Validade como DATA (a partir de data + N dias) pra exibir no documento.
     validadeData(o) { const dias = +o.validade || 0; const base = o.data ? new Date(o.data + 'T00:00:00') : new Date(); base.setDate(base.getDate() + dias); return base.toISOString().slice(0, 10); },
     // Cronograma de cobranças: N parcelas mensais a partir da data, no valor total.
@@ -760,60 +772,87 @@ document.addEventListener('alpine:init', () => {
     },
     _esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); },
     _cssDoc() {
-      return `*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1a1a1a;margin:0;padding:42px 46px;font-size:13px;line-height:1.5}
-.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #111;padding-bottom:14px}
-.brand{font-size:20px;font-weight:800;line-height:1.1}.brand small{display:block;font-size:10px;font-weight:500;color:#666;margin-top:3px;letter-spacing:.3px}
-.doc-meta{text-align:right}.doc-type{font-size:11px;font-weight:700;color:#888;letter-spacing:2px}.doc-num{font-size:19px;font-weight:800}.doc-meta div.sub{font-size:11px;color:#666;margin-top:2px}
-.empresa-line{font-size:10.5px;color:#777;margin-top:8px}
-h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;margin:24px 0 8px;border-bottom:1px solid #eee;padding-bottom:4px}
-.meta-cli{display:flex;flex-wrap:wrap;gap:4px 24px;margin:14px 0;font-size:13px}.meta-cli b{color:#444}
-.intro{white-space:pre-wrap;color:#333;text-align:justify}
-.serv{margin:10px 0;padding:10px 0;border-bottom:1px solid #f0f0f0}
-.serv-head{display:flex;justify-content:space-between;font-weight:700;font-size:14px}
-.serv-val{color:#16a34a;white-space:nowrap}
-.serv ul{margin:6px 0 0;padding-left:18px;color:#555;font-size:12px}.serv li{margin:2px 0}
-.total{margin-top:14px;background:#faf7e6;border:1px solid #f0e6a8;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;font-weight:700}.total b{font-size:22px}
-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #eee}th{background:#f7f7f7;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:#888}
-.bloco{margin:10px 0}.bloco b{display:block;margin-bottom:2px}
-.clausula{margin:14px 0}.clausula h3{font-size:12.5px;margin:0 0 4px;color:#111}.clausula p{margin:3px 0;text-align:justify;color:#333}
-.assin{display:flex;justify-content:space-between;gap:40px;margin-top:54px}.assin div{flex:1;text-align:center;border-top:1px solid #333;padding-top:6px;font-size:11px}
+      return `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box}body{font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1f1f1f;margin:0;padding:0;font-size:13px;line-height:1.55}
+.pad{padding:30px 46px 46px}
+.head{background:#141414;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:26px 46px}
+.head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:48px;width:auto}
+.wm{font-size:19px;font-weight:800;letter-spacing:.4px;line-height:1.05}.wm span{display:block;font-size:8.5px;font-weight:600;letter-spacing:2.4px;color:#C9A24B;margin-top:5px}
+.head-doc{text-align:right}.head-doc .doc-type{font-size:10px;font-weight:700;letter-spacing:3px;color:#C9A24B}.head-doc .doc-num{font-size:20px;font-weight:800;margin-top:3px}.head-doc .sub{font-size:10.5px;color:#bdbdbd;margin-top:2px}
+.empresa-bar{background:#f5f3ee;color:#6f6a5e;font-size:10px;letter-spacing:.2px;padding:8px 46px;border-bottom:2px solid #C9A24B;line-height:1.5}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#141414;margin:26px 0 12px;padding-left:11px;border-left:3px solid #C9A24B}
+.meta-cli{display:flex;flex-wrap:wrap;gap:6px 26px;margin:18px 0 4px;font-size:13px}.meta-cli b{color:#141414}
+.intro{white-space:pre-wrap;color:#444;text-align:justify}
+.serv{margin:12px 0;padding:14px 16px;background:#fafafa;border:1px solid #eee;border-radius:12px}
+.serv-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}.serv-head .n{font-weight:700;font-size:15px;color:#141414}
+.serv-val{color:#141414;font-weight:800;white-space:nowrap;font-size:15px}.serv-val small{color:#999;font-weight:600;font-size:11px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 2px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #e6e6e6;border-radius:20px;padding:3px 11px 3px 8px;font-size:11px;color:#444}.chip img{width:13px;height:13px}.chip b{font-weight:700;color:#141414}
+.verba-nota{font-size:11px;color:#8a7a3e;font-style:italic;margin:7px 0 0}
+.serv ul{margin:9px 0 0;padding-left:18px;color:#555;font-size:12px}.serv li{margin:3px 0}
+.total{margin:18px 0 6px;background:#141414;color:#fff;border-radius:14px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}.total span{font-size:12px;letter-spacing:2px;color:#C9A24B;font-weight:700}.total b{font-size:26px;font-weight:800;color:#fff}
+.nota-perfil{font-size:11.5px;color:#888;font-style:italic;margin:10px 2px 2px;line-height:1.55}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{text-align:left;padding:9px 12px;border-bottom:1px solid #eee}th{background:#141414;color:#C9A24B;font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700}tbody tr:nth-child(even){background:#fafafa}
+.bloco{margin:10px 0}.bloco b{display:block;margin-bottom:2px;color:#141414}
+.clausula{margin:14px 0}.clausula h3{font-size:12.5px;margin:0 0 4px;color:#141414}.clausula p{margin:3px 0;text-align:justify;color:#333}
+.midia-card{background:#fbf7ec;border:1px solid #ecdfb8;border-left:3px solid #C9A24B;border-radius:8px;padding:9px 12px;margin:9px 0 2px;font-size:11.5px;color:#7a6a3a;line-height:1.5}
+.assin{display:flex;justify-content:space-between;gap:48px;margin-top:56px}.assin div{flex:1;text-align:center;border-top:1.5px solid #141414;padding-top:8px;font-size:11px;color:#444}
+.sig-digital{display:flex;gap:22px;margin-top:46px;flex-wrap:wrap}
+.esig{flex:1;min-width:240px;background:#f1f8f1;border:1px solid #cfe6cf;border-radius:12px;padding:14px 16px}
+.esig-tag{font-size:9.5px;font-weight:800;letter-spacing:1.5px;color:#2e7d32}
+.esig-co{font-weight:800;color:#141414;margin-top:7px;font-size:13px}.esig-sub{font-size:10.5px;color:#777;margin-top:2px}
+.aceite{flex:1;min-width:240px;border:1px dashed #d8c790;border-radius:12px;padding:14px 16px;background:#fcfaf3;display:flex;flex-direction:column;justify-content:center}
+.aceite-txt{font-size:11px;color:#7a6a3a;margin-bottom:11px;line-height:1.5}
+.btn-aceite{display:block;width:100%;text-align:center;background:#141414;color:#C9A24B;font-weight:800;font-size:13px;text-decoration:none;padding:12px 18px;border-radius:10px;letter-spacing:.3px;border:none;cursor:pointer}
 .foot{margin-top:40px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:12px;text-align:center}
-@media print{body{padding:24px}.serv,.clausula{break-inside:avoid}}`;
+@media print{.pad{padding:24px 32px}.head{padding:22px 32px}.empresa-bar{padding:8px 32px}.serv,.clausula,.total{break-inside:avoid}}`;
     },
     _docHead(tipo, num, subs) {
       const e = this._esc;
       const subsHTML = (subs || []).map(s => `<div class="sub">${e(s)}</div>`).join('');
-      return `<div class="head"><div><div class="brand">Maracatu Digital<small>INTELLIGENCE · Marketing Digital</small></div></div>
-<div class="doc-meta"><div class="doc-type">${e(tipo)}</div><div class="doc-num">Nº ${e(num)}</div>${subsHTML}</div></div>
-<div class="empresa-line">CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.email)} · ${e(EMPRESA.fone)}<br>${e(EMPRESA.endereco)}</div>`;
+      const logo = (typeof LOGO_DATAURI !== 'undefined' && LOGO_DATAURI) ? `<img class="logo" src="${LOGO_DATAURI}" alt="">` : '';
+      return `<div class="head">
+<div class="head-brand">${logo}<div class="wm">MARACATU DIGITAL<span>INTELLIGENCE · MARKETING DIGITAL</span></div></div>
+<div class="head-doc"><div class="doc-type">${e(tipo)}</div><div class="doc-num">Nº ${e(num)}</div>${subsHTML}</div>
+</div>
+<div class="empresa-bar">CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.email)} · ${e(EMPRESA.fone)} · ${e(EMPRESA.endereco)}</div>`;
     },
     _docFoot() {
       const e = this._esc;
       return `<div class="foot">${e(EMPRESA.nome)} · CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.fone)} · ${e(EMPRESA.email)}</div>`;
     },
     // ===== PROPOSTA (modelo Bella Napoli) =====
+    // Rodapé da proposta: presencial (linhas pra assinar impresso) ou digital
+    // (assinatura eletrônica da agência + botão de aceite do cliente).
+    _rodapeAssinatura(o) {
+      const e = this._esc;
+      if (o.modoAssinatura === 'digital') {
+        return `<div class="sig-digital"><div class="esig"><div class="esig-tag">✔ ASSINADO ELETRONICAMENTE</div><div class="esig-co">${e(EMPRESA.nome)}</div><div class="esig-sub">CNPJ ${e(EMPRESA.cnpj)}</div><div class="esig-sub">Emitido em ${e(MD.fmtDate(MD.today()))}${o.numero ? ' · Proposta ' + e(o.numero) : ''}</div></div><div class="aceite"><div class="aceite-txt">Concordando, você aceita os termos desta proposta e autoriza a geração do contrato.</div><button class="btn-aceite" id="btn-aceite" type="button">✔ Estou de acordo — gerar contrato</button></div></div>`;
+      }
+      return `<div class="assin"><div>${e(EMPRESA.nome)}</div><div>${e(o.cliente || 'Cliente')}${o.contato ? '<br>' + e(o.contato) : ''}</div></div>`;
+    },
     _propostaHTML(o) {
       const e = this._esc, total = this.orcTotal(o);
       const servHTML = (o.servicos || []).filter(s => s.nome || s.valor).map((s, i) => {
         const bullets = String(s.escopo || '').split('\n').map(x => x.replace(/^[-•\s]+/, '').trim()).filter(Boolean);
-        const redes = (Array.isArray(s.redes) && s.redes.length) ? `<div style="font-size:13px;color:#555;margin:2px 0 6px"><b>Redes:</b> ${e(this.redesLabel(s.redes))}</div>` : '';
-        const ads = (Array.isArray(s.ads) && s.ads.length) ? (() => {
-          const itens = s.ads.map(id => { const a = ADS_PLATAFORMAS.find(x => x.id === id); const v = (s.verbaAds || {})[id]; return (a ? a.label : id) + (v ? ` (${MD.fmtCur(+v)}/mês)` : ''); });
-          const tot = this.verbaAdsTotal(s);
-          return `<div style="font-size:13px;color:#555;margin:2px 0 6px"><b>Plataformas de tráfego:</b> ${e(itens.join(' · '))}${tot ? ` <i>— verba de mídia sugerida: ${e(MD.fmtCur(tot))}/mês, à parte (não incluída no fee)</i>` : ''}</div>`;
-        })() : '';
-        return `<div class="serv"><div class="serv-head"><span>${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(s.valor))}/mês</span></div>${redes}${ads}${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
+        const redeChips = (Array.isArray(s.redes) ? s.redes : []).map(id => { const r = REDES.find(x => x.id === id); return r ? `<span class="chip"><img src="${redeIcon(r)}">${e(r.label)}</span>` : ''; }).join('');
+        const adsChips = (Array.isArray(s.ads) ? s.ads : []).map(id => { const a = ADS_PLATAFORMAS.find(x => x.id === id); const v = (s.verbaAds || {})[id]; return a ? `<span class="chip"><img src="${redeIcon(a)}">${e(a.label)}${v ? ` · <b>${e(MD.fmtCur(+v))}</b>` : ''}</span>` : ''; }).join('');
+        const chips = (redeChips || adsChips) ? `<div class="chips">${redeChips}${adsChips}</div>` : '';
+        const tot = this.verbaAdsTotal(s);
+        const verbaNota = (Array.isArray(s.ads) && s.ads.length && tot) ? `<div class="midia-card">💡 <b>Investimento em mídia sugerido: ${e(MD.fmtCur(tot))}/mês</b> — pago <b>diretamente às plataformas</b> (${e(this.adsLabel(s.ads))}), à parte do fee da agência.</div>` : '';
+        return `<div class="serv"><div class="serv-head"><span class="n">${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(s.valor))}<small>/mês</small></span></div>${chips}${verbaNota}${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
       }).join('');
       const cron = this.cronograma(o).map(p => `<tr><td>${p.n}º mês — ${e(MD.fmtDate(p.venc))}</td><td>${e(MD.fmtCur(p.valor))}</td><td>${e(o.formaPagamento || 'Boleto')}</td></tr>`).join('');
       const metaCli = [o.contato && `<span><b>Contato:</b> ${e(o.contato)}</span>`, o.email && `<span><b>E-mail:</b> ${e(o.email)}</span>`].filter(Boolean).join('');
       return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Proposta ${e(o.numero)}</title><style>${this._cssDoc()}</style></head><body>
 ${this._docHead('PROPOSTA', o.numero, ['Data: ' + MD.fmtDate(o.data), 'Validade: ' + (o.validade || 30) + ' dias'])}
+<div class="pad">
 <div class="meta-cli"><span><b>Cliente:</b> ${e(o.cliente || '—')}</span>${metaCli}</div>
 ${o.projeto ? `<div class="meta-cli"><span><b>Projeto:</b> ${e(o.projeto)}</span></div>` : ''}
 <h2>Introdução</h2><div class="intro">${e(PROPOSTA_INTRO)}</div>
 <h2>Serviços incluídos</h2>${servHTML || '<div class="intro">—</div>'}
 <div class="total"><span>MENSALIDADE TOTAL</span><b>${e(MD.fmtCur(total))}/mês</b></div>
-<div style="font-size:12px;color:#777;font-style:italic;margin:8px 2px 2px;line-height:1.5">Os valores sugeridos nesta proposta, incluindo a verba de investimento em mídia, foram definidos a partir de uma análise prévia do perfil e dos objetivos do cliente, podendo ser ajustados em conjunto conforme a estratégia acordada.</div>
+<div class="nota-perfil">Os valores sugeridos nesta proposta, incluindo a verba de investimento em mídia, foram definidos a partir de uma análise prévia do perfil e dos objetivos do cliente, podendo ser ajustados em conjunto conforme a estratégia acordada.</div>
 <h2>Vigência do contrato</h2><div class="bloco">${e(o.vigenciaMeses || 6)} meses via ${e(o.formaPagamento || 'Boleto')}</div>
 <h2>Cronograma de cobranças</h2><table><thead><tr><th>Competência / Vencimento</th><th>Mensalidade</th><th>Forma</th></tr></thead><tbody>${cron}</tbody></table>
 <h2>Considerações finais</h2>
@@ -822,8 +861,9 @@ ${o.projeto ? `<div class="meta-cli"><span><b>Projeto:</b> ${e(o.projeto)}</span
 <div class="bloco"><b>Reajuste</b>Reajuste automático após 12 meses, pela variação do IPCA.</div>
 <div class="bloco"><b>Validade da Proposta</b>Esta proposta é válida por ${e(o.validade || 30)} dias a partir da data de envio.</div>
 ${o.observacoes ? `<div class="bloco"><b>Observações</b>${e(o.observacoes)}</div>` : ''}
-<div class="assin"><div>${e(EMPRESA.nome)}</div><div>${e(o.cliente || 'Cliente')}${o.contato ? '<br>' + e(o.contato) : ''}</div></div>
+${this._rodapeAssinatura(o)}
 ${this._docFoot()}
+</div>
 </body></html>`;
     },
     // ===== CONTRATO (prestação de serviços de marketing digital — modelo legal) =====

@@ -841,6 +841,7 @@
         <div class="form-group"><label class="form-label">Validade (dias)</label><input class="form-input" type="number" min="0" x-model="editing.validade"></div>
         <div class="form-group"><label class="form-label">Vigência (meses)</label><input class="form-input" type="number" min="1" x-model="editing.vigenciaMeses"></div>
         <div class="form-group"><label class="form-label">Forma de pagamento</label><select class="form-select" x-model="editing.formaPagamento"><template x-for="p in FORMAS_PAGAMENTO"><option x-text="p"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Assinatura</label><select class="form-select" x-model="editing.modoAssinatura"><option value="presencial">Presencial (imprimir e assinar)</option><option value="digital">Digital (link + aceite online)</option></select></div>
       </div>
       <label class="form-label" style="margin-top:16px;display:block">Serviços incluídos</label>
       <template x-for="(s,i) in editing.servicos" :key="s.id">
@@ -891,10 +892,32 @@
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirOrcamento(editing)">Excluir</button>
       <button class="btn btn-ghost" x-show="editing.id" @click="imprimirDoc('orcamento', editing)" title="Gerar PDF / imprimir">🖨️ PDF</button>
+      <button class="btn btn-ghost" x-show="editing.id" @click="enviarPropostaDigital(editing)" title="Cria o link público da proposta digital pra enviar ao cliente">📤 Enviar digital</button>
       <button class="btn btn-ghost" x-show="editing.id" @click="gerarContrato(editing)" title="Criar um contrato a partir desta proposta">→ Gerar contrato</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarOrcamento()">Salvar</button>
     </div>
+  </div>
+</div>
+
+<!-- ENVIO DA PROPOSTA DIGITAL -->
+<div class="modal-backdrop" x-show="modal==='propostaEnvio'" @click.self="modal=null" x-cloak>
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head"><div class="modal-title">Proposta digital criada ✓</div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-body" x-show="propostaEnvio">
+      <div class="fs-12 text-2" style="margin-bottom:12px">Envie o link pro cliente. Ele abre, revisa e clica em <b>"Estou de acordo"</b> — o aceite fica registrado. (A geração automática do contrato + assinatura ZapSign entra na próxima fase.)</div>
+      <label class="form-label">Link da proposta</label>
+      <div class="flex gap-2" style="align-items:center">
+        <input class="form-input" style="flex:1" readonly :value="propostaEnvio?.link" @focus="$event.target.select()">
+        <button class="btn btn-ghost btn-sm" @click="copiarLink(propostaEnvio.link)">Copiar</button>
+      </div>
+      <div class="flex gap-2" style="margin-top:14px;flex-wrap:wrap">
+        <a class="btn btn-sm" :href="'https://wa.me/?text='+encodeURIComponent('Olá! Segue a proposta da Maracatu Digital: '+propostaEnvio.link)" target="_blank" style="background:#25D366;color:#fff;font-weight:600">Enviar por WhatsApp</a>
+        <a class="btn btn-sm" :href="'mailto:'+(propostaEnvio.email||'')+'?subject='+encodeURIComponent('Proposta '+(propostaEnvio.numero||''))+'&body='+encodeURIComponent('Olá! Segue a proposta da Maracatu Digital: '+propostaEnvio.link)" style="background:#633806;color:#fff;font-weight:600">Enviar por e-mail</a>
+        <a class="btn btn-ghost btn-sm" :href="propostaEnvio?.link" target="_blank">Abrir prévia</a>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" @click="modal=null">Fechar</button></div>
   </div>
 </div>
 
@@ -1077,6 +1100,7 @@
   </div>
 </div>
 
-<script src="js/app.js?v=32"></script>
+<script src="js/brand.js"></script>
+<script src="js/app.js?v=33"></script>
 </body>
 </html>
