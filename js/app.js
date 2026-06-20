@@ -267,6 +267,7 @@ document.addEventListener('alpine:init', () => {
     TRELLO_LABELS, dragId: null, dropCol: null, // arrastar cards entre listas (estilo Trello)
     cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, novoItemCheck: '', // card-detalhe Trello
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
+    cloudCfg: { cloud: '', preset: '' }, uploadando: false, // storage de arquivos (Cloudinary)
     quickAddCol: '', quickAddText: '', // adicionar cartão rápido
     layouts: [], layoutModal: false, layoutAtual: null, // layout da semana (Fase 2/3)
     progModal: false, // modal de criar programação (calendário de posts da semana)
@@ -394,7 +395,7 @@ document.addEventListener('alpine:init', () => {
       const nome = cls.split('ph-').pop();
       return 'assets/icons/' + nome + '.png?v=3';
     },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') { this.carregarUsuarios(); this.carregarCloud(); } if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -449,9 +450,15 @@ document.addEventListener('alpine:init', () => {
       } catch (e) { this.pessoaMsg = '⚠ ' + e.message; }
     },
     // foto de perfil: lê arquivo, redimensiona no navegador e guarda como base64
-    lerFotoArquivo(e) {
+    async lerFotoArquivo(e) {
       const file = e.target.files && e.target.files[0]; if (!file) return;
       if (!file.type.startsWith('image/')) { alert('Selecione uma imagem.'); return; }
+      if (this.cloudOk) { // sobe pro Cloudinary (não pesa o banco)
+        this.uploadando = true;
+        try { const u = await this.uploadArquivo(file); if (u) this.pessoaForm.foto = u; }
+        catch (err) { alert(err.message); } finally { this.uploadando = false; e.target.value = ''; }
+        return;
+      }
       const url = URL.createObjectURL(file); const img = new Image();
       img.onload = () => {
         const S = 240; const cv = document.createElement('canvas'); cv.width = S; cv.height = S; const ctx = cv.getContext('2d');
@@ -949,6 +956,25 @@ document.addEventListener('alpine:init', () => {
     onDropProjeto(status) { const p = this.projects.find(x => x.id === this.dragId); if (p && p.status !== status) this.moverProjeto(p, status); this.dragId = null; this.dropCol = null; },
     // ── Etiquetas nomeadas (compartilhadas) ──
     async carregarLabels() { try { const r = await this.api('GET', '/config/ui.labels'); this.labelNames = r && r.valor ? JSON.parse(r.valor) : {}; } catch { this.labelNames = {}; } },
+    // ── Storage de arquivos (Cloudinary) ──
+    async carregarCloud() { try { const r = await this.api('GET', '/config/ui.cloudinary'); this.cloudCfg = r && r.valor ? JSON.parse(r.valor) : { cloud: '', preset: '' }; } catch { } },
+    async salvarCloud() { try { await this.api('PUT', '/config/ui.cloudinary', { valor: JSON.stringify({ cloud: (this.cloudCfg.cloud || '').trim(), preset: (this.cloudCfg.preset || '').trim() }) }); alert('Configuração salva! Agora dá pra subir arquivos.'); } catch (e) { alert(e.message); } },
+    get cloudOk() { return !!(this.cloudCfg.cloud && this.cloudCfg.preset); },
+    async uploadArquivo(file) {
+      if (!file || !this.cloudOk) return null;
+      const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', this.cloudCfg.preset);
+      const r = await fetch('https://api.cloudinary.com/v1_1/' + this.cloudCfg.cloud + '/upload', { method: 'POST', body: fd });
+      if (!r.ok) throw new Error('Falha no upload (' + r.status + ')');
+      const d = await r.json(); return d.secure_url;
+    },
+    // sobe um arquivo e seta a URL em obj[campo] (usa Cloudinary; sem config, avisa)
+    async uploadParaCampo(e, obj, campo, persistir) {
+      const file = e.target.files && e.target.files[0]; if (!file) return;
+      if (!this.cloudOk) { alert('Configure o Cloudinary primeiro (Pessoal › Armazenamento de arquivos).'); e.target.value = ''; return; }
+      this.uploadando = true;
+      try { const url = await this.uploadArquivo(file); if (url) { obj[campo] = url; if (persistir) await persistir(); } }
+      catch (err) { alert(err.message); } finally { this.uploadando = false; e.target.value = ''; }
+    },
     async salvarLabels() { try { await this.api('PUT', '/config/ui.labels', { valor: JSON.stringify(this.labelNames) }); } catch (e) { alert(e.message); } },
     labelNome(key) { return this.labelNames[key] || ''; },
     // ── Card-detalhe estilo Trello (membros, etiquetas, checklist, data, descrição) ──
@@ -973,6 +999,13 @@ document.addEventListener('alpine:init', () => {
     removeComentario(id) { this.cardRef.comentarios = this.cardRef.comentarios.filter(x => x.id !== id); this.salvarCard(); },
     addAnexo() { const u = (this.novoAnexoUrl || '').trim(); if (!u) return; this.cardRef.anexos.push({ id: MD.uid(), nome: (this.novoAnexoNome || '').trim() || u, url: u, em: new Date().toISOString() }); this.novoAnexoNome = ''; this.novoAnexoUrl = ''; this.salvarCard(); },
     removeAnexo(id) { this.cardRef.anexos = this.cardRef.anexos.filter(x => x.id !== id); this.salvarCard(); },
+    async uploadAnexo(e) {
+      const file = e.target.files && e.target.files[0]; if (!file) return;
+      if (!this.cloudOk) { alert('Configure o Cloudinary primeiro (Pessoal › Armazenamento de arquivos).'); e.target.value = ''; return; }
+      this.uploadando = true;
+      try { const url = await this.uploadArquivo(file); if (url) { this.cardRef.anexos.push({ id: MD.uid(), nome: file.name || 'arquivo', url, em: new Date().toISOString() }); await this.salvarCard(); } }
+      catch (err) { alert(err.message); } finally { this.uploadando = false; e.target.value = ''; }
+    },
     async quickAdd(status) {
       const t = (this.quickAddText || '').trim(); if (!t) { this.quickAddCol = ''; return; }
       try { await this.salvarProjetoApi({ id: '', nome: t, cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '', labels: [], membros: [], checklist: [] }); await this.carregarProjetos(); this.quickAddText = ''; }

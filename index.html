@@ -860,6 +860,20 @@
           <div class="text-3 fs-12">Quem tem acesso ao sistema e o que cada perfil enxerga.</div>
           <button class="btn btn-primary" @click="novoColaborador()">+ Colaborador</button>
         </div>
+
+        <!-- Armazenamento de arquivos (Cloudinary) -->
+        <div class="card mb-4" style="padding:14px">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="fw-800 fs-14">Armazenamento de arquivos</div>
+            <span class="badge" :style="cloudOk?'background:#dcfce7;color:#16a34a':'background:#fef3c7;color:#92400e'" x-text="cloudOk?'Cloudinary conectado':'não configurado'"></span>
+          </div>
+          <div class="text-3 fs-12 mb-3">Pra subir foto de perfil e criativos como arquivo (não só link). Crie a conta grátis em <b>cloudinary.com</b>, e em <b>Settings › Upload › Add upload preset</b> deixe o modo <b>Unsigned</b>. Depois cole abaixo.</div>
+          <div class="grid grid-2" style="gap:14px">
+            <div class="form-group" style="margin:0"><label class="form-label">Cloud name</label><input class="form-input" x-model="cloudCfg.cloud" placeholder="ex: maracatu-digital"></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Upload preset (unsigned)</label><input class="form-input" x-model="cloudCfg.preset" placeholder="ex: som_unsigned"></div>
+          </div>
+          <div class="mt-3"><button class="btn btn-primary btn-sm" @click="salvarCloud()">Salvar</button></div>
+        </div>
         <!-- legenda dos perfis -->
         <div class="grid grid-4 mb-4">
           <template x-for="p in PAPEIS_INFO" :key="p.id">
@@ -1355,7 +1369,10 @@
               <button type="button" class="btn btn-ghost btn-sm" @click="removePostProg(i)" title="Remover post">🗑</button>
             </div>
             <textarea class="form-textarea" x-model="po.legenda" placeholder="Legenda do post…" style="min-height:54px"></textarea>
-            <input class="form-input" style="margin-top:6px" x-model="po.criativo" placeholder="Link do criativo (Drive/Canva) — opcional">
+            <div class="flex gap-2 items-center" style="margin-top:6px">
+              <input class="form-input" style="flex:1" x-model="po.criativo" placeholder="Link do criativo ou suba o arquivo — opcional">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><img class="ic-img" src="assets/icons/export.png?v=3"> <span x-text="uploadando?'…':'subir'"></span><input type="file" accept="image/*,application/pdf" @change="uploadParaCampo($event, po, 'criativo')" style="display:none"></label>
+            </div>
           </div>
         </template>
       </div>
@@ -1497,7 +1514,13 @@
       <template x-if="cardRef&&cardRef.isPost">
         <div>
           <div class="tl-section"><div class="tl-section-label">Legenda</div><textarea class="form-textarea" x-model="cardRef.legenda" @change="salvarCard()" style="min-height:80px"></textarea></div>
-          <div class="tl-section"><div class="tl-section-label">Criativo (link)</div><input class="form-input" x-model="cardRef.criativo" @change="salvarCard()" placeholder="Drive / Canva…"></div>
+          <div class="tl-section"><div class="tl-section-label">Criativo</div>
+            <div class="flex gap-2 items-center">
+              <input class="form-input" style="flex:1" x-model="cardRef.criativo" @change="salvarCard()" placeholder="Cole o link ou suba o arquivo…">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><img class="ic-img" src="assets/icons/export.png?v=3"> <span x-text="uploadando?'enviando…':'subir'"></span><input type="file" accept="image/*,application/pdf" @change="uploadParaCampo($event, cardRef, 'criativo', ()=>salvarCard())" style="display:none"></label>
+              <a x-show="cardRef.criativo" :href="cardRef.criativo" target="_blank" class="btn btn-ghost btn-sm">ver ↗</a>
+            </div>
+          </div>
         </div>
       </template>
 
@@ -1540,8 +1563,9 @@
         </template>
         <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
           <input class="form-input" style="width:160px;padding:6px 10px" x-model="novoAnexoNome" placeholder="Nome (opcional)">
-          <input class="form-input" style="flex:1;min-width:160px;padding:6px 10px" x-model="novoAnexoUrl" placeholder="Link do arquivo (Drive/Canva…)" @keydown.enter.prevent="addAnexo()">
-          <button class="btn btn-ghost btn-sm" @click="addAnexo()">+ Anexar</button>
+          <input class="form-input" style="flex:1;min-width:140px;padding:6px 10px" x-model="novoAnexoUrl" placeholder="Link do arquivo…" @keydown.enter.prevent="addAnexo()">
+          <button class="btn btn-ghost btn-sm" @click="addAnexo()">+ Link</button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer"><img class="ic-img" src="assets/icons/export.png?v=3"> <span x-text="uploadando?'enviando…':'subir arquivo'"></span><input type="file" @change="uploadAnexo($event)" style="display:none"></label>
         </div>
       </div>
 
@@ -1729,6 +1753,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=59"></script>
+<script src="js/app.js?v=60"></script>
 </body>
 </html>
