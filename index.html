@@ -379,6 +379,28 @@
 
       <!-- ========== OPERACIONAL (projetos kanban) ========== -->
       <section x-show="page==='operacional'">
+        <!-- 🟢 Equipe online — quem está logado e há quanto tempo -->
+        <div class="card" x-show="presenca.length" style="margin-bottom:14px;padding:12px 14px">
+          <div class="flex items-center justify-between mb-2">
+            <div class="fw-800 fs-14">Equipe online</div>
+            <div class="text-3 fs-12" x-text="ehAdmin ? (presenca.filter(p=>p.online).length+' de '+presenca.length+' online') : (presenca.length+' online agora')"></div>
+          </div>
+          <div class="flex gap-2" style="flex-wrap:wrap">
+            <template x-for="u in presenca" :key="u.id">
+              <div class="flex items-center gap-2" style="padding:7px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface)" :style="u.online?'':'opacity:.55'">
+                <span style="position:relative;display:inline-flex">
+                  <span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor" x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
+                  <span style="position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--surface)" :style="'background:'+(u.online?'#16a34a':'#9ca3af')"></span>
+                </span>
+                <div style="min-width:0">
+                  <div class="fs-13 fw-700 truncate" style="max-width:170px"><span x-text="u.nome"></span> <span x-show="u.id===(usuario&&usuario.id)" class="text-3" style="font-weight:400">(você)</span></div>
+                  <div class="text-3 fs-12" x-text="u.online ? ('logado há '+durHuman(u.loginAt)) : (u.lastSeen ? ('visto há '+durHuman(u.lastSeen)) : 'ainda não acessou')"></div>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div x-show="ehAdmin && !presenca.some(p=>p.online)" class="text-3 fs-12" style="margin-top:6px">Ninguém online no momento.</div>
+        </div>
         <div class="kanban">
           <template x-for="s in PROJ_STATUS" :key="s.id">
             <div class="kanban-col">
@@ -1280,6 +1302,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=43"></script>
+<script src="js/app.js?v=44"></script>
 </body>
 </html>

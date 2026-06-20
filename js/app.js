@@ -254,6 +254,8 @@ document.addEventListener('alpine:init', () => {
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '' },
     pessoaModal: false, pessoaMsg: '',
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
+    presenca: [], // quem está online (Operacional); admin vê todos
+    _hbStarted: false, // guarda do heartbeat
     // Operacional — modelos de projeto + colaboradores
     MODELOS_PROJETO, AREAS_PROJETO,
     modeloSel: '', // modelo escolhido no dropdown do "Novo projeto"
@@ -297,7 +299,7 @@ document.addEventListener('alpine:init', () => {
         this.persist('catalogo', this.catalogo);
         localStorage.setItem('som_catalogo_seeded', '1'); // não re-semeia se o usuário apagar tudo
       }
-      if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); }
+      if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.startHeartbeat(); }
     },
 
     get autenticado() { return !!this.token; },
@@ -319,7 +321,7 @@ document.addEventListener('alpine:init', () => {
         const d = await this.api('POST', '/auth/login', { email: this.loginEmail, senha: this.loginSenha });
         this.token = d.token; this.usuario = d.usuario;
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
-        this.loginSenha = ''; this.garantirPaginaPermitida(); await this.carregarClientes(); this.carregarOnboardings();
+        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); await this.carregarClientes(); this.carregarOnboardings();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -343,7 +345,7 @@ document.addEventListener('alpine:init', () => {
     // ícones: classe Phosphor a partir do emoji-chave + cor (p/ sinais de saúde)
     phClass(e) { return PH_ICON[e] || 'ph ph-circle'; },
     phCor(e) { return SINAL_COR[e] || ''; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'pessoal') this.carregarUsuarios(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') this.carregarPresenca(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -353,6 +355,19 @@ document.addEventListener('alpine:init', () => {
     // ── Pessoal: gestão de equipe (admin) ──
     papelInfo(id) { return PAPEIS_INFO.find(x => x.id === id) || { nome: id || '—', cor: '#6b7280', bg: '#f1f5f9', desc: '' }; },
     async carregarUsuarios() { if (!this.ehAdmin) return; try { this.usuarios = (await this.api('GET', '/auth/usuarios')) || []; } catch (e) { this.usuarios = []; } },
+    // ── Presença / online (Operacional) ──
+    async heartbeat() { try { await this.api('POST', '/auth/heartbeat', {}); } catch {} },
+    async carregarPresenca() { try { this.presenca = (await this.api('GET', '/auth/presenca')) || []; } catch { this.presenca = []; } },
+    startHeartbeat() {
+      if (this._hbStarted) return; this._hbStarted = true;
+      if (this.token) this.heartbeat();
+      setInterval(() => {
+        if (!this.token) return;
+        this.heartbeat();
+        if (this.page === 'operacional') this.carregarPresenca(); // mantém os tempos vivos
+      }, 45000);
+    },
+    durHuman(iso) { if (!iso) return '—'; let s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); if (h > 0) return h + 'h' + (m ? (' ' + m + 'min') : ''); if (m > 0) return m + 'min'; return 'agora mesmo'; },
     novoColaborador() { this.pessoaForm = { id: '', nome: '', email: '', papel: 'colaborador', senha: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
     editarColaborador(u) { this.pessoaForm = { id: u.id, nome: u.nome, email: u.email, papel: u.papel, senha: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
     async salvarColaborador() {
