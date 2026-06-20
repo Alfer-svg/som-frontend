@@ -158,6 +158,42 @@ const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => 
 // Documentos do cliente (links — contrato, proposta, etc.). Salvo em dados.documentos.
 const TIPOS_DOC = ['Contrato', 'Proposta', 'Apresentação', 'Relatório', 'Briefing', 'Identidade visual', 'Outro'];
 const TIPOS_INTER = [['Ligação', '📞'], ['WhatsApp', '💬'], ['E-mail', '✉️'], ['Reunião', '🤝'], ['Visita', '📍'], ['Nota', '📝']];
+
+/* ---------- Operacional: modelos de projeto comuns de agência ---------- */
+const AREAS_PROJETO = ['📱 Redes Sociais', '🎯 Tráfego Pago', '🌐 Sites & Apps', '🎬 Audiovisual', '🎨 Branding', '🗳️ Marketing Político', '🤝 Recorrente'];
+const MODELOS_PROJETO = [
+  { nome: 'Calendário de conteúdo do mês', area: '📱 Redes Sociais', servico: 'Gestão de Redes Sociais' },
+  { nome: 'Produção de posts/criativos do mês', area: '📱 Redes Sociais', servico: 'Criação de Conteúdo' },
+  { nome: 'Reels/Stories da semana', area: '📱 Redes Sociais', servico: 'Criação de Conteúdo' },
+  { nome: 'Gestão de comunidade (DM/comentários)', area: '📱 Redes Sociais', servico: 'Gestão de Redes Sociais' },
+  { nome: 'Relatório mensal de redes', area: '📱 Redes Sociais', servico: 'Gestão de Redes Sociais' },
+  { nome: 'Setup de campanha nova', area: '🎯 Tráfego Pago', servico: 'ADS / Tráfego Pago' },
+  { nome: 'Otimização semanal de campanhas', area: '🎯 Tráfego Pago', servico: 'ADS / Tráfego Pago' },
+  { nome: 'Criativos para anúncios', area: '🎯 Tráfego Pago', servico: 'ADS / Tráfego Pago' },
+  { nome: 'Configuração de pixel/conversões/GA4', area: '🎯 Tráfego Pago', servico: 'ADS / Tráfego Pago' },
+  { nome: 'Relatório de performance de mídia', area: '🎯 Tráfego Pago', servico: 'ADS / Tráfego Pago' },
+  { nome: 'Site institucional', area: '🌐 Sites & Apps', servico: 'Sites & Apps' },
+  { nome: 'Landing page de campanha', area: '🌐 Sites & Apps', servico: 'Sites & Apps' },
+  { nome: 'E-commerce / loja virtual', area: '🌐 Sites & Apps', servico: 'Sites & Apps' },
+  { nome: 'Manutenção e atualização de site', area: '🌐 Sites & Apps', servico: 'Sites & Apps' },
+  { nome: 'SEO on-page', area: '🌐 Sites & Apps', servico: 'SEO / Growth' },
+  { nome: 'Captação (ensaio foto/vídeo)', area: '🎬 Audiovisual', servico: 'Audiovisual' },
+  { nome: 'Edição de vídeo', area: '🎬 Audiovisual', servico: 'Audiovisual' },
+  { nome: 'Motion / animação', area: '🎬 Audiovisual', servico: 'Audiovisual' },
+  { nome: 'Cobertura de evento', area: '🎬 Audiovisual', servico: 'Audiovisual' },
+  { nome: 'Identidade visual / logo', area: '🎨 Branding', servico: 'Branding' },
+  { nome: 'Manual de marca', area: '🎨 Branding', servico: 'Branding' },
+  { nome: 'Naming', area: '🎨 Branding', servico: 'Branding' },
+  { nome: 'Rebranding', area: '🎨 Branding', servico: 'Branding' },
+  { nome: 'Plano de comunicação de campanha', area: '🗳️ Marketing Político', servico: 'Marketing Político' },
+  { nome: 'Gestão de redes do candidato', area: '🗳️ Marketing Político', servico: 'Marketing Político' },
+  { nome: 'Material de campanha (santinho/jingle/adesivo)', area: '🗳️ Marketing Político', servico: 'Marketing Político' },
+  { nome: 'Monitoramento e gestão de crise', area: '🗳️ Marketing Político', servico: 'Marketing Político' },
+  { nome: 'Onboarding de novo cliente', area: '🤝 Recorrente', servico: 'Consultoria' },
+  { nome: 'Reunião de kickoff', area: '🤝 Recorrente', servico: 'Consultoria' },
+  { nome: 'Planejamento estratégico trimestral', area: '🤝 Recorrente', servico: 'Consultoria' },
+  { nome: 'Renovação de contrato', area: '🤝 Recorrente', servico: 'Consultoria' },
+];
 const docVazio = () => ({ id: '', nome: '', tipo: 'Contrato', url: '' });
 const docMerge = (arr) => (Array.isArray(arr) ? arr : []).map(d => ({ ...docVazio(), ...d, id: d.id || MD.uid() }));
 
@@ -173,6 +209,11 @@ document.addEventListener('alpine:init', () => {
     novaInter: { tipo: 'Ligação', texto: '' }, // form de nova interação na timeline
     radarAutolog: MD.get('som_radar_autolog', true), // auto-registrar ações do Radar no histórico
     TIPOS_INTER,
+    // Operacional — modelos de projeto + colaboradores
+    MODELOS_PROJETO, AREAS_PROJETO,
+    modeloSel: '', // modelo escolhido no dropdown do "Novo projeto"
+    modelosFav: MD.get('som_modelos_fav', []), // nomes dos modelos favoritados (sobem no dropdown)
+    colaboradores: MD.get('som_colaboradores', []), // nomes da equipe (cresce sozinho ao salvar projeto)
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
@@ -722,13 +763,27 @@ document.addEventListener('alpine:init', () => {
     // ───────────────── OPERACIONAL: projetos ─────────────────
     projetosDoStatus(s) { const q = this.busca.toLowerCase(); return this.projects.filter(p => p.status === s && (!q || (p.nome + ' ' + p.cliente).toLowerCase().includes(q))); },
     projStatusInfo(s) { return PROJ_STATUS.find(x => x.id === s) || PROJ_STATUS[0]; },
-    novoProjeto(status = 'A Fazer') { this.editing = { id: '', nome: '', cliente: '', servico: 'Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '' }; this.modal = 'project'; },
-    editarProjeto(p) { this.editing = { ...p }; this.modal = 'project'; },
+    novoProjeto(status = 'A Fazer') { this.modeloSel = ''; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '' }; this.modal = 'project'; },
+    editarProjeto(p) { this.modeloSel = ''; this.editing = { ...p }; this.modal = 'project'; },
     salvarProjeto() {
       const e = this.editing; if (!e.nome) return alert('Informe o nome do projeto.');
+      const resp = (e.responsavel || '').trim();
+      if (resp && !this.colaboradores.includes(resp)) { this.colaboradores = [...this.colaboradores, resp].sort((a, b) => a.localeCompare(b)); MD.set('som_colaboradores', this.colaboradores); }
       if (e.id) { const i = this.projects.findIndex(x => x.id === e.id); if (i > -1) this.projects[i] = { ...e }; }
       else { e.id = MD.uid(); this.projects.unshift({ ...e }); }
       this.persist('projects', this.projects); this.modal = null;
+    },
+    // ── Modelos de projeto (dropdown com favoritos no topo) ──
+    modelosFavoritos() { return this.MODELOS_PROJETO.filter(m => this.modelosFav.includes(m.nome)); },
+    modelosDaArea(area) { return this.MODELOS_PROJETO.filter(m => m.area === area && !this.modelosFav.includes(m.nome)); },
+    aplicarModelo() {
+      const m = this.MODELOS_PROJETO.find(x => x.nome === this.modeloSel); if (!m) return;
+      this.editing.nome = m.nome; this.editing.servico = m.servico;
+    },
+    favModeloSel() {
+      const n = this.modeloSel; if (!n) return alert('Escolha um modelo no menu primeiro.');
+      this.modelosFav = this.modelosFav.includes(n) ? this.modelosFav.filter(x => x !== n) : [...this.modelosFav, n];
+      MD.set('som_modelos_fav', this.modelosFav);
     },
     moverProjeto(p, status) { p.status = status; if (status === 'Concluído') p.progresso = 100; this.persist('projects', this.projects); },
     excluirProjeto(p) { if (!confirm('Excluir o projeto ' + p.nome + '?')) return; this.projects = this.projects.filter(x => x.id !== p.id); this.persist('projects', this.projects); this.modal = null; },
