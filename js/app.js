@@ -940,6 +940,7 @@ document.addEventListener('alpine:init', () => {
     projStatusInfo(s) { return PROJ_STATUS.find(x => x.id === s) || PROJ_STATUS[0]; },
     // ── Trello: etiquetas + arrastar ──
     labelCor(key) { const l = TRELLO_LABELS.find(x => x.key === key); return l ? l.cor : '#b3b9c4'; },
+    labelTextCor(key) { return ['yellow', 'lime', 'sky'].includes(key) ? '#172b4d' : '#fff'; },
     toggleLabel(key) { if (!Array.isArray(this.editing.labels)) this.editing.labels = []; const i = this.editing.labels.indexOf(key); if (i >= 0) this.editing.labels.splice(i, 1); else this.editing.labels.push(key); },
     prazoCor(p) { if (!p.prazo || p.status === 'Concluído') return ''; const s = this.semanaAtual; if (p.prazo < s.ini) return '#eb5a46'; if (p.prazo <= s.fim) return '#ff9f1a'; return ''; },
     iniciais(nome) { return (nome || '?').trim().split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase(); },
