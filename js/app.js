@@ -229,6 +229,7 @@ document.addEventListener('alpine:init', () => {
     usuarios: [], // equipe (vinda do backend, só admin lê)
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '' },
     pessoaModal: false, pessoaMsg: '',
+    comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     // Operacional — modelos de projeto + colaboradores
     MODELOS_PROJETO, AREAS_PROJETO,
     modeloSel: '', // modelo escolhido no dropdown do "Novo projeto"
@@ -315,7 +316,7 @@ document.addEventListener('alpine:init', () => {
 
     // helpers de formatação expostos ao template
     fmtDate: MD.fmtDate, fmtCur: MD.fmtCur, daysDiff: MD.daysDiff, redeIcon,
-    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'onboarding') this.carregarOnboardings(); if (p === 'pessoal') this.carregarUsuarios(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'pessoal') this.carregarUsuarios(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
