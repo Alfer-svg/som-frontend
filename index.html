@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=3">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=46">
+  <link rel="stylesheet" href="css/styles.css?v=47">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -1456,8 +1456,10 @@
         <div class="tl-section-label">Etiquetas</div>
         <div class="flex gap-2 items-center" style="flex-wrap:wrap">
           <template x-for="l in TRELLO_LABELS" :key="l.key">
-            <div @click="toggleLabelCard(l.key)" :style="'background:'+l.cor+';color:'+labelTextCor(l.key)+(((cardRef.labels||[]).includes(l.key))?';outline:2px solid #172b4d;outline-offset:1px':'')"
-                 style="height:32px;min-width:56px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;padding:0 10px" x-text="labelNome(l.key)"></div>
+            <div class="lbl-pick" :class="(cardRef.labels||[]).includes(l.key)?'on':''" @click="toggleLabelCard(l.key)" :style="'background:'+l.cor+';color:'+labelTextCor(l.key)">
+              <span x-text="labelNome(l.key)||'sem nome'"></span>
+              <span x-show="(cardRef.labels||[]).includes(l.key)" style="font-weight:900">✓</span>
+            </div>
           </template>
           <button class="btn btn-ghost btn-sm" @click="labelEdit=!labelEdit" x-text="labelEdit?'pronto':'nomear'"></button>
         </div>
