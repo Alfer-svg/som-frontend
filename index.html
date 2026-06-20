@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=3">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=44">
+  <link rel="stylesheet" href="css/styles.css?v=45">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -395,7 +395,7 @@
             <template x-for="u in presenca" :key="u.id">
               <div class="flex items-center gap-2" style="padding:7px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface)" :style="u.online?'':'opacity:.55'">
                 <span style="position:relative;display:inline-flex">
-                  <span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor" x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
+                  <span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;overflow:hidden;background-size:cover;background-position:center" :style="fotoDe(u.nome)?('background-image:url('+fotoDe(u.nome)+')'):('background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor)" x-text="fotoDe(u.nome)?'':(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
                   <span style="position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--surface)" :style="'background:'+(u.online?'#16a34a':'#9ca3af')"></span>
                 </span>
                 <div style="min-width:0">
@@ -501,7 +501,7 @@
                       <span x-show="p.isPost && p.criativo" class="tl-chip" style="background:#f1f2f4;color:#5e6c84"><img class="ic-img" src="assets/icons/palette.png?v=3" style="height:1em;width:1em"></span>
                       <span style="margin-left:auto;display:inline-flex">
                         <template x-for="m in (p.membros&&p.membros.length ? p.membros : (p.responsavel?[p.responsavel]:[]))" :key="m">
-                          <span class="tl-avatar" style="margin-left:-6px;border:2px solid #fff" :style="'background:'+avatarBg(m)+';color:'+avatarFg(m)" :title="m" x-text="iniciais(m)"></span>
+                          <span class="tl-avatar" style="margin-left:-6px;border:2px solid #fff" :style="fotoDe(m)?('background-image:url('+fotoDe(m)+')'):('background:'+avatarBg(m)+';color:'+avatarFg(m))" :title="m" x-text="fotoDe(m)?'':iniciais(m)"></span>
                         </template>
                       </span>
                     </div>
@@ -874,7 +874,7 @@
           <template x-if="!usuarios.length"><div class="empty">Nenhum colaborador carregado. Clique em <b>+ Colaborador</b> pra adicionar a equipe.</div></template>
           <template x-for="u in usuarios" :key="u.id">
             <div class="flex items-center gap-3" style="padding:11px 14px;border-bottom:1px solid var(--border)">
-              <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor" x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></div>
+              <div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;overflow:hidden" :style="u.foto?('background-image:url('+u.foto+');background-size:cover;background-position:center'):('background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor)" x-text="u.foto?'':(u.nome||'?').trim().charAt(0).toUpperCase()"></div>
               <div style="flex:1;min-width:0">
                 <div class="fs-14 fw-700 truncate" x-text="u.nome"></div>
                 <div class="text-3 fs-12 truncate" x-text="u.email"></div>
@@ -1477,7 +1477,7 @@
         <div class="flex gap-2 items-center" style="flex-wrap:wrap">
           <template x-for="m in equipe" :key="m.id">
             <div @click="toggleMembro(m.nome)" class="flex items-center gap-2" style="cursor:pointer;padding:4px 8px 4px 4px;border-radius:20px;border:1px solid var(--border)" :style="(cardRef.membros||[]).includes(m.nome)?'background:'+papelInfo(m.papel).bg:''">
-              <span class="tl-avatar" style="width:22px;height:22px" :style="'background:'+papelInfo(m.papel).bg+';color:'+papelInfo(m.papel).cor" x-text="iniciais(m.nome)"></span>
+              <span class="tl-avatar" style="width:22px;height:22px" :style="m.foto?('background-image:url('+m.foto+')'):('background:'+papelInfo(m.papel).bg+';color:'+papelInfo(m.papel).cor)" x-text="m.foto?'':iniciais(m.nome)"></span>
               <span class="fs-12 fw-600" x-text="m.nome"></span>
               <span x-show="(cardRef.membros||[]).includes(m.nome)" style="color:var(--green);font-weight:800">✓</span>
             </div>
@@ -1552,7 +1552,7 @@
         </div>
         <template x-for="cm in cardRef.comentarios" :key="cm.id">
           <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
-            <span class="tl-avatar" style="width:26px;height:26px;flex-shrink:0" :style="'background:'+avatarBg(cm.autor)+';color:'+avatarFg(cm.autor)" x-text="iniciais(cm.autor)"></span>
+            <span class="tl-avatar" style="width:26px;height:26px;flex-shrink:0" :style="fotoDe(cm.autor)?('background-image:url('+fotoDe(cm.autor)+')'):('background:'+avatarBg(cm.autor)+';color:'+avatarFg(cm.autor))" x-text="fotoDe(cm.autor)?'':iniciais(cm.autor)"></span>
             <div style="flex:1;min-width:0">
               <div class="fs-12"><b x-text="cm.autor"></b> <span class="text-3" x-text="'· '+fmtDataHora(cm.em)"></span></div>
               <div class="fs-13" style="white-space:pre-wrap" x-text="cm.texto"></div>
@@ -1630,6 +1630,15 @@
   <div class="modal" style="max-width:460px">
     <div class="modal-head"><div class="modal-title" x-text="pessoaForm.id?'Editar colaborador':'Novo colaborador'"></div><button class="btn btn-icon btn-ghost" @click="pessoaModal=false">✕</button></div>
     <div class="modal-body">
+      <div class="flex items-center gap-3" style="margin-bottom:14px">
+        <div style="width:72px;height:72px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:24px;overflow:hidden;background:var(--surface-2);color:var(--text-3)"
+             :style="pessoaForm.foto?('background-image:url('+pessoaForm.foto+');background-size:cover;background-position:center'):''" x-text="pessoaForm.foto?'':iniciais(pessoaForm.nome)"></div>
+        <div>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer"><img class="ic-img" src="assets/icons/camera.png?v=3"> Escolher foto<input type="file" accept="image/*" @change="lerFotoArquivo($event)" style="display:none"></label>
+          <button class="btn btn-ghost btn-sm" x-show="pessoaForm.foto" @click="pessoaForm.foto=''">remover</button>
+          <div class="text-3 fs-12" style="margin-top:3px">Quadrada fica melhor. É redimensionada automaticamente.</div>
+        </div>
+      </div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">Nome *</label><input class="form-input" x-model="pessoaForm.nome" placeholder="Nome do colaborador"></div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">E-mail *</label><input class="form-input" type="email" x-model="pessoaForm.email" :disabled="!!pessoaForm.id" placeholder="email@maracatu.com" autocomplete="off"><div class="text-3 fs-12" x-show="pessoaForm.id" style="margin-top:4px">O e-mail de login não pode ser alterado.</div></div>
       <div class="form-group" style="margin-bottom:12px">
@@ -1718,6 +1727,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=57"></script>
+<script src="js/app.js?v=58"></script>
 </body>
 </html>

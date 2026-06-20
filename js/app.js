@@ -259,7 +259,7 @@ document.addEventListener('alpine:init', () => {
     PAPEIS_INFO,
     usuarios: [], // equipe completa (só admin lê)
     equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
-    pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '' },
+    pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' },
     pessoaModal: false, pessoaMsg: '',
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     presenca: [], // quem está online (Operacional); admin vê todos
@@ -438,16 +438,30 @@ document.addEventListener('alpine:init', () => {
       try { this.relatorio = (await this.api('GET', '/relatorios/equipe?de=' + this.relDe + '&ate=' + this.relAte)) || { linhas: [], porDia: [] }; }
       catch { this.relatorio = { linhas: [], porDia: [] }; }
     },
-    novoColaborador() { this.pessoaForm = { id: '', nome: '', email: '', papel: 'colaborador', senha: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
-    editarColaborador(u) { this.pessoaForm = { id: u.id, nome: u.nome, email: u.email, papel: u.papel, senha: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
+    novoColaborador() { this.pessoaForm = { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
+    editarColaborador(u) { this.pessoaForm = { id: u.id, nome: u.nome, email: u.email, papel: u.papel, senha: '', foto: u.foto || '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
     async salvarColaborador() {
       const f = this.pessoaForm; this.pessoaMsg = '';
       try {
-        if (f.id) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, papel: f.papel, senha: f.senha || undefined });
-        else await this.api('POST', '/auth/usuarios', { nome: f.nome, email: f.email, papel: f.papel, senha: f.senha });
-        await this.carregarUsuarios(); this.pessoaModal = false;
+        if (f.id) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, papel: f.papel, senha: f.senha || undefined, foto: f.foto || '' });
+        else await this.api('POST', '/auth/usuarios', { nome: f.nome, email: f.email, papel: f.papel, senha: f.senha, foto: f.foto || '' });
+        await this.carregarUsuarios(); this.carregarEquipe(); this.pessoaModal = false;
       } catch (e) { this.pessoaMsg = '⚠ ' + e.message; }
     },
+    // foto de perfil: lê arquivo, redimensiona no navegador e guarda como base64
+    lerFotoArquivo(e) {
+      const file = e.target.files && e.target.files[0]; if (!file) return;
+      if (!file.type.startsWith('image/')) { alert('Selecione uma imagem.'); return; }
+      const url = URL.createObjectURL(file); const img = new Image();
+      img.onload = () => {
+        const S = 240; const cv = document.createElement('canvas'); cv.width = S; cv.height = S; const ctx = cv.getContext('2d');
+        const sc = Math.max(S / img.width, S / img.height); const w = img.width * sc, h = img.height * sc;
+        ctx.drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
+        this.pessoaForm.foto = cv.toDataURL('image/jpeg', 0.82); URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    },
+    fotoDe(nome) { const m = (this.equipe || []).find(x => x.nome === nome) || (this.usuarios || []).find(x => x.nome === nome); return m && m.foto ? m.foto : ''; },
     async removerColaborador(u) {
       if (!confirm('Remover ' + u.nome + ' da equipe? Ele perde o acesso ao sistema.')) return;
       try { await this.api('DELETE', '/auth/usuarios/' + u.id); await this.carregarUsuarios(); }
