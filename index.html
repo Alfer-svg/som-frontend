@@ -130,6 +130,7 @@
       <button class="btn btn-primary" x-show="page==='servicos'" @click="novoServico()">+ Serviço</button>
       <button class="btn btn-primary" x-show="page==='contratos'" @click="novoContrato()">+ Contrato</button>
       <button class="btn btn-primary" x-show="page==='financeiro'" @click="novoLancamento('receita')">+ Lançamento</button>
+      <button class="btn btn-ghost" x-show="page==='operacional'" @click="abrirProgramacao()" title="Atribuir vários projetos do mesmo cliente a um colaborador de uma vez">+ Programação</button>
       <button class="btn btn-primary" x-show="page==='operacional'" @click="novoProjeto()">+ Projeto</button>
     </header>
 
@@ -1267,6 +1268,58 @@
 </div>
 
 <!-- PROJETO -->
+<!-- PROGRAMAÇÃO — cria vários projetos do mesmo cliente p/ um colaborador -->
+<div class="modal-backdrop" x-show="progModal" @click.self="progModal=false" x-cloak>
+  <div class="modal" style="max-width:640px">
+    <div class="modal-head"><div class="modal-title">Nova programação semanal</div><button class="btn btn-icon btn-ghost" @click="progModal=false">✕</button></div>
+    <div class="modal-body">
+      <div class="grid grid-2" style="gap:14px;margin-bottom:6px">
+        <div class="form-group"><label class="form-label">Cliente *</label>
+          <select class="form-select" x-model="progForm.cliente">
+            <option value="">— escolher cliente —</option>
+            <template x-for="c in clients" :key="c.id"><option :value="c.empresa" x-text="c.empresa"></option></template>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Responsável *</label>
+          <select class="form-select" x-model="progForm.responsavel">
+            <option value="">— escolher colaborador —</option>
+            <template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Prazo (aplica a todos)</label><input class="form-input" type="date" x-model="progForm.prazo"></div>
+      </div>
+      <label class="form-label" style="margin-top:6px">Projetos da semana <span class="text-3" style="font-weight:400;text-transform:none">(marque os que entram na programação deste cliente)</span></label>
+      <div style="max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:6px 10px;margin-top:4px">
+        <template x-for="a in AREAS_PROJETO" :key="a">
+          <div style="margin:6px 0">
+            <div class="text-3 fs-12 fw-700" style="text-transform:uppercase;letter-spacing:.3px" x-text="a"></div>
+            <template x-for="m in MODELOS_PROJETO.filter(x=>x.area===a)" :key="m.nome">
+              <label class="flex items-center gap-2" style="padding:4px 0;cursor:pointer">
+                <input type="checkbox" :checked="progSelModelos.includes(m.nome)" @change="toggleModeloProg(m.nome)" style="width:16px;height:16px;cursor:pointer">
+                <span class="fs-13" x-text="m.nome"></span>
+              </label>
+            </template>
+          </div>
+        </template>
+      </div>
+      <!-- itens extras (texto livre) -->
+      <div class="flex gap-2 items-center" style="margin-top:8px">
+        <input class="form-input" style="flex:1" x-model="progExtraInput" placeholder="Adicionar item personalizado…" @keydown.enter.prevent="addExtraProg()">
+        <button type="button" class="btn btn-ghost btn-sm" @click="addExtraProg()">+ Adicionar</button>
+      </div>
+      <div class="flex gap-2" style="flex-wrap:wrap;margin-top:6px">
+        <template x-for="(e,i) in progExtras" :key="i">
+          <span class="badge" style="background:var(--surface-2);color:var(--text-2)"><span x-text="e"></span> <span style="cursor:pointer;font-weight:800;margin-left:4px" @click="removeExtraProg(i)">✕</span></span>
+        </template>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="progModal=false">Cancelar</button>
+      <button class="btn btn-primary" @click="salvarProgramacao()" :disabled="!progTotal" x-text="progTotal ? ('Criar '+progTotal+' projeto'+(progTotal>1?'s':'')) : 'Criar projetos'"></button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" x-show="modal==='project'" @click.self="modal=null" x-cloak>
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Projeto':'Novo Projeto'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
@@ -1408,6 +1461,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=51"></script>
+<script src="js/app.js?v=52"></script>
 </body>
 </html>

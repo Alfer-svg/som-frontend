@@ -257,6 +257,9 @@ document.addEventListener('alpine:init', () => {
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação)
+    progModal: false, // modal de criar programação (vários projetos de uma vez)
+    progForm: { cliente: '', responsavel: '', prazo: '' },
+    progSelModelos: [], progExtras: [], progExtraInput: '',
     _hbStarted: false, // guarda do heartbeat
     relatorio: { linhas: [], porDia: [], de: '', ate: '' }, // relatório de equipe (ponto + produção)
     relPeriodo: 'mes', relDe: '', relAte: '',
@@ -935,6 +938,33 @@ document.addEventListener('alpine:init', () => {
     progFeitos(arr) { return arr.filter(p => p.status === 'Concluído').length; },
     prazoNaSemana(p) { const s = this.semanaAtual; return p.prazo && p.prazo >= s.ini && p.prazo <= s.fim; },
     toggleConcluido(p) { this.moverProjeto(p, p.status === 'Concluído' ? 'A Fazer' : 'Concluído'); },
+    // ── Programação: criar vários projetos do mesmo cliente p/ um colaborador ──
+    abrirProgramacao() {
+      if (!this.equipe.length) this.carregarEquipe();
+      this.progForm = { cliente: '', responsavel: '', prazo: this.semanaAtual.fim };
+      this.progSelModelos = []; this.progExtras = []; this.progExtraInput = '';
+      this.progModal = true;
+    },
+    toggleModeloProg(nome) { const i = this.progSelModelos.indexOf(nome); if (i >= 0) this.progSelModelos.splice(i, 1); else this.progSelModelos.push(nome); },
+    addExtraProg() { const t = (this.progExtraInput || '').trim(); if (!t) return; this.progExtras.push(t); this.progExtraInput = ''; },
+    removeExtraProg(i) { this.progExtras.splice(i, 1); },
+    get progTotal() { return this.progSelModelos.length + this.progExtras.length; },
+    async salvarProgramacao() {
+      const f = this.progForm;
+      if (!f.cliente) return alert('Escolha o cliente.');
+      if (!f.responsavel) return alert('Escolha o colaborador responsável.');
+      if (!this.progTotal) return alert('Selecione ao menos um projeto da programação.');
+      const itens = [];
+      this.progSelModelos.forEach(nome => { const m = this.MODELOS_PROJETO.find(x => x.nome === nome); itens.push({ nome, servico: m ? m.servico : 'Consultoria' }); });
+      this.progExtras.forEach(nome => itens.push({ nome, servico: 'Consultoria' }));
+      try {
+        for (const it of itens) {
+          await this.salvarProjetoApi({ id: '', nome: it.nome, cliente: f.cliente, servico: it.servico, responsavel: f.responsavel, status: 'A Fazer', prazo: f.prazo || '', progresso: 0, notas: '' });
+        }
+        await this.carregarProjetos();
+        this.progModal = false; this.opTab = 'semana';
+      } catch (e) { alert(e.message || 'Falha ao criar a programação.'); }
+    },
     novoProjeto(status = 'A Fazer') { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '' }; this.modal = 'project'; },
     editarProjeto(p) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { ...p }; this.modal = 'project'; },
     async salvarProjeto() {
