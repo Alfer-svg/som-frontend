@@ -265,6 +265,8 @@ document.addEventListener('alpine:init', () => {
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     TRELLO_LABELS, dragId: null, dropCol: null, // arrastar cards entre listas (estilo Trello)
+    cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, novoItemCheck: '', // card-detalhe Trello
+    quickAddCol: '', quickAddText: '', // adicionar cartão rápido
     layouts: [], layoutModal: false, layoutAtual: null, // layout da semana (Fase 2/3)
     progModal: false, // modal de criar programação (calendário de posts da semana)
     progForm: { cliente: '', responsavel: '' },
@@ -391,7 +393,7 @@ document.addEventListener('alpine:init', () => {
       const nome = cls.split('ph-').pop();
       return 'assets/icons/' + nome + '.png?v=3';
     },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -929,6 +931,31 @@ document.addEventListener('alpine:init', () => {
     avatarBg(nome) { const m = (this.equipe || []).find(x => x.nome === nome); return m ? this.papelInfo(m.papel).bg : '#dfe1e6'; },
     avatarFg(nome) { const m = (this.equipe || []).find(x => x.nome === nome); return m ? this.papelInfo(m.papel).cor : '#5e6c84'; },
     onDropProjeto(status) { const p = this.projects.find(x => x.id === this.dragId); if (p && p.status !== status) this.moverProjeto(p, status); this.dragId = null; this.dropCol = null; },
+    // ── Etiquetas nomeadas (compartilhadas) ──
+    async carregarLabels() { try { const r = await this.api('GET', '/config/ui.labels'); this.labelNames = r && r.valor ? JSON.parse(r.valor) : {}; } catch { this.labelNames = {}; } },
+    async salvarLabels() { try { await this.api('PUT', '/config/ui.labels', { valor: JSON.stringify(this.labelNames) }); } catch (e) { alert(e.message); } },
+    labelNome(key) { return this.labelNames[key] || ''; },
+    // ── Card-detalhe estilo Trello (membros, etiquetas, checklist, data, descrição) ──
+    abrirCard(p) {
+      if (!this.equipe.length) this.carregarEquipe();
+      if (!Array.isArray(p.labels)) p.labels = [];
+      if (!Array.isArray(p.membros)) p.membros = [];
+      if (!Array.isArray(p.checklist)) p.checklist = [];
+      this.cardRef = p; this.labelEdit = false; this.novoItemCheck = ''; this.cardModal = true;
+    },
+    async salvarCard() { if (!this.cardRef) return; try { await this.salvarProjetoApi(this.cardRef); } catch (e) { alert(e.message); } },
+    fecharCard() { this.cardModal = false; this.carregarProjetos(); },
+    toggleLabelCard(key) { const a = this.cardRef.labels; const i = a.indexOf(key); if (i >= 0) a.splice(i, 1); else a.push(key); this.salvarCard(); },
+    toggleMembro(nome) { const a = this.cardRef.membros; const i = a.indexOf(nome); if (i >= 0) a.splice(i, 1); else a.push(nome); this.salvarCard(); },
+    addItemCheck() { const t = (this.novoItemCheck || '').trim(); if (!t) return; this.cardRef.checklist.push({ id: MD.uid(), texto: t, feito: false }); this.novoItemCheck = ''; this.salvarCard(); },
+    toggleItemCheck(it) { it.feito = !it.feito; this.salvarCard(); },
+    removeItemCheck(id) { this.cardRef.checklist = this.cardRef.checklist.filter(x => x.id !== id); this.salvarCard(); },
+    checkProgresso(p) { const c = p.checklist || []; const f = c.filter(x => x.feito).length; return { feitos: f, total: c.length, pct: c.length ? Math.round(f / c.length * 100) : 0 }; },
+    async quickAdd(status) {
+      const t = (this.quickAddText || '').trim(); if (!t) { this.quickAddCol = ''; return; }
+      try { await this.salvarProjetoApi({ id: '', nome: t, cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '', labels: [], membros: [], checklist: [] }); await this.carregarProjetos(); this.quickAddText = ''; }
+      catch (e) { alert(e.message); }
+    },
     // ── Programação semanal (checklist por colaborador) ──
     get semanaAtual() {
       const hoje = new Date(Date.now() - 3 * 3600 * 1000); const dow = (hoje.getDay() + 6) % 7; // 0=segunda
