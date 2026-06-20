@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=3">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=48">
+  <link rel="stylesheet" href="css/styles.css?v=49">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -450,11 +450,14 @@
                 </div>
                 <template x-for="p in progOrdena(g.projetos)" :key="p.id">
                   <div class="flex items-start gap-2" style="padding:10px 14px;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" :checked="p.status==='Concluído'" @change="toggleConcluido(p)" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;margin-top:2px" :title="p.status==='Concluído'?'Pronto':'Marcar pronto'">
-                    <div style="flex:1;min-width:0;cursor:pointer" @click="p.isPost ? editarPost(p) : editarProjeto(p)">
+                    <input type="checkbox" :checked="p.status==='Concluído'" @change="toggleConcluido(p)" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;margin-top:3px" :title="p.status==='Concluído'?'Pronto':'Marcar pronto'">
+                    <div style="flex:1;min-width:0;cursor:pointer" @click="abrirCard(p)">
+                      <div class="tl-labels" x-show="(p.labels||[]).length" style="margin-bottom:4px">
+                        <template x-for="lb in (p.labels||[])" :key="lb"><span class="tl-label" :style="'background:'+labelCor(lb)+';color:'+labelTextCor(lb)" x-text="labelNome(lb)||'sem nome'"></span></template>
+                      </div>
                       <div class="flex items-center gap-2">
                         <span x-show="p.isPost && p.prazo" class="badge" style="background:var(--surface-2);color:var(--text-2)" x-text="diaSemanaLabel(p.prazo)"></span>
-                        <span x-show="p.isPost" class="badge" style="background:#ede9fe;color:#6d28d9" x-text="p.tipoPost||'Feed'"></span>
+                        <span x-show="p.isPost" class="tl-type" x-text="p.tipoPost||'Feed'"></span>
                         <span class="fs-13 fw-700 truncate" :style="p.status==='Concluído'?'text-decoration:line-through;color:var(--text-3)':''" x-text="p.tema||p.nome"></span>
                       </div>
                       <div class="text-3 fs-12 truncate" style="margin-top:2px">
@@ -463,9 +466,17 @@
                           <span><span x-show="p.cliente" x-text="p.cliente"></span><span x-show="p.prazo" :style="prazoNaSemana(p)&&p.status!=='Concluído'?'color:#d97706;font-weight:700':''" x-text="(p.cliente?' · ':'')+(prazoNaSemana(p)?'esta semana · ':'')+'prazo '+fmtDate(p.prazo)"></span></span>
                         </template>
                       </div>
+                      <!-- metadados na mesma linha do card Trello -->
+                      <div class="tl-meta" x-show="(p.checklist||[]).length || (p.comentarios||[]).length || (p.anexos||[]).length || (p.membros||[]).length" style="margin-top:6px">
+                        <span class="m" x-show="(p.checklist||[]).length" :style="checkProgresso(p).pct===100?'color:#61bd4f':''"><i class="ph ph-check-square"></i> <span x-text="checkProgresso(p).feitos+'/'+checkProgresso(p).total"></span></span>
+                        <span class="m" x-show="(p.comentarios||[]).length"><i class="ph ph-chat-circle"></i> <span x-text="(p.comentarios||[]).length"></span></span>
+                        <span class="m" x-show="(p.anexos||[]).length || (p.isPost&&p.criativo)"><i class="ph ph-paperclip"></i> <span x-text="(p.anexos||[]).length + (p.isPost&&p.criativo?1:0)"></span></span>
+                        <span style="display:inline-flex">
+                          <template x-for="m in (p.membros||[])" :key="m"><span class="tl-avatar" style="width:20px;height:20px;margin-left:-5px;border:2px solid #fff" :style="fotoDe(m)?('background-image:url('+fotoDe(m)+')'):('background:'+avatarBg(m)+';color:'+avatarFg(m))" :title="m" x-text="fotoDe(m)?'':iniciais(m)"></span></template>
+                        </span>
+                      </div>
                     </div>
-                    <a x-show="p.isPost && p.criativo" :href="p.criativo" target="_blank" @click.stop class="btn btn-ghost btn-sm" title="Abrir criativo"><img class="ic-img" src="assets/icons/palette.png?v=3"></a>
-                    <span class="badge" :style="'background:'+projStatusInfo(p.status).color+'22;color:'+projStatusInfo(p.status).color" x-text="p.status==='Concluído'?'pronto':p.status"></span>
+                    <span class="badge" style="align-self:flex-start;flex-shrink:0;white-space:nowrap" :style="'background:'+projStatusInfo(p.status).color+'22;color:'+projStatusInfo(p.status).color" x-text="p.status==='Concluído'?'pronto':p.status"></span>
                   </div>
                 </template>
               </div>
@@ -1762,6 +1773,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=61"></script>
+<script src="js/app.js?v=63"></script>
 </body>
 </html>
