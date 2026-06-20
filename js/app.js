@@ -171,6 +171,7 @@ document.addEventListener('alpine:init', () => {
     radarAberto: true, // painel Radar do Monitoramento expandido
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
     novaInter: { tipo: 'Ligação', texto: '' }, // form de nova interação na timeline
+    radarAutolog: MD.get('som_radar_autolog', true), // auto-registrar ações do Radar no histórico
     TIPOS_INTER,
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
@@ -554,7 +555,9 @@ document.addEventListener('alpine:init', () => {
       await this.persistirCliente(c);
     },
     // Registra automaticamente a ação feita pelo Radar (parabéns, seguir…) no histórico do cliente
+    toggleRadarAutolog() { this.radarAutolog = !this.radarAutolog; MD.set('som_radar_autolog', this.radarAutolog); },
     registrarAcaoRadar(p) {
+      if (!this.radarAutolog) return; // auto-registro desligado pelo usuário
       const c = (this.clients || []).find(x => x.id === p.cliId); if (!c) return;
       const tipo = p.kind === 'aniver' ? 'WhatsApp' : 'Nota';
       const texto = p.kind === 'aniver' ? '🎂 Parabenizou pelo aniversário (via Radar)' : p.kind === 'seguir' ? '📲 Abriu o perfil pra seguir (via Radar)' : '✅ ' + p.txt;

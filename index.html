@@ -364,7 +364,13 @@
                 <div class="text-3 fs-12" x-text="radar.length ? (radar.length+' pendência(s)'+(radarUrgentes?' · '+radarUrgentes+' urgente(s)':'')) : 'Tudo em dia ✅'"></div>
               </div>
             </div>
-            <button class="btn btn-ghost btn-sm" @click="radarAberto=!radarAberto" x-show="radar.length" x-text="radarAberto?'Recolher':'Ver tudo'"></button>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2" style="cursor:pointer;font-size:12px;color:var(--text-3)" title="Quando ligado, clicar em Parabenizar/Seguir registra a ação no histórico do cliente">
+                <input type="checkbox" :checked="radarAutolog" @change="toggleRadarAutolog()" style="cursor:pointer">
+                <span>Registrar ações no histórico</span>
+              </label>
+              <button class="btn btn-ghost btn-sm" @click="radarAberto=!radarAberto" x-show="radar.length" x-text="radarAberto?'Recolher':'Ver tudo'"></button>
+            </div>
           </div>
           <div x-show="radar.length && radarAberto" style="max-height:340px;overflow:auto">
             <template x-for="(p,i) in radar" :key="p.cliId+'-'+i">
@@ -1173,6 +1179,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=37"></script>
+<script src="js/app.js?v=38"></script>
 </body>
 </html>
