@@ -82,6 +82,7 @@ const TRELLO_LABELS = [
   { key: 'sky', cor: '#00c2e0' }, { key: 'lime', cor: '#51e898' }, { key: 'pink', cor: '#ff78cb' },
 ];
 const FIN_CATEGORIAS = ['Mensalidade', 'Mídia/ADS', 'Projeto pontual', 'Salários', 'Ferramentas', 'Impostos', 'Infra', 'Outros'];
+const FORN_CATEGORIAS = ['Ferramentas/SaaS', 'Mídia/ADS', 'Terceirizados', 'Infra/Hospedagem', 'Impostos', 'Serviços', 'Outros'];
 // Orçamentos (propostas comerciais) — status do funil de proposta.
 const ORC_STATUS = [
   { id: 'Rascunho', color: '#8a8ba3' },
@@ -247,7 +248,7 @@ document.addEventListener('alpine:init', () => {
   Alpine.data('app', () => ({
     page: 'dashboard',
     comOpen: true, // grupo "Comercial" (CRM + Clientes) aberto na barra lateral
-    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
+    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, FORN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
     radarAberto: true, // painel Radar do Monitoramento expandido
@@ -292,8 +293,10 @@ document.addEventListener('alpine:init', () => {
     secCli: 'empresa', // seção aberta no acordeão do modal de cliente
 
     // dados
-    clients: [], leads: [], proposals: [], contracts: [], finance: [], projects: [], catalogo: [],
+    clients: [], leads: [], proposals: [], contracts: [], finance: [], projects: [], catalogo: [], fornecedores: [],
     propostaEnvio: null,
+    finTab: 'lancamentos',  // Financeiro: 'lancamentos' | 'fornecedores'
+    fornForm: {},
 
     // modais
     modal: null, // 'lead' | 'client' | 'finance' | 'project'
@@ -313,6 +316,7 @@ document.addEventListener('alpine:init', () => {
       this.proposals = MD.get('som_proposals', []);
       this.contracts = MD.get('som_contracts', []);
       this.finance   = MD.get('som_finance', []);
+      this.fornecedores = MD.get('som_fornecedores', []); // cadastro de fornecedores (despesas)
       this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento
       if (this.catalogo.length === 0 && !localStorage.getItem('som_catalogo_seeded')) {
         this.catalogo = CATALOGO_SEED.map(s => ({ id: MD.uid(), ...s }));
@@ -941,7 +945,7 @@ document.addEventListener('alpine:init', () => {
 
     // ───────────────── FINANCEIRO ─────────────────
     get financeFiltrado() { return [...this.finance].sort((a, b) => (b.data || '').localeCompare(a.data || '')); },
-    novoLancamento(tipo = 'receita') { this.editing = { id: '', tipo, descricao: '', valor: 0, categoria: tipo === 'receita' ? 'Mensalidade' : 'Ferramentas', cliente: '', status: 'pendente', vencimento: MD.today(), data: MD.today() }; this.modal = 'finance'; },
+    novoLancamento(tipo = 'receita') { this.editing = { id: '', tipo, descricao: '', valor: 0, categoria: tipo === 'receita' ? 'Mensalidade' : 'Ferramentas', cliente: '', fornecedor: '', emailCobranca: '', whatsappCobranca: '', status: 'pendente', vencimento: MD.today(), data: MD.today() }; this.modal = 'finance'; },
     editarLancamento(f) { this.editing = { ...f }; this.modal = 'finance'; },
     salvarLancamento() {
       const e = this.editing; if (!e.descricao) return alert('Informe a descrição.');
@@ -951,6 +955,90 @@ document.addEventListener('alpine:init', () => {
     },
     togglePago(f) { f.status = f.status === 'pago' ? 'pendente' : 'pago'; this.persist('finance', this.finance); },
     excluirLancamento(f) { if (!confirm('Excluir este lançamento?')) return; this.finance = this.finance.filter(x => x.id !== f.id); this.persist('finance', this.finance); this.modal = null; },
+
+    // ───────────────── FORNECEDORES (despesas) ─────────────────
+    get fornecedoresOrd() { const q = this.busca.toLowerCase(); return [...this.fornecedores].sort((a, b) => (a.nome || '').localeCompare(b.nome || '')).filter(f => !q || ((f.nome || '') + ' ' + (f.categoria || '') + ' ' + (f.cnpjCpf || '')).toLowerCase().includes(q)); },
+    novoFornecedor() { this.fornForm = { id: '', nome: '', cnpjCpf: '', categoria: 'Ferramentas/SaaS', email: '', whatsapp: '', chavePix: '', site: '', obs: '' }; this.modal = 'fornecedor'; },
+    editarFornecedor(f) { this.fornForm = { ...f }; this.modal = 'fornecedor'; },
+    salvarFornecedor() {
+      const e = this.fornForm; if (!e.nome) return alert('Informe o nome do fornecedor.');
+      if (e.id) { const i = this.fornecedores.findIndex(x => x.id === e.id); if (i > -1) this.fornecedores[i] = { ...e }; }
+      else { e.id = MD.uid(); this.fornecedores.push({ ...e }); }
+      this.persist('fornecedores', this.fornecedores); this.modal = null;
+    },
+    excluirFornecedor(f) { if (!confirm('Excluir o fornecedor "' + (f.nome || '') + '"?')) return; this.fornecedores = this.fornecedores.filter(x => x.id !== f.id); this.persist('fornecedores', this.fornecedores); this.modal = null; },
+
+    // ───────────────── COBRANÇA (fatura, boleto Cora, e-mail, zap) ─────────────────
+    // Nº legível do lançamento (fatura/boleto)
+    numLancamento(f) { return 'FAT-' + String(f.id || '').replace(/\D/g, '').slice(-6).padStart(6, '0').toUpperCase(); },
+    // Fatura — documento client-side (imprime / Salvar como PDF)
+    gerarFatura(f) {
+      const w = window.open('', '_blank');
+      if (!w) return alert('Permita pop-ups neste site pra gerar a fatura.');
+      w.document.write(this._faturaHTML(f)); w.document.close(); w.focus();
+      setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
+    },
+    _faturaHTML(f) {
+      const e = this._esc, num = this.numLancamento(f);
+      const linha = (l, v) => v ? `<div class="meta-row"><span>${e(l)}</span><b>${e(v)}</b></div>` : '';
+      const pagto = [];
+      if (f.linhaDigitavel) pagto.push(`<div class="bloco"><b>Boleto — linha digitável</b>${e(f.linhaDigitavel)}</div>`);
+      if (f.boletoUrl) pagto.push(`<div class="bloco"><b>Boleto (link)</b><a href="${e(f.boletoUrl)}">${e(f.boletoUrl)}</a></div>`);
+      if (EMPRESA.pix) pagto.push(`<div class="bloco"><b>PIX</b>${e(EMPRESA.pix)}</div>`);
+      return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Fatura ${e(num)}</title>
+<style>${this._cssDoc()}
+.fat-wrap{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;margin-top:6px}
+.meta-row{display:flex;justify-content:space-between;gap:18px;padding:7px 0;border-bottom:1px solid #eee;font-size:13px}.meta-row b{color:#141414}
+.fat-total{margin:22px 0;background:#141414;color:#fff;border-radius:14px;padding:20px 24px;display:flex;justify-content:space-between;align-items:center}.fat-total span{font-size:12px;letter-spacing:2px;color:#C9A24B;font-weight:700}.fat-total b{font-size:28px;font-weight:800}
+.pagto{background:#fafafa;border:1px solid #eee;border-radius:12px;padding:16px 18px;margin-top:8px}.pagto .bloco{margin:8px 0}.pagto a{color:#141414;word-break:break-all}</style></head>
+<body>${this._docHead('FATURA', num, ['Emissão: ' + MD.fmtDate(MD.today()), 'Vencimento: ' + MD.fmtDate(f.vencimento)])}
+<div class="pad">
+<h2>Cobrança para</h2>
+<div class="meta-cli"><b>${e(f.cliente || 'Cliente')}</b></div>
+<h2>Descrição</h2>
+${linha('Serviço / referência', f.descricao)}
+${linha('Categoria', f.categoria)}
+${linha('Vencimento', MD.fmtDate(f.vencimento))}
+<div class="fat-total"><span>VALOR TOTAL</span><b>${e(MD.fmtCur(f.valor))}</b></div>
+${pagto.length ? '<h2>Como pagar</h2><div class="pagto">' + pagto.join('') + '</div>' : ''}
+${this._docFoot()}
+</div></body></html>`;
+    },
+    // Boleto via Cora (backend) — chave configurada por último
+    async gerarBoleto(f) {
+      if (f.tipo !== 'receita') return alert('Boleto é gerado para receitas (cobrança de cliente).');
+      if (!confirm('Gerar boleto na Cora para ' + (f.cliente || 'cliente') + ' — ' + MD.fmtCur(f.valor) + '?')) return;
+      f._cobrando = 'boleto';
+      try {
+        const r = await this.api('POST', '/cobranca/boleto', { financeId: f.id, numero: this.numLancamento(f), cliente: f.cliente, valor: +f.valor, vencimento: f.vencimento, descricao: f.descricao, email: f.emailCobranca, whatsapp: f.whatsappCobranca });
+        f.boletoUrl = r.url || r.pdf || ''; f.linhaDigitavel = r.linhaDigitavel || r.barcode || ''; f.boletoId = r.id || '';
+        this.persist('finance', this.finance);
+        alert('Boleto gerado na Cora!' + (f.boletoUrl ? '\n' + f.boletoUrl : ''));
+      } catch (err) { alert('Não foi possível gerar o boleto: ' + err.message + '\n\n(Falta configurar a chave da Cora no backend — deixamos pro final.)'); }
+      finally { f._cobrando = ''; }
+    },
+    // Cobrança por e-mail (Resend, backend) — chave por último
+    async cobrarEmail(f) {
+      const email = (f.emailCobranca || prompt('E-mail do cliente para a cobrança:', f.emailCobranca || '') || '').trim();
+      if (!email) return;
+      f.emailCobranca = email; this.persist('finance', this.finance);
+      f._cobrando = 'email';
+      try {
+        await this.api('POST', '/cobranca/email', { financeId: f.id, numero: this.numLancamento(f), email, cliente: f.cliente, valor: +f.valor, vencimento: f.vencimento, descricao: f.descricao, boletoUrl: f.boletoUrl || '', linhaDigitavel: f.linhaDigitavel || '' });
+        alert('Cobrança enviada por e-mail para ' + email + '.');
+      } catch (err) { alert('Não foi possível enviar o e-mail: ' + err.message + '\n\n(Falta a chave Resend da Maracatu — deixamos pro final.)'); }
+      finally { f._cobrando = ''; }
+    },
+    // Cobrança por WhatsApp — abre o wa.me com a mensagem pronta (funciona já, sem chave)
+    cobrarWhatsApp(f) {
+      const num = (f.whatsappCobranca || prompt('WhatsApp do cliente (com DDD):', f.whatsappCobranca || '') || '').trim();
+      if (!num) return;
+      f.whatsappCobranca = num; this.persist('finance', this.finance);
+      const linhas = ['Olá! Tudo bem? Segue a cobrança da ' + EMPRESA.nome + ':', '', '*' + (f.descricao || 'Serviço') + '*', 'Valor: ' + MD.fmtCur(f.valor), 'Vencimento: ' + MD.fmtDate(f.vencimento)];
+      if (f.linhaDigitavel) linhas.push('', 'Linha digitável do boleto:', f.linhaDigitavel);
+      if (f.boletoUrl) linhas.push('', 'Boleto: ' + f.boletoUrl);
+      window.open(this.waLink(num) + '?text=' + encodeURIComponent(linhas.join('\n')), '_blank');
+    },
 
     // ───────────────── OPERACIONAL: projetos ─────────────────
     projetosDoStatus(s) { const q = this.busca.toLowerCase(); return this.projects.filter(p => p.status === s && (!q || (p.nome + ' ' + p.cliente).toLowerCase().includes(q))); },

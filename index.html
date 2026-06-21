@@ -373,28 +373,73 @@
           <div class="card kpi"><div class="kpi-label">Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
           <div class="card kpi"><div class="kpi-label">A receber / A pagar</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
         </div>
-        <div class="flex gap-2 mb-3">
-          <button class="btn btn-primary" @click="novoLancamento('receita')">+ Receita</button>
-          <button class="btn btn-ghost" @click="novoLancamento('despesa')">+ Despesa</button>
+
+        <!-- Abas: Lançamentos | Fornecedores -->
+        <div class="fichario mb-3">
+          <div class="fichario-tab" :class="finTab==='lancamentos'?'active':''" @click="finTab='lancamentos'"><i class="ph ph-wallet ic-ph"></i> Lançamentos</div>
+          <div class="fichario-tab" :class="finTab==='fornecedores'?'active':''" @click="finTab='fornecedores'"><i class="ph ph-buildings ic-ph"></i> Fornecedores <span x-show="fornecedores.length" class="badge" style="margin-left:6px;background:var(--surface-2);min-width:18px;justify-content:center" x-text="fornecedores.length"></span></div>
         </div>
-        <template x-if="finance.length===0"><div class="card empty">Sem lançamentos. Adicione uma receita ou despesa.</div></template>
-        <div class="card" x-show="finance.length">
-          <table class="table">
-            <thead><tr><th>Descrição</th><th>Categoria</th><th>Cliente</th><th>Vencimento</th><th>Valor</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-              <template x-for="f in financeFiltrado" :key="f.id">
-                <tr>
-                  <td class="fw-700" x-text="(f.tipo==='receita'?'↑ ':'↓ ')+f.descricao"></td>
-                  <td class="fs-12 text-2" x-text="f.categoria"></td>
-                  <td class="fs-12 text-2" x-text="f.cliente||'—'"></td>
-                  <td class="fs-12 text-2" x-text="fmtDate(f.vencimento)"></td>
-                  <td class="fw-700" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="fmtCur(f.valor)"></td>
-                  <td><span class="badge" @click="togglePago(f)" style="cursor:pointer" :style="f.status==='pago'?'background:#dcfce7;color:#16a34a':'background:#fef3c7;color:#b45309'" x-text="f.status==='pago'?'Pago':'Pendente'"></span></td>
-                  <td><button class="btn btn-ghost btn-sm" @click="editarLancamento(f)">Editar</button></td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
+
+        <!-- ── LANÇAMENTOS ── -->
+        <div x-show="finTab==='lancamentos'">
+          <div class="flex gap-2 mb-3">
+            <button class="btn btn-primary" @click="novoLancamento('receita')">+ Receita</button>
+            <button class="btn btn-ghost" @click="novoLancamento('despesa')">+ Despesa</button>
+          </div>
+          <template x-if="finance.length===0"><div class="card empty">Sem lançamentos. Adicione uma receita ou despesa.</div></template>
+          <div class="card" x-show="finance.length" style="padding:0;overflow:hidden">
+            <table class="table">
+              <thead><tr><th>Descrição</th><th>Categoria</th><th>Cliente / Fornecedor</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Cobrança</th><th></th></tr></thead>
+              <tbody>
+                <template x-for="f in financeFiltrado" :key="f.id">
+                  <tr>
+                    <td class="fw-700"><span :class="f.tipo==='receita'?'text-green':'text-red'" x-text="f.tipo==='receita'?'↑ ':'↓ '"></span><span x-text="f.descricao"></span></td>
+                    <td class="fs-12 text-2" x-text="f.categoria"></td>
+                    <td class="fs-12 text-2" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||'—'"></td>
+                    <td class="fs-12 text-2" x-text="fmtDate(f.vencimento)"></td>
+                    <td class="fw-700" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="fmtCur(f.valor)"></td>
+                    <td><span class="badge" @click="togglePago(f)" style="cursor:pointer" :style="f.status==='pago'?'background:#dcfce7;color:#16a34a':'background:#fef3c7;color:#b45309'" x-text="f.status==='pago'?'Pago':'Pendente'"></span></td>
+                    <td>
+                      <div class="flex gap-2" x-show="f.tipo==='receita'" style="flex-wrap:nowrap">
+                        <button class="btn btn-ghost btn-icon btn-sm" @click="gerarFatura(f)" title="Gerar fatura (PDF)"><i class="ph ph-file-text ic-ph"></i></button>
+                        <button class="btn btn-ghost btn-icon btn-sm" @click="gerarBoleto(f)" :disabled="f._cobrando" :title="f.boletoUrl?'Boleto gerado — regerar':'Gerar boleto (Cora)'"><i class="ph ph-barcode ic-ph" :style="f.boletoUrl?'color:var(--green)':''"></i></button>
+                        <button class="btn btn-ghost btn-icon btn-sm" @click="cobrarEmail(f)" :disabled="f._cobrando" title="Cobrar por e-mail"><i class="ph ph-envelope ic-ph"></i></button>
+                        <button class="btn btn-ghost btn-icon btn-sm" @click="cobrarWhatsApp(f)" title="Cobrar por WhatsApp"><i class="ph ph-whatsapp-logo ic-ph"></i></button>
+                      </div>
+                      <span x-show="f.tipo==='despesa'" class="text-3 fs-12">—</span>
+                    </td>
+                    <td><button class="btn btn-ghost btn-sm" @click="editarLancamento(f)">Editar</button></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── FORNECEDORES ── -->
+        <div x-show="finTab==='fornecedores'">
+          <div class="flex gap-2 mb-3"><button class="btn btn-primary" @click="novoFornecedor()">+ Fornecedor</button></div>
+          <template x-if="fornecedores.length===0"><div class="card empty">Nenhum fornecedor cadastrado. Cadastre quem você paga (ferramentas, mídia, terceirizados…).</div></template>
+          <div class="card" x-show="fornecedores.length" style="padding:0;overflow:hidden">
+            <table class="table">
+              <thead><tr><th>Fornecedor</th><th>CNPJ / CPF</th><th>Categoria</th><th>Contato</th><th></th></tr></thead>
+              <tbody>
+                <template x-for="f in fornecedoresOrd" :key="f.id">
+                  <tr>
+                    <td class="fw-700" x-text="f.nome"></td>
+                    <td class="fs-12 text-2" x-text="f.cnpjCpf||'—'"></td>
+                    <td class="fs-12 text-2" x-text="f.categoria"></td>
+                    <td class="fs-12 text-2">
+                      <a x-show="f.whatsapp" :href="waLink(f.whatsapp)" target="_blank" style="color:#16a34a;font-weight:600"><i class="ph ph-whatsapp-logo ic-ph"></i> <span x-text="f.whatsapp"></span></a>
+                      <span x-show="f.email" x-text="(f.whatsapp?' · ':'')+f.email"></span>
+                      <span x-show="!f.whatsapp && !f.email">—</span>
+                    </td>
+                    <td><button class="btn btn-ghost btn-sm" @click="editarFornecedor(f)">Editar</button></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -1166,14 +1211,62 @@
       <div class="form-group"><label class="form-label">Valor (R$)</label><input class="form-input" type="number" x-model="editing.valor"></div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição *</label><input class="form-input" x-model="editing.descricao"></div>
       <div class="form-group"><label class="form-label">Categoria</label><select class="form-select" x-model="editing.categoria"><template x-for="c in FIN_CATEGORIAS"><option x-text="c"></option></template></select></div>
-      <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" list="cli-list"><datalist id="cli-list"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+      <!-- Receita → Cliente; Despesa → Fornecedor (caixa de seleção) -->
+      <div class="form-group" x-show="editing.tipo==='receita'"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" list="cli-list"><datalist id="cli-list"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+      <div class="form-group" x-show="editing.tipo==='despesa'">
+        <label class="form-label">Fornecedor</label>
+        <select class="form-select" x-model="editing.fornecedor">
+          <option value="">— selecione —</option>
+          <template x-for="fo in fornecedoresOrd" :key="fo.id"><option :value="fo.nome" x-text="fo.nome"></option></template>
+        </select>
+        <div class="text-3 fs-12" style="margin-top:5px">Não está na lista? <a @click.prevent="novoFornecedor()" href="#" style="color:var(--accent);font-weight:600">Cadastrar fornecedor</a></div>
+      </div>
       <div class="form-group"><label class="form-label">Vencimento</label><input class="form-input" type="date" x-model="editing.vencimento"></div>
       <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+      <!-- Cobrança (só receita) -->
+      <template x-if="editing.tipo==='receita'">
+        <div style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:12px;margin-top:2px">
+          <div class="fw-700 fs-12 mb-2"><i class="ph ph-receipt ic-ph"></i> Cobrança do cliente</div>
+          <div class="grid grid-2" style="gap:14px">
+            <div class="form-group"><label class="form-label">E-mail p/ cobrança</label><input class="form-input" type="email" x-model="editing.emailCobranca" placeholder="cliente@email.com"></div>
+            <div class="form-group"><label class="form-label">WhatsApp p/ cobrança</label><input class="form-input" x-model="editing.whatsappCobranca" placeholder="(81) 9 9999-9999"></div>
+          </div>
+          <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
+            <button type="button" class="btn btn-ghost btn-sm" @click="gerarFatura(editing)"><i class="ph ph-file-text ic-ph"></i> Fatura (PDF)</button>
+            <button type="button" class="btn btn-ghost btn-sm" :disabled="!editing.id || editing._cobrando" @click="gerarBoleto(editing)"><i class="ph ph-barcode ic-ph"></i> <span x-text="editing.boletoUrl?'Boleto gerado ✓':'Gerar boleto (Cora)'"></span></button>
+            <button type="button" class="btn btn-ghost btn-sm" :disabled="!editing.id || editing._cobrando" @click="cobrarEmail(editing)"><i class="ph ph-envelope ic-ph"></i> Cobrar por e-mail</button>
+            <button type="button" class="btn btn-ghost btn-sm" @click="cobrarWhatsApp(editing)"><i class="ph ph-whatsapp-logo ic-ph"></i> Cobrar por WhatsApp</button>
+          </div>
+          <div class="text-3 fs-12" style="margin-top:7px" x-show="!editing.id">Salve o lançamento antes de gerar boleto ou enviar por e-mail.</div>
+        </div>
+      </template>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirLancamento(editing)">Excluir</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarLancamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORNECEDOR -->
+<div class="modal-backdrop" x-show="modal==='fornecedor'" @click.self="modal=null" x-cloak>
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title" x-text="(fornForm.id?'Editar ':'Novo ')+'Fornecedor'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-body grid grid-2" style="gap:14px">
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome / Razão social *</label><input class="form-input" x-model="fornForm.nome"></div>
+      <div class="form-group"><label class="form-label">CNPJ / CPF</label><input class="form-input" x-model="fornForm.cnpjCpf"></div>
+      <div class="form-group"><label class="form-label">Categoria</label><select class="form-select" x-model="fornForm.categoria"><template x-for="c in FORN_CATEGORIAS"><option x-text="c"></option></template></select></div>
+      <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" type="email" x-model="fornForm.email"></div>
+      <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" x-model="fornForm.whatsapp"></div>
+      <div class="form-group"><label class="form-label">Chave PIX</label><input class="form-input" x-model="fornForm.chavePix"></div>
+      <div class="form-group"><label class="form-label">Site</label><input class="form-input" x-model="fornForm.site" placeholder="https://"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Observações</label><textarea class="form-textarea" x-model="fornForm.obs"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" x-show="fornForm.id" @click="excluirFornecedor(fornForm)">Excluir</button>
+      <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
+      <button class="btn btn-primary" @click="salvarFornecedor()">Salvar</button>
     </div>
   </div>
 </div>
@@ -1838,6 +1931,6 @@
 </div>
 
 <script src="js/brand.js?v=5"></script>
-<script src="js/app.js?v=69"></script>
+<script src="js/app.js?v=70"></script>
 </body>
 </html>
