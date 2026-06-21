@@ -626,6 +626,8 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
     // Grava local (cache offline) e, se for coleção compartilhada, sincroniza no backend.
     persist(key, arr) { MD.set('som_' + key, arr); if (this.token && COLECOES_SYNC.includes(key)) this.api('POST', '/colecoes/' + key, { itens: arr }).catch(() => {}); },
+    // Remove itens com nome repetido (mantém o 1º) — usado pra limpar catálogo duplicado.
+    _dedupePorNome(arr) { const seen = new Set(); return (arr || []).filter(x => { const k = String((x && x.nome) || '').trim().toLowerCase(); if (!k) return true; if (seen.has(k)) return false; seen.add(k); return true; }); },
     // Carrega as coleções compartilhadas do backend, unindo (por id) o que houver de local
     // que ainda não subiu — assim nada se perde e todos passam a ver os mesmos dados.
     async carregarColecoesSync() {
@@ -637,8 +639,10 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
           const local = MD.get('som_' + key, []);
           const ids = new Set(remoto.map(x => x && x.id).filter(Boolean));
           const novos = (Array.isArray(local) ? local : []).filter(x => x && x.id && !ids.has(x.id));
-          const merged = novos.length ? [...novos, ...remoto] : remoto;
-          if (novos.length) await this.api('POST', '/colecoes/' + key, { itens: merged }).catch(() => {});
+          let merged = novos.length ? [...novos, ...remoto] : remoto.slice();
+          // catálogo: dedupe por NOME (itens semeados em navegadores diferentes têm ids distintos mas mesmo nome)
+          if (key === 'catalogo') merged = this._dedupePorNome(merged);
+          if (novos.length || merged.length !== remoto.length) await this.api('POST', '/colecoes/' + key, { itens: merged }).catch(() => {});
           this[key] = merged; MD.set('som_' + key, merged);
           // semeia o catálogo só na 1ª vez (backend e local vazios), evitando duplicar entre navegadores
           if (key === 'catalogo' && !merged.length && !localStorage.getItem('som_catalogo_seeded')) {
