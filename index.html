@@ -436,8 +436,16 @@
 
       <!-- ========== CONTRATOS ========== -->
       <section x-show="page==='contratos'">
+        <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
+          <div class="text-3 fs-12"><span x-text="verArquivadosContrato?'Arquivados':'Ativos'"></span>: <span x-text="contratosFiltrados.length"></span></div>
+          <button class="btn btn-ghost btn-sm" @click="verArquivadosContrato=!verArquivadosContrato" title="Arquivados = encerrados (cancelados) ou vencidos há mais de 10 dias">
+            <i class="ph ph-archive ic-ph"></i>
+            <span x-text="verArquivadosContrato ? 'Ver ativos' : ('Ver arquivados ('+contratosArquivadosCount+')')"></span>
+          </button>
+        </div>
         <template x-if="contracts.length===0"><div class="card empty">Nenhum contrato ainda. Clique em “+ Contrato”, ou gere um a partir de um orçamento aprovado.</div></template>
-        <div class="card" x-show="contracts.length">
+        <template x-if="contracts.length>0 && contratosFiltrados.length===0"><div class="card empty" x-text="verArquivadosContrato ? 'Nenhum contrato arquivado.' : 'Nenhum contrato ativo. Veja os arquivados ou crie um novo.'"></div></template>
+        <div class="card" x-show="contratosFiltrados.length">
           <table class="table">
             <thead><tr><th>Número</th><th>Cliente</th><th>Projeto</th><th>Início</th><th>Vigência</th><th>Valor</th><th>Status</th><th></th></tr></thead>
             <tbody>
@@ -2357,6 +2365,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=112"></script>
+<script src="js/app.js?v=113"></script>
 </body>
 </html>

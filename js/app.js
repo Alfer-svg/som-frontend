@@ -292,6 +292,7 @@ document.addEventListener('alpine:init', () => {
     fichaModal: false, fichaMsg: '',
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     verArquivados: false, // lista de Clientes: mostrar arquivados (inativos) em vez dos ativos
+    verArquivadosContrato: false, // lista de Contratos: mostrar arquivados (encerrados/vencidos +10d)
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     TRELLO_LABELS, dragId: null, dropCol: null, // arrastar cards entre listas (estilo Trello)
@@ -1833,7 +1834,16 @@ ${this._docFoot()}
     aplicarCatalogo(s, id) { const it = this.catalogo.find(x => x.id === id); if (!it) return; s.nome = it.nome; s.valor = +it.valor || 0; if (it.escopo) s.escopo = it.escopo; if (Array.isArray(it.redes) && it.redes.length) s.redes = [...it.redes]; if (Array.isArray(it.ads) && it.ads.length) { s.ads = [...it.ads]; s.verbaAds = { ...(it.verbaAds || {}) }; } },
 
     // ───────────────── COMERCIAL: contratos ─────────────────
-    get contratosFiltrados() { const q = this.busca.toLowerCase(); return [...this.contracts].sort((a, b) => (b.inicio || '').localeCompare(a.inicio || '')).filter(c => !q || ((c.numero || '') + ' ' + (c.cliente || '') + ' ' + (c.objeto || '')).toLowerCase().includes(q)); },
+    // Arquivado = Encerrado (cancelado) OU vencido há mais de 10 dias.
+    contratoArquivado(c) { if (c.status === 'Encerrado') return true; const fim = this.contrFim(c); return !!(fim && fim < this._dataEm(-10)); },
+    get contratosArquivadosCount() { return this.contracts.filter(c => this.contratoArquivado(c)).length; },
+    get contratosFiltrados() {
+      const q = this.busca.toLowerCase();
+      return [...this.contracts]
+        .filter(c => this.verArquivadosContrato ? this.contratoArquivado(c) : !this.contratoArquivado(c))
+        .sort((a, b) => (b.inicio || '').localeCompare(a.inicio || ''))
+        .filter(c => !q || ((c.numero || '') + ' ' + (c.cliente || '') + ' ' + (c.objeto || '')).toLowerCase().includes(q));
+    },
     contrStatusInfo(s) { return CONTR_STATUS.find(x => x.id === s) || CONTR_STATUS[0]; },
     // Data-fim = início + vigência (meses).
     contrFim(c) { if (!c.inicio || !+c.meses) return ''; const d = new Date(c.inicio + 'T00:00:00'); d.setMonth(d.getMonth() + (+c.meses || 0)); return d.toISOString().slice(0, 10); },
