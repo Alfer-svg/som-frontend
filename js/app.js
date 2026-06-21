@@ -1456,8 +1456,14 @@ ${this._docFoot()}
     editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, validade: 30, modoAssinatura: 'presencial', ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, escopo: '', ...s, _open: false })); this.projetoSel = this._projSel(this.editing.projeto); this.modal = 'orcamento'; },
     addServicoOrc() { if (!Array.isArray(this.editing.servicos)) this.editing.servicos = []; this.editing.servicos.forEach(s => s._open = false); this.editing.servicos.push(this.servicoVazio()); },
     removeServicoOrc(i) { this.editing.servicos.splice(i, 1); if (!this.editing.servicos.length) this.editing.servicos.push(this.servicoVazio()); },
-    // Preenche contato/e-mail a partir do cliente selecionado.
-    autoPreencherClienteOrc() { const c = this.clients.find(c => c.empresa === this.editing.cliente); if (c) { if (!this.editing.contato) this.editing.contato = c.contato || ''; if (!this.editing.email) this.editing.email = c.email || ''; } },
+    // Preenche o máximo possível a partir do cliente selecionado (contato/e-mail, com fallback no 1º responsável).
+    autoPreencherClienteOrc() {
+      const c = this._clientePorNome(this.editing.cliente); if (!c) return;
+      const r0 = Array.isArray(c.responsaveis) && c.responsaveis[0] ? c.responsaveis[0] : null;
+      if (!this.editing.contato) this.editing.contato = c.contato || (r0 && r0.nome) || '';
+      if (!this.editing.email) this.editing.email = c.email || (r0 && r0.email) || c.emailCobranca || '';
+      if (!this.editing.whatsapp) this.editing.whatsapp = c.whatsapp || (r0 && r0.whatsapp) || '';
+    },
     async salvarOrcamento() {
       const e = this.editing; if (!e.cliente && !(e.servicos || []).some(s => s.nome)) return alert('Informe o cliente e ao menos um serviço.');
       e.servicos = (e.servicos || []).filter(s => s.nome || +s.valor).map(({ _open, ...s }) => s); // tira o flag de UI e serviços vazios
@@ -1532,11 +1538,24 @@ ${this._docFoot()}
       const partes = [ruaNum, c.complemento, c.bairro, cidUf, c.cep && ('CEP ' + c.cep)].filter(Boolean);
       return partes.join(' – ') || c.endereco || '';
     },
+    // Texto detalhado dos serviços (nome, valor, plataformas e escopo) p/ o objeto do contrato.
+    _servicosTexto(servicos) {
+      return (servicos || []).filter(s => s.nome || +s.valor).map((s, i) => {
+        const head = (i + 1) + '. ' + (s.nome || '') + (+s.valor ? (' — ' + MD.fmtCur(s.valor) + '/mês') : '');
+        const redes = (Array.isArray(s.redes) ? s.redes : []).map(id => { const r = REDES.find(x => x.id === id); return r ? r.label : null; }).filter(Boolean);
+        const ads = (Array.isArray(s.ads) ? s.ads : []).map(id => { const a = ADS_PLATAFORMAS.find(x => x.id === id); return a ? a.label : null; }).filter(Boolean);
+        const linhas = [head];
+        if (redes.length) linhas.push('Redes: ' + redes.join(', '));
+        if (ads.length) linhas.push('Anúncios: ' + ads.join(', '));
+        String(s.escopo || '').split('\n').map(x => x.replace(/^[-•\s]+/, '').trim()).filter(Boolean).forEach(b => linhas.push('• ' + b));
+        return linhas.join('\n');
+      }).join('\n');
+    },
     gerarContrato(o) {
       const c = this._clientePorNome(o.cliente); // puxa CNPJ/endereço/representante do cadastro
       const resp0 = c && Array.isArray(c.responsaveis) ? c.responsaveis[0] : null;
-      const serv = (o.servicos || []).map(s => '• ' + (s.nome || '') + (s.valor ? (' — ' + MD.fmtCur(s.valor) + '/mês') : '')).join('\n');
-      this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || (c && (c.empresa || c.razaoSocial)) || '', documento: (c && (c.cnpj || c.documento || c.cpf)) || '', endereco: this._enderecoCliente(c), representante: o.contato || (resp0 && resp0.nome) || (c && c.contato) || '', projeto: o.projeto || '', objeto: serv || o.descricao || '', servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: o.numero || '', status: 'Ativo', observacoes: '' };
+      const objeto = this._servicosTexto(o.servicos) || o.descricao || '';
+      this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || (c && (c.empresa || c.razaoSocial)) || '', documento: (c && (c.cnpj || c.documento || c.cpf)) || '', endereco: this._enderecoCliente(c), representante: o.contato || (resp0 && resp0.nome) || (c && c.contato) || '', projeto: o.projeto || '', objeto, servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: o.vigenciaMeses == 1 ? 'Único' : 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: o.numero || '', status: 'Ativo', observacoes: o.observacoes || '' };
       this.modal = 'contrato';
     },
 
