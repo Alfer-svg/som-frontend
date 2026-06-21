@@ -11,7 +11,7 @@
   <link rel="icon" href="assets/favicon.png?v=6">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=72">
+  <link rel="stylesheet" href="css/styles.css?v=73">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -541,25 +541,25 @@
                     <i class="ph ph-barcode ic-ph" style="color:#a98a3a"></i>
                     <b>Boleto Cora:</b>
                     <span class="fin-boleto-status">Emitido</span>
-                    <button x-show="f.linhaDigitavel" @click="copiar(f.linhaDigitavel,'Linha digitável')"><i class="ph ph-copy ic-ph"></i> Linha digitável</button>
-                    <button x-show="f.pix" @click="copiar(f.pix,'Pix copia e cola')"><i class="ph ph-qr-code ic-ph"></i> Pix copia e cola</button>
-                    <button @click="abrirUrl(f.boletoUrl)"><i class="ph ph-file-pdf ic-ph"></i> PDF do boleto</button>
-                    <button x-show="f.status!=='pago'" @click="sincronizarBoleto(f)"><i class="ph ph-arrows-clockwise ic-ph"></i> Sincronizar</button>
-                    <button x-show="f.status!=='pago'" class="danger" @click="cancelarBoleto(f)"><i class="ph ph-x-circle ic-ph"></i> Cancelar boleto</button>
+                    <button x-show="f.linhaDigitavel" @click="copiar(f.linhaDigitavel,'Linha digitável')" title="Copiar a linha digitável (código de barras) do boleto pra colar no app do banco"><i class="ph ph-copy ic-ph"></i> Linha digitável</button>
+                    <button x-show="f.pix" @click="copiar(f.pix,'Pix copia e cola')" title="Copiar o código Pix copia-e-cola do boleto"><i class="ph ph-qr-code ic-ph"></i> Pix copia e cola</button>
+                    <button @click="abrirUrl(f.boletoUrl)" title="Abrir o PDF do boleto pra visualizar/imprimir"><i class="ph ph-file-pdf ic-ph"></i> PDF do boleto</button>
+                    <button x-show="f.status!=='pago'" @click="sincronizarBoleto(f)" title="Consultar na Cora se o boleto já foi pago e atualizar o status aqui"><i class="ph ph-arrows-clockwise ic-ph"></i> Sincronizar</button>
+                    <button x-show="f.status!=='pago'" class="danger" @click="cancelarBoleto(f)" title="Cancelar o boleto na Cora (deixa de poder ser pago)"><i class="ph ph-x-circle ic-ph"></i> Cancelar boleto</button>
                   </div>
                 </template>
 
                 <!-- ações -->
                 <div class="fin-acoes">
-                  <button x-show="f.tipo==='receita'" @click="gerarFatura(f)" title="Gerar fatura (PDF)"><i class="ph ph-file-text ic-ph"></i> PDF</button>
-                  <button x-show="f.tipo==='receita' && !f.boletoUrl && f.status!=='pago'" class="fin-btn-cora" @click="gerarBoleto(f)" :disabled="f._cobrando"><i class="ph ph-barcode ic-ph"></i> Gerar boleto (Cora)</button>
-                  <button x-show="f.tipo==='receita'" @click="cobrarEmail(f)" :disabled="f._cobrando"><i class="ph ph-envelope ic-ph"></i> E-mail</button>
-                  <button x-show="f.tipo==='receita'" @click="cobrarWhatsApp(f)"><i class="ph ph-whatsapp-logo ic-ph"></i> WhatsApp</button>
-                  <button x-show="f.status!=='pago'" class="fin-btn-receber" @click="receberPagar(f)"><i class="ph ph-check-circle ic-ph"></i> <span x-text="f.tipo==='receita'?'Receber':'Pagar'"></span></button>
-                  <button x-show="f.status==='pago'" @click="togglePago(f)"><i class="ph ph-arrow-counter-clockwise ic-ph"></i> Reabrir</button>
-                  <button @click="alterarVencimento(f)"><i class="ph ph-clock ic-ph"></i> Alterar vencimento</button>
-                  <button @click="editarLancamento(f)"><i class="ph ph-pencil-simple ic-ph"></i> Editar</button>
-                  <button class="danger" @click="excluirLancamento(f)" title="Excluir"><i class="ph ph-trash ic-ph"></i></button>
+                  <button x-show="f.tipo==='receita'" @click="gerarFatura(f)" title="Gerar a fatura em PDF pra imprimir ou enviar ao cliente"><i class="ph ph-file-text ic-ph"></i> PDF</button>
+                  <button x-show="f.tipo==='receita' && !f.boletoUrl && f.status!=='pago'" class="fin-btn-cora" @click="gerarBoleto(f)" :disabled="f._cobrando" title="Emitir um boleto bancário (com Pix) na Cora pra esta cobrança"><i class="ph ph-barcode ic-ph"></i> Gerar boleto (Cora)</button>
+                  <button x-show="f.tipo==='receita'" @click="cobrarEmail(f)" :disabled="f._cobrando" title="Enviar a cobrança/boleto por e-mail pro cliente"><i class="ph ph-envelope ic-ph"></i> E-mail</button>
+                  <button x-show="f.tipo==='receita'" @click="cobrarWhatsApp(f)" title="Abrir o WhatsApp com a mensagem de cobrança pronta pra enviar"><i class="ph ph-whatsapp-logo ic-ph"></i> WhatsApp</button>
+                  <button x-show="f.status!=='pago'" class="fin-btn-receber" @click="receberPagar(f)" :title="f.tipo==='receita'?'Dar baixa: marcar como recebido (pede a data da quitação)':'Dar baixa: marcar como pago (pede a data)'"><i class="ph ph-check-circle ic-ph"></i> <span x-text="f.tipo==='receita'?'Receber':'Pagar'"></span></button>
+                  <button x-show="f.status==='pago'" @click="togglePago(f)" title="Desfazer a baixa: volta o lançamento pra pendente (ex.: marcou errado ou o pagamento foi estornado)"><i class="ph ph-arrow-counter-clockwise ic-ph"></i> Reabrir</button>
+                  <button @click="alterarVencimento(f)" title="Mudar a data de vencimento deste lançamento"><i class="ph ph-clock ic-ph"></i> Alterar vencimento</button>
+                  <button @click="editarLancamento(f)" title="Editar os dados do lançamento (descrição, valor, categoria…)"><i class="ph ph-pencil-simple ic-ph"></i> Editar</button>
+                  <button class="danger" @click="excluirLancamento(f)" title="Excluir este lançamento de vez"><i class="ph ph-trash ic-ph"></i></button>
                 </div>
               </div>
             </template>
@@ -1389,29 +1389,29 @@
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+(editing.tipo==='receita'?'Receita':'Despesa')"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
-      <div class="form-group"><label class="form-label">Tipo</label><select class="form-select" x-model="editing.tipo"><option value="receita">Receita</option><option value="despesa">Despesa</option></select></div>
-      <div class="form-group"><label class="form-label">Valor (R$)</label><input class="form-input" type="number" x-model="editing.valor"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição *</label><input class="form-input" x-model="editing.descricao"></div>
-      <div class="form-group"><label class="form-label">Categoria</label><select class="form-select" x-model="editing.categoria"><template x-for="c in FIN_CATEGORIAS"><option x-text="c"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Tipo <span class="hq" title="Receita = dinheiro que entra (cobrança de cliente). Despesa = dinheiro que sai (fornecedor, ferramenta).">?</span></label><select class="form-select" x-model="editing.tipo"><option value="receita">Receita</option><option value="despesa">Despesa</option></select></div>
+      <div class="form-group"><label class="form-label">Valor (R$) <span class="hq" title="Valor total do lançamento, em reais.">?</span></label><input class="form-input" type="number" x-model="editing.valor"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição * <span class="hq" title="Do que se trata — ex.: 'Mensalidade junho — Studyo'.">?</span></label><input class="form-input" x-model="editing.descricao"></div>
+      <div class="form-group"><label class="form-label">Categoria <span class="hq" title="Agrupa os lançamentos nos relatórios (ex.: Mensalidade, Ferramentas, Mídia).">?</span></label><select class="form-select" x-model="editing.categoria"><template x-for="c in FIN_CATEGORIAS"><option x-text="c"></option></template></select></div>
       <!-- Receita → Cliente; Despesa → Fornecedor (caixa de seleção) -->
-      <div class="form-group" x-show="editing.tipo==='receita'"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" list="cli-list"><datalist id="cli-list"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+      <div class="form-group" x-show="editing.tipo==='receita'"><label class="form-label">Cliente <span class="hq" title="Quem vai pagar esta receita.">?</span></label><input class="form-input" x-model="editing.cliente" list="cli-list"><datalist id="cli-list"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
       <div class="form-group" x-show="editing.tipo==='despesa'">
-        <label class="form-label">Fornecedor</label>
+        <label class="form-label">Fornecedor <span class="hq" title="Para quem você paga esta despesa.">?</span></label>
         <select class="form-select" x-model="editing.fornecedor">
           <option value="">— selecione —</option>
           <template x-for="fo in fornecedoresOrd" :key="fo.id"><option :value="fo.nome" x-text="fo.nome"></option></template>
         </select>
         <div class="text-3 fs-12" style="margin-top:5px">Não está na lista? <a @click.prevent="novoFornecedor()" href="#" style="color:var(--accent);font-weight:600">Cadastrar fornecedor</a></div>
       </div>
-      <div class="form-group"><label class="form-label">Vencimento</label><input class="form-input" type="date" x-model="editing.vencimento"></div>
-      <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+      <div class="form-group"><label class="form-label">Vencimento <span class="hq" title="Data em que o pagamento é esperado. É por ela que o lançamento aparece no mês e na previsão de caixa.">?</span></label><input class="form-input" type="date" x-model="editing.vencimento"></div>
+      <div class="form-group"><label class="form-label">Status <span class="hq" title="Pendente = ainda não pago. Pago = já quitado (use 'Receber/Pagar' no card pra registrar a data).">?</span></label><select class="form-select" x-model="editing.status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
       <!-- Cobrança (só receita) -->
       <template x-if="editing.tipo==='receita'">
         <div style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:12px;margin-top:2px">
           <div class="fw-700 fs-12 mb-2"><i class="ph ph-receipt ic-ph"></i> Cobrança do cliente</div>
           <div class="grid grid-2" style="gap:14px">
-            <div class="form-group"><label class="form-label">E-mail p/ cobrança</label><input class="form-input" type="email" x-model="editing.emailCobranca" placeholder="cliente@email.com"></div>
-            <div class="form-group"><label class="form-label">WhatsApp p/ cobrança</label><input class="form-input" x-model="editing.whatsappCobranca" placeholder="(81) 9 9999-9999"></div>
+            <div class="form-group"><label class="form-label">E-mail p/ cobrança <span class="hq" title="E-mail do cliente pra onde vai a cobrança/boleto. Fica salvo pra reusar.">?</span></label><input class="form-input" type="email" x-model="editing.emailCobranca" placeholder="cliente@email.com"></div>
+            <div class="form-group"><label class="form-label">WhatsApp p/ cobrança <span class="hq" title="WhatsApp do cliente (com DDD) pra enviar a cobrança. Fica salvo pra reusar.">?</span></label><input class="form-input" x-model="editing.whatsappCobranca" placeholder="(81) 9 9999-9999"></div>
           </div>
           <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
             <button type="button" class="btn btn-ghost btn-sm" @click="gerarFatura(editing)"><i class="ph ph-file-text ic-ph"></i> Fatura (PDF)</button>
@@ -2243,6 +2243,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=107"></script>
+<script src="js/app.js?v=108"></script>
 </body>
 </html>
