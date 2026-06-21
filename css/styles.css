@@ -285,7 +285,7 @@ i.ic-ph{font-size:1.25em;line-height:1;vertical-align:-0.18em;display:inline-fle
 .fin-card-sub{font-size:12px;color:var(--text-3);margin-top:4px}
 .fin-card-right{text-align:right;flex:0 0 auto;white-space:nowrap}
 .fin-valor{font-weight:800;font-size:15px}
-.fin-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-top:5px}
+.fin-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-top:5px;white-space:nowrap}
 .fin-boleto-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:11px;padding:9px 12px;border-radius:10px;background:#fbf7ec;border:1px solid #ecdfb8}
 .fin-boleto-bar > b{font-size:12px;color:var(--text-2)}
 .fin-boleto-status{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#C9A24B;color:#fff}
