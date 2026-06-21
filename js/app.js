@@ -695,7 +695,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     get projetosAndamento() { return this.projects.filter(p => p.status !== 'Concluído').length; },
     // chave 'YYYY-MM' do mês selecionado nas abas do Financeiro
     get finMesKey() { return this.finAno + '-' + String(this.finMes + 1).padStart(2, '0'); },
-    get finMesLabel() { return MESES_CURTOS[this.finMes] + '/' + this.finAno; },
+    get finMesLabel() { return MESES_CURTOS[this.finMes].toLowerCase() + '/' + this.finAno; },
     _finNoMes(f) { return String(f.vencimento || f.data || '').slice(0, 7) === this.finMesKey; }, // por vencimento
     get receitaMes() { return this.finance.filter(f => f.tipo === 'receita' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
     get despesaMes() { return this.finance.filter(f => f.tipo === 'despesa' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
@@ -1155,7 +1155,16 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       else { e.id = MD.uid(); this.finance.unshift({ ...e }); }
       this.persist('finance', this.finance); this.modal = null;
     },
-    togglePago(f) { f.status = f.status === 'pago' ? 'pendente' : 'pago'; this.persist('finance', this.finance); },
+    // dd/mm/aaaa -> aaaa-mm-dd (retorna '' se inválido)
+    _parseDataBR(s) { const m = String(s || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if (!m) return ''; const d = m[1].padStart(2, '0'), mo = m[2].padStart(2, '0'); return `${m[3]}-${mo}-${d}`; },
+    togglePago(f) {
+      if (f.status === 'pago') { f.status = 'pendente'; delete f.pagoEm; this.persist('finance', this.finance); return; }
+      const resp = prompt('Data da quitação (dd/mm/aaaa):', MD.fmtDate(MD.today()));
+      if (resp === null) return; // cancelou: não liquida
+      f.pagoEm = this._parseDataBR(resp) || MD.today();
+      f.status = 'pago';
+      this.persist('finance', this.finance);
+    },
     excluirLancamento(f) { if (!confirm('Excluir este lançamento?')) return; this.finance = this.finance.filter(x => x.id !== f.id); this.persist('finance', this.finance); this.modal = null; },
 
     // ───────────────── FORNECEDORES (despesas) ─────────────────

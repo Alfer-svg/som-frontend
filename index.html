@@ -505,7 +505,7 @@
             <button class="btn btn-ghost btn-icon btn-sm" @click="finMesAnterior()" title="Mês anterior"><i class="ph ph-caret-left ic-ph"></i></button>
             <div class="fichario" style="flex:1;margin-bottom:0">
               <template x-for="(m,i) in MESES_CURTOS" :key="i">
-                <div class="fichario-tab" :class="finMes===i?'active':''" @click="finMes=i" x-text="m"></div>
+                <div class="fichario-tab" :class="finMes===i?'active':''" @click="finMes=i" x-text="m.toLowerCase()"></div>
               </template>
             </div>
             <button class="btn btn-ghost btn-icon btn-sm" @click="finMesProximo()" title="Próximo mês"><i class="ph ph-caret-right ic-ph"></i></button>
@@ -523,7 +523,7 @@
                     <td class="fs-12 text-2" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||'—'"></td>
                     <td class="fs-12 text-2" x-text="fmtDate(f.vencimento)"></td>
                     <td class="fw-700" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="fmtCur(f.valor)"></td>
-                    <td><span class="badge" @click="togglePago(f)" style="cursor:pointer" :style="f.status==='pago'?'background:#dcfce7;color:#16a34a':'background:#fef3c7;color:#b45309'" x-text="f.status==='pago'?'Pago':'Pendente'"></span></td>
+                    <td><span class="badge" @click="togglePago(f)" style="cursor:pointer" :style="f.status==='pago'?'background:#dcfce7;color:#16a34a':'background:#fef3c7;color:#b45309'" :title="f.status==='pago'&&f.pagoEm?('Quitado em '+fmtDate(f.pagoEm)):'Clique para liquidar'" x-text="f.status==='pago' ? ('Pago'+(f.pagoEm?' · '+fmtDate(f.pagoEm):'')) : 'Pendente'"></span></td>
                     <td style="text-align:right;position:relative" x-data="{m:false}">
                       <button class="btn btn-icon btn-ghost btn-sm" @click="m=!m" title="Ações"><i class="ph ph-dots-three ic-ph"></i></button>
                       <div class="row-menu" x-show="m" @click.outside="m=false" x-cloak>
@@ -2221,6 +2221,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=105"></script>
+<script src="js/app.js?v=106"></script>
 </body>
 </html>
