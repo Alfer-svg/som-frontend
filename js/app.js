@@ -413,6 +413,7 @@ document.addEventListener('alpine:init', () => {
       for (const o of locais) {
         const num = String(o.numero || '').trim();
         if (num && nums.has(num)) continue; // já está no backend
+        if (/alfer/i.test((o.cliente || '') + ' ' + (o.empresa || ''))) continue; // descarta orçamentos de teste da Alfer
         const { id, _token, _envio, ...dados } = o;
         try { await this.api('POST', '/propostas', { numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), dados }); n++; } catch { }
       }
@@ -1431,7 +1432,14 @@ ${this._docFoot()}
 
     // ───────────────── COMERCIAL: orçamentos (propostas) ─────────────────
     // Numeração automática: ORC-AAAA-NNN / CT-AAAA-NNN (sequencial por ano).
-    proximoNumero(pref, arr) { const ano = MD.today().slice(0, 4); const n = (arr || []).filter(x => (x.numero || '').includes('-' + ano + '-')).length + 1; return pref + '-' + ano + '-' + String(n).padStart(3, '0'); },
+    proximoNumero(pref, arr) {
+      const ano = MD.today().slice(0, 4);
+      const base = pref === 'ORC' ? 500 : 1; // orçamentos começam em 500
+      const re = new RegExp('^' + pref + '-' + ano + '-(\\d+)$');
+      const max = (arr || []).reduce((m, x) => { const g = String(x.numero || '').match(re); return g ? Math.max(m, parseInt(g[1], 10)) : m; }, 0);
+      const n = Math.max(max + 1, base);
+      return pref + '-' + ano + '-' + String(n).padStart(3, '0');
+    },
     get orcamentosFiltrados() { const q = this.busca.toLowerCase(); return [...this.proposals].sort((a, b) => (b.data || '').localeCompare(a.data || '')).filter(o => !q || ((o.numero || '') + ' ' + (o.cliente || '') + ' ' + (o.projeto || '') + ' ' + (o.descricao || '')).toLowerCase().includes(q)); },
     orcStatusInfo(s) { return ORC_STATUS.find(x => x.id === s) || ORC_STATUS[0]; },
     // Total mensal = soma dos serviços (fallback no campo valor legado de orçamentos antigos).
@@ -1598,15 +1606,15 @@ ${this._docFoot()}
     _cssDoc() {
       return `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box}body{font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1f1f1f;margin:0;padding:0;font-size:13px;line-height:1.55}
-.pad{padding:22px 46px 36px}
+.pad{padding:15px 46px 30px}
 .head-banner{width:100%;height:108px;overflow:hidden;line-height:0;background:#141414}.head-banner img{width:100%;height:100%;object-fit:cover;object-position:center 32%;display:block;filter:grayscale(100%) contrast(1.05)}
 .head{background:#141414;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:30px 46px}
-.head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:104px;width:auto;object-fit:contain;background:#fff;border-radius:12px;padding:13px 24px;box-shadow:0 6px 22px rgba(0,0,0,.35)}
+.head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:104px;width:auto;object-fit:contain;background:#fff;border-radius:8px;padding:12px 22px}
 .wm{font-size:19px;font-weight:800;letter-spacing:.4px;line-height:1.05}.wm span{display:block;font-size:8.5px;font-weight:600;letter-spacing:2.4px;color:#C9A24B;margin-top:5px}
 .head-doc{text-align:right}.head-doc .doc-type{font-size:12px;font-weight:800;letter-spacing:4px;color:#D8B45C}.head-doc .doc-num{font-size:25px;font-weight:800;margin-top:4px;color:#fff}.head-doc .sub{font-size:11.5px;color:#d6d6d6;margin-top:3px}
 .empresa-bar{background:#f5f3ee;color:#6f6a5e;font-size:10px;letter-spacing:.2px;padding:8px 46px;border-bottom:2px solid #C9A24B;line-height:1.5}
-h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#141414;margin:16px 0 9px;padding-left:11px;border-left:3px solid #C9A24B}
-.meta-cli{display:flex;flex-wrap:wrap;gap:6px 26px;margin:18px 0 4px;font-size:13px}.meta-cli b{color:#141414}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#141414;margin:13px 0 8px;padding-left:11px;border-left:3px solid #C9A24B}
+.meta-cli{display:flex;flex-wrap:wrap;gap:6px 26px;margin:10px 0 2px;font-size:13px}.meta-cli b{color:#141414}
 .intro{white-space:pre-wrap;color:#444;text-align:justify}
 .serv{margin:12px 0;padding:14px 16px;background:#fafafa;border:1px solid #eee;border-radius:12px}
 .serv-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}.serv-head .n{font-weight:700;font-size:15px;color:#141414}
