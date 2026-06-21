@@ -1277,6 +1277,17 @@ ${this._docFoot()}
       try { await this.api('DELETE', '/cobranca/boleto/' + (f.boletoId || 'x')); } catch (e) { /* limpa local mesmo se o backend não responder */ }
       f.boletoUrl = ''; f.linhaDigitavel = ''; f.pix = ''; f.boletoId = ''; this.persist('finance', this.finance);
     },
+    // ── Acréscimo / desconto num lançamento ──
+    ajusteForm: { f: null, tipo: 'acrescimo', valor: 0, motivo: '' },
+    abrirAjuste(f) { this.ajusteForm = { f, tipo: 'acrescimo', valor: 0, motivo: '' }; this.modal = 'ajuste'; },
+    get ajusteNovoValor() { const a = this.ajusteForm; if (!a.f) return 0; const v = +a.f.valor || 0, x = +a.valor || 0; return a.tipo === 'acrescimo' ? v + x : Math.max(0, v - x); },
+    aplicarAjuste() {
+      const a = this.ajusteForm; if (!a.f) return;
+      const x = +a.valor || 0; if (x <= 0) return alert('Informe um valor maior que zero.');
+      a.f.valor = this.ajusteNovoValor;
+      a.f.ajustes = a.f.ajustes || []; a.f.ajustes.push({ tipo: a.tipo, valor: x, motivo: (a.motivo || '').trim(), em: MD.today() });
+      this.persist('finance', this.finance); this.modal = null;
+    },
     // ── Dashboard financeiro do cliente (popup ao clicar no nome) ──
     finClienteSel: '',
     abrirFinanceCliente(nome) { if (!nome) return; this.finClienteSel = nome; this.modal = 'finCliente'; },
