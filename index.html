@@ -54,9 +54,9 @@
       <div class="lg-tip"><span class="lg-tip-txt" x-text="dicaLogin"></span></div>
 
       <form @submit.prevent="fazerLogin()">
-        <div class="lg-field"><label class="form-label">E-mail</label>
+        <div class="lg-field"><label class="form-label">E-mail <span class="hq" title="E-mail de contato.">?</span></label>
           <input class="form-input" type="email" x-model="loginEmail" autocomplete="username" placeholder="voce@maracatumktdigital.com"></div>
-        <div class="lg-field"><label class="form-label">Senha</label>
+        <div class="lg-field"><label class="form-label">Senha <span class="hq" title="Senha de acesso.">?</span></label>
           <input class="form-input" type="password" x-model="loginSenha" autocomplete="current-password" placeholder="••••••••"></div>
         <div class="lg-row">
           <label class="lg-check"><input type="checkbox" x-model="lembrarLogin"> Lembrar meu e-mail</label>
@@ -1148,8 +1148,8 @@
           </div>
           <div class="text-3 fs-12 mb-3">Pra subir foto de perfil e criativos como arquivo (não só link). Crie a conta grátis em <b>cloudinary.com</b>, e em <b>Settings › Upload › Add upload preset</b> deixe o modo <b>Unsigned</b>. Depois cole abaixo.</div>
           <div class="grid grid-2" style="gap:14px">
-            <div class="form-group" style="margin:0"><label class="form-label">Cloud name</label><input class="form-input" x-model="cloudCfg.cloud" placeholder="ex: maracatu-digital"></div>
-            <div class="form-group" style="margin:0"><label class="form-label">Upload preset (unsigned)</label><input class="form-input" x-model="cloudCfg.preset" placeholder="ex: som_unsigned"></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Cloud name <span class="hq" title="Cloud name da sua conta Cloudinary.">?</span></label><input class="form-input" x-model="cloudCfg.cloud" placeholder="ex: maracatu-digital"></div>
+            <div class="form-group" style="margin:0"><label class="form-label">Upload preset (unsigned) <span class="hq" title="Preset de upload (unsigned) do Cloudinary.">?</span></label><input class="form-input" x-model="cloudCfg.preset" placeholder="ex: som_unsigned"></div>
           </div>
           <div class="mt-3"><button class="btn btn-primary btn-sm" @click="salvarCloud()">Salvar</button></div>
         </div>
@@ -1164,22 +1164,22 @@
 <!-- LEAD -->
 <div class="modal-backdrop" x-show="modal==='lead'" x-cloak>
   <div class="modal">
-    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Lead':'Novo Lead'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Lead':'Novo Lead'"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche automático</span></label>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche automático</span> <span class="hq" title="Digite o CNPJ e busque para preencher os dados sozinho.">?</span></label>
         <div class="flex gap-2"><input class="form-input" x-model="editing.cnpj" placeholder="00.000.000/0000-00" @keydown.enter.prevent="buscarCnpj()"><button class="btn btn-primary" @click="buscarCnpj()" :disabled="cnpjLoading"><i :class="cnpjLoading?'ph ph-circle-notch':'ph ph-magnifying-glass'"></i></button></div>
         <div class="fs-12" x-show="cnpjMsg" :style="cnpjMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cnpjMsg"></div>
       </div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Empresa / Lead *</label><input class="form-input" x-model="editing.empresa"></div>
-      <div class="form-group"><label class="form-label">Contato</label><input class="form-input" x-model="editing.contato"></div>
-      <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" x-model="editing.whatsapp"></div>
-      <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" x-model="editing.email"></div>
-      <div class="form-group"><label class="form-label">Cidade</label><input class="form-input" x-model="editing.cidade"></div>
-      <div class="form-group"><label class="form-label">Serviço de interesse</label><select class="form-select" x-model="editing.servico"><option value="">—</option><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
-      <div class="form-group"><label class="form-label">Origem</label><select class="form-select" x-model="editing.origem"><template x-for="o in ORIGENS"><option x-text="o"></option></template></select></div>
-      <div class="form-group"><label class="form-label">Estágio</label><select class="form-select" x-model="editing.stage"><template x-for="s in STAGES"><option :value="s.id" x-text="s.id"></option></template></select></div>
-      <div class="form-group"><label class="form-label">Valor estimado (R$)</label><input class="form-input" type="number" x-model="editing.valor"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Empresa / Lead * <span class="hq" title="Nome da empresa ou do lead (obrigatório).">?</span></label><input class="form-input" x-model="editing.empresa"></div>
+      <div class="form-group"><label class="form-label">Contato <span class="hq" title="Nome da pessoa de contato.">?</span></label><input class="form-input" x-model="editing.contato"></div>
+      <div class="form-group"><label class="form-label">WhatsApp <span class="hq" title="WhatsApp com DDD para contato.">?</span></label><input class="form-input" x-model="editing.whatsapp"></div>
+      <div class="form-group"><label class="form-label">E-mail <span class="hq" title="E-mail de contato.">?</span></label><input class="form-input" x-model="editing.email"></div>
+      <div class="form-group"><label class="form-label">Cidade <span class="hq" title="Cidade.">?</span></label><input class="form-input" x-model="editing.cidade"></div>
+      <div class="form-group"><label class="form-label">Serviço de interesse <span class="hq" title="Serviço que o lead procura.">?</span></label><select class="form-select" x-model="editing.servico"><option value="">—</option><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Origem <span class="hq" title="De onde veio o lead (site, indicação, anúncio…).">?</span></label><select class="form-select" x-model="editing.origem"><template x-for="o in ORIGENS"><option x-text="o"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Estágio <span class="hq" title="Etapa do lead no funil de vendas.">?</span></label><select class="form-select" x-model="editing.stage"><template x-for="s in STAGES"><option :value="s.id" x-text="s.id"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Valor estimado (R$) <span class="hq" title="Valor potencial estimado do negócio.">?</span></label><input class="form-input" type="number" x-model="editing.valor"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas <span class="hq" title="Anotações livres.">?</span></label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirLead(editing)">Excluir</button>
@@ -1193,30 +1193,30 @@
 <!-- CLIENTE -->
 <div class="modal-backdrop" x-show="modal==='client'" x-cloak>
   <div class="modal">
-    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body" style="display:block">
       <div @click="secCli=secCli==='empresa'?'':'empresa'" class="accH"><span><i class="ph ph-buildings ic-ph"></i> Empresa</span><span class="accX" x-text="secCli==='empresa'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='empresa'">
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche Receita + endereço</span></label>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche Receita + endereço</span> <span class="hq" title="Digite o CNPJ e busque para puxar razão social e endereço.">?</span></label>
         <div class="flex gap-2"><input class="form-input" x-model="editing.cnpj" placeholder="00.000.000/0000-00" @keydown.enter.prevent="buscarCnpj()"><button class="btn btn-primary" @click="buscarCnpj()" :disabled="cnpjLoading" ><i :class="cnpjLoading?'ph ph-circle-notch':'ph ph-magnifying-glass'"></i> <span x-text="cnpjLoading?'':'Buscar'"></span></button></div>
         <div class="fs-12" x-show="cnpjMsg" :style="cnpjMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cnpjMsg"></div>
       </div>
-      <div class="form-group"><label class="form-label">Razão Social</label><input class="form-input" x-model="editing.razaoSocial"></div>
-      <div class="form-group"><label class="form-label">Inscrição Estadual</label><input class="form-input" x-model="editing.inscEstadual" placeholder="Isento / nº"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome Fantasia / Empresa *</label><input class="form-input" x-model="editing.empresa"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Slogan da empresa</label><input class="form-input" x-model="editing.slogan"></div>
+      <div class="form-group"><label class="form-label">Razão Social <span class="hq" title="Razão social (nome jurídico) da empresa.">?</span></label><input class="form-input" x-model="editing.razaoSocial"></div>
+      <div class="form-group"><label class="form-label">Inscrição Estadual <span class="hq" title="Inscrição Estadual (ou Isento).">?</span></label><input class="form-input" x-model="editing.inscEstadual" placeholder="Isento / nº"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome Fantasia / Empresa * <span class="hq" title="Nome fantasia/comercial do cliente (obrigatório).">?</span></label><input class="form-input" x-model="editing.empresa"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Slogan da empresa <span class="hq" title="Slogan/assinatura da marca do cliente.">?</span></label><input class="form-input" x-model="editing.slogan"></div>
 
       <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2);margin-top:6px"><i class="ph ph-map-pin ic-ph"></i> Endereço</div>
-      <div class="form-group"><label class="form-label">CEP <span class="text-3">— preenche endereço</span></label>
+      <div class="form-group"><label class="form-label">CEP <span class="text-3">— preenche endereço</span> <span class="hq" title="Digite o CEP e busque para preencher o endereço.">?</span></label>
         <div class="flex gap-2"><input class="form-input" x-model="editing.cep" placeholder="00000-000" @keydown.enter.prevent="buscarCep()"><button class="btn btn-primary" @click="buscarCep()" :disabled="cepLoading" ><i :class="cepLoading?'ph ph-circle-notch':'ph ph-magnifying-glass'"></i></button></div>
         <div class="fs-12" x-show="cepMsg" :style="cepMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cepMsg"></div>
       </div>
-      <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="editing.numero"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Logradouro</label><input class="form-input" x-model="editing.logradouro"></div>
-      <div class="form-group"><label class="form-label">Complemento</label><input class="form-input" x-model="editing.complemento"></div>
-      <div class="form-group"><label class="form-label">Bairro</label><input class="form-input" x-model="editing.bairro"></div>
-      <div class="form-group"><label class="form-label">Cidade</label><input class="form-input" x-model="editing.cidade"></div>
-      <div class="form-group"><label class="form-label">UF</label><input class="form-input" x-model="editing.uf" maxlength="2" placeholder="SP"></div>
+      <div class="form-group"><label class="form-label">Número <span class="hq" title="Número/identificador do documento (gerado automático, dá pra ajustar).">?</span></label><input class="form-input" x-model="editing.numero"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Logradouro <span class="hq" title="Rua/avenida do endereço.">?</span></label><input class="form-input" x-model="editing.logradouro"></div>
+      <div class="form-group"><label class="form-label">Complemento <span class="hq" title="Complemento do endereço (sala, andar, bloco).">?</span></label><input class="form-input" x-model="editing.complemento"></div>
+      <div class="form-group"><label class="form-label">Bairro <span class="hq" title="Bairro.">?</span></label><input class="form-input" x-model="editing.bairro"></div>
+      <div class="form-group"><label class="form-label">Cidade <span class="hq" title="Cidade.">?</span></label><input class="form-input" x-model="editing.cidade"></div>
+      <div class="form-group"><label class="form-label">UF <span class="hq" title="Estado (sigla, ex.: PE).">?</span></label><input class="form-input" x-model="editing.uf" maxlength="2" placeholder="SP"></div>
 
       </div>
       <div @click="secCli=secCli==='contato'?'':'contato'" class="accH"><span><i class="ph ph-users ic-ph"></i> Contatos / Responsáveis</span><span class="accX" x-text="secCli==='contato'?'▾':'▸'"></span></div>
@@ -1224,14 +1224,14 @@
       <div style="grid-column:1/-1" class="text-3 fs-12">Adicione até 5 contatos da empresa — o 1º vira o contato principal. Pra estreitar o relacionamento.</div>
       <template x-for="(r,i) in (editing.responsaveis||[])" :key="r.id">
         <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div class="form-group" style="margin:0"><label class="form-label">Nome</label><input class="form-input" x-model="r.nome"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Cargo / papel</label><input class="form-input" x-model="r.cargo" placeholder="Sócio, Marketing, Financeiro…"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">WhatsApp</label><input class="form-input" x-model="r.whatsapp"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">E-mail</label><input class="form-input" x-model="r.email"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Data de nascimento</label><input class="form-input" type="date" x-model="r.nascimento"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Instagram</label><input class="form-input" x-model="r.instagram" placeholder="@usuario ou link"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">LinkedIn</label><input class="form-input" x-model="r.linkedin" placeholder="link do perfil ou nome"></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Notas <span class="text-3" style="font-weight:400;text-transform:none">(time, hobby, preferências…)</span></label><input class="form-input" x-model="r.notas"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Nome <span class="hq" title="Nome.">?</span></label><input class="form-input" x-model="r.nome"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Cargo / papel <span class="hq" title="Cargo ou papel do contato (sócio, marketing…).">?</span></label><input class="form-input" x-model="r.cargo" placeholder="Sócio, Marketing, Financeiro…"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">WhatsApp <span class="hq" title="WhatsApp com DDD para contato.">?</span></label><input class="form-input" x-model="r.whatsapp"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">E-mail <span class="hq" title="E-mail de contato.">?</span></label><input class="form-input" x-model="r.email"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Data de nascimento <span class="hq" title="Aniversário do contato (para relacionamento).">?</span></label><input class="form-input" type="date" x-model="r.nascimento"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Instagram <span class="hq" title="@usuário ou link do Instagram.">?</span></label><input class="form-input" x-model="r.instagram" placeholder="@usuario ou link"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">LinkedIn <span class="hq" title="Link ou nome do perfil no LinkedIn.">?</span></label><input class="form-input" x-model="r.linkedin" placeholder="link do perfil ou nome"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Notas <span class="text-3" style="font-weight:400;text-transform:none">(time, hobby, preferências…)</span> <span class="hq" title="Detalhes pessoais para estreitar o relacionamento.">?</span></label><input class="form-input" x-model="r.notas"></div>
           <label class="flex items-center gap-2" style="grid-column:1/-1;font-size:13px;cursor:pointer"><input type="checkbox" x-model="r.seguindo"> <i class="ph ph-check-circle ic-ph"></i> A Maracatu já segue essa pessoa nas redes</label>
           <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeResponsavel(i)"><i class="ph ph-trash ic-ph"></i> remover</button></div>
         </div>
@@ -1241,7 +1241,7 @@
       </div>
       <div @click="secCli=secCli==='site'?'':'site'" class="accH"><span><i class="ph ph-globe ic-ph"></i> Site, domínio e hospedagem</span><span class="accX" x-text="secCli==='site'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='site'">
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">URL do site <span class="text-3">— preenche redes, domínio e contato</span></label><input class="form-input" x-model="editing.site.url" placeholder="https://"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">URL do site <span class="text-3">— preenche redes, domínio e contato</span> <span class="hq" title="Site do cliente; busque para puxar redes, domínio e contato.">?</span></label><input class="form-input" x-model="editing.site.url" placeholder="https://"></div>
       <div class="form-group" style="grid-column:1/-1">
         <button type="button" class="btn btn-primary btn-sm" @click="puxarDoSite()" :disabled="enriqLoading"><i :class="enriqLoading?'ph ph-circle-notch':'ph ph-sparkle'"></i> <span x-text="enriqLoading?'lendo o site…':'Puxar do site (redes, GMN, domínio, contato)'"></span></button>
         <span class="fs-12" x-show="enriqMsg" :style="(enriqMsg.startsWith('✓')?'color:#16a34a;':'color:var(--text-3);')+'margin-left:10px'" x-text="enriqMsg"></span>
@@ -1257,17 +1257,17 @@
         <button type="button" class="btn btn-ghost btn-sm" @click="avaliarPagespeed()" :disabled="psiLoading"><i :class="psiLoading?'ph ph-hourglass':'ph ph-magnifying-glass'"></i> <span x-text="psiLoading?'rodando o Google…':'Avaliar SEO com Google (PageSpeed)'"></span></button>
         <span class="fs-12" x-show="psiMsg" :style="(psiMsg.startsWith('✓')?'color:#16a34a;':'color:var(--text-3);')+'margin-left:10px'" x-text="psiMsg"></span>
       </div>
-      <div class="form-group"><label class="form-label">SEO (%) <span class="text-3" x-show="editing.site&&editing.site.lh">— oficial Google</span></label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.seo"></div>
-      <div class="form-group"><label class="form-label">SGO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.sgo"></div>
-      <div class="form-group"><label class="form-label">Domínio — provedor/local</label><input class="form-input" x-model="editing.dominio.provedor" placeholder="Registro.br, GoDaddy…"></div>
-      <div class="form-group"><label class="form-label">Domínio — vencimento</label><input class="form-input" type="date" x-model="editing.dominio.vencimento"></div>
-      <div class="form-group"><label class="form-label">Hospedagem — provedor/local</label><input class="form-input" x-model="editing.hospedagem.provedor" placeholder="Vercel, Hostgator…"></div>
-      <div class="form-group"><label class="form-label">Hospedagem — vencimento</label><input class="form-input" type="date" x-model="editing.hospedagem.vencimento"></div>
+      <div class="form-group"><label class="form-label">SEO (%) <span class="text-3" x-show="editing.site&&editing.site.lh">— oficial Google</span> <span class="hq" title="Nota de SEO do site (0–100).">?</span></label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.seo"></div>
+      <div class="form-group"><label class="form-label">SGO (%) <span class="hq" title="Nota de SGO/saúde do site (0–100).">?</span></label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.sgo"></div>
+      <div class="form-group"><label class="form-label">Domínio — provedor/local <span class="hq" title="Onde o domínio está registrado (Registro.br, GoDaddy…).">?</span></label><input class="form-input" x-model="editing.dominio.provedor" placeholder="Registro.br, GoDaddy…"></div>
+      <div class="form-group"><label class="form-label">Domínio — vencimento <span class="hq" title="Data de renovação do domínio.">?</span></label><input class="form-input" type="date" x-model="editing.dominio.vencimento"></div>
+      <div class="form-group"><label class="form-label">Hospedagem — provedor/local <span class="hq" title="Onde o site está hospedado.">?</span></label><input class="form-input" x-model="editing.hospedagem.provedor" placeholder="Vercel, Hostgator…"></div>
+      <div class="form-group"><label class="form-label">Hospedagem — vencimento <span class="hq" title="Data de renovação da hospedagem.">?</span></label><input class="form-input" type="date" x-model="editing.hospedagem.vencimento"></div>
 
       </div>
       <div @click="secCli=secCli==='com'?'':'com'" class="accH"><span><i class="ph ph-briefcase ic-ph"></i> Comercial</span><span class="accX" x-text="secCli==='com'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='com'">
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Serviços contratados</label>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Serviços contratados <span class="hq" title="Serviços que o cliente contratou.">?</span></label>
         <div class="flex" style="flex-wrap:wrap;gap:8px">
           <template x-for="s in SERVICOS" :key="s">
             <label class="badge" style="cursor:pointer;border:1px solid var(--border);padding:5px 11px" :style="editing.servicos.includes(s)?'background:var(--accent);color:#fff;border-color:var(--accent)':'background:var(--surface)'">
@@ -1276,9 +1276,9 @@
           </template>
         </div>
       </div>
-      <div class="form-group"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="editing.mensalidade"></div>
-      <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><option>Ativo</option><option>Inativo</option></select></div>
-      <div class="form-group"><label class="form-label">Cliente desde</label><input class="form-input" type="date" x-model="editing.desde"></div>
+      <div class="form-group"><label class="form-label">Mensalidade (R$) <span class="hq" title="Valor da mensalidade do cliente, em reais.">?</span></label><input class="form-input" type="number" x-model="editing.mensalidade"></div>
+      <div class="form-group"><label class="form-label">Status <span class="hq" title="Situação atual do registro.">?</span></label><select class="form-select" x-model="editing.status"><option>Ativo</option><option>Inativo</option></select></div>
+      <div class="form-group"><label class="form-label">Cliente desde <span class="hq" title="Data em que virou cliente.">?</span></label><input class="form-input" type="date" x-model="editing.desde"></div>
 
       </div>
       <div @click="secCli=secCli==='redes'?'':'redes'" class="accH"><span><i class="ph ph-device-mobile ic-ph"></i> Redes sociais</span><span class="accX" x-text="secCli==='redes'?'▾':'▸'"></span></div>
@@ -1322,40 +1322,40 @@
       <div class="grid grid-2 accB" x-show="secCli==='brief'">
 
       <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Público</div>
-      <div class="form-group"><label class="form-label">Faixa etária</label><input class="form-input" x-model="editing.briefing.publico.faixaEtaria" placeholder="ex.: 25-45"></div>
-      <div class="form-group"><label class="form-label">Escolaridade</label><input class="form-input" x-model="editing.briefing.publico.escolaridade" placeholder="ex.: superior"></div>
-      <div class="form-group"><label class="form-label">Sexo do público</label><input class="form-input" x-model="editing.briefing.publico.sexo" placeholder="feminino / masculino / ambos"></div>
-      <div class="form-group"><label class="form-label">Público-alvo principal</label><input class="form-input" x-model="editing.briefing.publico.alvo"></div>
+      <div class="form-group"><label class="form-label">Faixa etária <span class="hq" title="Faixa de idade do público do cliente.">?</span></label><input class="form-input" x-model="editing.briefing.publico.faixaEtaria" placeholder="ex.: 25-45"></div>
+      <div class="form-group"><label class="form-label">Escolaridade <span class="hq" title="Escolaridade predominante do público.">?</span></label><input class="form-input" x-model="editing.briefing.publico.escolaridade" placeholder="ex.: superior"></div>
+      <div class="form-group"><label class="form-label">Sexo do público <span class="hq" title="Sexo predominante do público.">?</span></label><input class="form-input" x-model="editing.briefing.publico.sexo" placeholder="feminino / masculino / ambos"></div>
+      <div class="form-group"><label class="form-label">Público-alvo principal <span class="hq" title="Quem é o público-alvo principal.">?</span></label><input class="form-input" x-model="editing.briefing.publico.alvo"></div>
 
       <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Posicionamento</div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição do negócio</label><textarea class="form-textarea" x-model="editing.briefing.posicionamento.descricao"></textarea></div>
-      <div class="form-group"><label class="form-label">Concorrentes diretos</label><input class="form-input" x-model="editing.briefing.posicionamento.concorrentes" placeholder="2-3 nomes"></div>
-      <div class="form-group"><label class="form-label">Percepção na categoria</label><input class="form-input" x-model="editing.briefing.posicionamento.percepcao"></div>
-      <div class="form-group"><label class="form-label">Recorrência de consumo</label><input class="form-input" x-model="editing.briefing.posicionamento.recorrencia"></div>
-      <div class="form-group"><label class="form-label">Ciclo médio de venda</label><input class="form-input" x-model="editing.briefing.posicionamento.cicloVenda"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição do negócio <span class="hq" title="O que o cliente faz, em poucas linhas.">?</span></label><textarea class="form-textarea" x-model="editing.briefing.posicionamento.descricao"></textarea></div>
+      <div class="form-group"><label class="form-label">Concorrentes diretos <span class="hq" title="Principais concorrentes do cliente.">?</span></label><input class="form-input" x-model="editing.briefing.posicionamento.concorrentes" placeholder="2-3 nomes"></div>
+      <div class="form-group"><label class="form-label">Percepção na categoria <span class="hq" title="Como o cliente é percebido no mercado.">?</span></label><input class="form-input" x-model="editing.briefing.posicionamento.percepcao"></div>
+      <div class="form-group"><label class="form-label">Recorrência de consumo <span class="hq" title="Com que frequência o público compra.">?</span></label><input class="form-input" x-model="editing.briefing.posicionamento.recorrencia"></div>
+      <div class="form-group"><label class="form-label">Ciclo médio de venda <span class="hq" title="Tempo médio até fechar uma venda.">?</span></label><input class="form-input" x-model="editing.briefing.posicionamento.cicloVenda"></div>
 
       <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Histórico</div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">O que gostou (trabalhos anteriores)</label><textarea class="form-textarea" x-model="editing.briefing.historico.gostou"></textarea></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">O que espera melhorar</label><textarea class="form-textarea" x-model="editing.briefing.historico.melhorar"></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">O que gostou (trabalhos anteriores) <span class="hq" title="O que o cliente gostou em trabalhos anteriores.">?</span></label><textarea class="form-textarea" x-model="editing.briefing.historico.gostou"></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">O que espera melhorar <span class="hq" title="O que o cliente espera melhorar com a agência.">?</span></label><textarea class="form-textarea" x-model="editing.briefing.historico.melhorar"></textarea></div>
 
       <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Transmissão / mídia</div>
-      <div class="form-group"><label class="form-label">Mídias já testadas</label><input class="form-input" x-model="editing.briefing.transmissao.midiasTestadas"></div>
-      <div class="form-group"><label class="form-label">Campanhas/datas previstas</label><input class="form-input" x-model="editing.briefing.transmissao.campanhas"></div>
+      <div class="form-group"><label class="form-label">Mídias já testadas <span class="hq" title="Canais/mídias que o cliente já testou.">?</span></label><input class="form-input" x-model="editing.briefing.transmissao.midiasTestadas"></div>
+      <div class="form-group"><label class="form-label">Campanhas/datas previstas <span class="hq" title="Campanhas ou datas importantes planejadas.">?</span></label><input class="form-input" x-model="editing.briefing.transmissao.campanhas"></div>
 
       <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Direcionamento criativo</div>
-      <div class="form-group"><label class="form-label">Tipo de linguagem</label><input class="form-input" x-model="editing.briefing.criativo.linguagem"></div>
-      <div class="form-group"><label class="form-label">Termos a evitar</label><input class="form-input" x-model="editing.briefing.criativo.evitar"></div>
-      <div class="form-group"><label class="form-label">Hashtags / slogan</label><input class="form-input" x-model="editing.briefing.criativo.hashtags"></div>
-      <div class="form-group"><label class="form-label">Marcas/perfis inspiradores</label><input class="form-input" x-model="editing.briefing.criativo.inspiracoes"></div>
-      <div class="form-group"><label class="form-label">Datas comemorativas</label><input class="form-input" x-model="editing.briefing.criativo.datasComemorativas"></div>
-      <div class="form-group"><label class="form-label">Datas do segmento</label><input class="form-input" x-model="editing.briefing.criativo.datasSegmento"></div>
+      <div class="form-group"><label class="form-label">Tipo de linguagem <span class="hq" title="Tom de voz da marca (formal, descontraído…).">?</span></label><input class="form-input" x-model="editing.briefing.criativo.linguagem"></div>
+      <div class="form-group"><label class="form-label">Termos a evitar <span class="hq" title="Palavras/temas que a marca não usa.">?</span></label><input class="form-input" x-model="editing.briefing.criativo.evitar"></div>
+      <div class="form-group"><label class="form-label">Hashtags / slogan <span class="hq" title="Hashtags e slogan da marca.">?</span></label><input class="form-input" x-model="editing.briefing.criativo.hashtags"></div>
+      <div class="form-group"><label class="form-label">Marcas/perfis inspiradores <span class="hq" title="Referências de marcas/perfis que inspiram.">?</span></label><input class="form-input" x-model="editing.briefing.criativo.inspiracoes"></div>
+      <div class="form-group"><label class="form-label">Datas comemorativas <span class="hq" title="Datas comemorativas relevantes para o cliente.">?</span></label><input class="form-input" x-model="editing.briefing.criativo.datasComemorativas"></div>
+      <div class="form-group"><label class="form-label">Datas do segmento <span class="hq" title="Datas importantes do segmento do cliente.">?</span></label><input class="form-input" x-model="editing.briefing.criativo.datasSegmento"></div>
 
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Palavras-chave <span class="text-3">(separadas por vírgula)</span></label><textarea class="form-textarea" x-model="editing.briefing.palavrasChave"></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Palavras-chave <span class="text-3">(separadas por vírgula)</span> <span class="hq" title="Palavras-chave do cliente, separadas por vírgula.">?</span></label><textarea class="form-textarea" x-model="editing.briefing.palavrasChave"></textarea></div>
 
       <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Materiais visuais (links — não subir arquivo)</div>
-      <div class="form-group"><label class="form-label">Logo (link)</label><input class="form-input" x-model="editing.briefing.ativos.logo" placeholder="https://"></div>
-      <div class="form-group"><label class="form-label">Manual de marca (link)</label><input class="form-input" x-model="editing.briefing.ativos.manual" placeholder="https://"></div>
-      <div class="form-group"><label class="form-label">Drive de fotos/vídeos (link)</label><input class="form-input" x-model="editing.briefing.ativos.drive" placeholder="https://"></div>
+      <div class="form-group"><label class="form-label">Logo (link) <span class="hq" title="Link para o arquivo do logo.">?</span></label><input class="form-input" x-model="editing.briefing.ativos.logo" placeholder="https://"></div>
+      <div class="form-group"><label class="form-label">Manual de marca (link) <span class="hq" title="Link para o manual/brandbook da marca.">?</span></label><input class="form-input" x-model="editing.briefing.ativos.manual" placeholder="https://"></div>
+      <div class="form-group"><label class="form-label">Drive de fotos/vídeos (link) <span class="hq" title="Link para a pasta de fotos e vídeos.">?</span></label><input class="form-input" x-model="editing.briefing.ativos.drive" placeholder="https://"></div>
 
       </div>
       <div @click="secCli=secCli==='docs'?'':'docs'" class="accH"><span><i class="ph ph-paperclip ic-ph"></i> Documentos</span><span class="accX" x-text="secCli==='docs'?'▾':'▸'"></span></div>
@@ -1363,9 +1363,9 @@
       <div style="grid-column:1/-1" class="text-3 fs-12">Links — contrato, proposta, apresentação…</div>
       <template x-for="(d,i) in (editing.documentos||[])" :key="d.id">
         <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;grid-template-columns:160px 1fr;gap:8px">
-          <div class="form-group" style="margin:0"><label class="form-label">Tipo</label><select class="form-select" x-model="d.tipo"><template x-for="t in TIPOS_DOC" :key="t"><option :value="t" x-text="t"></option></template></select></div>
-          <div class="form-group" style="margin:0"><label class="form-label">Nome</label><input class="form-input" x-model="d.nome" placeholder="Ex.: Contrato 2026"></div>
-          <div class="form-group" style="grid-column:1/-1;margin:0"><label class="form-label">Link</label><input class="form-input" x-model="d.url" placeholder="https://"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Tipo <span class="hq" title="Tipo do registro.">?</span></label><select class="form-select" x-model="d.tipo"><template x-for="t in TIPOS_DOC" :key="t"><option :value="t" x-text="t"></option></template></select></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Nome <span class="hq" title="Nome.">?</span></label><input class="form-input" x-model="d.nome" placeholder="Ex.: Contrato 2026"></div>
+          <div class="form-group" style="grid-column:1/-1;margin:0"><label class="form-label">Link <span class="hq" title="Endereço/URL.">?</span></label><input class="form-input" x-model="d.url" placeholder="https://"></div>
           <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeDocumento(i)"><i class="ph ph-trash ic-ph"></i> remover</button></div>
         </div>
       </template>
@@ -1387,7 +1387,7 @@
 <!-- FINANCEIRO -->
 <div class="modal-backdrop" x-show="modal==='finance'" x-cloak>
   <div class="modal">
-    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+(editing.tipo==='receita'?'Receita':'Despesa')"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+(editing.tipo==='receita'?'Receita':'Despesa')"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
       <div class="form-group"><label class="form-label">Tipo <span class="hq" title="Receita = dinheiro que entra (cobrança de cliente). Despesa = dinheiro que sai (fornecedor, ferramenta).">?</span></label><select class="form-select" x-model="editing.tipo"><option value="receita">Receita</option><option value="despesa">Despesa</option></select></div>
       <div class="form-group"><label class="form-label">Valor (R$) <span class="hq" title="Valor total do lançamento, em reais.">?</span></label><input class="form-input" type="number" x-model="editing.valor"></div>
@@ -1438,7 +1438,7 @@
       <div>
         <div class="modal-head">
           <div class="modal-title"><i class="ph ph-chart-line-up ic-ph"></i> Situação financeira — <span x-text="finClienteResumo.nome"></span></div>
-          <button class="btn btn-icon btn-ghost" @click="modal=null">✕</button>
+          <button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button>
         </div>
         <div class="modal-body">
           <template x-if="finClienteResumo.total===0">
@@ -1515,16 +1515,16 @@
 <!-- FORNECEDOR -->
 <div class="modal-backdrop" x-show="modal==='fornecedor'" x-cloak>
   <div class="modal">
-    <div class="modal-head"><div class="modal-title" x-text="(fornForm.id?'Editar ':'Novo ')+'Fornecedor'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-head"><div class="modal-title" x-text="(fornForm.id?'Editar ':'Novo ')+'Fornecedor'"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome / Razão social *</label><input class="form-input" x-model="fornForm.nome"></div>
-      <div class="form-group"><label class="form-label">CNPJ / CPF</label><input class="form-input" x-model="fornForm.cnpjCpf"></div>
-      <div class="form-group"><label class="form-label">Categoria</label><select class="form-select" x-model="fornForm.categoria"><template x-for="c in FORN_CATEGORIAS"><option x-text="c"></option></template></select></div>
-      <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" type="email" x-model="fornForm.email"></div>
-      <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" x-model="fornForm.whatsapp"></div>
-      <div class="form-group"><label class="form-label">Chave PIX</label><input class="form-input" x-model="fornForm.chavePix"></div>
-      <div class="form-group"><label class="form-label">Site</label><input class="form-input" x-model="fornForm.site" placeholder="https://"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Observações</label><textarea class="form-textarea" x-model="fornForm.obs"></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome / Razão social * <span class="hq" title="Nome ou razão social do fornecedor (obrigatório).">?</span></label><input class="form-input" x-model="fornForm.nome"></div>
+      <div class="form-group"><label class="form-label">CNPJ / CPF <span class="hq" title="CNPJ (empresa) ou CPF (pessoa).">?</span></label><input class="form-input" x-model="fornForm.cnpjCpf"></div>
+      <div class="form-group"><label class="form-label">Categoria <span class="hq" title="Categoria para organizar e filtrar.">?</span></label><select class="form-select" x-model="fornForm.categoria"><template x-for="c in FORN_CATEGORIAS"><option x-text="c"></option></template></select></div>
+      <div class="form-group"><label class="form-label">E-mail <span class="hq" title="E-mail de contato.">?</span></label><input class="form-input" type="email" x-model="fornForm.email"></div>
+      <div class="form-group"><label class="form-label">WhatsApp <span class="hq" title="WhatsApp com DDD para contato.">?</span></label><input class="form-input" x-model="fornForm.whatsapp"></div>
+      <div class="form-group"><label class="form-label">Chave PIX <span class="hq" title="Chave PIX para recebimento.">?</span></label><input class="form-input" x-model="fornForm.chavePix"></div>
+      <div class="form-group"><label class="form-label">Site <span class="hq" title="Site do fornecedor.">?</span></label><input class="form-input" x-model="fornForm.site" placeholder="https://"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Observações <span class="hq" title="Anotações livres sobre este registro.">?</span></label><textarea class="form-textarea" x-model="fornForm.obs"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="fornForm.id" @click="excluirFornecedor(fornForm)">Excluir</button>
@@ -1537,13 +1537,13 @@
 <!-- ORÇAMENTO / PROPOSTA -->
 <div class="modal-backdrop" x-show="modal==='orcamento'" x-cloak>
   <div class="modal" style="max-width:700px">
-    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Nova ')+'Proposta'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Nova ')+'Proposta'"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px">
-        <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="editing.numero"></div>
-        <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in ORC_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
-        <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
-        <div class="form-group"><label class="form-label">Projeto</label>
+        <div class="form-group"><label class="form-label">Número <span class="hq" title="Número/identificador do documento (gerado automático, dá pra ajustar).">?</span></label><input class="form-input" x-model="editing.numero"></div>
+        <div class="form-group"><label class="form-label">Status <span class="hq" title="Situação atual do registro.">?</span></label><select class="form-select" x-model="editing.status"><template x-for="s in ORC_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Cliente <span class="hq" title="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">Projeto <span class="hq" title="Tipo/nome do projeto (ex.: Gestão + Tráfego).">?</span></label>
           <select class="form-select" x-model="projetoSel" @change="if(projetoSel!=='Outros'){editing.projeto=projetoSel}else if(PROJETO_OPCOES.includes(editing.projeto)){editing.projeto=''}">
             <option value="" disabled>Selecione…</option>
             <template x-for="p in PROJETO_OPCOES" :key="p"><option :value="p" x-text="p"></option></template>
@@ -1551,13 +1551,13 @@
           </select>
           <input class="form-input" x-show="projetoSel==='Outros'" x-model="editing.projeto" placeholder="Nome do projeto" style="margin-top:8px">
         </div>
-        <div class="form-group"><label class="form-label">Contato</label><input class="form-input" x-model="editing.contato"></div>
-        <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" x-model="editing.email"></div>
-        <div class="form-group"><label class="form-label">Data</label><input class="form-input" type="date" x-model="editing.data"></div>
-        <div class="form-group"><label class="form-label">Validade (dias)</label><input class="form-input" type="number" min="0" x-model="editing.validade"></div>
-        <div class="form-group"><label class="form-label">Vigência (meses)</label><input class="form-input" type="number" min="1" x-model="editing.vigenciaMeses"></div>
-        <div class="form-group"><label class="form-label">Forma de pagamento</label><select class="form-select" x-model="editing.formaPagamento"><template x-for="p in FORMAS_PAGAMENTO"><option x-text="p"></option></template></select></div>
-        <div class="form-group"><label class="form-label">Assinatura</label><select class="form-select" x-model="editing.modoAssinatura"><option value="presencial">Presencial (imprimir e assinar)</option><option value="digital">Digital (link + aceite online)</option></select></div>
+        <div class="form-group"><label class="form-label">Contato <span class="hq" title="Nome da pessoa de contato.">?</span></label><input class="form-input" x-model="editing.contato"></div>
+        <div class="form-group"><label class="form-label">E-mail <span class="hq" title="E-mail de contato.">?</span></label><input class="form-input" x-model="editing.email"></div>
+        <div class="form-group"><label class="form-label">Data <span class="hq" title="Data de emissão.">?</span></label><input class="form-input" type="date" x-model="editing.data"></div>
+        <div class="form-group"><label class="form-label">Validade (dias) <span class="hq" title="Por quantos dias a proposta vale.">?</span></label><input class="form-input" type="number" min="0" x-model="editing.validade"></div>
+        <div class="form-group"><label class="form-label">Vigência (meses) <span class="hq" title="Duração em meses.">?</span></label><input class="form-input" type="number" min="1" x-model="editing.vigenciaMeses"></div>
+        <div class="form-group"><label class="form-label">Forma de pagamento <span class="hq" title="Como o cliente vai pagar (Boleto, Pix, etc.).">?</span></label><select class="form-select" x-model="editing.formaPagamento"><template x-for="p in FORMAS_PAGAMENTO"><option x-text="p"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Assinatura <span class="hq" title="Como o cliente vai assinar (presencial ou digital).">?</span></label><select class="form-select" x-model="editing.modoAssinatura"><option value="presencial">Presencial (imprimir e assinar)</option><option value="digital">Digital (link + aceite online)</option></select></div>
       </div>
       <label class="form-label" style="margin-top:16px;display:block">Serviços incluídos</label>
       <template x-for="(s,i) in editing.servicos" :key="s.id">
@@ -1576,14 +1576,14 @@
           </div>
           <!-- Aberto: editor -->
           <div x-show="s._open" style="padding:12px 14px">
-            <div class="form-group" x-show="catalogo.length" style="margin-bottom:8px"><label class="form-label">Usar do catálogo</label><select class="form-select" @change="aplicarCatalogo(s, $event.target.value); $event.target.value=''"><option value="">— escolher serviço cadastrado —</option><template x-for="it in catalogo" :key="it.id"><option :value="it.id" x-text="it.nome + (it.valor?(' — '+fmtCur(it.valor)+'/mês'):'')"></option></template></select></div>
+            <div class="form-group" x-show="catalogo.length" style="margin-bottom:8px"><label class="form-label">Usar do catálogo <span class="hq" title="Puxe um serviço já cadastrado para preencher rápido.">?</span></label><select class="form-select" @change="aplicarCatalogo(s, $event.target.value); $event.target.value=''"><option value="">— escolher serviço cadastrado —</option><template x-for="it in catalogo" :key="it.id"><option :value="it.id" x-text="it.nome + (it.valor?(' — '+fmtCur(it.valor)+'/mês'):'')"></option></template></select></div>
             <div class="flex gap-2" style="align-items:flex-end">
-              <div class="form-group" style="flex:1"><label class="form-label">Serviço</label><input class="form-input" x-model="s.nome" list="serv-list"></div>
-              <div class="form-group" style="width:150px"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="s.valor"></div>
+              <div class="form-group" style="flex:1"><label class="form-label">Serviço <span class="hq" title="Serviço relacionado.">?</span></label><input class="form-input" x-model="s.nome" list="serv-list"></div>
+              <div class="form-group" style="width:150px"><label class="form-label">Mensalidade (R$) <span class="hq" title="Valor da mensalidade do cliente, em reais.">?</span></label><input class="form-input" type="number" x-model="s.valor"></div>
               <button class="btn btn-icon btn-ghost" @click="removeServicoOrc(i)" title="Remover serviço"><i class="ph ph-trash ic-ph"></i></button>
             </div>
             <div class="form-group" x-show="Array.isArray(s.redes)" style="margin-top:8px">
-              <label class="form-label">Redes incluídas</label>
+              <label class="form-label">Redes incluídas <span class="hq" title="Redes sociais incluídas neste serviço.">?</span></label>
               <div class="flex" style="flex-wrap:wrap;gap:8px">
                 <template x-for="r in REDES" :key="r.id">
                   <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:5px 9px;border:1px solid var(--border,#e2e2e2);border-radius:8px" :style="(s.redes||[]).includes(r.id)?'border-color:#111;background:#1110':''">
@@ -1594,7 +1594,7 @@
               </div>
             </div>
             <div class="form-group" x-show="Array.isArray(s.ads)" style="margin-top:8px">
-              <label class="form-label">Plataformas de tráfego + verba sugerida</label>
+              <label class="form-label">Plataformas de tráfego + verba sugerida <span class="hq" title="Plataformas de anúncio e a verba de mídia sugerida.">?</span></label>
               <template x-for="a in ADS_PLATAFORMAS" :key="a.id">
                 <div class="flex" style="align-items:center;gap:10px;margin-bottom:5px">
                   <label style="display:flex;align-items:center;gap:6px;cursor:pointer;min-width:150px">
@@ -1609,7 +1609,7 @@
               </template>
               <div class="fs-12 text-2" style="margin-top:3px">Verba de mídia sugerida — não entra no total do orçamento.</div>
             </div>
-            <div class="form-group" style="margin-top:8px"><label class="form-label">Escopo (1 item por linha)</label><textarea class="form-textarea" rows="3" x-model="s.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
+            <div class="form-group" style="margin-top:8px"><label class="form-label">Escopo (1 item por linha) <span class="hq" title="O que está incluso, um item por linha.">?</span></label><textarea class="form-textarea" rows="3" x-model="s.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
             <div class="flex" style="justify-content:flex-end;margin-top:10px">
               <button type="button" class="btn btn-primary btn-sm" @click="recolherServico(s)"><i class="ph ph-check ic-ph"></i> Salvar serviço</button>
             </div>
@@ -1621,7 +1621,7 @@
         <button class="btn btn-ghost btn-sm" @click="addServicoOrc()">+ Serviço</button>
         <div class="fw-700">Mensalidade total: <span class="text-green" x-text="fmtCur(orcTotal(editing))+'/mês'"></span></div>
       </div>
-      <div class="form-group" style="margin-top:10px"><label class="form-label">Observações</label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">Observações <span class="hq" title="Anotações livres sobre este registro.">?</span></label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirOrcamento(editing)">Excluir</button>
@@ -1637,10 +1637,10 @@
 <!-- ENVIO DA PROPOSTA DIGITAL -->
 <div class="modal-backdrop" x-show="modal==='propostaEnvio'" x-cloak>
   <div class="modal" style="max-width:560px">
-    <div class="modal-head"><div class="modal-title">Proposta digital criada ✓</div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-head"><div class="modal-title">Proposta digital criada ✓</div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body" x-show="propostaEnvio">
       <div class="fs-12 text-2" style="margin-bottom:12px">Envie o link pro cliente. Ele abre, revisa e clica em <b>"Estou de acordo"</b> — o aceite fica registrado. (A geração automática do contrato + assinatura ZapSign entra na próxima fase.)</div>
-      <label class="form-label">Link da proposta</label>
+      <label class="form-label">Link da proposta <span class="hq" title="Link público da proposta para enviar ao cliente.">?</span></label>
       <div class="flex gap-2" style="align-items:center">
         <input class="form-input" style="flex:1" readonly :value="propostaEnvio?.link" @focus="$event.target.select()">
         <button class="btn btn-ghost btn-sm" @click="copiarLink(propostaEnvio.link)">Copiar</button>
@@ -1658,15 +1658,15 @@
 <!-- SERVIÇO (catálogo) -->
 <div class="modal-backdrop" x-show="modal==='servico'" x-cloak>
   <div class="modal" style="max-width:520px">
-    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Serviço'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Serviço'"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px">
-        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do serviço</label><input class="form-input" x-model="editing.nome" placeholder="Ex.: Gestão de Redes Sociais"></div>
-        <div class="form-group"><label class="form-label">Categoria</label><input class="form-input" x-model="editing.categoria" placeholder="Ex.: Social Media" list="cat-list"><datalist id="cat-list"><template x-for="c in [...new Set(catalogo.map(x=>x.categoria).filter(Boolean))]"><option :value="c"></option></template></datalist></div>
-        <div class="form-group"><label class="form-label">Valor padrão (R$/mês)</label><input class="form-input" type="number" min="0" x-model="editing.valor"></div>
+        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do serviço <span class="hq" title="Nome do serviço no catálogo.">?</span></label><input class="form-input" x-model="editing.nome" placeholder="Ex.: Gestão de Redes Sociais"></div>
+        <div class="form-group"><label class="form-label">Categoria <span class="hq" title="Categoria para organizar e filtrar.">?</span></label><input class="form-input" x-model="editing.categoria" placeholder="Ex.: Social Media" list="cat-list"><datalist id="cat-list"><template x-for="c in [...new Set(catalogo.map(x=>x.categoria).filter(Boolean))]"><option :value="c"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">Valor padrão (R$/mês) <span class="hq" title="Valor mensal padrão (dá pra ajustar no orçamento).">?</span></label><input class="form-input" type="number" min="0" x-model="editing.valor"></div>
       </div>
       <div class="form-group" style="margin-top:10px">
-        <label class="form-label">Redes sociais incluídas (opcional)</label>
+        <label class="form-label">Redes sociais incluídas (opcional) <span class="hq" title="Redes incluídas por padrão (opcional).">?</span></label>
         <div class="flex" style="flex-wrap:wrap;gap:8px">
           <template x-for="r in REDES" :key="r.id">
             <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;border:1px solid var(--border,#e2e2e2);border-radius:8px" :style="(editing.redes||[]).includes(r.id)?'border-color:#111;background:#1110':''">
@@ -1677,7 +1677,7 @@
         </div>
       </div>
       <div class="form-group" style="margin-top:10px">
-        <label class="form-label">Plataformas de tráfego + verba sugerida (opcional)</label>
+        <label class="form-label">Plataformas de tráfego + verba sugerida (opcional) <span class="hq" title="Plataformas e verba sugerida por padrão (opcional).">?</span></label>
         <div class="fs-12 text-2" style="margin:-2px 0 8px">Marque as plataformas e sugira a verba de mídia de cada uma. Não soma no total do orçamento.</div>
         <template x-for="a in ADS_PLATAFORMAS" :key="a.id">
           <div class="flex" style="align-items:center;gap:10px;margin-bottom:6px">
@@ -1692,7 +1692,7 @@
           </div>
         </template>
       </div>
-      <div class="form-group" style="margin-top:10px"><label class="form-label">Escopo padrão (1 item por linha)</label><textarea class="form-textarea" rows="5" x-model="editing.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">Escopo padrão (1 item por linha) <span class="hq" title="Escopo padrão do serviço, um item por linha.">?</span></label><textarea class="form-textarea" rows="5" x-model="editing.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirServico(editing)">Excluir</button>
@@ -1705,32 +1705,32 @@
 <!-- CONTRATO -->
 <div class="modal-backdrop" x-show="modal==='contrato'" x-cloak>
   <div class="modal" style="max-width:700px">
-    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Contrato'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Contrato'"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px">
-        <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="editing.numero"></div>
-        <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in CONTR_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
-        <div class="form-group"><label class="form-label">Cliente (CONTRATANTE)</label><input class="form-input" x-model="editing.cliente" list="cli-ct"><datalist id="cli-ct"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
-        <div class="form-group"><label class="form-label">CNPJ / CPF</label><input class="form-input" x-model="editing.documento"></div>
-        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Endereço da CONTRATANTE</label><input class="form-input" x-model="editing.endereco"></div>
-        <div class="form-group"><label class="form-label">Representante</label><input class="form-input" x-model="editing.representante"></div>
-        <div class="form-group"><label class="form-label">Projeto</label><input class="form-input" x-model="editing.projeto"></div>
-        <div class="form-group"><label class="form-label">Valor (R$)</label><input class="form-input" type="number" x-model="editing.valor"></div>
-        <div class="form-group"><label class="form-label">Periodicidade</label><select class="form-select" x-model="editing.periodicidade"><template x-for="p in PERIODICIDADES"><option x-text="p"></option></template></select></div>
-        <div class="form-group"><label class="form-label">Início</label><input class="form-input" type="date" x-model="editing.inicio"></div>
-        <div class="form-group"><label class="form-label">Vigência (meses)</label><input class="form-input" type="number" min="1" x-model="editing.meses"></div>
-        <div class="form-group"><label class="form-label">Forma de pagamento</label><select class="form-select" x-model="editing.formaPagamento"><template x-for="p in FORMAS_PAGAMENTO"><option x-text="p"></option></template></select></div>
-        <div class="form-group"><label class="form-label">Dia de vencimento</label><input class="form-input" type="number" min="1" max="28" x-model="editing.diaVencimento"></div>
-        <div class="form-group"><label class="form-label">Fidelidade (meses)</label><input class="form-input" type="number" min="0" x-model="editing.fidelidadeMeses"></div>
-        <div class="form-group"><label class="form-label">Multa rescisória (%)</label><input class="form-input" type="number" min="0" max="100" x-model="editing.multaPercentual"></div>
-        <div class="form-group"><label class="form-label">Índice de reajuste</label><input class="form-input" x-model="editing.indiceReajuste" placeholder="IPCA"></div>
-        <div class="form-group"><label class="form-label">Foro (comarca)</label><input class="form-input" x-model="editing.foro"></div>
-        <div class="form-group"><label class="form-label">Aprovação tácita (dias úteis)</label><input class="form-input" type="number" min="0" x-model="editing.aprovacaoDias"></div>
-        <div class="form-group"><label class="form-label">Suspende após atraso (dias)</label><input class="form-input" type="number" min="0" x-model="editing.suspensaoDias"></div>
+        <div class="form-group"><label class="form-label">Número <span class="hq" title="Número/identificador do documento (gerado automático, dá pra ajustar).">?</span></label><input class="form-input" x-model="editing.numero"></div>
+        <div class="form-group"><label class="form-label">Status <span class="hq" title="Situação atual do registro.">?</span></label><select class="form-select" x-model="editing.status"><template x-for="s in CONTR_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Cliente (CONTRATANTE) <span class="hq" title="Cliente que está contratando (CONTRATANTE).">?</span></label><input class="form-input" x-model="editing.cliente" list="cli-ct"><datalist id="cli-ct"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">CNPJ / CPF <span class="hq" title="CNPJ (empresa) ou CPF (pessoa).">?</span></label><input class="form-input" x-model="editing.documento"></div>
+        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Endereço da CONTRATANTE <span class="hq" title="Endereço completo do cliente.">?</span></label><input class="form-input" x-model="editing.endereco"></div>
+        <div class="form-group"><label class="form-label">Representante <span class="hq" title="Quem representa o cliente na assinatura.">?</span></label><input class="form-input" x-model="editing.representante"></div>
+        <div class="form-group"><label class="form-label">Projeto <span class="hq" title="Tipo/nome do projeto (ex.: Gestão + Tráfego).">?</span></label><input class="form-input" x-model="editing.projeto"></div>
+        <div class="form-group"><label class="form-label">Valor (R$) <span class="hq" title="Valor do contrato, em reais.">?</span></label><input class="form-input" type="number" x-model="editing.valor"></div>
+        <div class="form-group"><label class="form-label">Periodicidade <span class="hq" title="Frequência da cobrança (Mensal, Único…).">?</span></label><select class="form-select" x-model="editing.periodicidade"><template x-for="p in PERIODICIDADES"><option x-text="p"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Início <span class="hq" title="Data de início do contrato.">?</span></label><input class="form-input" type="date" x-model="editing.inicio"></div>
+        <div class="form-group"><label class="form-label">Vigência (meses) <span class="hq" title="Duração em meses.">?</span></label><input class="form-input" type="number" min="1" x-model="editing.meses"></div>
+        <div class="form-group"><label class="form-label">Forma de pagamento <span class="hq" title="Como o cliente vai pagar (Boleto, Pix, etc.).">?</span></label><select class="form-select" x-model="editing.formaPagamento"><template x-for="p in FORMAS_PAGAMENTO"><option x-text="p"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Dia de vencimento <span class="hq" title="Dia do mês em que vence a mensalidade.">?</span></label><input class="form-input" type="number" min="1" max="28" x-model="editing.diaVencimento"></div>
+        <div class="form-group"><label class="form-label">Fidelidade (meses) <span class="hq" title="Período mínimo de fidelidade, em meses.">?</span></label><input class="form-input" type="number" min="0" x-model="editing.fidelidadeMeses"></div>
+        <div class="form-group"><label class="form-label">Multa rescisória (%) <span class="hq" title="Multa por quebra de contrato (% sobre o restante).">?</span></label><input class="form-input" type="number" min="0" max="100" x-model="editing.multaPercentual"></div>
+        <div class="form-group"><label class="form-label">Índice de reajuste <span class="hq" title="Índice de reajuste anual (ex.: IPCA).">?</span></label><input class="form-input" x-model="editing.indiceReajuste" placeholder="IPCA"></div>
+        <div class="form-group"><label class="form-label">Foro (comarca) <span class="hq" title="Comarca para resolver disputas do contrato.">?</span></label><input class="form-input" x-model="editing.foro"></div>
+        <div class="form-group"><label class="form-label">Aprovação tácita (dias úteis) <span class="hq" title="Dias para aprovar; o silêncio aprova automático.">?</span></label><input class="form-input" type="number" min="0" x-model="editing.aprovacaoDias"></div>
+        <div class="form-group"><label class="form-label">Suspende após atraso (dias) <span class="hq" title="Dias de atraso até suspender os serviços.">?</span></label><input class="form-input" type="number" min="0" x-model="editing.suspensaoDias"></div>
       </div>
       <label class="flex gap-2" style="align-items:center;margin-top:12px;cursor:pointer"><input type="checkbox" x-model="editing.politico"> <span class="fs-13">Cliente eleitoral/político (inclui Anexo II — regras do TSE)</span></label>
-      <div class="form-group" style="margin-top:12px"><label class="form-label">Objeto / serviços contratados</label><textarea class="form-textarea" rows="4" x-model="editing.objeto" placeholder="1 item por linha…"></textarea></div>
-      <div class="form-group" style="margin-top:10px"><label class="form-label">Observações</label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
+      <div class="form-group" style="margin-top:12px"><label class="form-label">Objeto / serviços contratados <span class="hq" title="Serviços contratados (um por linha).">?</span></label><textarea class="form-textarea" rows="4" x-model="editing.objeto" placeholder="1 item por linha…"></textarea></div>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">Observações <span class="hq" title="Anotações livres sobre este registro.">?</span></label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirContrato(editing)">Excluir</button>
@@ -1747,7 +1747,7 @@
   <div class="modal" style="max-width:920px;width:95vw;height:92vh;display:flex;flex-direction:column">
     <div class="modal-head">
       <div class="modal-title" x-text="(docTipo==='contrato'?'Contrato ':'Proposta ')+((docObj&&docObj.numero)||'')"></div>
-      <button class="btn btn-icon btn-ghost" @click="modal=null">✕</button>
+      <button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button>
     </div>
     <div class="modal-body" style="flex:1;padding:0;overflow:hidden;background:#eee">
       <iframe :srcdoc="docHtml" style="width:100%;height:100%;border:0;background:#fff"></iframe>
@@ -1777,13 +1777,13 @@
     <div class="modal-head"><div class="modal-title">Nova programação semanal</div><button class="btn btn-icon btn-ghost" @click="progModal=false">✕</button></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px;margin-bottom:6px">
-        <div class="form-group"><label class="form-label">Cliente *</label>
+        <div class="form-group"><label class="form-label">Cliente * <span class="hq" title="Cliente vinculado (obrigatório).">?</span></label>
           <select class="form-select" x-model="progForm.cliente">
             <option value="">— escolher cliente —</option>
             <template x-for="c in clients" :key="c.id"><option :value="c.empresa" x-text="c.empresa"></option></template>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Responsável *</label>
+        <div class="form-group"><label class="form-label">Responsável * <span class="hq" title="Pessoa responsável (obrigatório).">?</span></label>
           <select class="form-select" x-model="progForm.responsavel">
             <option value="">— escolher colaborador —</option>
             <template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template>
@@ -1826,12 +1826,12 @@
     <div class="modal-head"><div class="modal-title">Post — <span x-text="postRef&&postRef.cliente"></span></div><button class="btn btn-icon btn-ghost" @click="postModal=false">✕</button></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px;margin-bottom:12px">
-        <div class="form-group"><label class="form-label">Data</label><input class="form-input" type="date" x-model="postForm.data"></div>
-        <div class="form-group"><label class="form-label">Tipo</label><select class="form-select" x-model="postForm.tipo"><template x-for="t in TIPOS_POST" :key="t"><option x-text="t"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Data <span class="hq" title="Data de emissão.">?</span></label><input class="form-input" type="date" x-model="postForm.data"></div>
+        <div class="form-group"><label class="form-label">Tipo <span class="hq" title="Tipo do registro.">?</span></label><select class="form-select" x-model="postForm.tipo"><template x-for="t in TIPOS_POST" :key="t"><option x-text="t"></option></template></select></div>
       </div>
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Tema</label><input class="form-input" x-model="postForm.tema" placeholder="Ex: Dia do orgulho"></div>
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Legenda</label><textarea class="form-textarea" x-model="postForm.legenda" style="min-height:120px"></textarea></div>
-      <div class="form-group"><label class="form-label">Link do criativo</label>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Tema <span class="hq" title="Tema/assunto do post ou criativo.">?</span></label><input class="form-input" x-model="postForm.tema" placeholder="Ex: Dia do orgulho"></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Legenda <span class="hq" title="Legenda do post.">?</span></label><textarea class="form-textarea" x-model="postForm.legenda" style="min-height:120px"></textarea></div>
+      <div class="form-group"><label class="form-label">Link do criativo <span class="hq" title="Link para a arte/criativo.">?</span></label>
         <div class="flex gap-2">
           <input class="form-input" style="flex:1" x-model="postForm.criativo" placeholder="Drive / Canva…">
           <a x-show="postForm.criativo" :href="postForm.criativo" target="_blank" class="btn btn-ghost btn-sm">abrir ↗</a>
@@ -1898,7 +1898,7 @@
 
     <div class="modal-foot" style="flex-wrap:wrap;gap:10px;align-items:flex-end">
       <div class="form-group" style="flex:1;min-width:220px;margin:0">
-        <label class="form-label">PDF final do designer (link)</label>
+        <label class="form-label">PDF final do designer (link) <span class="hq" title="Link do PDF final aprovado do designer.">?</span></label>
         <input class="form-input" :value="layoutAtual&&layoutAtual.anexoUrl" @change="patchLayout({anexoUrl:$event.target.value})" placeholder="Link do Canva/Drive…">
       </div>
       <a x-show="layoutAtual&&layoutAtual.anexoUrl" :href="layoutAtual&&layoutAtual.anexoUrl" target="_blank" class="btn btn-ghost">abrir PDF ↗</a>
@@ -2092,10 +2092,10 @@
 
 <div class="modal-backdrop" x-show="modal==='project'" x-cloak>
   <div class="modal">
-    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Projeto':'Novo Projeto'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Projeto':'Novo Projeto'"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
       <div class="form-group" style="grid-column:1/-1">
-        <label class="form-label">Começar de um modelo <span class="text-3" style="font-weight:400;text-transform:none">(opcional — preenche nome e serviço)</span></label>
+        <label class="form-label">Começar de um modelo <span class="text-3" style="font-weight:400;text-transform:none">(opcional — preenche nome e serviço)</span> <span class="hq" title="Escolha um modelo para preencher nome e serviço.">?</span></label>
         <div class="flex gap-2 items-center">
           <select class="form-select" style="flex:1" x-model="modeloSel" @change="aplicarModelo()">
             <option value="">— escolher modelo —</option>
@@ -2115,27 +2115,27 @@
           <button type="button" class="btn btn-ghost btn-sm" @click="favModeloSel()" :disabled="!modeloSel" :title="(modeloSel && modelosFav.includes(modeloSel)) ? 'Remover dos favoritos' : 'Marcar como favorito (sobe no topo da lista)'" style="font-size:16px;padding:6px 12px"><i class="ph-fill ph-star ic-ph" :style="(modeloSel && modelosFav.includes(modeloSel)) ? '' : 'opacity:.35'"></i></button>
         </div>
       </div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do projeto *</label><input class="form-input" x-model="editing.nome"></div>
-      <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" list="cli-list2"><datalist id="cli-list2"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
-      <div class="form-group"><label class="form-label">Serviço</label><select class="form-select" x-model="editing.servico"><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
-      <div class="form-group"><label class="form-label">Responsável</label>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do projeto * <span class="hq" title="Nome do projeto/tarefa (obrigatório).">?</span></label><input class="form-input" x-model="editing.nome"></div>
+      <div class="form-group"><label class="form-label">Cliente <span class="hq" title="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" list="cli-list2"><datalist id="cli-list2"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+      <div class="form-group"><label class="form-label">Serviço <span class="hq" title="Serviço relacionado.">?</span></label><select class="form-select" x-model="editing.servico"><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Responsável <span class="hq" title="Pessoa responsável pelo projeto.">?</span></label>
         <select class="form-select" x-model="editing.responsavel">
           <option value="">— escolher colaborador —</option>
           <template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template>
           <template x-if="editing.responsavel && !equipe.some(m=>m.nome===editing.responsavel)"><option :value="editing.responsavel" x-text="editing.responsavel"></option></template>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in PROJ_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
-      <div class="form-group"><label class="form-label">Prazo</label><input class="form-input" type="date" x-model="editing.prazo"></div>
-      <div class="form-group"><label class="form-label">Progresso (%)</label><input class="form-input" type="number" min="0" max="100" x-model="editing.progresso"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Etiquetas</label>
+      <div class="form-group"><label class="form-label">Status <span class="hq" title="Situação atual do registro.">?</span></label><select class="form-select" x-model="editing.status"><template x-for="s in PROJ_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Prazo <span class="hq" title="Data limite de entrega.">?</span></label><input class="form-input" type="date" x-model="editing.prazo"></div>
+      <div class="form-group"><label class="form-label">Progresso (%) <span class="hq" title="Quanto do projeto já foi concluído (0–100).">?</span></label><input class="form-input" type="number" min="0" max="100" x-model="editing.progresso"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Etiquetas <span class="hq" title="Etiquetas para classificar o projeto.">?</span></label>
         <div class="flex gap-2" style="flex-wrap:wrap">
           <template x-for="l in TRELLO_LABELS" :key="l.key">
             <div class="tl-swatch" :class="(editing.labels||[]).includes(l.key)?'on':''" :style="'background:'+l.cor+';width:46px'" @click="toggleLabel(l.key)" :title="l.key"></div>
           </template>
         </div>
       </div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas <span class="hq" title="Anotações livres.">?</span></label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirProjeto(editing)">Excluir</button>
@@ -2159,10 +2159,10 @@
           <div class="text-3 fs-12" style="margin-top:3px">Quadrada fica melhor. É redimensionada automaticamente.</div>
         </div>
       </div>
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Nome *</label><input class="form-input" x-model="pessoaForm.nome" placeholder="Nome do colaborador"></div>
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">E-mail *</label><input class="form-input" type="email" x-model="pessoaForm.email" :disabled="!!pessoaForm.id" placeholder="email@maracatu.com" autocomplete="off"><div class="text-3 fs-12" x-show="pessoaForm.id" style="margin-top:4px">O e-mail de login não pode ser alterado.</div></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Nome * <span class="hq" title="Nome (obrigatório).">?</span></label><input class="form-input" x-model="pessoaForm.nome" placeholder="Nome do colaborador"></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">E-mail * <span class="hq" title="E-mail (obrigatório) — também usado como login.">?</span></label><input class="form-input" type="email" x-model="pessoaForm.email" :disabled="!!pessoaForm.id" placeholder="email@maracatu.com" autocomplete="off"><div class="text-3 fs-12" x-show="pessoaForm.id" style="margin-top:4px">O e-mail de login não pode ser alterado.</div></div>
       <div class="form-group" style="margin-bottom:12px">
-        <label class="form-label">Perfil de acesso *</label>
+        <label class="form-label">Perfil de acesso * <span class="hq" title="Nível de acesso do usuário no sistema (obrigatório).">?</span></label>
         <select class="form-select" x-model="pessoaForm.papel"><template x-for="p in PAPEIS_INFO" :key="p.id"><option :value="p.id" x-text="p.nome"></option></template></select>
         <div class="text-3 fs-12" style="margin-top:4px" x-text="papelInfo(pessoaForm.papel).desc"></div>
       </div>
@@ -2189,57 +2189,57 @@
 
       <div class="ficha-sec-title" style="margin-top:14px"><i class="ph ph-briefcase ic-ph"></i> Dados profissionais</div>
       <div class="grid grid-2" style="gap:12px">
-        <div class="form-group"><label class="form-label">Cargo</label><input class="form-input" x-model="fichaForm.ficha.cargo" placeholder="Ex.: Social Media"></div>
-        <div class="form-group"><label class="form-label">Área / Departamento</label><input class="form-input" x-model="fichaForm.ficha.area" placeholder="Ex.: Criação"></div>
-        <div class="form-group"><label class="form-label">Regime</label><select class="form-select" x-model="fichaForm.ficha.regime"><option>CLT</option><option>PJ</option><option>Estágio</option><option>Freelancer</option><option>Sócio</option></select></div>
-        <div class="form-group"><label class="form-label">Carga horária (h/semana)</label><input class="form-input" type="number" x-model="fichaForm.ficha.cargaHoraria" placeholder="Ex.: 44"></div>
-        <div class="form-group"><label class="form-label">Jornada / horário</label><input class="form-input" x-model="fichaForm.ficha.jornada" placeholder="Ex.: Seg–Sex 9h–18h"></div>
-        <div class="form-group"><label class="form-label">Admissão</label><input class="form-input" type="date" x-model="fichaForm.ficha.admissao"></div>
-        <div class="form-group"><label class="form-label">Demissão (se houver)</label><input class="form-input" type="date" x-model="fichaForm.ficha.demissao"></div>
-        <div class="form-group"><label class="form-label">Salário / pró-labore (R$)</label><input class="form-input" type="number" x-model="fichaForm.ficha.salario"></div>
+        <div class="form-group"><label class="form-label">Cargo <span class="hq" title="Cargo do funcionário.">?</span></label><input class="form-input" x-model="fichaForm.ficha.cargo" placeholder="Ex.: Social Media"></div>
+        <div class="form-group"><label class="form-label">Área / Departamento <span class="hq" title="Área ou departamento.">?</span></label><input class="form-input" x-model="fichaForm.ficha.area" placeholder="Ex.: Criação"></div>
+        <div class="form-group"><label class="form-label">Regime <span class="hq" title="Regime de contratação (CLT, PJ…).">?</span></label><select class="form-select" x-model="fichaForm.ficha.regime"><option>CLT</option><option>PJ</option><option>Estágio</option><option>Freelancer</option><option>Sócio</option></select></div>
+        <div class="form-group"><label class="form-label">Carga horária (h/semana) <span class="hq" title="Horas trabalhadas por semana.">?</span></label><input class="form-input" type="number" x-model="fichaForm.ficha.cargaHoraria" placeholder="Ex.: 44"></div>
+        <div class="form-group"><label class="form-label">Jornada / horário <span class="hq" title="Horário/jornada de trabalho.">?</span></label><input class="form-input" x-model="fichaForm.ficha.jornada" placeholder="Ex.: Seg–Sex 9h–18h"></div>
+        <div class="form-group"><label class="form-label">Admissão <span class="hq" title="Data de admissão.">?</span></label><input class="form-input" type="date" x-model="fichaForm.ficha.admissao"></div>
+        <div class="form-group"><label class="form-label">Demissão (se houver) <span class="hq" title="Data de desligamento, se houver.">?</span></label><input class="form-input" type="date" x-model="fichaForm.ficha.demissao"></div>
+        <div class="form-group"><label class="form-label">Salário / pró-labore (R$) <span class="hq" title="Remuneração mensal, em reais.">?</span></label><input class="form-input" type="number" x-model="fichaForm.ficha.salario"></div>
       </div>
 
       <div class="ficha-sec-title" style="margin-top:16px"><i class="ph ph-money ic-ph"></i> Pagamento</div>
       <div class="grid grid-2" style="gap:12px">
-        <div class="form-group"><label class="form-label">Chave PIX</label><input class="form-input" x-model="fichaForm.ficha.pix"></div>
-        <div class="form-group"><label class="form-label">Banco</label><input class="form-input" x-model="fichaForm.ficha.banco"></div>
-        <div class="form-group"><label class="form-label">Agência</label><input class="form-input" x-model="fichaForm.ficha.agencia"></div>
-        <div class="form-group"><label class="form-label">Conta</label><input class="form-input" x-model="fichaForm.ficha.conta"></div>
+        <div class="form-group"><label class="form-label">Chave PIX <span class="hq" title="Chave PIX para recebimento.">?</span></label><input class="form-input" x-model="fichaForm.ficha.pix"></div>
+        <div class="form-group"><label class="form-label">Banco <span class="hq" title="Banco para pagamento.">?</span></label><input class="form-input" x-model="fichaForm.ficha.banco"></div>
+        <div class="form-group"><label class="form-label">Agência <span class="hq" title="Agência bancária.">?</span></label><input class="form-input" x-model="fichaForm.ficha.agencia"></div>
+        <div class="form-group"><label class="form-label">Conta <span class="hq" title="Conta bancária.">?</span></label><input class="form-input" x-model="fichaForm.ficha.conta"></div>
       </div>
 
       <div class="ficha-sec-title" style="margin-top:16px"><i class="ph ph-identification-card ic-ph"></i> Dados pessoais</div>
       <div class="grid grid-2" style="gap:12px">
-        <div class="form-group"><label class="form-label">CPF</label><input class="form-input" x-model="fichaForm.ficha.cpf"></div>
-        <div class="form-group"><label class="form-label">RG</label><input class="form-input" x-model="fichaForm.ficha.rg"></div>
-        <div class="form-group"><label class="form-label">Nascimento</label><input class="form-input" type="date" x-model="fichaForm.ficha.nascimento"></div>
-        <div class="form-group"><label class="form-label">Sexo</label><select class="form-select" x-model="fichaForm.ficha.sexo"><option value="">—</option><option>Feminino</option><option>Masculino</option><option>Outro</option></select></div>
-        <div class="form-group"><label class="form-label">Estado civil</label><select class="form-select" x-model="fichaForm.ficha.estadoCivil"><option value="">—</option><option>Solteiro(a)</option><option>Casado(a)</option><option>União estável</option><option>Divorciado(a)</option><option>Viúvo(a)</option></select></div>
+        <div class="form-group"><label class="form-label">CPF <span class="hq" title="CPF (só números ou formatado).">?</span></label><input class="form-input" x-model="fichaForm.ficha.cpf"></div>
+        <div class="form-group"><label class="form-label">RG <span class="hq" title="Documento de identidade.">?</span></label><input class="form-input" x-model="fichaForm.ficha.rg"></div>
+        <div class="form-group"><label class="form-label">Nascimento <span class="hq" title="Data de nascimento.">?</span></label><input class="form-input" type="date" x-model="fichaForm.ficha.nascimento"></div>
+        <div class="form-group"><label class="form-label">Sexo <span class="hq" title="Sexo.">?</span></label><select class="form-select" x-model="fichaForm.ficha.sexo"><option value="">—</option><option>Feminino</option><option>Masculino</option><option>Outro</option></select></div>
+        <div class="form-group"><label class="form-label">Estado civil <span class="hq" title="Estado civil.">?</span></label><select class="form-select" x-model="fichaForm.ficha.estadoCivil"><option value="">—</option><option>Solteiro(a)</option><option>Casado(a)</option><option>União estável</option><option>Divorciado(a)</option><option>Viúvo(a)</option></select></div>
       </div>
 
       <div class="ficha-sec-title" style="margin-top:16px"><i class="ph ph-phone ic-ph"></i> Contato</div>
       <div class="grid grid-2" style="gap:12px">
-        <div class="form-group"><label class="form-label">Telefone / WhatsApp</label><input class="form-input" x-model="fichaForm.ficha.telefone" placeholder="(81) 9 9999-9999"></div>
-        <div class="form-group"><label class="form-label">E-mail pessoal</label><input class="form-input" type="email" x-model="fichaForm.ficha.emailPessoal"></div>
+        <div class="form-group"><label class="form-label">Telefone / WhatsApp <span class="hq" title="Telefone ou WhatsApp com DDD.">?</span></label><input class="form-input" x-model="fichaForm.ficha.telefone" placeholder="(81) 9 9999-9999"></div>
+        <div class="form-group"><label class="form-label">E-mail pessoal <span class="hq" title="E-mail pessoal do funcionário.">?</span></label><input class="form-input" type="email" x-model="fichaForm.ficha.emailPessoal"></div>
       </div>
 
       <div class="ficha-sec-title" style="margin-top:16px"><i class="ph ph-map-pin ic-ph"></i> Endereço</div>
       <div class="grid grid-2" style="gap:12px">
-        <div class="form-group"><label class="form-label">CEP</label><div class="flex gap-2"><input class="form-input" x-model="fichaForm.ficha.cep" @blur="buscarCepFicha()" placeholder="00000-000"><button type="button" class="btn btn-ghost btn-sm" @click="buscarCepFicha()" :disabled="cepLoading"><i class="ph ph-magnifying-glass ic-ph"></i></button></div><div class="text-3 fs-12" x-show="cepMsg" x-text="cepMsg" style="margin-top:3px"></div></div>
-        <div class="form-group"><label class="form-label">Logradouro</label><input class="form-input" x-model="fichaForm.ficha.logradouro"></div>
-        <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="fichaForm.ficha.numero"></div>
-        <div class="form-group"><label class="form-label">Complemento</label><input class="form-input" x-model="fichaForm.ficha.complemento"></div>
-        <div class="form-group"><label class="form-label">Bairro</label><input class="form-input" x-model="fichaForm.ficha.bairro"></div>
-        <div class="form-group"><label class="form-label">Cidade</label><input class="form-input" x-model="fichaForm.ficha.cidade"></div>
-        <div class="form-group"><label class="form-label">UF</label><input class="form-input" x-model="fichaForm.ficha.uf" maxlength="2" style="text-transform:uppercase"></div>
+        <div class="form-group"><label class="form-label">CEP <span class="hq" title="CEP do endereço.">?</span></label><div class="flex gap-2"><input class="form-input" x-model="fichaForm.ficha.cep" @blur="buscarCepFicha()" placeholder="00000-000"><button type="button" class="btn btn-ghost btn-sm" @click="buscarCepFicha()" :disabled="cepLoading"><i class="ph ph-magnifying-glass ic-ph"></i></button></div><div class="text-3 fs-12" x-show="cepMsg" x-text="cepMsg" style="margin-top:3px"></div></div>
+        <div class="form-group"><label class="form-label">Logradouro <span class="hq" title="Rua/avenida do endereço.">?</span></label><input class="form-input" x-model="fichaForm.ficha.logradouro"></div>
+        <div class="form-group"><label class="form-label">Número <span class="hq" title="Número/identificador do documento (gerado automático, dá pra ajustar).">?</span></label><input class="form-input" x-model="fichaForm.ficha.numero"></div>
+        <div class="form-group"><label class="form-label">Complemento <span class="hq" title="Complemento do endereço (sala, andar, bloco).">?</span></label><input class="form-input" x-model="fichaForm.ficha.complemento"></div>
+        <div class="form-group"><label class="form-label">Bairro <span class="hq" title="Bairro.">?</span></label><input class="form-input" x-model="fichaForm.ficha.bairro"></div>
+        <div class="form-group"><label class="form-label">Cidade <span class="hq" title="Cidade.">?</span></label><input class="form-input" x-model="fichaForm.ficha.cidade"></div>
+        <div class="form-group"><label class="form-label">UF <span class="hq" title="Estado (sigla, ex.: PE).">?</span></label><input class="form-input" x-model="fichaForm.ficha.uf" maxlength="2" style="text-transform:uppercase"></div>
       </div>
 
       <div class="ficha-sec-title" style="margin-top:16px"><i class="ph ph-first-aid ic-ph"></i> Emergência</div>
       <div class="grid grid-2" style="gap:12px">
-        <div class="form-group"><label class="form-label">Contato de emergência</label><input class="form-input" x-model="fichaForm.ficha.emergNome"></div>
-        <div class="form-group"><label class="form-label">Telefone de emergência</label><input class="form-input" x-model="fichaForm.ficha.emergFone"></div>
+        <div class="form-group"><label class="form-label">Contato de emergência <span class="hq" title="Nome do contato de emergência.">?</span></label><input class="form-input" x-model="fichaForm.ficha.emergNome"></div>
+        <div class="form-group"><label class="form-label">Telefone de emergência <span class="hq" title="Telefone do contato de emergência.">?</span></label><input class="form-input" x-model="fichaForm.ficha.emergFone"></div>
       </div>
 
-      <div class="form-group" style="margin-top:14px"><label class="form-label">Observações</label><textarea class="form-textarea" x-model="fichaForm.ficha.obs"></textarea></div>
+      <div class="form-group" style="margin-top:14px"><label class="form-label">Observações <span class="hq" title="Anotações livres sobre este registro.">?</span></label><textarea class="form-textarea" x-model="fichaForm.ficha.obs"></textarea></div>
       <div class="fs-12" x-show="fichaMsg" style="color:#dc2626;margin-top:10px" x-text="fichaMsg"></div>
     </div>
     <div class="modal-foot">
@@ -2255,8 +2255,8 @@
   <div class="modal" style="max-width:380px">
     <div class="modal-head"><div class="modal-title">Trocar senha</div><button class="btn btn-icon btn-ghost" @click="senhaModal=false">✕</button></div>
     <div class="modal-body">
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Senha atual</label><input class="form-input" type="password" x-model="pwAtual"></div>
-      <div class="form-group"><label class="form-label">Nova senha (mín. 6)</label><input class="form-input" type="password" x-model="pwNova"></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Senha atual <span class="hq" title="Sua senha atual (para confirmar a troca).">?</span></label><input class="form-input" type="password" x-model="pwAtual"></div>
+      <div class="form-group"><label class="form-label">Nova senha (mín. 6) <span class="hq" title="Nova senha, mínimo 6 caracteres.">?</span></label><input class="form-input" type="password" x-model="pwNova"></div>
       <div x-show="pwMsg" style="font-size:12px;margin-top:10px" :style="pwMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="pwMsg"></div>
     </div>
     <div class="modal-foot"><button class="btn btn-ghost" @click="senhaModal=false">Fechar</button><button class="btn btn-primary" @click="trocarSenha()">Salvar</button></div>
@@ -2268,11 +2268,11 @@
   <div class="modal" style="max-width:440px">
     <div class="modal-head"><div class="modal-title" x-text="credForm.id?'Editar acesso':'Novo acesso'"></div><button class="btn btn-icon btn-ghost" @click="credModal=false">✕</button></div>
     <div class="modal-body">
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Item / plataforma</label><input class="form-input" x-model="credForm.item" list="itens-cred" placeholder="Instagram, Domínio, Hospedagem…"><datalist id="itens-cred"><template x-for="i in ITENS_CRED"><option :value="i"></option></template></datalist></div>
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Login / usuário</label><input class="form-input" x-model="credForm.login" autocomplete="off"></div>
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Senha <span class="text-3" x-show="credForm.id" style="font-weight:400;text-transform:none">— em branco mantém a atual</span></label><input class="form-input" x-model="credForm.senha" autocomplete="off" :placeholder="credForm.id?'••••••• (em branco mantém)':''"></div>
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">URL (opcional)</label><input class="form-input" x-model="credForm.url" placeholder="https://"></div>
-      <div class="form-group"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="credForm.notas"></textarea></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Item / plataforma <span class="hq" title="Nome do item ou plataforma (ex.: Instagram, Meta Ads).">?</span></label><input class="form-input" x-model="credForm.item" list="itens-cred" placeholder="Instagram, Domínio, Hospedagem…"><datalist id="itens-cred"><template x-for="i in ITENS_CRED"><option :value="i"></option></template></datalist></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Login / usuário <span class="hq" title="Login/usuário do acesso.">?</span></label><input class="form-input" x-model="credForm.login" autocomplete="off"></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Senha <span class="text-3" x-show="credForm.id" style="font-weight:400;text-transform:none">— em branco mantém a atual</span> <span class="hq" title="Deixe em branco para não alterar a senha.">?</span></label><input class="form-input" x-model="credForm.senha" autocomplete="off" :placeholder="credForm.id?'••••••• (em branco mantém)':''"></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">URL (opcional) <span class="hq" title="Endereço do serviço (opcional).">?</span></label><input class="form-input" x-model="credForm.url" placeholder="https://"></div>
+      <div class="form-group"><label class="form-label">Notas <span class="hq" title="Anotações livres.">?</span></label><textarea class="form-textarea" x-model="credForm.notas"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="credForm.id" @click="excluirCredencial(credForm); credModal=false">Excluir</button>
@@ -2291,9 +2291,9 @@
     </div>
     <div class="modal-body">
       <p class="fs-12 text-2" x-show="cofreModal==='definir'" style="margin-bottom:12px">Crie a senha master do cofre. Ela é exigida pra ver qualquer senha guardada. Guarde-a bem — sem ela, as senhas não são reveladas.</p>
-      <div class="form-group" x-show="cofreModal==='trocar'" style="margin-bottom:12px"><label class="form-label">Senha master atual</label><input class="form-input" type="password" x-model="cofreAtual" autocomplete="off"></div>
+      <div class="form-group" x-show="cofreModal==='trocar'" style="margin-bottom:12px"><label class="form-label">Senha master atual <span class="hq" title="Senha mestra atual do cofre.">?</span></label><input class="form-input" type="password" x-model="cofreAtual" autocomplete="off"></div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label" x-text="cofreModal==='desbloquear'?'Senha master':'Nova senha master'"></label><input class="form-input" type="password" x-model="cofreA" autocomplete="off" @keydown.enter="confirmarCofre()"></div>
-      <div class="form-group" x-show="cofreModal!=='desbloquear'"><label class="form-label">Confirme a senha</label><input class="form-input" type="password" x-model="cofreB" autocomplete="off" @keydown.enter="confirmarCofre()"></div>
+      <div class="form-group" x-show="cofreModal!=='desbloquear'"><label class="form-label">Confirme a senha <span class="hq" title="Repita a senha para confirmar.">?</span></label><input class="form-input" type="password" x-model="cofreB" autocomplete="off" @keydown.enter="confirmarCofre()"></div>
       <div class="fs-12" x-show="cofreMsg" style="color:#dc2626;margin-top:8px" x-text="cofreMsg"></div>
     </div>
     <div class="modal-foot">
@@ -2324,6 +2324,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=110"></script>
+<script src="js/app.js?v=111"></script>
 </body>
 </html>
