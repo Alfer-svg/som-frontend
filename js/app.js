@@ -115,9 +115,10 @@ const DICAS_LOGIN = [
 ];
 // Contratos — situação da vigência.
 const CONTR_STATUS = [
-  { id: 'Ativo',     color: '#16a34a' },
-  { id: 'Pausado',   color: '#f59e0b' },
-  { id: 'Encerrado', color: '#8a8ba3' },
+  { id: 'Rascunho',  color: '#8a8ba3' }, // criado, ainda não enviado p/ assinatura
+  { id: 'Pendente',  color: '#f59e0b' }, // enviado, aguardando assinatura
+  { id: 'Assinado',  color: '#16a34a' }, // assinado = contrato ativo
+  { id: 'Cancelado', color: '#dc2626' }, // cancelado → arquiva
 ];
 const PERIODICIDADES = ['Mensal', 'Único', 'Trimestral', 'Anual'];
 const FORMAS_PAGAMENTO = ['Boleto', 'Pix', 'Cartão de crédito', 'Transferência/TED'];
@@ -1769,6 +1770,7 @@ ${this._docFoot()}
         const base64_pdf = await this._gerarPdfBase64(this._contratoHTML(c));
         const resp = await this.api('POST', '/assinatura/contrato', { name: 'Contrato ' + (c.numero || ''), base64_pdf, signers: [{ name: nome, email, phone_number: email ? '' : foneNum }] });
         c.assinatura = { ...resp, enviadoEm: MD.today() };
+        if (c.status === 'Rascunho') c.status = 'Pendente'; // enviado p/ assinatura, aguardando assinar
         const i = this.contracts.findIndex(x => x.id === c.id); if (i > -1) this.contracts[i] = { ...c };
         this.persist('contracts', this.contracts);
         if (this.docObj && this.docObj.id === c.id) this.docObj = c;
@@ -1802,7 +1804,7 @@ ${this._docFoot()}
         const c = this._clientePorNome(o.cliente); // puxa CNPJ/endereço/representante do cadastro
         const resp0 = c && Array.isArray(c.responsaveis) ? c.responsaveis[0] : null;
         const objeto = this._servicosTexto(o.servicos) || o.descricao || '';
-        ct = { id: MD.uid(), numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || (c && (c.empresa || c.razaoSocial)) || '', documento: (c && (c.cnpj || c.documento || c.cpf)) || '', endereco: this._enderecoCliente(c), representante: o.contato || (resp0 && resp0.nome) || (c && c.contato) || '', projeto: o.projeto || '', objeto, servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: o.vigenciaMeses == 1 ? 'Único' : 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: num, status: 'Ativo', observacoes: o.observacoes || '' };
+        ct = { id: MD.uid(), numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || (c && (c.empresa || c.razaoSocial)) || '', documento: (c && (c.cnpj || c.documento || c.cpf)) || '', endereco: this._enderecoCliente(c), representante: o.contato || (resp0 && resp0.nome) || (c && c.contato) || '', projeto: o.projeto || '', objeto, servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: o.vigenciaMeses == 1 ? 'Único' : 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: num, status: 'Rascunho', observacoes: o.observacoes || '' };
         this.contracts.unshift(ct); this.persist('contracts', this.contracts);
       }
       this.editing = { ...ct };
@@ -1834,8 +1836,8 @@ ${this._docFoot()}
     aplicarCatalogo(s, id) { const it = this.catalogo.find(x => x.id === id); if (!it) return; s.nome = it.nome; s.valor = +it.valor || 0; if (it.escopo) s.escopo = it.escopo; if (Array.isArray(it.redes) && it.redes.length) s.redes = [...it.redes]; if (Array.isArray(it.ads) && it.ads.length) { s.ads = [...it.ads]; s.verbaAds = { ...(it.verbaAds || {}) }; } },
 
     // ───────────────── COMERCIAL: contratos ─────────────────
-    // Arquivado = Encerrado (cancelado) OU vencido há mais de 10 dias.
-    contratoArquivado(c) { if (c.status === 'Encerrado') return true; const fim = this.contrFim(c); return !!(fim && fim < this._dataEm(-10)); },
+    // Arquivado = Cancelado OU vencido há mais de 10 dias (mesmo se Assinado).
+    contratoArquivado(c) { if (c.status === 'Cancelado') return true; const fim = this.contrFim(c); return !!(fim && fim < this._dataEm(-10)); },
     get contratosArquivadosCount() { return this.contracts.filter(c => this.contratoArquivado(c)).length; },
     get contratosFiltrados() {
       const q = this.busca.toLowerCase();
@@ -1847,7 +1849,7 @@ ${this._docFoot()}
     contrStatusInfo(s) { return CONTR_STATUS.find(x => x.id === s) || CONTR_STATUS[0]; },
     // Data-fim = início + vigência (meses).
     contrFim(c) { if (!c.inicio || !+c.meses) return ''; const d = new Date(c.inicio + 'T00:00:00'); d.setMonth(d.getMonth() + (+c.meses || 0)); return d.toISOString().slice(0, 10); },
-    novoContrato() { this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: '', documento: '', endereco: '', representante: '', projeto: '', objeto: '', valor: 0, periodicidade: 'Mensal', formaPagamento: 'Boleto', diaVencimento: 5, inicio: MD.today(), meses: 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: '', status: 'Ativo', observacoes: '' }; this.modal = 'contrato'; },
+    novoContrato() { this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: '', documento: '', endereco: '', representante: '', projeto: '', objeto: '', valor: 0, periodicidade: 'Mensal', formaPagamento: 'Boleto', diaVencimento: 5, inicio: MD.today(), meses: 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: '', status: 'Rascunho', observacoes: '' }; this.modal = 'contrato'; },
     editarContrato(c) { this.editing = { documento: '', endereco: '', representante: '', projeto: '', formaPagamento: 'Boleto', diaVencimento: 5, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: '', ...c }; this.modal = 'contrato'; },
     salvarContrato() {
       const e = this.editing; if (!e.cliente && !e.objeto) return alert('Informe ao menos o cliente ou o objeto.');
