@@ -263,6 +263,8 @@ document.addEventListener('alpine:init', () => {
     equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' },
     pessoaModal: false, pessoaMsg: '',
+    fichaForm: { id: '', nome: '', papel: '', foto: '', ficha: {} },
+    fichaModal: false, fichaMsg: '',
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
@@ -403,7 +405,7 @@ document.addEventListener('alpine:init', () => {
       const nome = cls.split('ph-').pop();
       return 'assets/icons/' + nome + '.png?v=7';
     },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') { this.carregarUsuarios(); this.carregarCloud(); } if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); } if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -454,11 +456,21 @@ document.addEventListener('alpine:init', () => {
       try { this.relatorio = (await this.api('GET', '/relatorios/equipe?de=' + this.relDe + '&ate=' + this.relAte)) || { linhas: [], porDia: [] }; }
       catch { this.relatorio = { linhas: [], porDia: [] }; }
     },
-    fichaVazia() { return { cargo: '', area: '', admissao: '', regime: 'CLT', salario: '', pix: '', cpf: '', rg: '', nascimento: '', sexo: '', estadoCivil: '', telefone: '', emailPessoal: '', cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', emergNome: '', emergFone: '', obs: '' }; },
-    novoColaborador() { this.pessoaForm = { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '', ficha: this.fichaVazia() }; this.pessoaMsg = ''; this.cepMsg = ''; this.pessoaModal = true; },
-    editarColaborador(u) { this.pessoaForm = { id: u.id, nome: u.nome, email: u.email, papel: u.papel, senha: '', foto: u.foto || '', ficha: { ...this.fichaVazia(), ...(u.ficha || {}) } }; this.pessoaMsg = ''; this.cepMsg = ''; this.pessoaModal = true; },
+    fichaVazia() { return { cargo: '', area: '', admissao: '', demissao: '', regime: 'CLT', cargaHoraria: '', jornada: '', salario: '', pix: '', banco: '', agencia: '', conta: '', cpf: '', rg: '', nascimento: '', sexo: '', estadoCivil: '', telefone: '', emailPessoal: '', cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', emergNome: '', emergFone: '', obs: '' }; },
+    // ── Acesso (Configurações › Usuários): login + perfil + senha ──
+    novoColaborador() { this.pessoaForm = { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
+    editarColaborador(u) { this.pessoaForm = { id: u.id, nome: u.nome, email: u.email, papel: u.papel, senha: '', foto: u.foto || '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
+    // ── Ficha de registro (Pessoal) — só os campos de RH, não toca no acesso ──
+    editarFicha(u) { this.fichaForm = { id: u.id, nome: u.nome, papel: u.papel, foto: u.foto || '', ficha: { ...this.fichaVazia(), ...(u.ficha || {}) } }; this.fichaMsg = ''; this.cepMsg = ''; this.fichaModal = true; },
+    async salvarFicha() {
+      const f = this.fichaForm; this.fichaMsg = '';
+      try {
+        await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, ficha: f.ficha || {} });
+        await this.carregarUsuarios(); this.carregarEquipe(); this.fichaModal = false;
+      } catch (e) { this.fichaMsg = '⚠ ' + e.message; }
+    },
     async buscarCepFicha() {
-      const fc = this.pessoaForm.ficha; const raw = (fc.cep || '').replace(/\D/g, '');
+      const fc = this.fichaForm.ficha; const raw = (fc.cep || '').replace(/\D/g, '');
       if (raw.length !== 8) { this.cepMsg = '⚠ CEP precisa ter 8 dígitos.'; return; }
       this.cepLoading = true; this.cepMsg = 'Buscando…'; fc.cep = raw.replace(/^(\d{5})(\d{3})$/, '$1-$2');
       try {
@@ -469,11 +481,54 @@ document.addEventListener('alpine:init', () => {
       } catch (e) { this.cepMsg = '⚠ ' + (e.message || 'Falha no CEP'); }
       finally { this.cepLoading = false; }
     },
+    // Imprime a ficha de registro do empregado (documento interno de RH).
+    imprimirFicha(u) {
+      const e = this._esc, f = (u && u.ficha) || {};
+      const w = window.open('', '_blank');
+      if (!w) return alert('Permita pop-ups neste site pra imprimir a ficha.');
+      const papel = this.papelInfo(u.papel).nome;
+      const linha = (l, v) => `<tr><td class="lbl">${e(l)}</td><td class="val">${v ? e(v) : '—'}</td></tr>`;
+      const dt = (d) => d ? MD.fmtDate(d) : '';
+      const grupo = (titulo, linhas) => `<h2>${e(titulo)}</h2><table>${linhas.join('')}</table>`;
+      const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Ficha — ${e(u.nome)}</title>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box}body{font-family:'Inter',Arial,sans-serif;color:#1f1f1f;margin:0;font-size:13px}
+.head{background:#141210;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:24px 40px}
+.head .t{font-size:11px;letter-spacing:3px;color:#bdbdbd}.head .n{font-size:22px;font-weight:800;margin-top:3px}
+.pad{padding:26px 40px 44px}
+.topcli{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+.av{width:64px;height:64px;border-radius:50%;background:#ececec;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#999;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.nome{font-size:20px;font-weight:800}.cargo{color:#666;font-size:13px;margin-top:2px}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#141210;margin:22px 0 8px;padding-left:10px;border-left:3px solid #141210}
+table{width:100%;border-collapse:collapse;margin-bottom:6px}
+td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:top}
+td.lbl{width:230px;color:#888;font-weight:600}td.val{font-weight:600;color:#141210}
+.foot{margin-top:34px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:12px;text-align:center}
+.assin{display:flex;justify-content:space-between;gap:48px;margin-top:54px}.assin div{flex:1;text-align:center;border-top:1.5px solid #141210;padding-top:8px;font-size:11px;color:#444}
+@media print{.pad{padding:20px 30px}}</style></head>
+<body>
+<div class="head"><div><div class="t">FICHA DE REGISTRO DO EMPREGADO</div><div class="n">${e(EMPRESA.nome)}</div></div><div style="text-align:right;font-size:10.5px;color:#bdbdbd">CNPJ ${e(EMPRESA.cnpj)}<br>Emitida em ${e(MD.fmtDate(MD.today()))}</div></div>
+<div class="pad">
+<div class="topcli"><div class="av">${u.foto ? `<img src="${e(u.foto)}">` : e((u.nome || '?').charAt(0).toUpperCase())}</div><div><div class="nome">${e(u.nome)}</div><div class="cargo">${e(f.cargo || '—')}${f.area ? ' · ' + e(f.area) : ''} · Perfil de acesso: ${e(papel)}</div></div></div>
+${grupo('Dados profissionais', [linha('Cargo', f.cargo), linha('Área / Departamento', f.area), linha('Regime', f.regime), linha('Admissão', dt(f.admissao)), f.demissao ? linha('Demissão', dt(f.demissao)) : '', linha('Carga horária', f.cargaHoraria && (f.cargaHoraria + 'h/semana')), linha('Jornada / horário', f.jornada), linha('Salário / pró-labore', f.salario && MD.fmtCur(f.salario))])}
+${grupo('Pagamento', [linha('Chave PIX', f.pix), linha('Banco', f.banco), linha('Agência', f.agencia), linha('Conta', f.conta)])}
+${grupo('Dados pessoais', [linha('CPF', f.cpf), linha('RG', f.rg), linha('Nascimento', dt(f.nascimento)), linha('Sexo', f.sexo), linha('Estado civil', f.estadoCivil)])}
+${grupo('Contato', [linha('Telefone / WhatsApp', f.telefone), linha('E-mail pessoal', f.emailPessoal), linha('E-mail de acesso', u.email)])}
+${grupo('Endereço', [linha('CEP', f.cep), linha('Logradouro', f.logradouro), linha('Número', f.numero), linha('Complemento', f.complemento), linha('Bairro', f.bairro), linha('Cidade', f.cidade), linha('UF', f.uf)])}
+${grupo('Emergência', [linha('Contato', f.emergNome), linha('Telefone', f.emergFone)])}
+${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-weight:400;white-space:pre-wrap">${e(f.obs)}</td></tr>`]) : ''}
+<div class="assin"><div>${e(u.nome)}<br>Empregado(a)</div><div>${e(EMPRESA.nome)}<br>Empregador</div></div>
+<div class="foot">${e(EMPRESA.nome)} · CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.endereco)}</div>
+</div></body></html>`;
+      w.document.write(html); w.document.close(); w.focus();
+      setTimeout(() => { try { w.print(); } catch (er) {} }, 350);
+    },
     async salvarColaborador() {
       const f = this.pessoaForm; this.pessoaMsg = '';
       try {
-        if (f.id) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, papel: f.papel, senha: f.senha || undefined, foto: f.foto || '', ficha: f.ficha || {} });
-        else await this.api('POST', '/auth/usuarios', { nome: f.nome, email: f.email, papel: f.papel, senha: f.senha, foto: f.foto || '', ficha: f.ficha || {} });
+        if (f.id) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, papel: f.papel, senha: f.senha || undefined, foto: f.foto || '' });
+        else await this.api('POST', '/auth/usuarios', { nome: f.nome, email: f.email, papel: f.papel, senha: f.senha, foto: f.foto || '' });
         await this.carregarUsuarios(); this.carregarEquipe(); this.pessoaModal = false;
       } catch (e) { this.pessoaMsg = '⚠ ' + e.message; }
     },
