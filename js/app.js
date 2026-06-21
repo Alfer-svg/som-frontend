@@ -92,6 +92,8 @@ const ORC_STATUS = [
 ];
 // Tipos de projeto pré-definidos no orçamento ('Outros' libera texto livre).
 const PROJETO_OPCOES = ['Gestão + Tráfego', 'Tráfego', 'Gestão'];
+// Meses (abas do Financeiro).
+const MESES_CURTOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 // Coleções que sincronizam no backend (compartilhadas por toda a equipe).
 // Para tornar QUALQUER coleção compartilhada, basta adicionar a chave aqui.
 const COLECOES_SYNC = ['catalogo', 'contracts', 'finance', 'fornecedores'];
@@ -322,6 +324,7 @@ document.addEventListener('alpine:init', () => {
     clients: [], leads: [], proposals: [], contracts: [], finance: [], projects: [], catalogo: [], fornecedores: [],
     propostaEnvio: null,
     finTab: 'lancamentos',  // Financeiro: 'lancamentos' | 'fornecedores'
+    finMes: new Date().getMonth(), finAno: new Date().getFullYear(), // mês/ano selecionado no Financeiro
     fornForm: {},
 
     // modais
@@ -689,11 +692,17 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     get clientesAtivos() { return this.clients.filter(c => c.status !== 'Inativo').length; },
     get leadsAbertos()   { return this.leads.filter(l => !['Ganho', 'Perdido'].includes(l.stage)).length; },
     get projetosAndamento() { return this.projects.filter(p => p.status !== 'Concluído').length; },
-    get receitaMes() { return this.finance.filter(f => f.tipo === 'receita' && (f.data || '').startsWith(MD.mesAtual())).reduce((a, f) => a + (+f.valor || 0), 0); },
-    get despesaMes() { return this.finance.filter(f => f.tipo === 'despesa' && (f.data || '').startsWith(MD.mesAtual())).reduce((a, f) => a + (+f.valor || 0), 0); },
+    // chave 'YYYY-MM' do mês selecionado nas abas do Financeiro
+    get finMesKey() { return this.finAno + '-' + String(this.finMes + 1).padStart(2, '0'); },
+    get finMesLabel() { return MESES_CURTOS[this.finMes] + '/' + this.finAno; },
+    _finNoMes(f) { return String(f.vencimento || f.data || '').slice(0, 7) === this.finMesKey; }, // por vencimento
+    get receitaMes() { return this.finance.filter(f => f.tipo === 'receita' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
+    get despesaMes() { return this.finance.filter(f => f.tipo === 'despesa' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
     get saldoMes()   { return this.receitaMes - this.despesaMes; },
-    get aReceber()   { return this.finance.filter(f => f.tipo === 'receita' && f.status !== 'pago').reduce((a, f) => a + (+f.valor || 0), 0); },
-    get aPagar()     { return this.finance.filter(f => f.tipo === 'despesa' && f.status !== 'pago').reduce((a, f) => a + (+f.valor || 0), 0); },
+    get aReceber()   { return this.finance.filter(f => f.tipo === 'receita' && f.status !== 'pago' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
+    get aPagar()     { return this.finance.filter(f => f.tipo === 'despesa' && f.status !== 'pago' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
+    finMesAnterior() { if (this.finMes === 0) { this.finMes = 11; this.finAno--; } else this.finMes--; },
+    finMesProximo() { if (this.finMes === 11) { this.finMes = 0; this.finAno++; } else this.finMes++; },
     get mrr()        { return this.clients.filter(c => c.status !== 'Inativo').reduce((a, c) => a + (+c.mensalidade || 0), 0); },
 
     // ───────────────── CRM ─────────────────
@@ -1126,7 +1135,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
 
     // ───────────────── FINANCEIRO ─────────────────
-    get financeFiltrado() { const q = this.busca.toLowerCase(); return [...this.finance].sort((a, b) => (b.data || '').localeCompare(a.data || '')).filter(f => !q || ((f.descricao || '') + ' ' + (f.cliente || '') + ' ' + (f.categoria || '') + ' ' + (f.tipo || '')).toLowerCase().includes(q)); },
+    get financeFiltrado() { const q = this.busca.toLowerCase(); return [...this.finance].filter(f => this._finNoMes(f)).sort((a, b) => (a.vencimento || a.data || '').localeCompare(b.vencimento || b.data || '')).filter(f => !q || ((f.descricao || '') + ' ' + (f.cliente || '') + ' ' + (f.categoria || '') + ' ' + (f.tipo || '')).toLowerCase().includes(q)); },
     novoLancamento(tipo = 'receita') { this.editing = { id: '', tipo, descricao: '', valor: 0, categoria: tipo === 'receita' ? 'Mensalidade' : 'Ferramentas', cliente: '', fornecedor: '', emailCobranca: '', whatsappCobranca: '', status: 'pendente', vencimento: MD.today(), data: MD.today() }; this.modal = 'finance'; },
     editarLancamento(f) { this.editing = { ...f }; this.modal = 'finance'; },
     salvarLancamento() {

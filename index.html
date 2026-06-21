@@ -478,10 +478,10 @@
       <!-- ========== FINANCEIRO ========== -->
       <section x-show="page==='financeiro'">
         <div class="grid grid-4 mb-4">
-          <div class="card kpi"><div class="kpi-label">Receita do mês</div><div class="kpi-value fs-22 text-green" x-text="fmtCur(receitaMes)"></div></div>
-          <div class="card kpi"><div class="kpi-label">Despesa do mês</div><div class="kpi-value fs-22 text-red" x-text="fmtCur(despesaMes)"></div></div>
-          <div class="card kpi"><div class="kpi-label">Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
-          <div class="card kpi"><div class="kpi-label">A receber / A pagar</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
+          <div class="card kpi"><div class="kpi-label">Receita · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22 text-green" x-text="fmtCur(receitaMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label">Despesa · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22 text-red" x-text="fmtCur(despesaMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label">Saldo · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label">A receber / A pagar (mês)</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
         </div>
 
         <!-- Navegação Lançamentos/Fornecedores agora é submenu da barra (grupo Financeiro) -->
@@ -492,10 +492,21 @@
             <button class="btn btn-primary" @click="novoLancamento('receita')">+ Receita</button>
             <button class="btn btn-ghost" @click="novoLancamento('despesa')">+ Despesa</button>
           </div>
-          <template x-if="finance.length===0"><div class="card empty">Sem lançamentos. Adicione uma receita ou despesa.</div></template>
-          <div class="card" x-show="finance.length" style="padding:0;overflow:hidden">
+          <!-- abas por mês (Jan–Dez) + ano -->
+          <div class="flex items-center gap-2 mb-2" style="flex-wrap:nowrap">
+            <button class="btn btn-ghost btn-icon btn-sm" @click="finMesAnterior()" title="Mês anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+            <div class="fichario" style="flex:1;margin-bottom:0">
+              <template x-for="(m,i) in MESES_CURTOS" :key="i">
+                <div class="fichario-tab" :class="finMes===i?'active':''" @click="finMes=i" x-text="m"></div>
+              </template>
+            </div>
+            <button class="btn btn-ghost btn-icon btn-sm" @click="finMesProximo()" title="Próximo mês"><i class="ph ph-caret-right ic-ph"></i></button>
+            <span class="fw-700 fs-13" style="white-space:nowrap;min-width:42px;text-align:center" x-text="finAno"></span>
+          </div>
+          <template x-if="financeFiltrado.length===0"><div class="card empty">Sem lançamentos em <span x-text="finMesLabel"></span>. Use o + Receita/Despesa ou troque o mês.</div></template>
+          <div class="card" x-show="financeFiltrado.length" style="padding:6px 0;overflow:visible">
             <table class="table">
-              <thead><tr><th>Descrição</th><th>Categoria</th><th>Cliente / Fornecedor</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Cobrança</th><th></th></tr></thead>
+              <thead><tr><th>Descrição</th><th>Categoria</th><th>Cliente / Fornecedor</th><th>Vencimento</th><th>Valor</th><th>Status</th><th></th></tr></thead>
               <tbody>
                 <template x-for="f in financeFiltrado" :key="f.id">
                   <tr>
@@ -505,16 +516,19 @@
                     <td class="fs-12 text-2" x-text="fmtDate(f.vencimento)"></td>
                     <td class="fw-700" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="fmtCur(f.valor)"></td>
                     <td><span class="badge" @click="togglePago(f)" style="cursor:pointer" :style="f.status==='pago'?'background:#dcfce7;color:#16a34a':'background:#fef3c7;color:#b45309'" x-text="f.status==='pago'?'Pago':'Pendente'"></span></td>
-                    <td>
-                      <div class="flex gap-2" x-show="f.tipo==='receita'" style="flex-wrap:nowrap">
-                        <button class="btn btn-ghost btn-icon btn-sm" @click="gerarFatura(f)" title="Gerar fatura (PDF)"><i class="ph ph-file-text ic-ph"></i></button>
-                        <button class="btn btn-ghost btn-icon btn-sm" @click="gerarBoleto(f)" :disabled="f._cobrando" :title="f.boletoUrl?'Boleto gerado — regerar':'Gerar boleto (Cora)'"><i class="ph ph-barcode ic-ph" :style="f.boletoUrl?'color:var(--green)':''"></i></button>
-                        <button class="btn btn-ghost btn-icon btn-sm" @click="cobrarEmail(f)" :disabled="f._cobrando" title="Cobrar por e-mail"><i class="ph ph-envelope ic-ph"></i></button>
-                        <button class="btn btn-ghost btn-icon btn-sm" @click="cobrarWhatsApp(f)" title="Cobrar por WhatsApp"><i class="ph ph-whatsapp-logo ic-ph"></i></button>
+                    <td style="text-align:right;position:relative" x-data="{m:false}">
+                      <button class="btn btn-icon btn-ghost btn-sm" @click="m=!m" title="Ações"><i class="ph ph-dots-three ic-ph"></i></button>
+                      <div class="row-menu" x-show="m" @click.outside="m=false" x-cloak>
+                        <button @click="togglePago(f); m=false"><i class="ph ph-check-circle ic-ph"></i> <span x-text="f.status==='pago'?'Reabrir (estornar)':'Marcar como pago (liquidar)'"></span></button>
+                        <button x-show="f.tipo==='receita'" @click="gerarBoleto(f); m=false" :disabled="f._cobrando"><i class="ph ph-barcode ic-ph"></i> <span x-text="f.boletoUrl?'Regerar boleto':'Gerar boleto'"></span></button>
+                        <button x-show="f.tipo==='receita' && f.boletoUrl" @click="cobrarEmail(f); m=false"><i class="ph ph-envelope ic-ph"></i> Enviar boleto por e-mail</button>
+                        <button x-show="f.tipo==='receita' && f.boletoUrl" @click="cobrarWhatsApp(f); m=false"><i class="ph ph-whatsapp-logo ic-ph"></i> Enviar boleto por WhatsApp</button>
+                        <button x-show="f.tipo==='receita'" @click="gerarFatura(f); m=false"><i class="ph ph-file-text ic-ph"></i> Gerar fatura (PDF)</button>
+                        <div class="row-menu-sep"></div>
+                        <button @click="editarLancamento(f); m=false"><i class="ph ph-pencil-simple ic-ph"></i> Editar</button>
+                        <button class="danger" @click="excluirLancamento(f); m=false"><i class="ph ph-trash ic-ph"></i> Excluir</button>
                       </div>
-                      <span x-show="f.tipo==='despesa'" class="text-3 fs-12">—</span>
                     </td>
-                    <td><button class="btn btn-ghost btn-sm" @click="editarLancamento(f)">Editar</button></td>
                   </tr>
                 </template>
               </tbody>
@@ -2199,6 +2213,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=102"></script>
+<script src="js/app.js?v=104"></script>
 </body>
 </html>
