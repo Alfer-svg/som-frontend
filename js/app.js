@@ -1642,7 +1642,11 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{t
 .aceite-txt{font-size:11px;color:#7a6a3a;margin-bottom:11px;line-height:1.5}
 .btn-aceite{display:block;width:100%;text-align:center;background:#141414;color:#C9A24B;font-weight:800;font-size:13px;text-decoration:none;padding:12px 18px;border-radius:10px;letter-spacing:.3px;border:none;cursor:pointer}
 .foot{margin-top:40px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:12px;text-align:center}
-@media print{.pad{padding:24px 32px}.head{padding:22px 32px}.empresa-bar{padding:8px 32px}.serv,.clausula,.total{break-inside:avoid}}`;
+@media print{.pad{padding:24px 32px}.head{padding:22px 32px}.empresa-bar{padding:8px 32px}
+/* só o box do total não pode quebrar; serviços/cláusulas podem fluir entre páginas pra não deixar buraco branco */
+.total{break-inside:avoid}
+/* títulos e cabeçalho do serviço não ficam órfãos no fim da página */
+h2{break-after:avoid}.serv-head{break-after:avoid}.serv{break-inside:auto}}`;
     },
     _docHead(tipo, num, subs) {
       const e = this._esc;
