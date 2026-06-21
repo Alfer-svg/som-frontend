@@ -90,6 +90,8 @@ const ORC_STATUS = [
   { id: 'Aprovado', color: '#16a34a' },
   { id: 'Recusado', color: '#dc2626' },
 ];
+// Tipos de projeto pré-definidos no orçamento ('Outros' libera texto livre).
+const PROJETO_OPCOES = ['Gestão + Tráfego', 'Tráfego', 'Gestão'];
 // Contratos — situação da vigência.
 const CONTR_STATUS = [
   { id: 'Ativo',     color: '#16a34a' },
@@ -307,6 +309,7 @@ document.addEventListener('alpine:init', () => {
     // modais
     modal: null, // 'lead' | 'client' | 'finance' | 'project'
     editing: {},
+    projetoSel: '', // dropdown de tipo de projeto no orçamento ('Outros' libera texto livre)
     cnpjLoading: false, cnpjMsg: '',
     cepLoading: false, cepMsg: '',
 
@@ -1448,8 +1451,9 @@ ${this._docFoot()}
     // Acordeão dos serviços: recolher (salva o item visualmente) / abrir (1 por vez)
     recolherServico(s) { if (!s.nome) return alert('Dê um nome ao serviço antes de recolher.'); s._open = false; },
     abrirServico(s) { (this.editing.servicos || []).forEach(x => x._open = false); s._open = true; },
-    novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', contato: '', email: '', projeto: '', servicos: [this.servicoVazio()], vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, status: 'Rascunho', data: MD.today(), validade: 30, observacoes: '', modoAssinatura: 'presencial' }; this.modal = 'orcamento'; },
-    editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, validade: 30, modoAssinatura: 'presencial', ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, escopo: '', ...s, _open: false })); this.modal = 'orcamento'; },
+    _projSel(p) { return PROJETO_OPCOES.includes(p) ? p : (p ? 'Outros' : ''); }, // deriva o valor do dropdown a partir do texto salvo
+    novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', contato: '', email: '', projeto: '', servicos: [this.servicoVazio()], vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, status: 'Rascunho', data: MD.today(), validade: 30, observacoes: '', modoAssinatura: 'presencial' }; this.projetoSel = ''; this.modal = 'orcamento'; },
+    editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, validade: 30, modoAssinatura: 'presencial', ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, escopo: '', ...s, _open: false })); this.projetoSel = this._projSel(this.editing.projeto); this.modal = 'orcamento'; },
     addServicoOrc() { if (!Array.isArray(this.editing.servicos)) this.editing.servicos = []; this.editing.servicos.forEach(s => s._open = false); this.editing.servicos.push(this.servicoVazio()); },
     removeServicoOrc(i) { this.editing.servicos.splice(i, 1); if (!this.editing.servicos.length) this.editing.servicos.push(this.servicoVazio()); },
     // Preenche contato/e-mail a partir do cliente selecionado.

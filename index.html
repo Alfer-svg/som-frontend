@@ -1360,7 +1360,14 @@
         <div class="form-group"><label class="form-label">Número</label><input class="form-input" x-model="editing.numero"></div>
         <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in ORC_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
         <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
-        <div class="form-group"><label class="form-label">Projeto</label><input class="form-input" x-model="editing.projeto" placeholder="Ex.: Gestão de Redes + Tráfego"></div>
+        <div class="form-group"><label class="form-label">Projeto</label>
+          <select class="form-select" x-model="projetoSel" @change="if(projetoSel!=='Outros'){editing.projeto=projetoSel}else if(PROJETO_OPCOES.includes(editing.projeto)){editing.projeto=''}">
+            <option value="" disabled>Selecione…</option>
+            <template x-for="p in PROJETO_OPCOES" :key="p"><option :value="p" x-text="p"></option></template>
+            <option value="Outros">Outros</option>
+          </select>
+          <input class="form-input" x-show="projetoSel==='Outros'" x-model="editing.projeto" placeholder="Nome do projeto" style="margin-top:8px">
+        </div>
         <div class="form-group"><label class="form-label">Contato</label><input class="form-input" x-model="editing.contato"></div>
         <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" x-model="editing.email"></div>
         <div class="form-group"><label class="form-label">Data</label><input class="form-input" type="date" x-model="editing.data"></div>
@@ -2103,6 +2110,6 @@
 </div>
 
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=84"></script>
+<script src="js/app.js?v=85"></script>
 </body>
 </html>
