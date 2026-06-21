@@ -391,8 +391,33 @@ document.addEventListener('alpine:init', () => {
       if (!this.token) return;
       const a = await this.migrarColecao('som_leads', '/leads');
       const b = await this.migrarColecao('som_projects', '/projetos');
-      if (a || b) console.info('Migrados pro backend — leads:', a, 'projetos:', b);
-      await this.carregarLeads(); await this.carregarProjetos();
+      const c = await this.migrarPropostas();
+      if (a || b || c) console.info('Migrados pro backend — leads:', a, 'projetos:', b, 'orçamentos:', c);
+      await this.carregarLeads(); await this.carregarProjetos(); await this.carregarPropostas();
+    },
+    // Orçamentos agora ficam no backend (compartilhados entre todos os usuários).
+    async carregarPropostas() {
+      try {
+        const rows = await this.api('GET', '/propostas');
+        this.proposals = (rows || []).map(r => ({ ...(r.dados || {}), id: r.id, numero: r.numero || (r.dados && r.dados.numero), cliente: r.cliente || (r.dados && r.dados.cliente), _token: r.token, _envio: r.status }));
+      } catch (e) { console.warn('carregarPropostas:', e.message); }
+    },
+    // migração dos orçamentos locais pro backend: sobe TODO orçamento local que ainda
+    // não exista no backend (dedupe por número), mesmo que o backend já tenha outros.
+    async migrarPropostas() {
+      const locais = MD.get('som_proposals', []);
+      if (!Array.isArray(locais) || !locais.length) return 0;
+      let remotos = []; try { remotos = (await this.api('GET', '/propostas')) || []; } catch { return 0; }
+      const nums = new Set(remotos.map(r => String(r.numero || (r.dados && r.dados.numero) || '').trim()).filter(Boolean));
+      let n = 0;
+      for (const o of locais) {
+        const num = String(o.numero || '').trim();
+        if (num && nums.has(num)) continue; // já está no backend
+        const { id, _token, _envio, ...dados } = o;
+        try { await this.api('POST', '/propostas', { numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), dados }); n++; } catch { }
+      }
+      localStorage.setItem('som_proposals_bak', JSON.stringify(locais)); localStorage.removeItem('som_proposals');
+      return n;
     },
 
     // helpers de formatação expostos ao template
@@ -1421,21 +1446,27 @@ ${this._docFoot()}
     removeServicoOrc(i) { this.editing.servicos.splice(i, 1); if (!this.editing.servicos.length) this.editing.servicos.push(this.servicoVazio()); },
     // Preenche contato/e-mail a partir do cliente selecionado.
     autoPreencherClienteOrc() { const c = this.clients.find(c => c.empresa === this.editing.cliente); if (c) { if (!this.editing.contato) this.editing.contato = c.contato || ''; if (!this.editing.email) this.editing.email = c.email || ''; } },
-    salvarOrcamento() {
+    async salvarOrcamento() {
       const e = this.editing; if (!e.cliente && !(e.servicos || []).some(s => s.nome)) return alert('Informe o cliente e ao menos um serviço.');
       e.servicos = (e.servicos || []).filter(s => s.nome || +s.valor).map(({ _open, ...s }) => s); // tira o flag de UI e serviços vazios
       e.valor = this.orcTotal(e); // mantém o total no campo legado (Financeiro/contrato leem daqui)
-      let saved;
-      if (e.id) { const i = this.proposals.findIndex(x => x.id === e.id); if (i > -1) { this.proposals[i] = { ...e }; saved = this.proposals[i]; } }
-      else { e.id = MD.uid(); saved = { ...e }; this.proposals.unshift(saved); }
-      this.persist('proposals', this.proposals); this.modal = null;
+      const { _token, _envio, ...dados } = e;
+      try {
+        // rascunho não precisa do HTML pesado (logo+banner embutidos) — só `dados`; o HTML é gerado ao criar o link público
+        const r = await this.api('POST', '/propostas', { id: e.id || undefined, numero: e.numero, cliente: e.cliente, email: e.email || '', valorTotal: e.valor, dados });
+        if (r && r.id) e.id = r.id;
+      } catch (err) { return alert('Erro ao salvar o orçamento: ' + (err.message || err)); }
+      await this.carregarPropostas(); this.modal = null;
+      const saved = this.proposals.find(x => x.id === e.id);
       if (saved && saved.status === 'Aprovado' && !saved.financeId) this.lancarOrcamentoFinanceiro(saved);
     },
-    excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; this.proposals = this.proposals.filter(x => x.id !== o.id); this.persist('proposals', this.proposals); this.modal = null; },
+    async excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; try { await this.api('DELETE', '/propostas/' + o.id); } catch (e) { return alert('Erro ao excluir: ' + (e.message || e)); } await this.carregarPropostas(); this.modal = null; },
     // Cria a proposta DIGITAL no backend e devolve o link público (aceite online).
     async _criarLinkProposta(o) {
       const html = this._propostaHTML({ ...o, modoAssinatura: 'digital' });
-      const r = await this.api('POST', '/propostas', { numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), html, dados: o });
+      const { _token, _envio, ...dados } = o;
+      // Atualiza o MESMO orçamento (por id) marcando como ENVIADA — não duplica a linha.
+      const r = await this.api('POST', '/propostas', { id: o.id || undefined, numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), html, dados, status: 'ENVIADA' });
       // Resolve relativo à página atual (funciona em subpasta do GitHub Pages e em localhost).
       return new URL('proposta.html?t=' + r.token, location.href).href;
     },
@@ -1528,7 +1559,8 @@ ${this._docFoot()}
       if (!silent && !confirm('Lançar ' + MD.fmtCur(tot) + ' no Financeiro como receita a receber?')) return;
       const f = { id: MD.uid(), tipo: 'receita', descricao: 'Proposta ' + (o.numero || '') + (o.cliente ? (' — ' + o.cliente) : ''), valor: tot, categoria: 'Mensalidade', cliente: o.cliente || '', status: 'pendente', vencimento: this.validadeData(o), data: MD.today() };
       this.finance.unshift(f); this.persist('finance', this.finance);
-      o.financeId = f.id; const i = this.proposals.findIndex(x => x.id === o.id); if (i > -1) { this.proposals[i] = { ...o }; this.persist('proposals', this.proposals); }
+      o.financeId = f.id; const i = this.proposals.findIndex(x => x.id === o.id); if (i > -1) this.proposals[i] = { ...o };
+      { const { _token, _envio, ...dados } = o; this.api('POST', '/propostas', { id: o.id, numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), dados }).catch(() => {}); }
       if (!silent) alert('Lançado no Financeiro ✅');
     },
     // Cronograma de cobranças do CONTRATO: parcelas conforme periodicidade × vigência,
