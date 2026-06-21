@@ -95,6 +95,21 @@ const PROJETO_OPCOES = ['Gestão + Tráfego', 'Tráfego', 'Gestão'];
 // Coleções que sincronizam no backend (compartilhadas por toda a equipe).
 // Para tornar QUALQUER coleção compartilhada, basta adicionar a chave aqui.
 const COLECOES_SYNC = ['catalogo', 'contracts', 'finance', 'fornecedores'];
+// Dicas de trabalho mostradas na tela de login (uma aleatória a cada acesso).
+const DICAS_LOGIN = [
+  'Gere o contrato direto do orçamento aprovado — ele puxa CNPJ, endereço e serviços sozinho.',
+  'No Radar do cliente nada de follow-up esquecido: ele lembra quem precisa de atenção.',
+  'Orçamento aprovado? Um clique em "Gerar contrato" e já sai pronto pra assinatura.',
+  'Cadastre o e-mail do cliente em Contatos e ele aparece automático no orçamento.',
+  'Use o catálogo de serviços pra montar orçamento em segundos, sem redigitar o escopo.',
+  'Enviou o contrato pro ZapSign? Já dispara e-mail/WhatsApp pro cliente assinar.',
+  'Cadastro do cliente completo = contrato perfeito sem digitar nada.',
+  'Acompanhe o funil no CRM — lead parado é oportunidade esfriando.',
+  'Lançou o contrato? Gere o Financeiro e as mensalidades entram como a receber.',
+  'Anexe o briefing no cadastro pra equipe toda ter o contexto do cliente.',
+  'Revise os orçamentos perto do vencimento de validade antes que percam o prazo.',
+  'Pequenas constâncias batem grandes esforços: toque um item do Radar por dia.',
+];
 // Contratos — situação da vigência.
 const CONTR_STATUS = [
   { id: 'Ativo',     color: '#16a34a' },
@@ -322,10 +337,15 @@ document.addEventListener('alpine:init', () => {
     token: localStorage.getItem('som_token') || '',
     usuario: JSON.parse(localStorage.getItem('som_usuario') || 'null'),
     loginEmail: '', loginSenha: '', loginErro: '', logando: false,
+    lembrarLogin: true, recuperarAberto: false, dicaLogin: '',
     senhaModal: false, pwAtual: '', pwNova: '', pwMsg: '',
     carregando: false,
 
     init() {
+      // login: e-mail lembrado + dica de trabalho aleatória
+      const emailLembrado = localStorage.getItem('som_login_email') || '';
+      this.loginEmail = emailLembrado; this.lembrarLogin = !!emailLembrado || !localStorage.getItem('som_login_visto');
+      this.dicaLogin = DICAS_LOGIN[Math.floor(Math.random() * DICAS_LOGIN.length)];
       // CRM (leads) e Operacional (projetos) agora vivem no backend — ver carregarColecoes()
       this.proposals = MD.get('som_proposals', []);
       this.contracts = MD.get('som_contracts', []);
@@ -356,6 +376,8 @@ document.addEventListener('alpine:init', () => {
         const d = await this.api('POST', '/auth/login', { email: this.loginEmail, senha: this.loginSenha });
         this.token = d.token; this.usuario = d.usuario;
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
+        localStorage.setItem('som_login_visto', '1');
+        if (this.lembrarLogin) localStorage.setItem('som_login_email', this.loginEmail); else localStorage.removeItem('som_login_email');
         this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }

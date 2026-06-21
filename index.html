@@ -17,21 +17,67 @@
 <body x-data="app()" x-cloak>
 
 <!-- ───────── LOGIN ───────── -->
-<div x-show="!autenticado" x-cloak style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0a0a,#1f1f1f);padding:20px">
-  <div style="background:#fff;border-radius:16px;padding:30px;width:340px;box-shadow:0 24px 60px rgba(0,0,0,.45)">
-    <div style="display:flex;align-items:center;gap:10px">
-      <img src="assets/icon.png?v=6" style="width:36px;height:36px;background:#fff;border-radius:9px;padding:4px;box-shadow:0 1px 4px rgba(0,0,0,.12)">
-      <div><div style="font-weight:800;font-size:16px">SOM</div><div style="font-size:11px;color:#908f86">por Maracatu Digital</div></div>
+<style>
+.lg-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1200px 600px at 50% -10%,#23211d 0%,#0c0b0a 55%,#080807 100%)}
+.lg-card{width:100%;max-width:390px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.55),0 2px 0 rgba(255,255,255,.04)}
+.lg-hero{position:relative;height:128px;background:#141210}
+.lg-hero img.lg-bg{width:100%;height:100%;object-fit:cover;object-position:center 34%;filter:grayscale(100%) contrast(1.05);opacity:.9}
+.lg-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,16,.15),rgba(20,18,16,.92))}
+.lg-logo{position:absolute;left:22px;bottom:13px;z-index:2;height:30px;width:auto;max-width:62%;object-fit:contain;background:#fff;border-radius:8px;padding:6px 12px;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.lg-body{padding:26px 26px 24px}
+.lg-title{font-size:20px;font-weight:800;color:#1b1b1b;letter-spacing:-.2px}
+.lg-sub{font-size:11.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#C9A24B;margin-top:3px}
+.lg-tip{display:flex;gap:10px;align-items:flex-start;background:#fbf7ec;border:1px solid #ecdfb8;border-left:3px solid #C9A24B;border-radius:10px;padding:11px 13px;margin:18px 0 18px}
+.lg-tip .lg-tip-ico{font-size:16px;line-height:1.2}
+.lg-tip b{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a98a3a;margin-bottom:3px}
+.lg-tip span.lg-tip-txt{font-size:12.5px;color:#6f6a5e;line-height:1.45}
+.lg-field{margin-bottom:12px}
+.lg-row{display:flex;align-items:center;justify-content:space-between;margin:2px 0 16px;font-size:12.5px}
+.lg-check{display:flex;align-items:center;gap:7px;cursor:pointer;color:#555}
+.lg-check input{width:15px;height:15px;accent-color:#141414;cursor:pointer}
+.lg-link{color:#C9A24B;font-weight:700;text-decoration:none;cursor:pointer}.lg-link:hover{text-decoration:underline}
+.lg-btn{width:100%;justify-content:center;padding:12px;font-size:14px;background:#141414;color:#fff;border:none;border-radius:11px;font-weight:800;cursor:pointer;letter-spacing:.3px}
+.lg-btn:disabled{opacity:.6;cursor:default}
+.lg-err{color:#dc2626;font-size:12px;margin-top:11px;text-align:center}
+.lg-rec{margin-top:14px;background:#f6f5f1;border:1px solid #e7e4dd;border-radius:10px;padding:12px 14px;font-size:12.5px;color:#5a564e;line-height:1.5}
+.lg-rec b{color:#1b1b1b}
+.lg-foot{text-align:center;font-size:10.5px;color:#b3aea4;margin-top:16px;letter-spacing:.3px}
+</style>
+<div x-show="!autenticado" x-cloak class="lg-wrap">
+  <div class="lg-card">
+    <div class="lg-hero">
+      <img class="lg-bg" :src="(typeof BANNER_DATAURI!=='undefined')?BANNER_DATAURI:''" alt="">
+      <img class="lg-logo" :src="(typeof LOGO_DATAURI!=='undefined')?LOGO_DATAURI:''" alt="Maracatu">
     </div>
-    <div style="font-size:13px;color:#908f86;margin:14px 0 18px">Entre para acessar o sistema.</div>
-    <form @submit.prevent="fazerLogin()">
-      <label class="form-label">E-mail</label>
-      <input class="form-input" type="email" x-model="loginEmail" autocomplete="username" style="margin-bottom:12px">
-      <label class="form-label">Senha</label>
-      <input class="form-input" type="password" x-model="loginSenha" autocomplete="current-password" style="margin-bottom:16px">
-      <button class="btn btn-primary" style="width:100%;justify-content:center" :disabled="logando" x-text="logando?'Entrando…':'Entrar'"></button>
-      <div x-show="loginErro" style="color:#dc2626;font-size:12px;margin-top:10px" x-text="loginErro"></div>
-    </form>
+    <div class="lg-body">
+      <div class="lg-title">Bem-vindo de volta</div>
+      <div class="lg-sub">SOM · Sistema Operacional Maracatu</div>
+
+      <div class="lg-tip">
+        <span class="lg-tip-ico">💡</span>
+        <div><b>Dica de trabalho</b><span class="lg-tip-txt" x-text="dicaLogin"></span></div>
+      </div>
+
+      <form @submit.prevent="fazerLogin()">
+        <div class="lg-field"><label class="form-label">E-mail</label>
+          <input class="form-input" type="email" x-model="loginEmail" autocomplete="username" placeholder="voce@maracatumktdigital.com"></div>
+        <div class="lg-field"><label class="form-label">Senha</label>
+          <input class="form-input" type="password" x-model="loginSenha" autocomplete="current-password" placeholder="••••••••"></div>
+        <div class="lg-row">
+          <label class="lg-check"><input type="checkbox" x-model="lembrarLogin"> Lembrar meu e-mail</label>
+          <a class="lg-link" @click.prevent="recuperarAberto=!recuperarAberto">Esqueci minha senha</a>
+        </div>
+        <button class="lg-btn" :disabled="logando" x-text="logando?'Entrando…':'Entrar'"></button>
+        <div x-show="loginErro" class="lg-err" x-text="loginErro"></div>
+      </form>
+
+      <div x-show="recuperarAberto" x-cloak class="lg-rec">
+        Pra redefinir sua senha, peça ao <b>administrador</b> — ele redefine em <b>Configurações › Pessoal</b>.
+        <span style="display:block;margin-top:5px;color:#908b81">A recuperação automática por e-mail entra em breve.</span>
+      </div>
+
+      <div class="lg-foot">Maracatu Digital Intelligence</div>
+    </div>
   </div>
 </div>
 
@@ -2153,6 +2199,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=99"></script>
+<script src="js/app.js?v=100"></script>
 </body>
 </html>
