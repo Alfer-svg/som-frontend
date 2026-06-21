@@ -1438,7 +1438,7 @@ ${this._docFoot()}
     // Numeração automática: ORC-AAAA-NNN / CT-AAAA-NNN (sequencial por ano).
     proximoNumero(pref, arr) {
       const ano = MD.today().slice(0, 4);
-      const base = pref === 'ORC' ? 500 : 1; // orçamentos começam em 500
+      const base = (pref === 'ORC' || pref === 'CT') ? 500 : 1; // orçamentos e contratos começam em 500
       const re = new RegExp('^' + pref + '-' + ano + '-(\\d+)$');
       const max = (arr || []).reduce((m, x) => { const g = String(x.numero || '').match(re); return g ? Math.max(m, parseInt(g[1], 10)) : m; }, 0);
       const n = Math.max(max + 1, base);
