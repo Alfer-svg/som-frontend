@@ -1222,7 +1222,7 @@ ${this._docFoot()}
       f._cobrando = 'boleto';
       try {
         const r = await this.api('POST', '/cobranca/boleto', { financeId: f.id, numero: this.numLancamento(f), cliente: f.cliente, valor: +f.valor, vencimento: f.vencimento, descricao: f.descricao, email: f.emailCobranca, whatsapp: f.whatsappCobranca });
-        f.boletoUrl = r.url || r.pdf || ''; f.linhaDigitavel = r.linhaDigitavel || r.barcode || ''; f.boletoId = r.id || '';
+        f.boletoUrl = r.url || r.pdf || ''; f.linhaDigitavel = r.linhaDigitavel || r.barcode || ''; f.pix = r.pix || r.pixCopiaECola || r.pix_copia_cola || ''; f.boletoId = r.id || '';
         this.persist('finance', this.finance);
         alert('Boleto gerado na Cora!' + (f.boletoUrl ? '\n' + f.boletoUrl : ''));
       } catch (err) { alert('Não foi possível gerar o boleto: ' + err.message + '\n\n(Falta configurar a chave da Cora no backend — deixamos pro final.)'); }
@@ -1249,6 +1249,33 @@ ${this._docFoot()}
       if (f.linhaDigitavel) linhas.push('', 'Linha digitável do boleto:', f.linhaDigitavel);
       if (f.boletoUrl) linhas.push('', 'Boleto: ' + f.boletoUrl);
       window.open(this.waLink(num) + '?text=' + encodeURIComponent(linhas.join('\n')), '_blank');
+    },
+    // ── helpers do card de lançamento (estilo SIAGO) ──
+    finStatus(f) {
+      if (f.status === 'pago') return { label: 'Pago', style: 'background:#dcfce7;color:#16a34a' };
+      if (f.vencimento && f.vencimento < MD.today()) return { label: 'Vencido', style: 'background:#fee2e2;color:#b91c1c' };
+      return { label: f.tipo === 'receita' ? 'A receber' : 'A pagar', style: 'background:#fef3c7;color:#a16207' };
+    },
+    finDotCor(f) { return f.status === 'pago' ? '#16a34a' : (f.vencimento && f.vencimento < MD.today()) ? '#dc2626' : '#C9A24B'; },
+    finCardBorder(f) { return 'border-left:3px solid ' + this.finDotCor(f); },
+    copiar(txt, label) { if (!txt) return; (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => alert((label || 'Texto') + ' copiado!')).catch(() => prompt('Copie:', txt)); },
+    abrirUrl(u) { if (u) window.open(u, '_blank'); else alert('Sem link disponível.'); },
+    alterarVencimento(f) {
+      const resp = prompt('Nova data de vencimento (dd/mm/aaaa):', MD.fmtDate(f.vencimento || MD.today()));
+      if (resp === null) return;
+      const iso = this._parseDataBR(resp); if (!iso) return alert('Data inválida (use dd/mm/aaaa).');
+      f.vencimento = iso; this.persist('finance', this.finance);
+    },
+    receberPagar(f) { this.togglePago(f); }, // "Receber"/"Pagar" = liquidar (pede a data)
+    async sincronizarBoleto(f) {
+      if (!f.boletoId) return alert('Boleto sem ID para sincronizar.');
+      try { const r = await this.api('GET', '/cobranca/boleto/' + f.boletoId); if (r && (r.status === 'pago' || r.pago)) { f.status = 'pago'; if (!f.pagoEm) f.pagoEm = MD.today(); } this.persist('finance', this.finance); alert('Status sincronizado com a Cora.'); }
+      catch (e) { alert('Sincronização indisponível — a Cora ainda não está configurada no servidor.'); }
+    },
+    async cancelarBoleto(f) {
+      if (!confirm('Cancelar o boleto deste lançamento?')) return;
+      try { await this.api('DELETE', '/cobranca/boleto/' + (f.boletoId || 'x')); } catch (e) { /* limpa local mesmo se o backend não responder */ }
+      f.boletoUrl = ''; f.linhaDigitavel = ''; f.pix = ''; f.boletoId = ''; this.persist('finance', this.finance);
     },
 
     // ───────────────── OPERACIONAL: projetos ─────────────────

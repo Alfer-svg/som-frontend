@@ -11,7 +11,7 @@
   <link rel="icon" href="assets/favicon.png?v=6">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=71">
+  <link rel="stylesheet" href="css/styles.css?v=72">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -512,35 +512,57 @@
             <span class="fw-700 fs-13" style="white-space:nowrap;min-width:42px;text-align:center" x-text="finAno"></span>
           </div>
           <template x-if="financeFiltrado.length===0"><div class="card empty">Sem lançamentos em <span x-text="finMesLabel"></span>. Use o + Receita/Despesa ou troque o mês.</div></template>
-          <div class="card" x-show="financeFiltrado.length" style="padding:6px 0;overflow:visible">
-            <table class="table">
-              <thead><tr><th>Descrição</th><th>Categoria</th><th>Cliente / Fornecedor</th><th>Vencimento</th><th>Valor</th><th>Status</th><th></th></tr></thead>
-              <tbody>
-                <template x-for="(f,i) in financeFiltrado" :key="f.id">
-                  <tr :style="lancRowBg(f,i)">
-                    <td class="fw-700"><span :class="f.tipo==='receita'?'text-green':'text-red'" x-text="f.tipo==='receita'?'↑ ':'↓ '"></span><span x-text="f.descricao"></span></td>
-                    <td class="fs-12 text-2" x-text="f.categoria"></td>
-                    <td class="fs-12 text-2" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||'—'"></td>
-                    <td class="fs-12 text-2" x-text="fmtDate(f.vencimento)"></td>
-                    <td class="fw-700" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="fmtCur(f.valor)"></td>
-                    <td><span class="badge" @click="togglePago(f)" style="cursor:pointer" :style="f.status==='pago'?'background:#dcfce7;color:#16a34a':'background:#fef3c7;color:#b45309'" :title="f.status==='pago'&&f.pagoEm?('Quitado em '+fmtDate(f.pagoEm)):'Clique para liquidar'" x-text="f.status==='pago' ? ('Pago'+(f.pagoEm?' · '+fmtDate(f.pagoEm):'')) : 'Pendente'"></span></td>
-                    <td style="text-align:right;position:relative" x-data="{m:false}">
-                      <button class="btn btn-icon btn-ghost btn-sm" @click="m=!m" title="Ações"><i class="ph ph-dots-three ic-ph"></i></button>
-                      <div class="row-menu" x-show="m" @click.outside="m=false" x-cloak>
-                        <button @click="togglePago(f); m=false"><i class="ph ph-check-circle ic-ph"></i> <span x-text="f.status==='pago'?'Reabrir (estornar)':'Marcar como pago (liquidar)'"></span></button>
-                        <button x-show="f.tipo==='receita'" @click="gerarBoleto(f); m=false" :disabled="f._cobrando"><i class="ph ph-barcode ic-ph"></i> <span x-text="f.boletoUrl?'Regerar boleto':'Gerar boleto'"></span></button>
-                        <button x-show="f.tipo==='receita' && f.boletoUrl" @click="cobrarEmail(f); m=false"><i class="ph ph-envelope ic-ph"></i> Enviar boleto por e-mail</button>
-                        <button x-show="f.tipo==='receita' && f.boletoUrl" @click="cobrarWhatsApp(f); m=false"><i class="ph ph-whatsapp-logo ic-ph"></i> Enviar boleto por WhatsApp</button>
-                        <button x-show="f.tipo==='receita'" @click="gerarFatura(f); m=false"><i class="ph ph-file-text ic-ph"></i> Gerar fatura (PDF)</button>
-                        <div class="row-menu-sep"></div>
-                        <button @click="editarLancamento(f); m=false"><i class="ph ph-pencil-simple ic-ph"></i> Editar</button>
-                        <button class="danger" @click="excluirLancamento(f); m=false"><i class="ph ph-trash ic-ph"></i> Excluir</button>
-                      </div>
-                    </td>
-                  </tr>
+          <!-- cards de lançamento (estilo SIAGO) -->
+          <div x-show="financeFiltrado.length">
+            <template x-for="f in financeFiltrado" :key="f.id">
+              <div class="fin-card" :style="finCardBorder(f)">
+                <!-- cabeçalho -->
+                <div class="fin-card-head">
+                  <div style="min-width:0">
+                    <div class="fin-card-title">
+                      <span class="fin-dot" :style="'background:'+finDotCor(f)"></span>
+                      <b x-text="numLancamento(f)"></b>
+                      <span x-text="f.descricao || '—'"></span>
+                      <span class="badge" style="background:var(--surface-2);color:var(--text-2);font-weight:600" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria||''" x-show="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria"></span>
+                    </div>
+                    <div class="fin-card-sub">
+                      <span x-show="f.categoria" x-text="f.categoria+' · '"></span>Vence: <span x-text="fmtDate(f.vencimento)"></span><span x-show="f.pagoEm" x-text="' · Pago: '+fmtDate(f.pagoEm)"></span>
+                    </div>
+                  </div>
+                  <div class="fin-card-right">
+                    <div class="fin-valor" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="(f.tipo==='receita'?'+':'-')+fmtCur(f.valor)"></div>
+                    <span class="fin-badge" :style="finStatus(f).style" x-text="finStatus(f).label"></span>
+                  </div>
+                </div>
+
+                <!-- barra do boleto (Cora) -->
+                <template x-if="f.tipo==='receita' && f.boletoUrl">
+                  <div class="fin-boleto-bar">
+                    <i class="ph ph-barcode ic-ph" style="color:#a98a3a"></i>
+                    <b>Boleto Cora:</b>
+                    <span class="fin-boleto-status">Emitido</span>
+                    <button x-show="f.linhaDigitavel" @click="copiar(f.linhaDigitavel,'Linha digitável')"><i class="ph ph-copy ic-ph"></i> Linha digitável</button>
+                    <button x-show="f.pix" @click="copiar(f.pix,'Pix copia e cola')"><i class="ph ph-qr-code ic-ph"></i> Pix copia e cola</button>
+                    <button @click="abrirUrl(f.boletoUrl)"><i class="ph ph-file-pdf ic-ph"></i> PDF do boleto</button>
+                    <button x-show="f.status!=='pago'" @click="sincronizarBoleto(f)"><i class="ph ph-arrows-clockwise ic-ph"></i> Sincronizar</button>
+                    <button x-show="f.status!=='pago'" class="danger" @click="cancelarBoleto(f)"><i class="ph ph-x-circle ic-ph"></i> Cancelar boleto</button>
+                  </div>
                 </template>
-              </tbody>
-            </table>
+
+                <!-- ações -->
+                <div class="fin-acoes">
+                  <button x-show="f.tipo==='receita'" @click="gerarFatura(f)" title="Gerar fatura (PDF)"><i class="ph ph-file-text ic-ph"></i> PDF</button>
+                  <button x-show="f.tipo==='receita' && !f.boletoUrl && f.status!=='pago'" class="fin-btn-cora" @click="gerarBoleto(f)" :disabled="f._cobrando"><i class="ph ph-barcode ic-ph"></i> Gerar boleto (Cora)</button>
+                  <button x-show="f.tipo==='receita'" @click="cobrarEmail(f)" :disabled="f._cobrando"><i class="ph ph-envelope ic-ph"></i> E-mail</button>
+                  <button x-show="f.tipo==='receita'" @click="cobrarWhatsApp(f)"><i class="ph ph-whatsapp-logo ic-ph"></i> WhatsApp</button>
+                  <button x-show="f.status!=='pago'" class="fin-btn-receber" @click="receberPagar(f)"><i class="ph ph-check-circle ic-ph"></i> <span x-text="f.tipo==='receita'?'Receber':'Pagar'"></span></button>
+                  <button x-show="f.status==='pago'" @click="togglePago(f)"><i class="ph ph-arrow-counter-clockwise ic-ph"></i> Reabrir</button>
+                  <button @click="alterarVencimento(f)"><i class="ph ph-clock ic-ph"></i> Alterar vencimento</button>
+                  <button @click="editarLancamento(f)"><i class="ph ph-pencil-simple ic-ph"></i> Editar</button>
+                  <button class="danger" @click="excluirLancamento(f)" title="Excluir"><i class="ph ph-trash ic-ph"></i></button>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -2221,6 +2243,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=106"></script>
+<script src="js/app.js?v=107"></script>
 </body>
 </html>

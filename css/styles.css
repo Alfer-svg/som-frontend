@@ -275,3 +275,27 @@ i.ic-ph{font-size:1.25em;line-height:1;vertical-align:-0.18em;display:inline-fle
 .accH:hover{border-color:var(--accent)}
 .accX{margin-left:auto;font-size:13px;color:var(--text-3)}
 .accB{gap:14px;padding:12px 2px 6px}
+
+/* ── Cards de lançamento (Financeiro, estilo SIAGO · paleta SOM) ── */
+.fin-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:11px;box-shadow:var(--shadow)}
+.fin-card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.fin-card-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;color:var(--text-2)}
+.fin-card-title b{color:var(--text);font-weight:800}
+.fin-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;display:inline-block}
+.fin-card-sub{font-size:12px;color:var(--text-3);margin-top:4px}
+.fin-card-right{text-align:right;flex:0 0 auto;white-space:nowrap}
+.fin-valor{font-weight:800;font-size:15px}
+.fin-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-top:5px}
+.fin-boleto-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:11px;padding:9px 12px;border-radius:10px;background:#fbf7ec;border:1px solid #ecdfb8}
+.fin-boleto-bar > b{font-size:12px;color:var(--text-2)}
+.fin-boleto-status{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:#C9A24B;color:#fff}
+.fin-acoes{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.fin-boleto-bar button,.fin-acoes button{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--text-2);cursor:pointer;transition:all .12s}
+.fin-boleto-bar button{padding:3px 9px}
+.fin-boleto-bar button:hover,.fin-acoes button:hover{background:var(--surface-2);color:var(--text)}
+.fin-boleto-bar button.danger,.fin-acoes button.danger{color:#dc2626;border-color:#f0cfcf}
+.fin-boleto-bar button.danger:hover,.fin-acoes button.danger:hover{background:#fef2f2}
+.fin-acoes .fin-btn-receber{background:#16a34a;color:#fff;border-color:#16a34a}
+.fin-acoes .fin-btn-receber:hover{background:#15803d;color:#fff}
+.fin-acoes .fin-btn-cora{background:var(--text);color:#fff;border-color:var(--text)}
+.fin-acoes .fin-btn-cora:hover{background:#000;color:#fff}
