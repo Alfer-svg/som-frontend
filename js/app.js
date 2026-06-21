@@ -775,6 +775,15 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
+    // Responsáveis do cliente; se não houver nenhum mas existir contato/e-mail/whats "de topo"
+    // (legado de quando era lead), cria o 1º contato com esses dados pra não ficar escondido.
+    _responsaveisComLegado(c) {
+      const rs = respMerge(c.responsaveis);
+      if (rs.length) return rs;
+      const fone = c.whatsapp || c.telefone || '';
+      if (c.contato || c.email || fone) return [{ ...respVazio(), id: MD.uid(), nome: c.contato || '', email: c.email || '', whatsapp: fone }];
+      return rs;
+    },
     editarCliente(c) {
       this.editing = {
         ...c,
@@ -785,9 +794,12 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         hospedagem: { provedor: '', vencimento: '', ...(c.hospedagem || {}) },
         ads: { google: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).google || {}) }, meta: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).meta || {}) } },
         objetivos: (c.objetivos || []).map(o => ({ id: o.id || MD.uid(), nome: o.nome || '', alvo: +o.alvo || 0, atual: +o.atual || 0, unidade: o.unidade || '' })),
-        slogan: c.slogan || '', briefing: briefingMerge(c.briefing), responsaveis: respMerge(c.responsaveis), documentos: docMerge(c.documentos),
+        slogan: c.slogan || '', briefing: briefingMerge(c.briefing), responsaveis: this._responsaveisComLegado(c), documentos: docMerge(c.documentos),
       };
-      this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
+      this.cnpjMsg = ''; this.cepMsg = '';
+      // se semeamos o contato a partir de dado antigo "de topo", já abre a seção pra ficar visível
+      if (!respMerge(c.responsaveis).length && this.editing.responsaveis.length) this.secCli = 'contato';
+      this.modal = 'client';
     },
     // sinalização de condição por % (0-100)
     corScore(n) { n = +n || 0; return n >= 80 ? '#16a34a' : n >= 40 ? '#f59e0b' : '#dc2626'; },
