@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=6">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=54">
+  <link rel="stylesheet" href="css/styles.css?v=55">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -37,8 +37,6 @@
   <aside class="sidebar">
     <div class="brand">
       <img class="brand-logo" src="assets/logo-horizontal.png?v=7" alt="Maracatu Digital Intelligence">
-      <div class="brand-name">SOM</div>
-      <div class="brand-sub">Sistema Operacional Maracatu</div>
     </div>
     <nav class="nav">
       <!-- Dashboard -->
@@ -108,6 +106,7 @@
         <button class="btn btn-ghost btn-sm" style="border-color:var(--border);color:var(--text-2)" @click="senhaModal=true; pwMsg=''">Trocar senha</button>
         <button class="btn btn-ghost btn-sm" style="border-color:var(--border);color:var(--text-2)" @click="logout()">Sair</button>
       </div>
+      <div class="brand-foot"><span class="brand-foot-name">SOM</span> · Sistema Operacional Maracatu</div>
     </div>
   </aside>
 
