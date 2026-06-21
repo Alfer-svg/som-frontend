@@ -266,6 +266,7 @@ document.addEventListener('alpine:init', () => {
     fichaForm: { id: '', nome: '', papel: '', foto: '', ficha: {} },
     fichaModal: false, fichaMsg: '',
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
+    verArquivados: false, // lista de Clientes: mostrar arquivados (inativos) em vez dos ativos
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     TRELLO_LABELS, dragId: null, dropCol: null, // arrastar cards entre listas (estilo Trello)
@@ -626,7 +627,15 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     async excluirLead(l) { if (!confirm('Excluir o lead ' + l.empresa + '?')) return; try { await this.api('DELETE', '/leads/' + l.id); this.leads = this.leads.filter(x => x.id !== l.id); this.modal = null; } catch (err) { alert(err.message); } },
 
     // ───────────────── COMERCIAL: clientes ─────────────────
-    get clientesFiltrados() { const q = this.busca.toLowerCase(); return this.clients.filter(c => !q || (c.empresa + ' ' + (c.razaoSocial || '') + ' ' + (c.contato || '')).toLowerCase().includes(q)); },
+    get clientesFiltrados() {
+      const q = this.busca.toLowerCase();
+      return this.clients
+        .filter(c => this.verArquivados ? (c.status === 'Inativo') : (c.status !== 'Inativo'))
+        .filter(c => !q || (c.empresa + ' ' + (c.razaoSocial || '') + ' ' + (c.contato || '')).toLowerCase().includes(q));
+    },
+    get clientesArquivadosCount() { return this.clients.filter(c => c.status === 'Inativo').length; },
+    ativarCliente(c) { c.status = 'Ativo'; return this.persistirCliente(c); },
+    arquivarCliente(c) { c.status = 'Inativo'; return this.persistirCliente(c); },
     async puxarDoSite() {
       const url = (this.editing.site && this.editing.site.url) || '';
       if (!url) { this.enriqMsg = 'Informe a URL do site primeiro.'; this.enriqResult = null; return; }
