@@ -651,8 +651,8 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     persist(key, arr) { MD.set('som_' + key, arr); if (this.token && COLECOES_SYNC.includes(key)) this.api('POST', '/colecoes/' + key, { itens: arr }).catch(() => {}); },
     // Remove itens com nome repetido (mantém o 1º) — usado pra limpar catálogo duplicado.
     _dedupePorNome(arr) { const seen = new Set(); return (arr || []).filter(x => { const k = String((x && x.nome) || '').trim().toLowerCase(); if (!k) return true; if (seen.has(k)) return false; seen.add(k); return true; }); },
-    // Carrega as coleções compartilhadas do backend, unindo (por id) o que houver de local
-    // que ainda não subiu — assim nada se perde e todos passam a ver os mesmos dados.
+    // Carrega as coleções compartilhadas — o BACKEND é a fonte de verdade.
+    // (Não faz merge do cache local pra cima: isso ressuscitava itens excluídos em outro navegador.)
     async carregarColecoesSync() {
       if (!this.token) return;
       for (const key of COLECOES_SYNC) {
@@ -660,19 +660,27 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
           let remoto = await this.api('GET', '/colecoes/' + key);
           remoto = Array.isArray(remoto) ? remoto : [];
           const local = MD.get('som_' + key, []);
-          const ids = new Set(remoto.map(x => x && x.id).filter(Boolean));
-          const novos = (Array.isArray(local) ? local : []).filter(x => x && x.id && !ids.has(x.id));
-          let merged = novos.length ? [...novos, ...remoto] : remoto.slice();
-          // catálogo: dedupe por NOME (itens semeados em navegadores diferentes têm ids distintos mas mesmo nome)
-          if (key === 'catalogo') merged = this._dedupePorNome(merged);
-          if (novos.length || merged.length !== remoto.length) await this.api('POST', '/colecoes/' + key, { itens: merged }).catch(() => {});
-          this[key] = merged; MD.set('som_' + key, merged);
-          // semeia o catálogo só na 1ª vez (backend e local vazios), evitando duplicar entre navegadores
-          if (key === 'catalogo' && !merged.length && !localStorage.getItem('som_catalogo_seeded')) {
-            this.catalogo = CATALOGO_SEED.map(s => ({ id: MD.uid(), ...s }));
-            localStorage.setItem('som_catalogo_seeded', '1');
-            this.persist('catalogo', this.catalogo);
+          // migração SÓ 1 vez (com flag): senão apagar o último item ressuscitaria do cache local.
+          const migKey = 'som_' + key + '_migrated';
+          if (!localStorage.getItem(migKey)) {
+            if (!remoto.length && Array.isArray(local) && local.length) {
+              let seed = key === 'catalogo' ? this._dedupePorNome(local) : local;
+              await this.api('POST', '/colecoes/' + key, { itens: seed }).catch(() => {});
+              remoto = seed;
+            }
+            localStorage.setItem(migKey, '1');
           }
+          // catálogo: dedupe por nome + semeia o padrão na 1ª vez (backend e local vazios)
+          if (key === 'catalogo') {
+            const dd = this._dedupePorNome(remoto);
+            if (dd.length !== remoto.length) { await this.api('POST', '/colecoes/catalogo', { itens: dd }).catch(() => {}); remoto = dd; }
+            if (!remoto.length && !localStorage.getItem('som_catalogo_seeded')) {
+              remoto = CATALOGO_SEED.map(s => ({ id: MD.uid(), ...s }));
+              localStorage.setItem('som_catalogo_seeded', '1');
+              await this.api('POST', '/colecoes/catalogo', { itens: remoto }).catch(() => {});
+            }
+          }
+          this[key] = remoto; MD.set('som_' + key, remoto); // backend manda
         } catch (e) { console.warn('colecao', key, e.message); }
       }
     },
@@ -1914,7 +1922,7 @@ ${this._docFoot()}
         'A CONTRATANTE é a única responsável pelo conteúdo eleitoral, sua veracidade e a observância dos limites de gastos, respondendo por eventuais penalidades (ex.: multa de 100% sobre o excesso de gasto).',
       ])}` : '';
       return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Contrato ${e(c.numero)}</title><style>${this._cssDoc()}</style></head><body>
-${this._docHead('CONTRATO', c.numero, ['Início: ' + MD.fmtDate(c.inicio)])}
+${this._docHead('CONTRATO', c.numero, [])}
 <div class="ct-title"><span class="ct-kicker">CONTRATO DE</span><div class="ct-name">Prestação de Serviços de Marketing Digital</div></div>
 <div class="bloco"><b>CONTRATADA:</b> ${e(EMPRESA.nome)}, CNPJ nº ${e(EMPRESA.cnpj)}, com sede em ${e(EMPRESA.endereco)}.</div>
 <div class="bloco"><b>CONTRATANTE:</b> ${e(c.cliente || '—')}${c.documento ? ', CNPJ/CPF nº ' + e(c.documento) : ''}${c.endereco ? ', com sede em ' + e(c.endereco) : ''}${c.representante ? ', neste ato representada por ' + e(c.representante) : ''}.</div>
