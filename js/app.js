@@ -294,6 +294,7 @@ document.addEventListener('alpine:init', () => {
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     verArquivados: false, // lista de Clientes: mostrar arquivados (inativos) em vez dos ativos
     verArquivadosContrato: false, // lista de Contratos: mostrar arquivados (encerrados/vencidos +10d)
+    verArquivadosOrc: false, // lista de Orçamentos: mostrar arquivados (recusados/vencidos)
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     TRELLO_LABELS, dragId: null, dropCol: null, // arrastar cards entre listas (estilo Trello)
@@ -1608,7 +1609,16 @@ ${this._docFoot()}
       const n = Math.max(max + 1, base);
       return pref + '-' + ano + '-' + String(n).padStart(3, '0');
     },
-    get orcamentosFiltrados() { const q = this.busca.toLowerCase(); return [...this.proposals].sort((a, b) => (b.data || '').localeCompare(a.data || '')).filter(o => !q || ((o.numero || '') + ' ' + (o.cliente || '') + ' ' + (o.projeto || '') + ' ' + (o.descricao || '')).toLowerCase().includes(q)); },
+    // Arquivado = Recusado OU vencido (passou da validade) e não aprovado.
+    orcamentoArquivado(o) { if (o.status === 'Recusado') return true; if (o.status === 'Aprovado') return false; const v = this.validadeData(o); return !!(v && v < MD.today()); },
+    get orcamentosArquivadosCount() { return this.proposals.filter(o => this.orcamentoArquivado(o)).length; },
+    get orcamentosFiltrados() {
+      const q = this.busca.toLowerCase();
+      return [...this.proposals]
+        .filter(o => this.verArquivadosOrc ? this.orcamentoArquivado(o) : !this.orcamentoArquivado(o))
+        .sort((a, b) => (b.data || '').localeCompare(a.data || ''))
+        .filter(o => !q || ((o.numero || '') + ' ' + (o.cliente || '') + ' ' + (o.projeto || '') + ' ' + (o.descricao || '')).toLowerCase().includes(q));
+    },
     orcStatusInfo(s) { return ORC_STATUS.find(x => x.id === s) || ORC_STATUS[0]; },
     // Total mensal = soma dos serviços (fallback no campo valor legado de orçamentos antigos).
     orcTotal(o) { const s = o && o.servicos; if (Array.isArray(s) && s.length) return s.reduce((a, x) => a + (+x.valor || 0), 0); return +(o && o.valor) || 0; },
@@ -1646,6 +1656,7 @@ ${this._docFoot()}
     async excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; try { await this.api('DELETE', '/propostas/' + o.id); } catch (e) { return alert('Erro ao excluir: ' + (e.message || e)); } await this.carregarPropostas(); this.modal = null; },
     // Cria a proposta DIGITAL no backend e devolve o link público (aceite online).
     async _criarLinkProposta(o) {
+      if (o.status === 'Rascunho' || !o.status) { o.status = 'Enviado'; const i = this.proposals.findIndex(x => x.id === o.id); if (i > -1) this.proposals[i] = { ...o }; } // rascunho → enviado
       const html = this._propostaHTML({ ...o, modoAssinatura: 'digital' });
       const { _token, _envio, ...dados } = o;
       // Atualiza o MESMO orçamento (por id) marcando como ENVIADA — não duplica a linha.

@@ -379,8 +379,16 @@
 
       <!-- ========== ORÇAMENTOS ========== -->
       <section x-show="page==='orcamentos'">
+        <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
+          <div class="text-3 fs-12"><span x-text="verArquivadosOrc?'Arquivados':'Ativos'"></span>: <span x-text="orcamentosFiltrados.length"></span></div>
+          <button class="btn btn-ghost btn-sm" @click="verArquivadosOrc=!verArquivadosOrc" title="Arquivados = recusados ou vencidos (passou da validade sem aprovação)">
+            <i class="ph ph-archive ic-ph"></i>
+            <span x-text="verArquivadosOrc ? 'Ver ativos' : ('Ver arquivados ('+orcamentosArquivadosCount+')')"></span>
+          </button>
+        </div>
         <template x-if="proposals.length===0"><div class="card empty">Nenhum orçamento ainda. Clique em “+ Orçamento” pra criar a primeira proposta.</div></template>
-        <div class="card" x-show="proposals.length">
+        <template x-if="proposals.length>0 && orcamentosFiltrados.length===0"><div class="card empty" x-text="verArquivadosOrc ? 'Nenhum orçamento arquivado.' : 'Nenhum orçamento ativo. Veja os arquivados ou crie um novo.'"></div></template>
+        <div class="card" x-show="orcamentosFiltrados.length">
           <table class="table">
             <thead><tr><th>Número</th><th>Cliente</th><th>Projeto</th><th>Serviços</th><th>Data</th><th>Mensalidade</th><th>Status</th><th></th></tr></thead>
             <tbody>
@@ -2365,6 +2373,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=115"></script>
+<script src="js/app.js?v=116"></script>
 </body>
 </html>
