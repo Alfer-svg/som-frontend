@@ -1567,6 +1567,7 @@ ${this._docFoot()}
       return `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box}body{font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1f1f1f;margin:0;padding:0;font-size:13px;line-height:1.55}
 .pad{padding:22px 46px 36px}
+.head-banner{width:100%;height:108px;overflow:hidden;line-height:0;background:#141414}.head-banner img{width:100%;height:100%;object-fit:cover;object-position:center 32%;display:block;filter:grayscale(100%) contrast(1.05)}
 .head{background:#141414;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:26px 46px}
 .head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:92px;width:auto;object-fit:contain;background:#fff;border-radius:10px;padding:11px 20px}
 .wm{font-size:19px;font-weight:800;letter-spacing:.4px;line-height:1.05}.wm span{display:block;font-size:8.5px;font-weight:600;letter-spacing:2.4px;color:#C9A24B;margin-top:5px}
@@ -1604,7 +1605,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{t
       const emailRemetente = (this.usuario && this.usuario.email) || EMPRESA.email; // quem envia = usuário logado
       const subsHTML = (subs || []).map(s => `<div class="sub">${e(s)}</div>`).join('');
       const logo = (typeof LOGO_DATAURI !== 'undefined' && LOGO_DATAURI) ? `<img class="logo" src="${LOGO_DATAURI}" alt="">` : '';
-      return `<div class="head">
+      const banner = (typeof BANNER_DATAURI !== 'undefined' && BANNER_DATAURI) ? `<div class="head-banner"><img src="${BANNER_DATAURI}" alt=""></div>` : '';
+      return `${banner}<div class="head">
 <div class="head-brand">${logo || '<div class="wm">MARACATU DIGITAL<span>INTELLIGENCE · MARKETING DIGITAL</span></div>'}</div>
 <div class="head-doc"><div class="doc-type">${e(tipo)}</div><div class="doc-num">Nº ${e(num)}</div>${subsHTML}</div>
 </div>
