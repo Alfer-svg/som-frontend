@@ -523,7 +523,7 @@
                       <span class="fin-dot" :style="'background:'+finDotCor(f)"></span>
                       <b x-text="numLancamento(f)"></b>
                       <span x-text="f.descricao || '—'"></span>
-                      <span class="badge" style="background:var(--surface-2);color:var(--text-2);font-weight:600" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria||''" x-show="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria"></span>
+                      <span class="badge" :style="'background:var(--surface-2);color:var(--text-2);font-weight:600'+(f.tipo==='receita'&&f.cliente?';cursor:pointer':'')" :title="f.tipo==='receita'&&f.cliente?'Ver situação financeira do cliente':''" @click="(f.tipo==='receita'&&f.cliente)&&abrirFinanceCliente(f.cliente)" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria||''" x-show="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria"></span>
                     </div>
                     <div class="fin-card-sub">
                       <span x-show="f.categoria" x-text="f.categoria+' · '"></span>Vence: <span x-text="fmtDate(f.vencimento)"></span><span x-show="f.pagoEm" x-text="' · Pago: '+fmtDate(f.pagoEm)"></span>
@@ -1431,6 +1431,87 @@
   </div>
 </div>
 
+<!-- DASHBOARD FINANCEIRO DO CLIENTE -->
+<div class="modal-backdrop" x-show="modal==='finCliente'" @click.self="modal=null" x-cloak>
+  <div class="modal" style="max-width:720px" x-data x-show="finClienteResumo">
+    <template x-if="finClienteResumo">
+      <div>
+        <div class="modal-head">
+          <div class="modal-title"><i class="ph ph-chart-line-up ic-ph"></i> Situação financeira — <span x-text="finClienteResumo.nome"></span></div>
+          <button class="btn btn-icon btn-ghost" @click="modal=null">✕</button>
+        </div>
+        <div class="modal-body">
+          <template x-if="finClienteResumo.total===0">
+            <div class="card empty">Esse cliente ainda não tem receitas lançadas no Financeiro.</div>
+          </template>
+          <template x-if="finClienteResumo.total>0">
+            <div>
+              <!-- KPIs de parcelas -->
+              <div class="grid grid-3" style="gap:10px;margin-bottom:14px">
+                <div class="card kpi"><div class="kpi-label">Parcelas pagas</div><div class="kpi-value fs-22 text-green" x-text="finClienteResumo.qtdPagas+' / '+finClienteResumo.total"></div></div>
+                <div class="card kpi"><div class="kpi-label">Faltam pagar</div><div class="kpi-value fs-22" x-text="finClienteResumo.qtdPendentes"></div></div>
+                <div class="card kpi"><div class="kpi-label">Pagas em atraso</div><div class="kpi-value fs-22" :class="finClienteResumo.qtdPagasAtraso?'text-red':''" x-text="finClienteResumo.qtdPagasAtraso"></div></div>
+              </div>
+              <div class="grid grid-3" style="gap:10px;margin-bottom:16px">
+                <div class="card kpi"><div class="kpi-label">Já recebido</div><div class="kpi-value fs-18 text-green" x-text="fmtCur(finClienteResumo.totalPago)"></div></div>
+                <div class="card kpi"><div class="kpi-label">A receber</div><div class="kpi-value fs-18" x-text="fmtCur(finClienteResumo.totalAReceber)"></div></div>
+                <div class="card kpi"><div class="kpi-label">Vencido</div><div class="kpi-value fs-18" :class="finClienteResumo.totalVencido?'text-red':''" x-text="fmtCur(finClienteResumo.totalVencido)"></div></div>
+              </div>
+
+              <!-- Destaques: parcela atual + última + pontualidade -->
+              <div class="grid grid-2" style="gap:12px;margin-bottom:16px">
+                <div class="card" style="padding:14px">
+                  <div class="fs-12 text-3 fw-700" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">Parcela atual (a pagar)</div>
+                  <template x-if="finClienteResumo.proxima">
+                    <div>
+                      <div class="fw-700" x-text="finClienteResumo.proxima.descricao || numLancamento(finClienteResumo.proxima)"></div>
+                      <div class="fs-13 text-2" style="margin-top:3px">Vence <b x-text="fmtDate(finClienteResumo.proxima.vencimento)"></b> · <b x-text="fmtCur(finClienteResumo.proxima.valor)"></b></div>
+                      <span class="fin-badge" :style="finStatus(finClienteResumo.proxima).style" x-text="finStatus(finClienteResumo.proxima).label" style="margin-top:6px;display:inline-block"></span>
+                    </div>
+                  </template>
+                  <template x-if="!finClienteResumo.proxima"><div class="fs-13 text-3">Tudo quitado 🎉</div></template>
+                </div>
+                <div class="card" style="padding:14px">
+                  <div class="fs-12 text-3 fw-700" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">Última parcela</div>
+                  <template x-if="finClienteResumo.ultima">
+                    <div>
+                      <div class="fw-700" x-text="'Vence '+fmtDate(finClienteResumo.ultima.vencimento)"></div>
+                      <div class="fs-13 text-2" style="margin-top:3px" x-text="(finClienteResumo.ultima.descricao||'')"></div>
+                      <div class="fs-13 text-2" style="margin-top:6px" x-show="finClienteResumo.pontualidade!==null">Pontualidade: <b :class="finClienteResumo.pontualidade>=80?'text-green':(finClienteResumo.pontualidade>=50?'':'text-red')" x-text="finClienteResumo.pontualidade+'%'"></b> <span class="text-3">(pagas em dia)</span></div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Timeline de parcelas -->
+              <div class="fs-12 text-3 fw-700" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Todas as parcelas (<span x-text="finClienteResumo.total"></span>)</div>
+              <div class="card" style="padding:0;max-height:280px;overflow:auto">
+                <table class="table">
+                  <thead><tr><th>Parcela / descrição</th><th>Vencimento</th><th>Pago em</th><th>Valor</th><th>Status</th></tr></thead>
+                  <tbody>
+                    <template x-for="p in finClienteResumo.items" :key="p.id">
+                      <tr>
+                        <td class="fw-700" style="font-size:13px"><span class="fin-dot" :style="'background:'+finDotCor(p)+';margin-right:7px'"></span><span x-text="(parcelaDesc(p)?('Parcela '+parcelaDesc(p).n+'/'+parcelaDesc(p).total+' — '):'')+(p.descricao||numLancamento(p))"></span></td>
+                        <td class="fs-12 text-2" x-text="fmtDate(p.vencimento)"></td>
+                        <td class="fs-12" :class="p.pagoEm&&p.vencimento&&p.pagoEm>p.vencimento?'text-red':'text-2'"><span x-text="p.pagoEm?fmtDate(p.pagoEm):'—'"></span><span x-show="p.pagoEm&&diasAtraso(p)>0" x-text="' (+'+diasAtraso(p)+'d)'"></span></td>
+                        <td class="fw-700 fs-12" x-text="fmtCur(p.valor)"></td>
+                        <td><span class="fin-badge" :style="finStatus(p).style" x-text="finStatus(p).label"></span></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" @click="modal=null">Fechar</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
 <!-- FORNECEDOR -->
 <div class="modal-backdrop" x-show="modal==='fornecedor'" x-cloak>
   <div class="modal">
@@ -2243,6 +2324,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=108"></script>
+<script src="js/app.js?v=110"></script>
 </body>
 </html>

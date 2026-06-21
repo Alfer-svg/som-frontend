@@ -1277,6 +1277,31 @@ ${this._docFoot()}
       try { await this.api('DELETE', '/cobranca/boleto/' + (f.boletoId || 'x')); } catch (e) { /* limpa local mesmo se o backend não responder */ }
       f.boletoUrl = ''; f.linhaDigitavel = ''; f.pix = ''; f.boletoId = ''; this.persist('finance', this.finance);
     },
+    // ── Dashboard financeiro do cliente (popup ao clicar no nome) ──
+    finClienteSel: '',
+    abrirFinanceCliente(nome) { if (!nome) return; this.finClienteSel = nome; this.modal = 'finCliente'; },
+    parcelaDesc(f) { const m = String(f && f.descricao || '').match(/\((\d+)\s*\/\s*(\d+)\)/); return m ? { n: +m[1], total: +m[2] } : null; },
+    diasAtraso(f) { if (!f.pagoEm || !f.vencimento) return 0; return Math.round((new Date(f.pagoEm) - new Date(f.vencimento)) / 86400000); },
+    get finClienteResumo() {
+      const nome = this.finClienteSel, hoje = MD.today();
+      const items = this.finance.filter(f => f.tipo === 'receita' && (f.cliente || '') === nome)
+        .slice().sort((a, b) => (a.vencimento || a.data || '').localeCompare(b.vencimento || b.data || ''));
+      const pagas = items.filter(f => f.status === 'pago');
+      const pendentes = items.filter(f => f.status !== 'pago');
+      const vencidas = pendentes.filter(f => f.vencimento && f.vencimento < hoje);
+      const aVencer = pendentes.filter(f => !f.vencimento || f.vencimento >= hoje);
+      const pagasAtraso = pagas.filter(f => f.pagoEm && f.vencimento && f.pagoEm > f.vencimento);
+      const sum = arr => arr.reduce((a, f) => a + (+f.valor || 0), 0);
+      return {
+        nome, items,
+        total: items.length, qtdPagas: pagas.length, qtdPendentes: pendentes.length,
+        qtdVencidas: vencidas.length, qtdPagasAtraso: pagasAtraso.length,
+        totalPago: sum(pagas), totalAReceber: sum(pendentes), totalVencido: sum(vencidas), totalGeral: sum(items),
+        proxima: pendentes[0] || null,                          // parcela atual a pagar (mais antiga em aberto)
+        ultima: items.length ? items[items.length - 1] : null,  // última parcela (data-fim)
+        pontualidade: pagas.length ? Math.round((pagas.length - pagasAtraso.length) / pagas.length * 100) : null,
+      };
+    },
 
     // ───────────────── OPERACIONAL: projetos ─────────────────
     projetosDoStatus(s) { const q = this.busca.toLowerCase(); return this.projects.filter(p => p.status === s && (!q || (p.nome + ' ' + p.cliente).toLowerCase().includes(q))); },
