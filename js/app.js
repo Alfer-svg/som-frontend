@@ -1568,10 +1568,10 @@ ${this._docFoot()}
 *{box-sizing:border-box}body{font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1f1f1f;margin:0;padding:0;font-size:13px;line-height:1.55}
 .pad{padding:22px 46px 36px}
 .head-banner{width:100%;height:108px;overflow:hidden;line-height:0;background:#141414}.head-banner img{width:100%;height:100%;object-fit:cover;object-position:center 32%;display:block;filter:grayscale(100%) contrast(1.05)}
-.head{background:#141414;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:26px 46px}
-.head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:92px;width:auto;object-fit:contain;background:#fff;border-radius:10px;padding:11px 20px}
+.head{background:#141414;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:30px 46px}
+.head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:104px;width:auto;object-fit:contain;background:#fff;border-radius:12px;padding:13px 24px;box-shadow:0 6px 22px rgba(0,0,0,.35)}
 .wm{font-size:19px;font-weight:800;letter-spacing:.4px;line-height:1.05}.wm span{display:block;font-size:8.5px;font-weight:600;letter-spacing:2.4px;color:#C9A24B;margin-top:5px}
-.head-doc{text-align:right}.head-doc .doc-type{font-size:10px;font-weight:700;letter-spacing:3px;color:#C9A24B}.head-doc .doc-num{font-size:20px;font-weight:800;margin-top:3px}.head-doc .sub{font-size:10.5px;color:#bdbdbd;margin-top:2px}
+.head-doc{text-align:right}.head-doc .doc-type{font-size:12px;font-weight:800;letter-spacing:4px;color:#D8B45C}.head-doc .doc-num{font-size:25px;font-weight:800;margin-top:4px;color:#fff}.head-doc .sub{font-size:11.5px;color:#d6d6d6;margin-top:3px}
 .empresa-bar{background:#f5f3ee;color:#6f6a5e;font-size:10px;letter-spacing:.2px;padding:8px 46px;border-bottom:2px solid #C9A24B;line-height:1.5}
 h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#141414;margin:16px 0 9px;padding-left:11px;border-left:3px solid #C9A24B}
 .meta-cli{display:flex;flex-wrap:wrap;gap:6px 26px;margin:18px 0 4px;font-size:13px}.meta-cli b{color:#141414}
