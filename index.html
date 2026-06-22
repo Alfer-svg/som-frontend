@@ -215,7 +215,7 @@
       <button class="btn btn-primary" x-show="page==='servicos'" @click="novoServico()">+ Serviço</button>
       <button class="btn btn-primary" x-show="page==='contratos'" @click="novoContrato()">+ Contrato</button>
       <button class="btn btn-primary" x-show="page==='financeiro'" @click="novoLancamento('receita')">+ Lançamento</button>
-      <button class="btn btn-ghost" x-show="page==='operacional'" @click="abrirProgramacao()" title="Atribuir vários projetos do mesmo cliente a um colaborador de uma vez">+ Programação</button>
+      <button class="btn btn-ghost" x-show="page==='operacional' && opTab!=='quadro'" @click="abrirProgramacao()" title="Programação semanal de posts (redes sociais)">+ Programação</button>
       <button class="btn btn-primary" x-show="page==='operacional'" @click="novoProjeto()">+ Projeto</button>
     </header>
 
@@ -2462,7 +2462,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=127"></script>
+<script src="js/app.js?v=128"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

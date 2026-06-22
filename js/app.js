@@ -1654,11 +1654,12 @@ ${this._docFoot()}
     descartarIA(obj, campo) { delete obj['_ia_' + campo]; },
     progColaboradores() {
       const q = this.busca.toLowerCase();
+      const posts = this.projects.filter(p => p.isPost); // só posts entram na programação semanal (projeto avulso fica fora)
       const nomes = this.equipe.map(m => m.nome);
-      const temSem = this.projects.some(p => !(p.responsavel || '').trim());
+      const temSem = posts.some(p => !(p.responsavel || '').trim());
       const lista = [...nomes]; if (temSem) lista.push('');
       return lista
-        .map(n => ({ nome: n || 'Sem responsável', ref: n, projetos: this.projects.filter(p => (p.responsavel || '') === n && (!q || (p.nome + ' ' + (p.cliente || '')).toLowerCase().includes(q))) }))
+        .map(n => ({ nome: n || 'Sem responsável', ref: n, projetos: posts.filter(p => (p.responsavel || '') === n && (!q || (p.nome + ' ' + (p.cliente || '')).toLowerCase().includes(q))) }))
         .filter(g => g.projetos.length);
     },
     // projetos ordenados: abertos primeiro (por prazo), concluídos no fim
