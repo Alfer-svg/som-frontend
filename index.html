@@ -1422,6 +1422,7 @@
       </div>
       <div class="form-group"><label class="form-label">Vencimento <span class="hq" title="Data em que o pagamento é esperado. É por ela que o lançamento aparece no mês e na previsão de caixa.">?</span></label><input class="form-input" type="date" x-model="editing.vencimento"></div>
       <div class="form-group"><label class="form-label">Status <span class="hq" title="Pendente = ainda não pago. Pago = já quitado (use 'Receber/Pagar' no card pra registrar a data).">?</span></label><select class="form-select" x-model="editing.status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Observações <span class="hq" title="Texto livre que aparece na fatura (ex.: dados pra pagamento, condições, agradecimento).">?</span></label><textarea class="form-textarea" x-model="editing.obs" placeholder="Aparece na fatura — ex.: chave PIX, condições de pagamento, observação ao cliente…"></textarea></div>
       <!-- Cobrança (só receita) -->
       <template x-if="editing.tipo==='receita'">
         <div style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:12px;margin-top:2px">
@@ -2373,6 +2374,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=116"></script>
+<script src="js/app.js?v=117"></script>
 </body>
 </html>

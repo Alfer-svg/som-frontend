@@ -1150,7 +1150,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
 
     // ───────────────── FINANCEIRO ─────────────────
     get financeFiltrado() { const q = this.busca.toLowerCase(); return [...this.finance].filter(f => this._finNoMes(f)).sort((a, b) => (a.vencimento || a.data || '').localeCompare(b.vencimento || b.data || '')).filter(f => !q || ((f.descricao || '') + ' ' + (f.cliente || '') + ' ' + (f.categoria || '') + ' ' + (f.tipo || '')).toLowerCase().includes(q)); },
-    novoLancamento(tipo = 'receita') { this.editing = { id: '', tipo, descricao: '', valor: 0, categoria: tipo === 'receita' ? 'Mensalidade' : 'Ferramentas', cliente: '', fornecedor: '', emailCobranca: '', whatsappCobranca: '', status: 'pendente', vencimento: MD.today(), data: MD.today() }; this.modal = 'finance'; },
+    novoLancamento(tipo = 'receita') { this.editing = { id: '', tipo, descricao: '', valor: 0, categoria: tipo === 'receita' ? 'Mensalidade' : 'Ferramentas', cliente: '', fornecedor: '', emailCobranca: '', whatsappCobranca: '', obs: '', status: 'pendente', vencimento: MD.today(), data: MD.today() }; this.modal = 'finance'; },
     editarLancamento(f) { this.editing = { ...f }; this.modal = 'finance'; },
     salvarLancamento() {
       const e = this.editing; if (!e.descricao) return alert('Informe a descrição.');
@@ -1215,6 +1215,7 @@ ${linha('Categoria', f.categoria)}
 ${linha('Vencimento', MD.fmtDate(f.vencimento))}
 <div class="fat-total"><span>VALOR TOTAL</span><b>${e(MD.fmtCur(f.valor))}</b></div>
 ${pagto.length ? '<h2>Como pagar</h2><div class="pagto">' + pagto.join('') + '</div>' : ''}
+${f.obs ? '<h2>Observações</h2><div class="pagto"><div class="bloco" style="white-space:pre-wrap">' + e(f.obs) + '</div></div>' : ''}
 ${this._docFoot()}
 </div></body></html>`;
     },
