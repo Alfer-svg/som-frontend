@@ -631,18 +631,47 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       return out;
     },
     async converterOnboarding(o) {
-      const d = o.dados || {}; const r = d.responsavel || {};
-      const dados = {
-        cnpj: '', razaoSocial: '', empresa: o.empresa, slogan: d.slogan || '',
-        cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
-        contato: r.nome || '', cargo: r.cargo || '', email: r.email || '', whatsapp: r.whatsapp || '', telefone: '', instagram: '',
-        servicos: [], redes: redesVazias(), site: { url: d.site || '', seo: 0, sgo: 0 },
-        dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
-        briefing: briefingMerge(d.briefing),
-        responsaveis: (r.nome || r.email || r.whatsapp) ? [{ id: MD.uid(), nome: r.nome || '', cargo: r.cargo || '', whatsapp: r.whatsapp || '', email: r.email || '', nascimento: '', instagram: '', linkedin: '', seguindo: false, notas: '' }] : [],
-        documentos: [], mensalidade: 0, status: 'Ativo', desde: MD.today(),
-        notas: (d.gmn && d.gmn.acesso) ? ('Google Meu Negócio: ' + d.gmn.acesso) : '',
-      };
+      const d = o.dados || {};
+      const a = d.answers || null; // onboarding novo (maracatumktdigital.com): respostas por chave data-q
+      let dados;
+      if (a) {
+        // ── Mapeia o briefing novo (chaves data-q) → estrutura do Cliente ──
+        const b = briefingVazio();
+        b.publico = { faixaEtaria: a.pub_idade || '', escolaridade: a.pub_escolaridade || '', sexo: a.pub_sexo || '', alvo: a.pub_alvo || '' };
+        b.posicionamento = { descricao: a.neg_descricao || '', concorrentes: a.neg_concorrentes || '', percepcao: a.neg_percepcao || '', recorrencia: a.neg_recorrencia || '', cicloVenda: a.neg_fechamento || '' };
+        b.historico = { gostou: a.hist_gostava || '', melhorar: a.hist_faltava || '' };
+        b.transmissao = { midiasTestadas: a.est_anuncios || '', campanhas: a.est_campanhas || '' };
+        b.criativo = { linguagem: a.cri_linguagem || '', evitar: a.cri_termos_evitar || '', hashtags: a.cri_hashtags || '', inspiracoes: a.cri_inspiracao || '', datasComemorativas: a.cri_datas_gerais || '', datasSegmento: a.cri_datas_segmento || '' };
+        b.ativos = { logo: a.mat_logo_url || '', manual: a.mat_manual_url || '', drive: a.mat_fotos || '' };
+        b.palavrasChave = a.pal_chave || '';
+        // Documentos: arquivos enviados (Cloudinary) + mailing
+        const docs = [];
+        (d.fileLinks || []).forEach(fl => { if (fl && fl.url) docs.push({ id: MD.uid(), nome: fl.filename || fl.name || 'Arquivo', tipo: 'Identidade visual', url: fl.url }); });
+        if (a.mat_mailing_url) docs.push({ id: MD.uid(), nome: 'Mailing de clientes', tipo: 'Outro', url: a.mat_mailing_url });
+        dados = {
+          cnpj: '', razaoSocial: '', empresa: o.empresa, slogan: a.empresa_slogan || '',
+          cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
+          contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
+          servicos: [], redes: redesVazias(), site: { url: a.empresa_site || '', seo: 0, sgo: 0 },
+          dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
+          briefing: b, responsaveis: [], documentos: docs, mensalidade: 0, status: 'Ativo', desde: MD.today(),
+          notas: a.empresa_gmn ? ('Google Meu Negócio: ' + a.empresa_gmn) : '',
+        };
+      } else {
+        // ── Formato antigo (fallback) ──
+        const r = d.responsavel || {};
+        dados = {
+          cnpj: '', razaoSocial: '', empresa: o.empresa, slogan: d.slogan || '',
+          cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
+          contato: r.nome || '', cargo: r.cargo || '', email: r.email || '', whatsapp: r.whatsapp || '', telefone: '', instagram: '',
+          servicos: [], redes: redesVazias(), site: { url: d.site || '', seo: 0, sgo: 0 },
+          dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
+          briefing: briefingMerge(d.briefing),
+          responsaveis: (r.nome || r.email || r.whatsapp) ? [{ id: MD.uid(), nome: r.nome || '', cargo: r.cargo || '', whatsapp: r.whatsapp || '', email: r.email || '', nascimento: '', instagram: '', linkedin: '', seguindo: false, notas: '' }] : [],
+          documentos: [], mensalidade: 0, status: 'Ativo', desde: MD.today(),
+          notas: (d.gmn && d.gmn.acesso) ? ('Google Meu Negócio: ' + d.gmn.acesso) : '',
+        };
+      }
       try {
         await this.api('POST', '/clientes', { empresa: o.empresa, dados });
         await this.api('POST', '/onboarding/admin/' + o.id + '/convertido', {});
