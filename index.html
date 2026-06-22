@@ -175,14 +175,14 @@
     <div class="sidebar-foot" x-data="{fo:false}" @mouseenter="fo=true" @mouseleave="fo=false">
       <!-- Recolhido: avatar + 1º nome -->
       <div class="foot-collapsed" x-show="!fo" @click="fo=true">
-        <span class="foot-avatar" x-text="(usuario&&usuario.nome||'A').charAt(0)"></span>
+        <span class="foot-avatar" :style="fotoDe(usuario&&usuario.nome)?('background-image:url('+fotoDe(usuario.nome)+');background-size:cover;background-position:center'):''" x-text="fotoDe(usuario&&usuario.nome)?'':(usuario&&usuario.nome||'A').charAt(0)"></span>
         <span class="foot-firstname" x-text="(usuario&&usuario.nome||'').split(' ')[0]"></span>
         <span class="foot-caret">▴</span>
       </div>
       <!-- Expandido: usuário + perfil + ações -->
       <div class="foot-expanded" x-show="fo" x-cloak>
         <div class="foot-user">
-          <span class="foot-avatar" x-text="(usuario&&usuario.nome||'A').charAt(0)"></span>
+          <span class="foot-avatar" :style="fotoDe(usuario&&usuario.nome)?('background-image:url('+fotoDe(usuario.nome)+');background-size:cover;background-position:center'):''" x-text="fotoDe(usuario&&usuario.nome)?'':(usuario&&usuario.nome||'A').charAt(0)"></span>
           <div class="flex-1" style="min-width:0">
             <div class="foot-name" x-text="usuario&&usuario.nome"></div>
             <div class="foot-mail" x-text="usuario&&usuario.email"></div>
