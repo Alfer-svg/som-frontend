@@ -733,9 +733,9 @@
         </div>
         <div class="kanban" x-show="opTab==='quadro'">
           <template x-for="col in boardAtual.colunas" :key="col.nome">
-            <div class="kanban-col" :class="dropCol===col.nome?'drop-on':''"
-                 @dragover.prevent="dropCol=col.nome" @dragleave="if(dropCol===col.nome)dropCol=null" @drop.prevent="onDropProjeto(col.nome)">
-              <div class="kanban-head"><span class="dot" :style="'background:'+(col.cor||'#8a8ba3')"></span><span class="fw-700 fs-12" x-text="col.nome"></span><span class="count" x-text="projetosDoBoardStatus(col.nome).length"></span>
+            <div class="kanban-col" :class="(dropCol===col.nome?'drop-on':'')+(dragColNome===col.nome?' col-dragging':'')"
+                 @dragover.prevent="dropCol=col.nome" @dragleave="if(dropCol===col.nome)dropCol=null" @drop.prevent="dragColNome ? onDropColuna(col.nome) : onDropProjeto(col.nome)">
+              <div class="kanban-head" draggable="true" @dragstart="dragColNome=col.nome; dragId=null" @dragend="dragColNome=''; dropCol=null" style="cursor:grab" title="Arraste para reordenar a coluna"><span class="dot" :style="'background:'+(col.cor||'#8a8ba3')"></span><span class="fw-700 fs-12" x-text="col.nome"></span><span class="count" x-text="projetosDoBoardStatus(col.nome).length"></span>
                 <template x-if="boardEdit"><span class="flex items-center" style="margin-left:auto;gap:1px">
                   <button class="btn btn-icon btn-ghost btn-sm" @click="moverColuna(col,-1)" title="Mover para a esquerda">‹</button>
                   <button class="btn btn-icon btn-ghost btn-sm" @click="moverColuna(col,1)" title="Mover para a direita">›</button>
@@ -2480,7 +2480,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=129"></script>
+<script src="js/app.js?v=130"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

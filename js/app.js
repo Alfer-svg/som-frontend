@@ -300,7 +300,7 @@ document.addEventListener('alpine:init', () => {
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
-    TRELLO_LABELS, dragId: null, dropCol: null, // arrastar cards entre listas (estilo Trello)
+    TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
     cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, membroDrop: false, novoItemCheck: '', // card-detalhe Trello
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
     cloudCfg: { cloud: '', preset: '' }, uploadando: false, // storage de arquivos (Cloudinary)
@@ -1474,6 +1474,11 @@ ${this._docFoot()}
     avatarBg(nome) { const m = (this.equipe || []).find(x => x.nome === nome); return m ? this.papelInfo(m.papel).bg : '#dfe1e6'; },
     avatarFg(nome) { const m = (this.equipe || []).find(x => x.nome === nome); return m ? this.papelInfo(m.papel).cor : '#5e6c84'; },
     onDropProjeto(status) { const p = this.projects.find(x => x.id === this.dragId); if (p && p.status !== status) this.moverProjeto(p, status); this.dragId = null; this.dropCol = null; },
+    onDropColuna(alvoNome) {
+      const b = this.boardAtual, from = b.colunas.findIndex(c => c.nome === this.dragColNome), to = b.colunas.findIndex(c => c.nome === alvoNome);
+      if (from > -1 && to > -1 && from !== to) { const [col] = b.colunas.splice(from, 1); b.colunas.splice(to, 0, col); this.salvarBoards(); }
+      this.dragColNome = ''; this.dropCol = null;
+    },
     // ── Etiquetas nomeadas (compartilhadas) ──
     async carregarLabels() { try { const r = await this.api('GET', '/config/ui.labels'); this.labelNames = r && r.valor ? JSON.parse(r.valor) : {}; } catch { this.labelNames = {}; } },
     // ── Storage de arquivos (Cloudinary) ──

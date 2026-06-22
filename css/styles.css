@@ -305,3 +305,5 @@ i.ic-ph{font-size:1.25em;line-height:1;vertical-align:-0.18em;display:inline-fle
 .hq:hover{background:rgba(20,18,16,.12);color:rgba(20,18,16,.72)}
 .hq-tip{position:fixed;z-index:99999;background:#141210;color:#fff;padding:8px 11px;border-radius:8px;font-size:12px;font-weight:500;line-height:1.45;max-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.22);pointer-events:none;text-align:left;white-space:normal;letter-spacing:normal;text-transform:none}
 .lbl-row-plain:hover{background:var(--accent-soft)}
+.kanban-col.col-dragging{opacity:.45}
+.kanban-head[draggable=true]:active{cursor:grabbing}
