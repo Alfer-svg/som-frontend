@@ -75,6 +75,8 @@ const PROJ_STATUS = [
   { id: 'Revisão',      color: '#f59e0b' },
   { id: 'Concluído',    color: '#16a34a' },
 ];
+// Quadro padrão do Operacional — colunas com os MESMOS nomes dos status legados (projetos antigos mapeiam direto).
+const BOARD_PADRAO = () => ({ id: 'geral', nome: 'Geral', colunas: PROJ_STATUS.map(s => ({ nome: s.id, cor: s.color })) });
 // Etiquetas estilo Trello (mesmas cores, p/ a equipe que já usa)
 const TRELLO_LABELS = [
   { key: 'green', cor: '#61bd4f' }, { key: 'yellow', cor: '#f2d600' }, { key: 'orange', cor: '#ff9f1a' },
@@ -297,6 +299,7 @@ document.addEventListener('alpine:init', () => {
     verArquivadosOrc: false, // lista de Orçamentos: mostrar arquivados (recusados/vencidos)
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
+    boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, // arrastar cards entre listas (estilo Trello)
     cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, novoItemCheck: '', // card-detalhe Trello
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
@@ -468,7 +471,7 @@ document.addEventListener('alpine:init', () => {
       const nome = cls.split('ph-').pop();
       return 'assets/icons/' + nome + '.png?v=7';
     },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); } if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); } if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -1420,6 +1423,47 @@ ${this._docFoot()}
 
     // ───────────────── OPERACIONAL: projetos ─────────────────
     projetosDoStatus(s) { const q = this.busca.toLowerCase(); return this.projects.filter(p => p.status === s && (!q || (p.nome + ' ' + p.cliente).toLowerCase().includes(q))); },
+    // ───────────────── QUADROS (Trello — vários, editáveis) ─────────────────
+    async carregarBoards() {
+      try { const r = await this.api('GET', '/config/ui.boards'); this.boards = (r && r.valor) ? JSON.parse(r.valor) : []; } catch { this.boards = []; }
+      if (!Array.isArray(this.boards) || !this.boards.length) { this.boards = [BOARD_PADRAO()]; this.salvarBoards(); }
+      if (!this.boardSel || !this.boards.find(b => b.id === this.boardSel)) this.boardSel = this.boards[0].id;
+    },
+    salvarBoards() { try { this.api('PUT', '/config/ui.boards', { valor: JSON.stringify(this.boards) }); } catch (e) { } },
+    get boardAtual() { return this.boards.find(b => b.id === this.boardSel) || this.boards[0] || BOARD_PADRAO(); },
+    projBoardId(p) { return p.boardId || 'geral'; }, // projetos antigos (sem boardId) caem no quadro 'Geral'
+    projetosDoBoard(bid) { return this.projects.filter(p => this.projBoardId(p) === bid); },
+    projetosDoBoardStatus(colNome) { const q = this.busca.toLowerCase(); return this.projects.filter(p => this.projBoardId(p) === this.boardSel && (p.status || 'A Fazer') === colNome && (!q || ((p.nome || '') + ' ' + (p.cliente || '')).toLowerCase().includes(q))); },
+    selecionarBoard(id) { this.boardSel = id; this.boardEdit = false; },
+    novoBoard() {
+      const nome = (prompt('Nome do novo quadro:', 'Novo quadro') || '').trim(); if (!nome) return;
+      const id = 'b' + MD.uid();
+      this.boards.push({ id, nome, colunas: [{ nome: 'A Fazer', cor: '#8a8ba3' }, { nome: 'Em Andamento', cor: '#2563eb' }, { nome: 'Concluído', cor: '#16a34a' }] });
+      this.boardSel = id; this.boardEdit = false; this.salvarBoards();
+    },
+    renomearBoard() { const b = this.boardAtual; const nome = (prompt('Nome do quadro:', b.nome) || '').trim(); if (!nome) return; b.nome = nome; this.salvarBoards(); },
+    async excluirBoard() {
+      if (this.boards.length <= 1) return alert('Tem que existir ao menos um quadro.');
+      const b = this.boardAtual, qtd = this.projetosDoBoard(b.id).length, outro = this.boards.find(x => x.id !== b.id);
+      if (!confirm('Excluir o quadro "' + b.nome + '"?' + (qtd ? (' Os ' + qtd + ' projetos dele vão pro quadro "' + outro.nome + '".') : ''))) return;
+      for (const p of this.projetosDoBoard(b.id)) { p.boardId = outro.id; try { await this.salvarProjetoApi(p); } catch { } }
+      this.boards = this.boards.filter(x => x.id !== b.id); this.boardSel = outro.id; this.boardEdit = false; this.salvarBoards();
+    },
+    addColuna() { const b = this.boardAtual; const nome = (prompt('Nome da nova coluna:', 'Nova coluna') || '').trim(); if (!nome) return; if (b.colunas.some(c => c.nome === nome)) return alert('Já existe uma coluna com esse nome.'); b.colunas.push({ nome, cor: '#8a8ba3' }); this.salvarBoards(); },
+    async renomearColuna(col) {
+      const b = this.boardAtual; const nome = (prompt('Nome da coluna:', col.nome) || '').trim(); if (!nome || nome === col.nome) return;
+      if (b.colunas.some(c => c.nome === nome)) return alert('Já existe uma coluna com esse nome.');
+      const antigos = this.projetosDoBoardStatus(col.nome); col.nome = nome; this.salvarBoards();
+      for (const p of antigos) { p.status = nome; try { await this.salvarProjetoApi(p); } catch { } } // migra os cards
+    },
+    async removerColuna(col) {
+      const b = this.boardAtual; if (b.colunas.length <= 1) return alert('O quadro precisa de ao menos uma coluna.');
+      const cards = this.projetosDoBoardStatus(col.nome), primeira = b.colunas.find(c => c.nome !== col.nome);
+      if (!confirm('Remover a coluna "' + col.nome + '"?' + (cards.length ? (' Os ' + cards.length + ' cards vão pra "' + primeira.nome + '".') : ''))) return;
+      for (const p of cards) { p.status = primeira.nome; try { await this.salvarProjetoApi(p); } catch { } }
+      b.colunas = b.colunas.filter(c => c.nome !== col.nome); this.salvarBoards();
+    },
+    moverColuna(col, dir) { const b = this.boardAtual, i = b.colunas.indexOf(col), j = i + dir; if (j < 0 || j >= b.colunas.length) return; b.colunas.splice(i, 1); b.colunas.splice(j, 0, col); this.salvarBoards(); },
     projStatusInfo(s) { return PROJ_STATUS.find(x => x.id === s) || PROJ_STATUS[0]; },
     // ── Trello: etiquetas + arrastar ──
     labelCor(key) { const l = TRELLO_LABELS.find(x => x.key === key); return l ? l.cor : '#b3b9c4'; },
@@ -1566,7 +1610,7 @@ ${this._docFoot()}
     },
     async quickAdd(status) {
       const t = (this.quickAddText || '').trim(); if (!t) { this.quickAddCol = ''; return; }
-      try { await this.salvarProjetoApi({ id: '', nome: t, cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '', labels: [], membros: [], checklist: [] }); await this.carregarProjetos(); this.quickAddText = ''; }
+      try { await this.salvarProjetoApi({ id: '', nome: t, cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, boardId: this.boardSel || 'geral', prazo: '', progresso: 0, notas: '', labels: [], membros: [], checklist: [] }); await this.carregarProjetos(); this.quickAddText = ''; }
       catch (e) { alert(e.message); }
     },
     // ── Programação semanal (checklist por colaborador) ──
@@ -1649,7 +1693,7 @@ ${this._docFoot()}
         for (const po of posts) {
           await this.salvarProjetoApi({
             id: '', nome: po.tema || (po.tipo + ' ' + (po.data || '')), cliente: f.cliente, servico: 'Gestão de Redes Sociais',
-            responsavel: f.responsavel, status: 'A Fazer', prazo: po.data || f.semanaIni || '', progresso: 0, notas: '',
+            responsavel: f.responsavel, status: 'A Fazer', boardId: this.boardSel || 'geral', prazo: po.data || f.semanaIni || '', progresso: 0, notas: '',
             isPost: true, tipoPost: po.tipo, tema: po.tema, descricao: po.descricao, legenda: po.legenda, criativo: po.criativo,
           });
         }
@@ -1716,7 +1760,7 @@ ${this._docFoot()}
     layoutStatusLabel(s) { return ({ RASCUNHO: 'Rascunho', APROVADO_GESTAO: 'Aprovado pela gestão', ENVIADO: 'Enviado ao cliente', APROVADO_CLIENTE: 'Aprovado pelo cliente', AJUSTE: 'Ajuste solicitado' })[s] || s; },
     layoutStatusCor(s) { return ({ RASCUNHO: '#8a8ba3', APROVADO_GESTAO: '#2563eb', ENVIADO: '#d97706', APROVADO_CLIENTE: '#16a34a', AJUSTE: '#dc2626' })[s] || '#8a8ba3'; },
     imprimirLayout() { window.print(); },
-    novoProjeto(status = 'A Fazer') { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '', labels: [] }; this.modal = 'project'; },
+    novoProjeto(status) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; const col = status || (this.boardAtual.colunas[0] && this.boardAtual.colunas[0].nome) || 'A Fazer'; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status: col, boardId: this.boardSel || 'geral', prazo: '', progresso: 0, notas: '', labels: [] }; this.modal = 'project'; },
     editarProjeto(p) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { ...p, labels: Array.isArray(p.labels) ? [...p.labels] : [] }; this.modal = 'project'; },
     async salvarProjeto() {
       const e = this.editing; if (!e.nome) return alert('Informe o nome do projeto.');

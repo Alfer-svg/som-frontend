@@ -717,13 +717,31 @@
           </div>
         </div>
 
+        <!-- barra de quadros (Trello): selecionar / criar / editar -->
+        <div x-show="opTab==='quadro'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-bottom:12px">
+          <template x-for="b in boards" :key="b.id">
+            <button class="btn btn-sm" :class="b.id===boardSel?'btn-primary':'btn-ghost'" @click="selecionarBoard(b.id)" x-text="b.nome"></button>
+          </template>
+          <button class="btn btn-ghost btn-sm" @click="novoBoard()" title="Criar um novo quadro"><i class="ph ph-plus ic-ph"></i> Novo quadro</button>
+          <span style="flex:1"></span>
+          <button class="btn btn-ghost btn-sm" @click="renomearBoard()" title="Renomear este quadro"><i class="ph ph-pencil-simple ic-ph"></i></button>
+          <button class="btn btn-sm" :class="boardEdit?'btn-primary':'btn-ghost'" @click="boardEdit=!boardEdit" title="Editar as colunas deste quadro"><i class="ph ph-columns ic-ph"></i> <span x-text="boardEdit?'concluir':'editar colunas'"></span></button>
+          <button class="btn btn-ghost btn-sm" @click="excluirBoard()" title="Excluir este quadro"><i class="ph ph-trash ic-ph"></i></button>
+        </div>
         <div class="kanban" x-show="opTab==='quadro'">
-          <template x-for="s in PROJ_STATUS" :key="s.id">
-            <div class="kanban-col" :class="dropCol===s.id?'drop-on':''"
-                 @dragover.prevent="dropCol=s.id" @dragleave="if(dropCol===s.id)dropCol=null" @drop.prevent="onDropProjeto(s.id)">
-              <div class="kanban-head"><span class="dot" :style="'background:'+s.color"></span><span class="fw-700 fs-12" x-text="s.id"></span><span class="count" x-text="projetosDoStatus(s.id).length"></span></div>
+          <template x-for="col in boardAtual.colunas" :key="col.nome">
+            <div class="kanban-col" :class="dropCol===col.nome?'drop-on':''"
+                 @dragover.prevent="dropCol=col.nome" @dragleave="if(dropCol===col.nome)dropCol=null" @drop.prevent="onDropProjeto(col.nome)">
+              <div class="kanban-head"><span class="dot" :style="'background:'+(col.cor||'#8a8ba3')"></span><span class="fw-700 fs-12" x-text="col.nome"></span><span class="count" x-text="projetosDoBoardStatus(col.nome).length"></span>
+                <template x-if="boardEdit"><span class="flex items-center" style="margin-left:auto;gap:1px">
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="moverColuna(col,-1)" title="Mover para a esquerda">‹</button>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="moverColuna(col,1)" title="Mover para a direita">›</button>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="renomearColuna(col)" title="Renomear coluna"><i class="ph ph-pencil-simple"></i></button>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="removerColuna(col)" title="Remover coluna">🗑</button>
+                </span></template>
+              </div>
               <div class="kanban-body">
-                <template x-for="p in projetosDoStatus(s.id)" :key="p.id">
+                <template x-for="p in projetosDoBoardStatus(col.nome)" :key="p.id">
                   <div class="kanban-card" :class="dragId===p.id?'dragging':''" draggable="true"
                        @dragstart="dragId=p.id" @dragend="dragId=null; dropCol=null"
                        @click="abrirCard(p)">
@@ -754,13 +772,19 @@
                 </template>
               </div>
               <!-- adicionar cartão (estilo Trello: inline) -->
-              <template x-if="quickAddCol===s.id">
+              <template x-if="quickAddCol===col.nome">
                 <div style="margin-top:6px">
-                  <textarea class="form-textarea" style="min-height:54px;font-size:13px" x-model="quickAddText" placeholder="Título do cartão…" @keydown.enter.prevent="quickAdd(s.id)" x-init="$nextTick(()=>$el.focus())"></textarea>
-                  <div class="flex gap-2 mt-2"><button class="btn btn-primary btn-sm" @click="quickAdd(s.id)">Adicionar</button><button class="btn btn-ghost btn-sm" @click="quickAddCol=''; quickAddText=''">✕</button></div>
+                  <textarea class="form-textarea" style="min-height:54px;font-size:13px" x-model="quickAddText" placeholder="Título do cartão…" @keydown.enter.prevent="quickAdd(col.nome)" x-init="$nextTick(()=>$el.focus())"></textarea>
+                  <div class="flex gap-2 mt-2"><button class="btn btn-primary btn-sm" @click="quickAdd(col.nome)">Adicionar</button><button class="btn btn-ghost btn-sm" @click="quickAddCol=''; quickAddText=''">✕</button></div>
                 </div>
               </template>
-              <button class="kanban-add" x-show="quickAddCol!==s.id" @click="quickAddCol=s.id; quickAddText=''">+ Adicionar um cartão</button>
+              <button class="kanban-add" x-show="quickAddCol!==col.nome" @click="quickAddCol=col.nome; quickAddText=''">+ Adicionar um cartão</button>
+            </div>
+          </template>
+          <!-- adicionar coluna (modo editar) -->
+          <template x-if="boardEdit">
+            <div class="kanban-col" style="background:transparent;border:2px dashed var(--border);min-height:60px;display:flex;align-items:center;justify-content:center">
+              <button class="btn btn-ghost btn-sm" @click="addColuna()"><i class="ph ph-plus ic-ph"></i> Adicionar coluna</button>
             </div>
           </template>
         </div>
@@ -2424,7 +2448,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=125"></script>
+<script src="js/app.js?v=126"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
