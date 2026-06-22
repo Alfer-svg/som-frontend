@@ -122,7 +122,7 @@
       <!-- Clientes (top-level) — inclui a aba de Onboardings -->
       <div class="nav-item" x-show="podeVer('comercial')" :class="page==='comercial'?'active':''" @click="go('comercial')" title="Clientes (CNPJ + CEP automáticos) e onboardings recebidos do site.">
         <span class="nav-icon"><i class="ph ph-users ic-ph"></i></span><span>Clientes</span>
-        <span x-show="podeVer('onboarding') && onboardings.length" class="badge" style="margin-left:auto;background:var(--accent);color:#fff;min-width:20px;justify-content:center" x-text="onboardings.length" title="Onboardings aguardando revisão"></span>
+        <span x-show="podeVer('onboarding') && onbPendentes.length" class="badge" style="margin-left:auto;background:var(--accent);color:#fff;min-width:20px;justify-content:center" x-text="onbPendentes.length" title="Onboardings aguardando revisão"></span>
       </div>
 
       <!-- Financeiro (grupo: Lançamentos + Fornecedores) -->
@@ -152,7 +152,7 @@
         <div class="nav-item" x-show="podeVer(item.id)" :class="page===item.id?'active':''" @click="go(item.id)" :title="item.desc">
           <span class="nav-icon"><i class="ic-ph" :class="phClass(item.ico)" :style="phCor(item.ico)?('color:'+phCor(item.ico)):''"></i></span>
           <span x-text="item.label"></span>
-          <span x-show="item.id==='onboarding' && onboardings.length" class="badge" style="margin-left:auto;background:var(--accent);color:#fff;min-width:20px;justify-content:center" x-text="onboardings.length"></span>
+          <span x-show="item.id==='onboarding' && onbPendentes.length" class="badge" style="margin-left:auto;background:var(--accent);color:#fff;min-width:20px;justify-content:center" x-text="onbPendentes.length"></span>
           <span x-show="item.id==='monitoramento' && radarUrgentes" class="badge" style="margin-left:auto;background:#dc2626;color:#fff;min-width:20px;justify-content:center" x-text="radarUrgentes" title="Pendências urgentes no Radar"></span>
         </div>
       </template>
@@ -317,7 +317,7 @@
         <!-- abas: Clientes | Onboardings -->
         <div class="fichario" x-show="podeVer('onboarding')" style="margin-bottom:14px">
           <div class="fichario-tab" :class="comTab==='lista'?'active':''" @click="comTab='lista'"><i class="ph ph-users ic-ph"></i> Clientes</div>
-          <div class="fichario-tab" :class="comTab==='onboarding'?'active':''" @click="comTab='onboarding'; carregarOnboardings()"><i class="ph ph-tray ic-ph"></i> Onboardings <span x-show="onboardings.length" class="badge" style="background:var(--accent);color:#fff;margin-left:6px;min-width:18px;justify-content:center" x-text="onboardings.length"></span></div>
+          <div class="fichario-tab" :class="comTab==='onboarding'?'active':''" @click="comTab='onboarding'; carregarOnboardings()"><i class="ph ph-tray ic-ph"></i> Onboardings <span x-show="onbPendentes.length" class="badge" style="background:var(--accent);color:#fff;margin-left:6px;min-width:18px;justify-content:center" x-text="onbPendentes.length"></span></div>
         </div>
 
         <!-- ABA: lista de clientes -->
@@ -365,17 +365,18 @@
             </div>
           </div>
           <div class="card">
-            <div class="card-title mb-3" x-text="'Aguardando revisão ('+onboardings.length+')'"></div>
-            <template x-if="!onboardings.length"><div class="empty">Nenhum onboarding pendente. <i class="ph ph-confetti ic-ph"></i></div></template>
+            <div class="card-title mb-3" x-text="'Onboardings recebidos ('+onboardings.length+' · '+onbPendentes.length+' pendente'+(onbPendentes.length===1?'':'s')+')'"></div>
+            <template x-if="!onboardings.length"><div class="empty">Nenhum onboarding recebido ainda. <i class="ph ph-confetti ic-ph"></i></div></template>
             <template x-for="o in onboardings" :key="o.id">
               <div class="flex items-center gap-2" style="padding:11px 0;border-bottom:1px solid var(--border)">
                 <div style="flex:1;min-width:0">
-                  <div class="fw-700" x-text="o.empresa"></div>
-                  <div class="fs-12 text-3" x-text="((o.dados&&o.dados.responsavel&&o.dados.responsavel.nome)?(o.dados.responsavel.nome+' · '):'')+fmtDate(o.createdAt)"></div>
+                  <div class="flex items-center gap-2"><span class="fw-700" x-text="o.empresa"></span><span class="badge" :style="onbStatusInfo(o).cor" x-text="onbStatusInfo(o).label"></span></div>
+                  <div class="fs-12 text-3" x-text="fmtDate(o.createdAt)"></div>
                 </div>
-                <button class="btn btn-ghost btn-sm" @click="verOnboarding(o)">ver</button>
-                <button class="btn btn-primary btn-sm" @click="converterOnboarding(o)">criar cliente</button>
-                <button class="btn btn-ghost btn-sm" @click="arquivarOnboarding(o)">arquivar</button>
+                <button class="btn btn-ghost btn-sm" @click="verOnboarding(o)">ver briefing</button>
+                <button class="btn btn-primary btn-sm" x-show="o.status==='convertido'" @click="irClienteOnb(o)">ver cliente</button>
+                <button class="btn btn-primary btn-sm" x-show="o.status!=='convertido'" @click="converterOnboarding(o)">criar cliente</button>
+                <button class="btn btn-ghost btn-sm" x-show="o.status==='pendente'" @click="arquivarOnboarding(o)">arquivar</button>
               </div>
             </template>
           </div>
@@ -2379,6 +2380,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=122"></script>
+<script src="js/app.js?v=123"></script>
 </body>
 </html>

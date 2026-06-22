@@ -622,6 +622,19 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
     // ── Onboardings recebidos do site ──
     async carregarOnboardings() { try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch { this.onboardings = []; } this.autoConverterOnboardings(); },
+    get onbPendentes() { return (this.onboardings || []).filter(o => o.status === 'pendente'); },
+    onbStatusInfo(o) {
+      const s = o.status || 'pendente';
+      if (s === 'convertido') return { label: 'Virou cliente', cor: 'background:#dcfce7;color:#16a34a' };
+      if (s === 'arquivado') return { label: 'Arquivado', cor: 'background:#e5e7eb;color:#6b7280' };
+      return { label: 'Pendente', cor: 'background:#fef3c7;color:#a16207' };
+    },
+    irClienteOnb(o) {
+      const nome = (o.empresa || '').trim().toLowerCase();
+      const id = (o.dados && o.dados._clienteId) || ((this.clients || []).find(c => (c.empresa || '').trim().toLowerCase() === nome) || {}).id;
+      if (!id) return alert('Cliente não encontrado (pode ter sido removido).');
+      this.page = 'monitoramento'; this.busca = ''; this.abrirMonitor(id);
+    },
     verOnboarding(o) { this.onbSel = o; this.onbModal = true; },
     onbLinhas(o) {
       const d = (o && o.dados) || {}; const out = []; const add = (l, v) => { if (v != null && String(v).trim()) out.push({ label: l, v: String(v) }); };
@@ -676,6 +689,15 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       return dados;
     },
     async converterOnboarding(o) {
+      // Trava anti-duplicado: se já existe cliente com o mesmo nome, não cria outro.
+      const nome = (o.empresa || '').trim().toLowerCase();
+      const existe = (this.clients || []).find(c => (c.empresa || '').trim().toLowerCase() === nome);
+      if (existe) {
+        if (!confirm('Já existe o cliente "' + existe.empresa + '". Não vou duplicar — marco este onboarding como convertido. Ok?')) return;
+        try { await this.api('POST', '/onboarding/admin/' + o.id + '/convertido', {}); } catch {}
+        this.onbModal = false; await this.carregarOnboardings();
+        return;
+      }
       const dados = this._dadosDoOnboarding(o);
       try {
         await this.api('POST', '/clientes', { empresa: o.empresa, dados });
