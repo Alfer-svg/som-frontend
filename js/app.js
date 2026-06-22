@@ -319,6 +319,7 @@ document.addEventListener('alpine:init', () => {
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
+    toastMsg: '', // alerta visível (ex.: novo onboarding convertido em cliente)
     perfilAberto: true, // perfil do cliente (recolhível)
     enriqLoading: false, enriqMsg: '', enriqResult: null, // enriquecimento a partir do site
     psiLoading: false, psiMsg: '', // Google PageSpeed (Lighthouse)
@@ -649,7 +650,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         (d.fileLinks || []).forEach(fl => { if (fl && fl.url) docs.push({ id: MD.uid(), nome: fl.filename || fl.name || 'Arquivo', tipo: 'Identidade visual', url: fl.url }); });
         if (a.mat_mailing_url) docs.push({ id: MD.uid(), nome: 'Mailing de clientes', tipo: 'Outro', url: a.mat_mailing_url });
         dados = {
-          cnpj: '', razaoSocial: '', empresa: o.empresa, slogan: a.empresa_slogan || '',
+          cnpj: a.empresa_documento || '', razaoSocial: '', empresa: o.empresa, slogan: a.empresa_slogan || '',
           cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
           contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
           servicos: [], redes: redesVazias(), site: { url: a.empresa_site || '', seo: 0, sgo: 0 },
@@ -693,19 +694,24 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       try {
         if (!this.clients || !this.clients.length) { try { await this.carregarClientes(); } catch {} }
         const nomes = new Set((this.clients || []).map(c => (c.empresa || '').trim().toLowerCase()).filter(Boolean));
-        let criados = 0;
+        const novos = [];
         for (const o of pend) {
           const nome = (o.empresa || '').trim().toLowerCase();
           try {
             if (nome && !nomes.has(nome)) { // novo → cria cliente
               await this.api('POST', '/clientes', { empresa: o.empresa, dados: this._dadosDoOnboarding(o) });
-              nomes.add(nome); criados++;
+              nomes.add(nome); novos.push(o.empresa);
             }
             // duplicado OU já criado → marca convertido pra sair da fila (registro fica como histórico)
             await this.api('POST', '/onboarding/admin/' + o.id + '/convertido', {});
           } catch (e) { /* deixa na fila pra tentar no próximo carregamento */ }
         }
-        if (criados) await this.carregarClientes();
+        if (novos.length) {
+          await this.carregarClientes();
+          const lista = novos.slice(0, 3).join(', ') + (novos.length > 3 ? ` +${novos.length - 3}` : '');
+          this.notificarSistema('🎯 Novo onboarding recebido', lista + (novos.length > 1 ? ' — clientes criados' : ' — cliente criado'));
+          this.mostrarToast('🎯 Onboarding recebido — cadastro criado: ' + lista);
+        }
         try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch {}
       } finally { this._autoConvRodando = false; }
     },
@@ -1495,6 +1501,18 @@ ${this._docFoot()}
         }
       } catch { }
     },
+    // Alerta de sistema (beep + notificação do navegador) — ex.: novo onboarding.
+    notificarSistema(titulo, texto) {
+      this.tocarBeep();
+      try {
+        if (window.Notification && Notification.permission === 'granted') {
+          const n = new Notification(titulo, { body: texto, icon: new URL('assets/icon.png?v=6', location.href).href, tag: 'som-sistema' });
+          n.onclick = () => { window.focus(); n.close(); };
+        }
+      } catch { }
+    },
+    // Toast visível dentro do app (some sozinho).
+    mostrarToast(msg) { this.toastMsg = msg; clearTimeout(this._toastT); this._toastT = setTimeout(() => { this.toastMsg = ''; }, 8000); },
     toggleLabelCard(key) { const a = this.cardRef.labels; const i = a.indexOf(key); if (i >= 0) a.splice(i, 1); else a.push(key); this.salvarCard(); },
     toggleMembro(nome) { const a = this.cardRef.membros; const i = a.indexOf(nome); if (i >= 0) a.splice(i, 1); else a.push(nome); this.salvarCard(); },
     addItemCheck() { const t = (this.novoItemCheck || '').trim(); if (!t) return; this.cardRef.checklist.push({ id: MD.uid(), texto: t, feito: false }); this.novoItemCheck = ''; this.salvarCard(); },
