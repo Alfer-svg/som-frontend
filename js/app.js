@@ -1233,8 +1233,18 @@ ${this._docFoot()}
       finally { f._cobrando = ''; }
     },
     // Cobrança por e-mail (Resend, backend) — chave por último
+    // Acha o cliente do lançamento (pelo nome) e devolve o melhor contato cadastrado (zap/e-mail), com fallback no 1º responsável.
+    _contatoCliente(f) {
+      const nome = ((f && f.cliente) || '').trim().toLowerCase();
+      if (!nome) return {};
+      const c = (this.clients || []).find(x => ((x.empresa || x.razaoSocial || '').trim().toLowerCase()) === nome);
+      if (!c) return {};
+      const r0 = (c.responsaveis || [])[0] || {};
+      return { whatsapp: c.whatsapp || c.telefone || r0.zap || r0.whatsapp || '', email: c.email || r0.email || '' };
+    },
     async cobrarEmail(f) {
-      const email = (f.emailCobranca || prompt('E-mail do cliente para a cobrança:', f.emailCobranca || '') || '').trim();
+      const auto = this._contatoCliente(f).email; // puxa do cadastro do cliente se o lançamento não tiver
+      const email = (f.emailCobranca || auto || prompt('E-mail do cliente para a cobrança:', '') || '').trim();
       if (!email) return;
       f.emailCobranca = email; this.persist('finance', this.finance);
       f._cobrando = 'email';
@@ -1246,7 +1256,8 @@ ${this._docFoot()}
     },
     // Cobrança por WhatsApp — abre o wa.me com a mensagem pronta (funciona já, sem chave)
     cobrarWhatsApp(f) {
-      const num = (f.whatsappCobranca || prompt('WhatsApp do cliente (com DDD):', f.whatsappCobranca || '') || '').trim();
+      const auto = this._contatoCliente(f).whatsapp; // puxa do cadastro do cliente se o lançamento não tiver
+      const num = (f.whatsappCobranca || auto || prompt('WhatsApp do cliente (com DDD):', '') || '').trim();
       if (!num) return;
       f.whatsappCobranca = num; this.persist('finance', this.finance);
       const linhas = ['Olá! Tudo bem? Segue a cobrança da ' + EMPRESA.nome + ':', '', '*' + (f.descricao || 'Serviço') + '*', 'Valor: ' + MD.fmtCur(f.valor), 'Vencimento: ' + MD.fmtDate(f.vencimento)];
