@@ -1976,30 +1976,13 @@
         <button class="btn btn-icon btn-ghost" @click="layoutModal=false">✕</button>
       </div>
     </div>
-    <div class="modal-body" id="layout-print">
-      <!-- capa -->
-      <div style="background:var(--primary);color:#fff;border-radius:12px;padding:22px;margin-bottom:16px;text-align:center">
-        <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:.7">Programação semanal</div>
-        <div class="fw-800" style="font-size:24px;margin:6px 0" x-text="layoutAtual&&layoutAtual.cliente"></div>
-        <div style="opacity:.8;font-size:13px" x-text="semanaAtual.label+' · 2026'"></div>
+    <div class="modal-body" id="layout-print" style="padding:0">
+      <div class="flex items-center justify-between" style="padding:10px 14px;background:var(--surface-2);border-bottom:1px solid var(--border)">
+        <div class="text-3 fs-12">👁 Exatamente como o cliente vai ver — montado com os posts da semana</div>
+        <a class="btn btn-ghost btn-sm" :href="layoutAtual?(linkPublicoLayout()+'&preview=1'):''" target="_blank">abrir em nova aba ↗</a>
       </div>
-      <!-- posts -->
-      <template x-if="!layoutPostsAtual.length"><div class="empty">Nenhum post nesta semana.</div></template>
-      <template x-for="p in layoutPostsAtual" :key="p.id">
-        <div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
-          <div class="flex items-center gap-2 mb-2">
-            <span class="badge" style="background:var(--surface-2);color:var(--text-2)" x-text="diaSemanaLabel(p.prazo)"></span>
-            <span class="badge" style="background:#ede9fe;color:#6d28d9" x-text="p.tipoPost||'Estático'"></span>
-            <span class="fw-700 fs-14" x-text="p.tema||p.nome"></span>
-            <span class="badge" style="margin-left:auto" :style="'background:'+projStatusInfo(p.status).color+'22;color:'+projStatusInfo(p.status).color" x-text="p.status==='Concluído'?'pronto':p.status"></span>
-          </div>
-          <div class="flex gap-3" style="align-items:flex-start">
-            <template x-if="p.criativo && ehImagem(p.criativo)"><img :src="p.criativo" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--border);flex-shrink:0"></template>
-            <template x-if="p.criativo && !ehImagem(p.criativo)"><a :href="p.criativo" target="_blank" class="btn btn-ghost btn-sm" style="flex-shrink:0">ver criativo ↗</a></template>
-            <div class="fs-13" style="white-space:pre-wrap;flex:1" x-text="p.legenda||'(sem legenda)'"></div>
-          </div>
-        </div>
-      </template>
+      <template x-if="!layoutPostsAtual.length"><div class="empty" style="margin:14px">Nenhum post nesta semana — use ◀ ▶ pra trocar de semana ou crie a programação.</div></template>
+      <iframe x-show="layoutPostsAtual.length" :src="layoutAtual?(linkPublicoLayout()+'&preview=1'):''" style="width:100%;height:62vh;min-height:380px;border:0;display:block"></iframe>
     </div>
     <!-- decisão do cliente -->
     <template x-if="layoutAtual&&layoutAtual.status==='APROVADO_CLIENTE'">
