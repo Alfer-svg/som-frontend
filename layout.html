@@ -3,108 +3,156 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aprovação da semana — Maracatu Digital</title>
+  <title>Programação Semanal — Aprovação de Conteúdo · Maracatu Digital</title>
   <link rel="icon" href="assets/favicon.png">
   <style>
-    :root{ --bg:#0b0b0c; --card:#16161a; --line:#2a2a31; --txt:#f4f4f5; --txt2:#a1a1aa; --accent:#22c55e; --accent2:#3b82f6; --red:#f87171; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    :root{
+      --bg:#eceae4; --card:#ffffff; --ink:#16161a; --ink2:#5b5750; --line:#e4e0d8;
+      --amber:#C9A24B; --ok:#16a34a; --red:#dc2626;
+      --c1:#e23b2e; --c2:#f2b705; --c3:#1f9e57; --c4:#2f6fd0;
+    }
     *{ box-sizing:border-box }
-    body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif; background:linear-gradient(160deg,#0b0b0c,#1a1a20); color:var(--txt); padding:24px 16px; }
-    .wrap{ max-width:720px; margin:0 auto; }
-    .head{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
-    .head img{ width:40px; height:40px; border-radius:9px; background:#000; padding:4px; }
-    h1{ font-size:22px; margin:14px 0 4px; }
-    .sub{ color:var(--txt2); font-size:14px; margin-bottom:22px; }
-    .cover{ background:linear-gradient(135deg,#16a34a,#22c55e); color:#04210f; border-radius:14px; padding:22px; text-align:center; margin-bottom:18px; }
-    .cover .lab{ font-size:11px; letter-spacing:3px; text-transform:uppercase; opacity:.7; }
-    .cover .cli{ font-size:26px; font-weight:800; margin:6px 0; }
-    .cover .sem{ font-size:13px; opacity:.85; }
-    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
-    .post-head{ display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
-    .badge{ font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; }
-    .post-art{ display:block; width:100%; max-width:480px; max-height:560px; height:auto; object-fit:contain; border-radius:12px; border:1px solid var(--line); background:#0e0e11; margin:0 auto 12px; cursor:zoom-in; }
-    .leg{ font-size:14px; line-height:1.5; white-space:pre-wrap; color:var(--txt); background:#0e0e11; border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
-    .leg-lab{ font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--txt2); margin-bottom:6px; }
-    .sec{ font-size:12px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--txt2); margin:4px 0 10px; }
-    label{ display:block; font-size:13px; font-weight:600; margin:10px 0 5px; }
-    input,textarea{ width:100%; background:#0e0e11; border:1px solid var(--line); color:var(--txt); border-radius:9px; padding:10px 12px; font-size:14px; font-family:inherit; }
-    input:focus,textarea:focus{ outline:none; border-color:var(--accent2); }
-    textarea{ min-height:80px; resize:vertical; }
-    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-    button{ flex:1; min-width:160px; border:0; border-radius:10px; padding:14px; font-size:15px; font-weight:800; cursor:pointer; }
-    .b-ok{ background:var(--accent); color:#04210f; }
-    .b-adj{ background:transparent; color:var(--txt); border:1px solid var(--line); }
-    button:disabled{ opacity:.55; cursor:default; }
-    .banner{ border-radius:12px; padding:16px; margin-bottom:14px; }
-    .banner.ok{ background:#16a34a22; border:1px solid #16a34a66; }
-    .banner.adj{ background:#dc262622; border:1px solid #dc262666; }
-    .banner h2{ margin:0 0 4px; font-size:16px; }
-    .err{ color:var(--red); font-size:13px; margin-top:10px; text-align:center; }
-    .foot{ text-align:center; color:var(--txt2); font-size:12px; margin-top:18px; }
-    .center{ text-align:center; padding:50px 20px; }
-    .center .big{ font-size:46px; }
-    a.pdf{ display:inline-block; color:var(--accent); font-weight:700; text-decoration:none; margin-top:6px; }
-    .pdfview{ width:100%; height:72vh; min-height:440px; border:1px solid var(--line); border-radius:10px; background:#fff; display:block; margin-bottom:8px; }
-    [x-hide]{ display:none; }
+    body{ margin:0; font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--ink); }
+    img{ display:block; max-width:100%; }
+    .doc{ max-width:980px; margin:0 auto; }
+    .stripe{ height:8px; display:flex; }
+    .stripe i{ flex:1; display:block; }
+    .stripe i:nth-child(1){background:var(--c1)} .stripe i:nth-child(2){background:var(--c2)}
+    .stripe i:nth-child(3){background:var(--c3)} .stripe i:nth-child(4){background:var(--c4)}
+
+    /* ---------- CAPA ---------- */
+    .capa{ position:relative; background:#0b0b0c; color:#fff; min-height:520px; display:flex; flex-direction:column; justify-content:flex-end;
+      background-size:cover; background-position:center; overflow:hidden; }
+    .capa::before{ content:""; position:absolute; inset:0; background:
+      linear-gradient(90deg, rgba(11,11,12,.96) 30%, rgba(11,11,12,.55) 70%, rgba(11,11,12,.25)); }
+    .capa .rings{ position:absolute; left:-140px; bottom:-160px; width:460px; height:460px; border-radius:50%;
+      background:repeating-radial-gradient(circle, rgba(255,255,255,.05) 0 2px, transparent 2px 26px); }
+    .capa .in{ position:relative; padding:0 48px 48px; }
+    .capa h1{ font-size:62px; line-height:.96; font-weight:900; letter-spacing:-1px; margin:0; text-transform:uppercase; }
+    .capa .tag{ font-size:24px; font-weight:400; color:#e7e7ea; margin:14px 0 0; }
+    .capa .stripe.top{ position:absolute; top:0; left:0; right:0; }
+    .capa .stripe.bot{ position:relative; margin-top:26px; max-width:380px; border-radius:3px; overflow:hidden; }
+
+    /* ---------- CABEÇALHO ---------- */
+    .bar{ background:#141414; color:#fff; display:flex; align-items:center; gap:18px; padding:18px 28px; }
+    .bar img{ height:38px; width:auto; }
+    .bar .sep{ width:1px; height:34px; background:#3a3a3a; }
+    .bar .t{ font-size:20px; font-weight:800; }
+    .bar .cli{ font-size:14px; color:#cfcfcf; margin-top:1px; }
+    .bar .cli b{ color:var(--amber); }
+
+    .body{ padding:26px 28px 10px; }
+
+    /* ---------- CARD DE POST ---------- */
+    .post{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 20px 20px; margin-bottom:22px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+    .meta{ display:flex; flex-wrap:wrap; gap:10px 26px; align-items:center; padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid var(--line); font-size:13.5px; }
+    .meta .it{ display:flex; align-items:center; gap:7px; color:var(--ink2); }
+    .meta .it b{ color:var(--ink); font-weight:700; }
+    .meta .ic{ font-size:15px; opacity:.85 }
+    .meta .st{ font-weight:700; }
+    .meta .st.wait{ color:var(--amber); } .meta .st.ok{ color:var(--ok); } .meta .st.adj{ color:#b8860b; } .meta .st.no{ color:var(--red); }
+
+    .art{ width:100%; border-radius:12px; border:1px solid var(--line); background:#f3f1ec; object-fit:contain; max-height:560px; margin:0 auto; cursor:zoom-in; }
+    .art-wrap{ text-align:center; }
+
+    .carousel{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(150px,1fr); gap:10px; overflow-x:auto; padding-bottom:8px; }
+    .carousel.fit{ grid-auto-columns:1fr; }
+    .slide{ position:relative; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#f3f1ec; aspect-ratio:4/5; }
+    .slide img{ width:100%; height:100%; object-fit:cover; cursor:zoom-in; }
+    .slide .n{ position:absolute; top:6px; left:6px; background:rgba(20,20,20,.82); color:#fff; font-size:11px; font-weight:700; border-radius:6px; padding:2px 7px; }
+
+    .leg{ margin-top:16px; }
+    .leg .lab{ display:flex; align-items:center; gap:7px; font-size:12px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; color:var(--ink2); margin-bottom:7px; }
+    .leg .tx{ font-size:14px; line-height:1.55; white-space:pre-wrap; color:#2c2a27; }
+
+    .acts{ display:flex; gap:12px; margin-top:18px; flex-wrap:wrap; }
+    .acts button{ flex:1; min-width:150px; border-radius:30px; padding:13px 16px; font-size:14.5px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; transition:.15s; }
+    .b-ok{ background:#141414; color:#fff; border:1px solid #141414; } .b-ok:hover{ background:#000; }
+    .b-adj{ background:#f3f1ec; color:var(--ink); border:1px solid var(--line); }
+    .b-no{ background:#fff; color:var(--red); border:1px solid #f0b9b9; }
+    button:disabled{ opacity:.5; cursor:default; }
+    .decided-tag{ display:inline-flex; align-items:center; gap:7px; font-size:13.5px; font-weight:700; padding:11px 16px; border-radius:12px; margin-top:14px; }
+    .decided-tag.ok{ background:#e9f7ee; color:#15803d; border:1px solid #bfe7cc; }
+    .decided-tag.adj{ background:#fdf3e3; color:#b8860b; border:1px solid #f0dcae; }
+    .decided-tag.no{ background:#fdeaea; color:#c0392b; border:1px solid #f3c9c9; }
+    .adjbox{ margin-top:12px; }
+    .adjbox textarea{ width:100%; border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:14px; font-family:inherit; min-height:72px; resize:vertical; }
+    .adjbox textarea:focus{ outline:none; border-color:var(--amber); }
+    .adjbox .send{ margin-top:8px; background:#141414; color:#fff; border:0; border-radius:10px; padding:11px 18px; font-weight:700; cursor:pointer; }
+
+    .divisor{ height:160px; background:#0b0b0c center/cover no-repeat; margin:6px 0 26px; position:relative; }
+    .divisor::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(11,11,12,.6), rgba(11,11,12,.15)); }
+
+    .pdfcard{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 20px; margin-bottom:22px; }
+    .pdfcard .sec{ font-size:12px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--ink2); margin-bottom:12px; }
+    .pdfframe{ width:100%; height:70vh; min-height:420px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+    .pdflink{ display:inline-block; color:var(--amber); font-weight:700; text-decoration:none; margin-top:8px; }
+
+    .foot{ background:#141414; color:#9a958c; text-align:center; font-size:12px; padding:22px; }
+    .foot b{ color:#fff; font-weight:800; letter-spacing:.4px; }
+    .err{ color:var(--red); font-size:13px; margin-top:10px; }
+    .center{ text-align:center; padding:70px 24px; color:var(--ink2); }
+    .center .big{ font-size:52px; }
+    [x-hide]{ display:none !important; }
+    @media(max-width:560px){ .capa h1{ font-size:40px } .capa .tag{ font-size:18px } .capa .in{ padding:0 24px 32px } .body{ padding:20px 16px 4px } }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="head">
-      <img src="assets/logo.png" alt="Maracatu Digital">
-      <div><div style="font-weight:800">Maracatu Digital</div><div style="font-size:12px;color:var(--txt2)">Aprovação da programação</div></div>
-    </div>
-
-    <div id="loading" class="center"><div class="sub">Carregando…</div></div>
+  <div class="doc">
+    <div id="loading" class="center"><div>Carregando…</div></div>
 
     <div id="indisponivel" class="center" x-hide>
       <div class="big">⏳</div>
-      <h1>Ainda não disponível</h1>
-      <div class="sub">Esta programação ainda está em preparação. Você vai receber o link assim que estiver pronta. 🙂</div>
+      <h2>Ainda não disponível</h2>
+      <div>Esta programação ainda está em preparação. Você recebe o link assim que estiver pronta. 🙂</div>
     </div>
 
     <div id="conteudo" x-hide>
-      <div class="cover">
-        <div class="lab">Programação semanal</div>
-        <div class="cli" id="c-cliente"></div>
-        <div class="sem" id="c-semana"></div>
-      </div>
-
-      <div id="banner"></div>
-
-      <div class="card" id="pdfcard" x-hide>
-        <div class="sec">Layout final (PDF)</div>
-        <iframe id="pdfframe" class="pdfview" title="Layout final"></iframe>
-        <a class="pdf" id="c-pdf" target="_blank">Abrir o PDF em nova aba ↗</a>
-      </div>
-
-      <div id="posts"></div>
-
-      <div class="card" id="extra" x-hide>
-        <div class="sec">Observações</div>
-        <div id="c-obs" class="leg"></div>
-      </div>
-
-      <div class="card" id="decidir">
-        <div class="sec">Sua avaliação</div>
-        <label>Seu nome</label>
-        <input id="nome" placeholder="Quem está aprovando">
-        <label>Precisa de ajuste? <span style="color:var(--txt2);font-weight:400">— descreva (só se for pedir ajuste)</span></label>
-        <textarea id="comentario" placeholder="Ex.: trocar a cor do post de quarta, ajustar a legenda de sexta…"></textarea>
-        <div class="actions">
-          <button class="b-ok" onclick="aprovar()">✓ Aprovar tudo</button>
-          <button class="b-adj" onclick="pedirAjuste()">✎ Pedir ajuste</button>
+      <div class="capa" id="capa">
+        <div class="stripe top"><i></i><i></i><i></i><i></i></div>
+        <div class="rings"></div>
+        <div class="in">
+          <h1>Programação<br>Semanal</h1>
+          <div class="tag">— Aprovação de Conteúdo</div>
+          <div class="stripe bot"><i></i><i></i><i></i><i></i></div>
         </div>
-        <div class="err" id="erro"></div>
       </div>
+
+      <div class="bar">
+        <img src="assets/logo-horizontal.png" onerror="this.onerror=null;this.src='assets/logo.png'" alt="Maracatu Digital">
+        <div class="sep"></div>
+        <div>
+          <div class="t">Aprovação de Conteúdo</div>
+          <div class="cli">Cliente: <b id="c-cliente"></b> · <span id="c-semana"></span></div>
+        </div>
+      </div>
+
+      <div class="body">
+        <div id="banner"></div>
+        <div id="posts"></div>
+
+        <div class="pdfcard" id="pdfcard" x-hide>
+          <div class="sec">Layout final (PDF)</div>
+          <iframe id="pdfframe" class="pdfframe" title="Layout final"></iframe>
+          <a class="pdflink" id="c-pdf" target="_blank">Abrir o PDF em nova aba ↗</a>
+        </div>
+
+        <div class="pdfcard" id="extra" x-hide>
+          <div class="sec">Observações</div>
+          <div class="leg"><div class="tx" id="c-obs"></div></div>
+        </div>
+      </div>
+
+      <div class="divisor" id="divisor" x-hide></div>
+      <div class="foot"><b>MARACATU</b> digital intelligence</div>
     </div>
 
     <div id="sucesso" class="center" x-hide>
       <div class="big" id="s-emoji">✅</div>
-      <h1 id="s-titulo">Recebido!</h1>
-      <div class="sub" id="s-msg"></div>
+      <h2 id="s-titulo">Recebido!</h2>
+      <div id="s-msg"></div>
     </div>
-
-    <div class="foot">Maracatu Digital Intelligence</div>
   </div>
 
   <script>
@@ -114,87 +162,117 @@
 
     function show(id){ document.getElementById(id).removeAttribute('x-hide'); }
     function hide(id){ document.getElementById(id).setAttribute('x-hide',''); }
-    function esc(s){ var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
-    function ehImagem(u){ return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u||''); }
-    function dia(d){ if(!d) return ''; var x=new Date(d+'T00:00:00'); if(isNaN(x))return''; var ds=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']; return ds[x.getDay()]+' '+String(x.getDate()).padStart(2,'0')+'/'+String(x.getMonth()+1).padStart(2,'0'); }
+    function esc(s){ var d=document.createElement('div'); d.textContent=(s==null?'':s); return d.innerHTML; }
+    function dia(d){ if(!d) return ''; var x=new Date(d+'T00:00:00'); if(isNaN(x))return''; var ds=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']; return ds[x.getDay()]+' '+String(x.getDate()).padStart(2,'0')+'.'+String(x.getMonth()+1).padStart(2,'0'); }
     function dmy(d){ if(!d) return ''; var p=String(d).split('-'); return p[2]+'/'+p[1]; }
+    function imagensDe(p){
+      var arr = Array.isArray(p.criativos) && p.criativos.length ? p.criativos
+              : (p.criativo ? String(p.criativo).split(/[\n,;|]+/).map(function(s){return s.trim()}).filter(Boolean) : []);
+      return arr;
+    }
+    function ehCarrossel(p){ return (p.tipoPost||'').toLowerCase().indexOf('carrossel')>=0 || imagensDe(p).length>1; }
+    function statusInfo(s){
+      s=(s||'').toLowerCase();
+      if(s.indexOf('aprov')>=0) return {cls:'ok', txt:'Aprovado'};
+      if(s.indexOf('ajuste')>=0) return {cls:'adj', txt:'Ajuste pedido'};
+      if(s.indexOf('reprov')>=0) return {cls:'no', txt:'Reprovado'};
+      return {cls:'wait', txt:'Aguardando aprovação'};
+    }
+
+    function cardPost(p, i){
+      var imgs = imagensDe(p);
+      var carrossel = ehCarrossel(p);
+      var tipoLabel = carrossel ? 'Carrossel' : 'Peça única';
+      var si = statusInfo(p.status);
+
+      var arte;
+      if (!imgs.length){
+        arte = '<div class="center" style="padding:30px;color:#a59f95">— criativo ainda não anexado —</div>';
+      } else if (carrossel){
+        var fit = imgs.length<=5 ? ' fit' : '';
+        arte = '<div class="carousel'+fit+'">'+ imgs.map(function(u,idx){
+          return '<div class="slide"><span class="n">'+(idx+1)+'</span><a href="'+esc(u)+'" target="_blank"><img src="'+esc(u)+'"></a></div>';
+        }).join('') +'</div>';
+      } else {
+        arte = '<div class="art-wrap"><a href="'+esc(imgs[0])+'" target="_blank"><img class="art" src="'+esc(imgs[0])+'"></a></div>';
+      }
+
+      var leg = '<div class="leg"><div class="lab">❝ Legenda</div><div class="tx">'+(esc(p.legenda)||'<span style="color:#a59f95">(sem legenda)</span>')+'</div></div>';
+
+      var meta = '<div class="meta">'
+        + '<span class="it"><span class="ic">📅</span><b>'+esc(dia(p.prazo))+'</b></span>'
+        + '<span class="it"><span class="ic">📱</span>Formato: <b>'+esc(p.formato||'Feed')+'</b></span>'
+        + '<span class="it"><span class="ic">🖼️</span>Tipo: <b>'+tipoLabel+'</b></span>'
+        + '<span class="it"><span class="ic">⏱️</span>Status: <span class="st '+si.cls+'">'+si.txt+'</span></span>'
+        + '</div>';
+
+      var rodape;
+      if (si.cls==='ok')       rodape = '<div class="decided-tag ok">✓ Aprovado por você</div>';
+      else if (si.cls==='no')  rodape = '<div class="decided-tag no">✕ Reprovado</div>';
+      else if (si.cls==='adj') rodape = '<div class="decided-tag adj">✎ Ajuste solicitado: '+esc(p.ajuste||'')+'</div>';
+      else rodape = '<div class="acts">'
+        + '<button class="b-ok" onclick="decidir('+i+",'aprovar')\">&#10003; Aprovar</button>"
+        + '<button class="b-adj" onclick="abrirAjuste('+i+')">&#9998; Ajustes</button>'
+        + '<button class="b-no" onclick="decidir('+i+",'reprovar')\">&#10005; Reprovar</button>"
+        + '</div>'
+        + '<div class="adjbox" id="adj-'+i+'" x-hide><textarea id="adjtx-'+i+'" placeholder="O que ajustar neste post?"></textarea><button class="send" onclick="decidir('+i+",'ajuste')\">Enviar ajuste</button></div>";
+
+      return '<div class="post" id="post-'+i+'">'+ meta + arte + leg + rodape + '<div class="err" id="err-'+i+'"></div></div>';
+    }
 
     function render(){
       document.getElementById('c-cliente').textContent = L.cliente || '';
       document.getElementById('c-semana').textContent = 'Semana de ' + dmy(L.semanaIni) + ' a ' + dmy(L.semanaFim);
 
-      var posts = L.posts || [];
-      document.getElementById('posts').innerHTML = posts.length ? posts.map(function(p){
-        var art = p.criativo && ehImagem(p.criativo)
-                ? '<a href="'+esc(p.criativo)+'" target="_blank" title="Abrir em tamanho real"><img class="post-art" src="'+esc(p.criativo)+'"></a>'
-                : (p.criativo ? '<a class="pdf" href="'+esc(p.criativo)+'" target="_blank">📎 ver criativo ↗</a>' : '');
-        var leg = '<div class="leg"><div class="leg-lab">Legenda</div>'+(esc(p.legenda)||'<span style="color:#a1a1aa">(sem legenda)</span>')+'</div>';
-        return '<div class="card"><div class="post-head">'
-          + '<span class="badge" style="background:#2a2a31;color:#a1a1aa">'+esc(dia(p.prazo))+'</span>'
-          + '<span class="badge" style="background:#3b1d6e;color:#c4b5fd">'+esc(p.tipoPost||'Feed')+'</span>'
-          + '<span style="font-weight:700;font-size:15px">'+esc(p.tema||'')+'</span></div>'
-          + art + leg + '</div>';
-      }).join('') : '<div class="card" style="text-align:center;color:var(--txt2)">Sem posts individuais — confira o PDF abaixo.</div>';
+      var capa = document.getElementById('capa');
+      var im = new Image(); im.onload=function(){ capa.style.backgroundImage="url('assets/capa.jpg')"; }; im.src='assets/capa.jpg';
+      var dv = document.getElementById('divisor'); var im2=new Image(); im2.onload=function(){ dv.style.backgroundImage="url('assets/divisor.jpg')"; show('divisor'); }; im2.src='assets/divisor.jpg';
 
-      // PDF final embutido na página (não só link). Google Drive vira /preview.
+      var posts = L.posts || [];
+      document.getElementById('posts').innerHTML = posts.length
+        ? posts.map(cardPost).join('')
+        : '<div class="post center">Sem posts individuais nesta semana — confira o PDF abaixo.</div>';
+
       if (L.anexoUrl){
-        var src = L.anexoUrl;
-        var gd = src.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+        var src = L.anexoUrl; var gd = src.match(/drive\.google\.com\/file\/d\/([^/]+)/);
         if (gd) src = 'https://drive.google.com/file/d/' + gd[1] + '/preview';
         document.getElementById('pdfframe').src = src;
         document.getElementById('c-pdf').href = L.anexoUrl;
         show('pdfcard');
       }
       if (L.observacoes){ document.getElementById('c-obs').textContent = L.observacoes; show('extra'); }
-
-      var banner = document.getElementById('banner');
-      if (L.status === 'APROVADO_CLIENTE'){
-        banner.innerHTML = '<div class="banner ok"><h2>✓ Você já aprovou esta semana</h2><div class="sub" style="margin:0">Obrigado! Se precisar, ainda dá pra pedir um ajuste abaixo.</div></div>';
-      } else if (L.status === 'AJUSTE'){
-        banner.innerHTML = '<div class="banner adj"><h2>✎ Ajuste registrado</h2><div class="leg">'+esc(L.ajusteCliente||'')+'</div><div class="sub" style="margin:6px 0 0">Nossa equipe já foi avisada. Quando estiver pronto você aprova.</div></div>';
-      }
       show('conteudo');
+    }
+
+    function abrirAjuste(i){ var b=document.getElementById('adj-'+i); if(b.hasAttribute('x-hide')) b.removeAttribute('x-hide'); else b.setAttribute('x-hide',''); }
+
+    function decidir(i, acao){
+      var errEl = document.getElementById('err-'+i); errEl.textContent='';
+      var body = { post: i, acao: acao };
+      if (acao==='ajuste'){
+        var c = (document.getElementById('adjtx-'+i).value||'').trim();
+        if(!c){ errEl.textContent='Descreva o ajuste.'; return; }
+        body.comentario = c;
+      }
+      var btns = document.querySelectorAll('#post-'+i+' button'); btns.forEach(function(b){b.disabled=true;});
+      fetch(API + '/' + encodeURIComponent(TOKEN) + '/post', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+      }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); })
+        .then(function(d){
+          if(d && Array.isArray(d.posts)){ L.posts = d.posts; }
+          else if(L.posts && L.posts[i]){ L.posts[i].status = acao==='aprovar'?'Aprovado':acao==='reprovar'?'Reprovado':'Ajuste'; if(acao==='ajuste')L.posts[i].ajuste=body.comentario; }
+          document.getElementById('post-'+i).outerHTML = cardPost(L.posts[i], i);
+        })
+        .catch(function(){ btns.forEach(function(b){b.disabled=false;}); errEl.textContent='Não consegui registrar agora. Tente de novo.'; });
     }
 
     function carregar(){
       if (!TOKEN){ hide('loading'); show('indisponivel'); return; }
       fetch(API + '/' + encodeURIComponent(TOKEN))
         .then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); })
-        .then(function(d){
-          hide('loading');
-          if (!d || !d.disponivel){ show('indisponivel'); return; }
-          L = d; render();
-        })
+        .then(function(d){ hide('loading'); if (!d || !d.disponivel){ show('indisponivel'); return; } L=d; render(); })
         .catch(function(){ hide('loading'); show('indisponivel'); });
     }
-
-    function lock(v){ document.querySelectorAll('#decidir button').forEach(function(b){ b.disabled=v; }); }
-    function sucesso(emoji, titulo, msg){ hide('conteudo'); var s=document.getElementById('sucesso'); document.getElementById('s-emoji').textContent=emoji; document.getElementById('s-titulo').textContent=titulo; document.getElementById('s-msg').textContent=msg; show('sucesso'); window.scrollTo(0,0); }
-
-    function aprovar(){
-      document.getElementById('erro').textContent='';
-      lock(true);
-      fetch(API + '/' + encodeURIComponent(TOKEN) + '/aprovar', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ nome: document.getElementById('nome').value.trim() })
-      }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); })
-        .then(function(){ sucesso('✅','Aprovado! Obrigado 🎉','Sua equipe já pode publicar a semana.'); })
-        .catch(function(){ lock(false); document.getElementById('erro').textContent='Não consegui registrar agora. Tente de novo em instantes.'; });
-    }
-
-    function pedirAjuste(){
-      var c = document.getElementById('comentario').value.trim();
-      if (!c){ document.getElementById('erro').textContent='Descreva o ajuste que você precisa no campo acima.'; return; }
-      document.getElementById('erro').textContent='';
-      lock(true);
-      fetch(API + '/' + encodeURIComponent(TOKEN) + '/ajuste', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ nome: document.getElementById('nome').value.trim(), comentario: c })
-      }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); })
-        .then(function(){ sucesso('✍️','Ajuste enviado!','Nossa equipe vai cuidar disso e te mandar a nova versão.'); })
-        .catch(function(){ lock(false); document.getElementById('erro').textContent='Não consegui enviar agora. Tente de novo em instantes.'; });
-    }
-
     carregar();
   </script>
 </body>
