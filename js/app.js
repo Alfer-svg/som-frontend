@@ -1828,17 +1828,33 @@ ${this._docFoot()}
       catch (e) { alert(e.message); }
     },
     ehImagem(url) { return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url || ''); },
-    // ── Fase 3: enviar pro cliente aprovar (congela um snapshot dos posts da semana) ──
+    // ── Fase 3: enviar pro cliente aprovar ──
+    // Monta o snapshot dos posts da semana com as imagens/legendas ATUAIS, preservando
+    // as decisões já tomadas pelo cliente (status/ajuste) — casadas por tema+data.
+    montarSnapshot() {
+      const old = (this.layoutAtual && Array.isArray(this.layoutAtual.postsSnapshot)) ? this.layoutAtual.postsSnapshot : [];
+      return this.layoutPostsAtual.map(p => {
+        const chave = (p.tema || p.nome || '') + '|' + (p.prazo || '');
+        const dec = old.find(s => ((s.tema || '') + '|' + (s.prazo || '')) === chave) || {};
+        return {
+          prazo: p.prazo, tipoPost: p.tipoPost || 'Estático', tema: p.tema || p.nome || '',
+          legenda: p.legenda || '', criativo: p.criativo || '', formato: p.formato || '',
+          criativos: Array.isArray(p.criativos) && p.criativos.length ? p.criativos : (p.criativo ? [p.criativo] : []),
+          status: dec.status || '', ajuste: dec.ajuste || null,
+        };
+      });
+    },
     async enviarLayoutCliente() {
       if (!this.layoutAtual) return;
-      const snap = this.layoutPostsAtual.map(p => ({
-        prazo: p.prazo, tipoPost: p.tipoPost || 'Estático', tema: p.tema || p.nome || '',
-        legenda: p.legenda || '', criativo: p.criativo || '',
-        criativos: Array.isArray(p.criativos) && p.criativos.length ? p.criativos : (p.criativo ? [p.criativo] : []),
-        status: p.status || '',
-      }));
+      const snap = this.montarSnapshot();
       if (!snap.length && !confirm('Não há posts nesta semana. Enviar mesmo assim (só o PDF/observações)?')) return;
       await this.patchLayout({ status: 'ENVIADO', postsSnapshot: snap });
+      this.copiarLink(this.linkPublicoLayout());
+    },
+    // Copia o link do cliente SEMPRE com as imagens/legendas atuais (re-sincroniza o snapshot).
+    async copiarLinkAtualizado() {
+      if (!this.layoutAtual) return;
+      try { await this.patchLayout({ postsSnapshot: this.montarSnapshot() }); } catch { }
       this.copiarLink(this.linkPublicoLayout());
     },
     linkPublicoLayout() {

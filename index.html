@@ -2027,8 +2027,8 @@
       <template x-if="layoutAtual&&['ENVIADO','APROVADO_CLIENTE','AJUSTE'].includes(layoutAtual.status)">
         <div class="flex items-center gap-2" style="flex-wrap:wrap;width:100%">
           <input class="form-input" style="flex:1;min-width:200px" readonly :value="linkPublicoLayout()" @focus="$event.target.select()">
-          <button class="btn btn-primary btn-sm" @click="copiarLink(linkPublicoLayout())">Copiar link</button>
-          <a class="btn btn-ghost btn-sm" :href="linkPublicoLayout()" target="_blank">abrir ↗</a>
+          <button class="btn btn-primary btn-sm" @click="copiarLinkAtualizado()">Copiar link</button>
+          <a class="btn btn-ghost btn-sm" :href="linkPublicoLayout()" target="_blank" @click="patchLayout({postsSnapshot: montarSnapshot()})">abrir ↗</a>
           <button class="btn btn-ghost btn-sm" @click="enviarLayoutCliente()" x-show="layoutAtual.status==='AJUSTE'">Reenviar com ajustes</button>
         </div>
       </template>
@@ -2505,7 +2505,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=139"></script>
+<script src="js/app.js?v=140"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
