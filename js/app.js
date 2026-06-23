@@ -1059,16 +1059,19 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       };
       const atual = this.saudeCliente(c).score || 0;
       const passos = [];
-      const push = (label, novo) => { const g = novo - atual; if (g > 0) passos.push({ label, ganho: g }); };
+      const push = (label, como, novo) => { const g = novo - atual; if (g > 0) passos.push({ label, como, ganho: g }); };
       const siteVal = temSite ? Math.round((((c.site.seo) || 0) + ((c.site.sgo) || 0)) / 2) : 0;
       const redesVal = temRedes ? this.mediaRedes(c) : 0;
       const objVal = objs.length ? Math.round(objs.reduce((a, x) => a + this.progressoObj(x), 0) / objs.length) : 0;
-      if (!temSite) push('Cadastrar o site e otimizar o SEO', sim({ site: 80 }));
-      else if (siteVal < 80) push('Melhorar o SEO/SGO do site (hoje ' + siteVal + '%)', sim({ site: 80 }));
-      if (!temRedes) push('Cadastrar e qualificar as redes sociais', sim({ redes: 80 }));
-      else if (redesVal < 80) push('Subir a qualidade das redes sociais (hoje ' + redesVal + '%)', sim({ redes: 80 }));
-      if (!objs.length) push('Definir objetivos/metas e acompanhar', sim({ objetivos: 80 }));
-      else if (objVal < 80) push('Avançar nos objetivos definidos (hoje ' + objVal + '%)', sim({ objetivos: 80 }));
+      const COMO_SITE = 'Cadastre a URL do site no monitoramento e rode o "Avaliar SEO (PageSpeed)". Corrija os pontos vermelhos: títulos e meta-descrições por página, velocidade/Core Web Vitals, versão mobile, HTTPS, conteúdo com palavras-chave e links internos.';
+      const COMO_REDES = 'Cadastre os perfis (Instagram/Facebook/YouTube/LinkedIn) na ficha, complete bio, foto e destaques, poste com constância e responda comentários/direct — depois atualize a nota de qualidade de cada rede.';
+      const COMO_OBJ = 'Defina metas mensuráveis na seção Objetivos (ex.: seguidores, leads, posts/mês) com alvo e prazo, e vá atualizando o valor "atual" conforme avança — o progresso entra direto na saúde.';
+      if (!temSite) push('Cadastrar o site e otimizar o SEO', COMO_SITE, sim({ site: 80 }));
+      else if (siteVal < 80) push('Melhorar o SEO/SGO do site (hoje ' + siteVal + '%)', COMO_SITE, sim({ site: 80 }));
+      if (!temRedes) push('Cadastrar e qualificar as redes sociais', COMO_REDES, sim({ redes: 80 }));
+      else if (redesVal < 80) push('Subir a qualidade das redes sociais (hoje ' + redesVal + '%)', COMO_REDES, sim({ redes: 80 }));
+      if (!objs.length) push('Definir objetivos/metas e acompanhar', COMO_OBJ, sim({ objetivos: 80 }));
+      else if (objVal < 80) push('Avançar nos objetivos definidos (hoje ' + objVal + '%)', COMO_OBJ, sim({ objetivos: 80 }));
       return passos.sort((a, b) => b.ganho - a.ganho);
     },
     // Busca de perfil de uma pessoa restrita a uma rede (Google site:) — sugestão pro cadastro.
