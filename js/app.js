@@ -1298,7 +1298,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
     excluirFornecedor(f) { if (!confirm('Excluir o fornecedor "' + (f.nome || '') + '"?')) return; this.fornecedores = this.fornecedores.filter(x => x.id !== f.id); this.persist('fornecedores', this.fornecedores); this.modal = null; },
 
-    // ───────────────── COBRANÇA (fatura, boleto Cora, e-mail, zap) ─────────────────
+    // ───────────────── COBRANÇA (fatura, boleto Banco Inter, e-mail, zap) ─────────────────
     // Nº legível do lançamento (fatura/boleto)
     numLancamento(f) { return 'FAT-' + String(f.id || '').replace(/\D/g, '').slice(-6).padStart(6, '0').toUpperCase(); },
     // Fatura — documento client-side (imprime / Salvar como PDF)
@@ -1335,17 +1335,23 @@ ${f.obs ? '<h2>Observações</h2><div class="pagto"><div class="bloco" style="wh
 ${this._docFoot()}
 </div></body></html>`;
     },
-    // Boleto via Cora (backend) — chave configurada por último
+    // Boleto via Banco Inter (backend) — chaves configuradas por último.
+    // O Inter exige CPF/CNPJ e endereço do pagador: puxamos do cadastro do cliente.
     async gerarBoleto(f) {
       if (f.tipo !== 'receita') return alert('Boleto é gerado para receitas (cobrança de cliente).');
-      if (!confirm('Gerar boleto na Cora para ' + (f.cliente || 'cliente') + ' — ' + MD.fmtCur(f.valor) + '?')) return;
+      const nome = ((f.cliente || '').trim().toLowerCase());
+      const c = (this.clients || []).find(x => ((x.empresa || x.razaoSocial || '').trim().toLowerCase()) === nome) || {};
+      const documento = String(f.documentoCobranca || c.cnpj || '').replace(/\D/g, '');
+      if (!documento) return alert('O Banco Inter exige o CPF/CNPJ do pagador.\nCadastre o CNPJ do cliente "' + (f.cliente || '') + '" (aba Clientes) e gere de novo.');
+      const endereco = { logradouro: c.logradouro || '', numero: c.numero || '', bairro: c.bairro || '', cidade: c.cidade || '', uf: c.uf || '', cep: String(c.cep || '').replace(/\D/g, '') };
+      if (!confirm('Gerar boleto no Banco Inter para ' + (f.cliente || 'cliente') + ' — ' + MD.fmtCur(f.valor) + '?')) return;
       f._cobrando = 'boleto';
       try {
-        const r = await this.api('POST', '/cobranca/boleto', { financeId: f.id, numero: this.numLancamento(f), cliente: f.cliente, valor: +f.valor, vencimento: f.vencimento, descricao: f.descricao, email: f.emailCobranca, whatsapp: f.whatsappCobranca });
-        f.boletoUrl = r.url || r.pdf || ''; f.linhaDigitavel = r.linhaDigitavel || r.barcode || ''; f.pix = r.pix || r.pixCopiaECola || r.pix_copia_cola || ''; f.boletoId = r.id || '';
+        const r = await this.api('POST', '/cobranca/boleto', { financeId: f.id, numero: this.numLancamento(f), cliente: f.cliente, documento, endereco, valor: +f.valor, vencimento: f.vencimento, descricao: f.descricao, email: f.emailCobranca || this._contatoCliente(f).email || '', whatsapp: f.whatsappCobranca });
+        f.boletoUrl = r.url || ''; f.linhaDigitavel = r.linhaDigitavel || r.codigoBarras || ''; f.pix = r.pix || r.pixCopiaECola || ''; f.boletoId = r.id || '';
         this.persist('finance', this.finance);
-        alert('Boleto gerado na Cora!' + (f.boletoUrl ? '\n' + f.boletoUrl : ''));
-      } catch (err) { alert('Não foi possível gerar o boleto: ' + err.message + '\n\n(Falta configurar a chave da Cora no backend — deixamos pro final.)'); }
+        alert('Boleto gerado no Banco Inter!' + (f.linhaDigitavel ? '\nLinha digitável: ' + f.linhaDigitavel : ''));
+      } catch (err) { alert('Não foi possível gerar o boleto: ' + err.message + '\n\n(Falta configurar as chaves do Banco Inter no backend — INTER_CLIENT_ID/SECRET/CERT/KEY.)'); }
       finally { f._cobrando = ''; }
     },
     // Cobrança por e-mail (Resend, backend) — chave por último
@@ -1365,7 +1371,7 @@ ${this._docFoot()}
       f.emailCobranca = email; this.persist('finance', this.finance);
       f._cobrando = 'email';
       try {
-        await this.api('POST', '/cobranca/email', { financeId: f.id, numero: this.numLancamento(f), email, cliente: f.cliente, valor: +f.valor, vencimento: f.vencimento, descricao: f.descricao, boletoUrl: f.boletoUrl || '', linhaDigitavel: f.linhaDigitavel || '' });
+        await this.api('POST', '/cobranca/email', { financeId: f.id, numero: this.numLancamento(f), email, cliente: f.cliente, valor: +f.valor, vencimento: f.vencimento, descricao: f.descricao, boletoUrl: f.boletoUrl || '', linhaDigitavel: f.linhaDigitavel || '', pix: f.pix || '' });
         alert('Cobrança enviada por e-mail para ' + email + '.');
       } catch (err) { alert('Não foi possível enviar o e-mail: ' + err.message + '\n\n(Falta a chave Resend da Maracatu — deixamos pro final.)'); }
       finally { f._cobrando = ''; }
@@ -1400,8 +1406,20 @@ ${this._docFoot()}
     receberPagar(f) { this.togglePago(f); }, // "Receber"/"Pagar" = liquidar (pede a data)
     async sincronizarBoleto(f) {
       if (!f.boletoId) return alert('Boleto sem ID para sincronizar.');
-      try { const r = await this.api('GET', '/cobranca/boleto/' + f.boletoId); if (r && (r.status === 'pago' || r.pago)) { f.status = 'pago'; if (!f.pagoEm) f.pagoEm = MD.today(); } this.persist('finance', this.finance); alert('Status sincronizado com a Cora.'); }
-      catch (e) { alert('Sincronização indisponível — a Cora ainda não está configurada no servidor.'); }
+      try { const r = await this.api('GET', '/cobranca/boleto/' + f.boletoId); if (r && (r.status === 'pago' || r.pago)) { f.status = 'pago'; if (!f.pagoEm) f.pagoEm = MD.today(); } this.persist('finance', this.finance); alert('Status sincronizado com o Banco Inter' + (r && r.situacao ? ' (' + r.situacao + ')' : '') + '.'); }
+      catch (e) { alert('Sincronização indisponível — o Banco Inter ainda não está configurado no servidor.'); }
+    },
+    // Abre o PDF do boleto (o Inter entrega em base64 por chamada autenticada).
+    async baixarBoletoPdf(f) {
+      if (!f.boletoId) return alert('Boleto sem ID.');
+      try {
+        const r = await this.api('GET', '/cobranca/' + f.boletoId + '/pdf');
+        if (!r || !r.pdf) return alert('PDF indisponível.');
+        const w = window.open('');
+        if (!w) return alert('Permita pop-ups pra abrir o PDF.');
+        w.document.write('<iframe src="data:application/pdf;base64,' + r.pdf + '" style="width:100%;height:100vh;border:0"></iframe>');
+        w.document.close();
+      } catch (e) { alert('Não foi possível obter o PDF: ' + e.message); }
     },
     async cancelarBoleto(f) {
       if (!confirm('Cancelar o boleto deste lançamento?')) return;

@@ -557,24 +557,24 @@
                   </div>
                 </div>
 
-                <!-- barra do boleto (Cora) -->
-                <template x-if="f.tipo==='receita' && f.boletoUrl">
+                <!-- barra do boleto (Banco Inter) -->
+                <template x-if="f.tipo==='receita' && f.boletoId">
                   <div class="fin-boleto-bar">
                     <i class="ph ph-barcode ic-ph" style="color:#a98a3a"></i>
-                    <b>Boleto Cora:</b>
+                    <b>Boleto Inter:</b>
                     <span class="fin-boleto-status">Emitido</span>
                     <button x-show="f.linhaDigitavel" @click="copiar(f.linhaDigitavel,'Linha digitável')" title="Copiar a linha digitável (código de barras) do boleto pra colar no app do banco"><i class="ph ph-copy ic-ph"></i> Linha digitável</button>
                     <button x-show="f.pix" @click="copiar(f.pix,'Pix copia e cola')" title="Copiar o código Pix copia-e-cola do boleto"><i class="ph ph-qr-code ic-ph"></i> Pix copia e cola</button>
-                    <button @click="abrirUrl(f.boletoUrl)" title="Abrir o PDF do boleto pra visualizar/imprimir"><i class="ph ph-file-pdf ic-ph"></i> PDF do boleto</button>
-                    <button x-show="f.status!=='pago'" @click="sincronizarBoleto(f)" title="Consultar na Cora se o boleto já foi pago e atualizar o status aqui"><i class="ph ph-arrows-clockwise ic-ph"></i> Sincronizar</button>
-                    <button x-show="f.status!=='pago'" class="danger" @click="cancelarBoleto(f)" title="Cancelar o boleto na Cora (deixa de poder ser pago)"><i class="ph ph-x-circle ic-ph"></i> Cancelar boleto</button>
+                    <button @click="baixarBoletoPdf(f)" title="Abrir o PDF do boleto pra visualizar/imprimir"><i class="ph ph-file-pdf ic-ph"></i> PDF do boleto</button>
+                    <button x-show="f.status!=='pago'" @click="sincronizarBoleto(f)" title="Consultar no Banco Inter se o boleto já foi pago e atualizar o status aqui"><i class="ph ph-arrows-clockwise ic-ph"></i> Sincronizar</button>
+                    <button x-show="f.status!=='pago'" class="danger" @click="cancelarBoleto(f)" title="Cancelar o boleto no Banco Inter (deixa de poder ser pago)"><i class="ph ph-x-circle ic-ph"></i> Cancelar boleto</button>
                   </div>
                 </template>
 
                 <!-- ações -->
                 <div class="fin-acoes">
                   <button x-show="f.tipo==='receita'" @click="gerarFatura(f)" title="Gerar a fatura em PDF pra imprimir ou enviar ao cliente"><i class="ph ph-file-text ic-ph"></i> PDF</button>
-                  <button x-show="f.tipo==='receita' && !f.boletoUrl && f.status!=='pago'" class="fin-btn-cora" @click="gerarBoleto(f)" :disabled="f._cobrando" title="Emitir um boleto bancário (com Pix) na Cora pra esta cobrança"><i class="ph ph-barcode ic-ph"></i> Gerar boleto (Cora)</button>
+                  <button x-show="f.tipo==='receita' && !f.boletoId && f.status!=='pago'" class="fin-btn-cora" @click="gerarBoleto(f)" :disabled="f._cobrando" title="Emitir um boleto bancário (com Pix) no Banco Inter pra esta cobrança"><i class="ph ph-barcode ic-ph"></i> Gerar boleto (Inter)</button>
                   <button x-show="f.tipo==='receita'" @click="cobrarEmail(f)" :disabled="f._cobrando" title="Enviar a cobrança/boleto por e-mail pro cliente"><i class="ph ph-envelope ic-ph"></i> E-mail</button>
                   <button x-show="f.tipo==='receita'" @click="cobrarWhatsApp(f)" title="Abrir o WhatsApp com a mensagem de cobrança pronta pra enviar"><i class="ph ph-whatsapp-logo ic-ph"></i> WhatsApp</button>
                   <button x-show="f.status!=='pago'" class="fin-btn-receber" @click="receberPagar(f)" :title="f.tipo==='receita'?'Dar baixa: marcar como recebido (pede a data da quitação)':'Dar baixa: marcar como pago (pede a data)'"><i class="ph ph-check-circle ic-ph"></i> <span x-text="f.tipo==='receita'?'Receber':'Pagar'"></span></button>
@@ -1486,7 +1486,7 @@
           </div>
           <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
             <button type="button" class="btn btn-ghost btn-sm" @click="gerarFatura(editing)"><i class="ph ph-file-text ic-ph"></i> Fatura (PDF)</button>
-            <button type="button" class="btn btn-ghost btn-sm" :disabled="!editing.id || editing._cobrando" @click="gerarBoleto(editing)"><i class="ph ph-barcode ic-ph"></i> <span x-text="editing.boletoUrl?'Boleto gerado ✓':'Gerar boleto (Cora)'"></span></button>
+            <button type="button" class="btn btn-ghost btn-sm" :disabled="!editing.id || editing._cobrando" @click="gerarBoleto(editing)"><i class="ph ph-barcode ic-ph"></i> <span x-text="editing.boletoId?'Boleto gerado ✓':'Gerar boleto (Inter)'"></span></button>
             <button type="button" class="btn btn-ghost btn-sm" :disabled="!editing.id || editing._cobrando" @click="cobrarEmail(editing)"><i class="ph ph-envelope ic-ph"></i> Cobrar por e-mail</button>
             <button type="button" class="btn btn-ghost btn-sm" @click="cobrarWhatsApp(editing)"><i class="ph ph-whatsapp-logo ic-ph"></i> Cobrar por WhatsApp</button>
           </div>
@@ -2509,7 +2509,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=142"></script>
+<script src="js/app.js?v=143"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
