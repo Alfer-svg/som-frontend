@@ -1651,6 +1651,30 @@ ${this._docFoot()}
         if (falhou) alert(ok + ' enviado(s), ' + falhou + ' falhou(aram).');
       } finally { this.uploadando = false; e.target.value = ''; }
     },
+    // ── Galeria de criativos (criativos[]): vários por post → vira carrossel pro cliente ──
+    criativosDe(obj) { if (!obj) return []; if (!Array.isArray(obj.criativos)) obj.criativos = obj.criativo ? [obj.criativo] : []; return obj.criativos; },
+    async uploadCriativos(e, obj, persistir) {
+      const files = Array.from(e.target.files || []); if (!files.length) return;
+      if (!this.cloudOk) { alert('Configure o Cloudinary primeiro (Pessoal › Armazenamento de arquivos).'); e.target.value = ''; return; }
+      const arr = this.criativosDe(obj);
+      this.uploadando = true; let falhou = 0;
+      try {
+        for (const file of files) {
+          try { const url = await this.uploadArquivo(file); if (!url) { falhou++; continue; } arr.push(url); if (!obj.criativo) obj.criativo = url; }
+          catch { falhou++; }
+        }
+        if (persistir) await persistir();
+        if (falhou) alert(falhou + ' arquivo(s) não subiram.');
+      } finally { this.uploadando = false; e.target.value = ''; }
+    },
+    addCriativoLink(obj, persistir) {
+      const u = (obj._novoCriativo || '').trim(); if (!u) return;
+      const arr = this.criativosDe(obj); arr.push(u); if (!obj.criativo) obj.criativo = u;
+      obj._novoCriativo = ''; if (persistir) persistir();
+    },
+    removeCriativo(obj, idx, persistir) {
+      const arr = this.criativosDe(obj); arr.splice(idx, 1); obj.criativo = arr[0] || ''; if (persistir) persistir();
+    },
     async quickAdd(status) {
       const t = (this.quickAddText || '').trim(); if (!t) { this.quickAddCol = ''; return; }
       try { await this.salvarProjetoApi({ id: '', nome: t, cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, boardId: this.boardSel || 'geral', prazo: '', progresso: 0, notas: '', labels: [], membros: [], checklist: [] }); await this.carregarProjetos(); this.quickAddText = ''; }
@@ -1721,7 +1745,7 @@ ${this._docFoot()}
     async alterarPrazo(p, val) { p.prazo = val || ''; try { await this.salvarProjetoApi(p); } catch (e) { alert(e.message || 'Falha ao salvar a data.'); } },
     // ── Programação: calendário de posts de redes sociais (vários de uma vez) ──
     TIPOS_POST,
-    postVazio() { return { data: (this.progForm && this.progForm.semanaIni) || this.semanaAtual.ini, tipo: 'Estático', tema: '', responsavel: '', descricao: '', legenda: '', criativo: '' }; },
+    postVazio() { return { data: (this.progForm && this.progForm.semanaIni) || this.semanaAtual.ini, tipo: 'Estático', tema: '', responsavel: '', descricao: '', legenda: '', criativo: '', criativos: [], _novoCriativo: '' }; },
     abrirProgramacao() {
       if (!this.equipe.length) this.carregarEquipe();
       // Sugere a semana em foco se o usuário navegou; senão, a próxima (seg→dom). Editável.
@@ -1743,7 +1767,9 @@ ${this._docFoot()}
           await this.salvarProjetoApi({
             id: '', nome: po.tema || (po.tipo + ' ' + (po.data || '')), cliente: f.cliente, servico: 'Gestão de Redes Sociais',
             responsavel: po.responsavel || f.responsavel, status: 'A Fazer', boardId: this.boardSel || 'geral', prazo: po.data || f.semanaIni || '', progresso: 0, notas: '',
-            isPost: true, tipoPost: po.tipo, tema: po.tema, descricao: po.descricao, legenda: po.legenda, criativo: po.criativo,
+            isPost: true, tipoPost: po.tipo, tema: po.tema, descricao: po.descricao, legenda: po.legenda,
+            criativo: po.criativo || (Array.isArray(po.criativos) && po.criativos[0]) || '',
+            criativos: Array.isArray(po.criativos) ? po.criativos.filter(Boolean) : [],
           });
         }
         await this.carregarProjetos();
