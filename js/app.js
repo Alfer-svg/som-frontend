@@ -1233,9 +1233,37 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         if (!e.email && d.email) e.email = String(d.email).toLowerCase();
         if (!e.whatsapp && d.ddd_telefone_1) e.whatsapp = String(d.ddd_telefone_1).replace(/\D/g, '');
         if (!e.contato && Array.isArray(d.qsa) && d.qsa[0]) e.contato = d.qsa[0].nome_socio || '';
-        this.cnpjMsg = '✓ Preenchido: ' + (d.razao_social || '') + (d.descricao_situacao_cadastral ? ' (' + d.descricao_situacao_cadastral + ')' : '');
+        this.cnpjMsg = '✓ Receita ok — varrendo a internet (site, redes, Google)…';
+        // 2) Varredura na internet: acha site/redes/GMN/telefone/SEO pelo nome+cidade e preenche o resto.
+        await this.varrerInternet(e);
       } catch (err) { this.cnpjMsg = '⚠ ' + (err.message || 'Não foi possível consultar.'); }
       finally { this.cnpjLoading = false; }
+    },
+    // Sweep da internet (usado pela lupa do CNPJ e disponível avulso) — preenche só o que está vazio.
+    async varrerInternet(e) {
+      try {
+        const x = await this.api('POST', '/clientes/descobrir', { empresa: e.empresa || e.razaoSocial || '', cidade: e.cidade || '', uf: e.uf || '', site: (e.site && e.site.url) || '' });
+        if (!x) return;
+        const achou = [];
+        if (x.site && x.site.url) {
+          e.site = { ...(e.site || {}), url: (e.site && e.site.url) || x.site.url, seo: (e.site && e.site.seo) || x.site.seo || 0, sgo: (e.site && e.site.sgo) || x.site.sgo || 0 };
+          achou.push('site');
+        }
+        if (x.redes && Object.keys(x.redes).length) {
+          e.redes = e.redes || {};
+          for (const k in x.redes) {
+            const atual = e.redes[k] || {};
+            if (!atual.url && !atual.score) e.redes[k] = { ...atual, ...x.redes[k] };
+          }
+          achou.push('redes');
+        }
+        if (x.gmn) { e.gmn = { ...(e.gmn || {}), ...x.gmn }; achou.push('Google'); }
+        if (x.dominio && !(e.dominio && e.dominio.provedor)) e.dominio = { ...(e.dominio || {}), ...x.dominio };
+        if (x.hospedagem && !(e.hospedagem && e.hospedagem.provedor)) e.hospedagem = { ...(e.hospedagem || {}), ...x.hospedagem };
+        if (!e.whatsapp && x.telefone) e.whatsapp = String(x.telefone).replace(/\D/g, '');
+        if (!e.email && x.email) e.email = x.email;
+        this.cnpjMsg = '✓ Preenchido — Receita + varredura' + (achou.length ? ' (' + achou.join(', ') + ')' : ' (nada extra encontrado online)');
+      } catch (err) { /* mantém o que a Receita já preencheu */ }
     },
 
     // Auto-preenche o endereço a partir do CEP (BrasilAPI, com fallback ViaCEP).
