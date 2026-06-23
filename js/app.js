@@ -1044,6 +1044,35 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       const ok = checks.filter((x) => x[1]).length;
       return { pct: Math.round((ok / checks.length) * 100), faltam: checks.filter((x) => !x[1]).map((x) => x[0]) };
     },
+    // Passos sugeridos pra MELHORAR A SAÚDE, com estimativa de ganho — simula cada alavanca a 80%.
+    passosSaude(c) {
+      if (!c) return [];
+      const temRedes = this.redesDoCliente(c).length;
+      const temSite = !!(c.site && c.site.url);
+      const objs = c.objetivos || [];
+      const sim = (ov) => {
+        const p = [];
+        const r = ov.redes != null ? ov.redes : (temRedes ? this.mediaRedes(c) : null); if (r != null) p.push(r);
+        const s = ov.site != null ? ov.site : (temSite ? Math.round((((c.site.seo) || 0) + ((c.site.sgo) || 0)) / 2) : null); if (s != null) p.push(s);
+        const o = ov.objetivos != null ? ov.objetivos : (objs.length ? Math.round(objs.reduce((a, x) => a + this.progressoObj(x), 0) / objs.length) : null); if (o != null) p.push(o);
+        return p.length ? Math.round(p.reduce((a, b) => a + b, 0) / p.length) : 0;
+      };
+      const atual = this.saudeCliente(c).score || 0;
+      const passos = [];
+      const push = (label, novo) => { const g = novo - atual; if (g > 0) passos.push({ label, ganho: g }); };
+      const siteVal = temSite ? Math.round((((c.site.seo) || 0) + ((c.site.sgo) || 0)) / 2) : 0;
+      const redesVal = temRedes ? this.mediaRedes(c) : 0;
+      const objVal = objs.length ? Math.round(objs.reduce((a, x) => a + this.progressoObj(x), 0) / objs.length) : 0;
+      if (!temSite) push('Cadastrar o site e otimizar o SEO', sim({ site: 80 }));
+      else if (siteVal < 80) push('Melhorar o SEO/SGO do site (hoje ' + siteVal + '%)', sim({ site: 80 }));
+      if (!temRedes) push('Cadastrar e qualificar as redes sociais', sim({ redes: 80 }));
+      else if (redesVal < 80) push('Subir a qualidade das redes sociais (hoje ' + redesVal + '%)', sim({ redes: 80 }));
+      if (!objs.length) push('Definir objetivos/metas e acompanhar', sim({ objetivos: 80 }));
+      else if (objVal < 80) push('Avançar nos objetivos definidos (hoje ' + objVal + '%)', sim({ objetivos: 80 }));
+      return passos.sort((a, b) => b.ganho - a.ganho);
+    },
+    // Busca de perfil de uma pessoa restrita a uma rede (Google site:) — sugestão pro cadastro.
+    buscaRede(r, empresa, dominio) { return 'https://www.google.com/search?q=' + encodeURIComponent([r && r.nome, empresa].filter(Boolean).join(' ') + ' site:' + dominio); },
     saudeAlertas(c) {
       const a = [];
       if (!(c.responsaveis || []).length) a.push('Sem responsáveis');

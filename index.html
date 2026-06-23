@@ -906,14 +906,25 @@
                     </div>
                   </div>
                   <div class="flex gap-2" style="flex-wrap:wrap;margin-left:auto">
-                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="redesDoCliente(monitorCliente).length"><i class="ph ph-device-mobile ic-ph"></i> <span x-text="mediaRedes(monitorCliente)+'%'"></span></span>
-                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="monitorCliente.site&&monitorCliente.site.url"><i class="ph ph-globe ic-ph"></i> <span x-text="Math.round((((monitorCliente.site.seo)||0)+((monitorCliente.site.sgo)||0))/2)+'%'"></span></span>
-                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)"><i class="ph ph-users ic-ph"></i> <span x-text="((monitorCliente.responsaveis||[]).length)"></span></span>
-                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)"><i class="ph ph-paperclip ic-ph"></i> <span x-text="((monitorCliente.documentos||[]).length)"></span></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="redesDoCliente(monitorCliente).length" title="Qualidade média das redes sociais (engajamento/preenchimento)"><i class="ph ph-device-mobile ic-ph"></i> <span x-text="mediaRedes(monitorCliente)+'%'"></span></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="monitorCliente.site&&monitorCliente.site.url" title="SEO/SGO do site (média) — quão bem posicionado/otimizado"><i class="ph ph-globe ic-ph"></i> <span x-text="Math.round((((monitorCliente.site.seo)||0)+((monitorCliente.site.sgo)||0))/2)+'%'"></span></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" title="Responsáveis / contatos cadastrados"><i class="ph ph-users ic-ph"></i> <span x-text="((monitorCliente.responsaveis||[]).length)"></span></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" title="Documentos anexados (contrato, proposta, etc.)"><i class="ph ph-paperclip ic-ph"></i> <span x-text="((monitorCliente.documentos||[]).length)"></span></span>
                   </div>
                 </div>
                 <div class="flex gap-2" style="flex-wrap:wrap;margin-top:8px" x-show="saudeAlertas(monitorCliente).length">
                   <template x-for="al in saudeAlertas(monitorCliente)" :key="al"><span class="badge" style="background:#fef3c7;color:#92400e"><i class="ph ph-warning ic-ph"></i> <span x-text="al"></span></span></template>
+                </div>
+                <!-- Passos sugeridos pra melhorar a saúde (com estimativa de ganho) -->
+                <div x-show="passosSaude(monitorCliente).length" style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px">
+                  <div class="fs-12 text-3" style="font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px"><i class="ph ph-trend-up ic-ph"></i> Como melhorar a saúde</div>
+                  <template x-for="p in passosSaude(monitorCliente)" :key="p.label">
+                    <div class="flex items-center gap-2" style="margin-top:4px">
+                      <i class="ph ph-arrow-up ic-ph" style="color:#16a34a"></i>
+                      <span class="fs-13" x-text="p.label"></span>
+                      <span class="badge" style="background:#dcfce7;color:#16a34a;margin-left:auto;font-weight:700" :title="'Estimativa de ganho na saúde se você fizer isso'" x-text="'+'+p.ganho+'%'"></span>
+                    </div>
+                  </template>
                 </div>
               </div>
 
@@ -935,6 +946,8 @@
                     <span class="badge" x-show="!r.seguindo && (igLink(r.instagram)||liLink(r.linkedin))" style="background:#fef3c7;color:#92400e"><i class="ph ph-plus ic-ph"></i> seguir</span>
                     <a x-show="igLink(r.instagram)" :href="igLink(r.instagram)" target="_blank" style="color:#E4405F;font-weight:600"><i class="ph ph-camera ic-ph"></i> Instagram</a>
                     <a x-show="liLink(r.linkedin)" :href="liLink(r.linkedin)" target="_blank" style="color:#0A66C2;font-weight:600"><i class="ph ph-briefcase ic-ph"></i> LinkedIn</a>
+                    <template x-if="!igLink(r.instagram)"><a :href="buscaRede(r, monitorCliente.empresa, 'instagram.com')" target="_blank" class="text-3" title="Achar o Instagram dessa pessoa pra cadastrar"><i class="ph ph-camera ic-ph"></i> achar Instagram</a></template>
+                    <template x-if="!liLink(r.linkedin)"><a :href="buscaRede(r, monitorCliente.empresa, 'linkedin.com')" target="_blank" class="text-3" title="Achar o LinkedIn dessa pessoa pra cadastrar"><i class="ph ph-briefcase ic-ph"></i> achar LinkedIn</a></template>
                     <a :href="buscaPessoa(r, monitorCliente.empresa)" target="_blank" class="text-3"><i class="ph ph-magnifying-glass ic-ph"></i> buscar perfil</a>
                   </div>
                   <div class="fs-12 text-3" x-show="r.notas" style="white-space:pre-wrap;margin-top:2px" x-text="r.notas"></div>
@@ -2520,7 +2533,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=145"></script>
+<script src="js/app.js?v=146"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
