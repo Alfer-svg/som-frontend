@@ -1624,6 +1624,32 @@ ${this._docFoot()}
       try { const url = await this.uploadArquivo(file); if (url) { this.cardRef.anexos.push({ id: MD.uid(), nome: file.name || 'arquivo', url, em: new Date().toISOString() }); await this.salvarCard(); } }
       catch (err) { alert(err.message); } finally { this.uploadando = false; e.target.value = ''; }
     },
+    // Sobe VÁRIOS arquivos de uma vez (input multiple). Cada um vira anexo do card; e
+    // se o card é um POST e o arquivo é imagem, também entra nos slides do carrossel
+    // (criativos[]) — assim subir 5 imagens monta o carrossel direto pro cliente.
+    async uploadAnexos(e) {
+      const files = Array.from(e.target.files || []); if (!files.length) return;
+      if (!this.cloudOk) { alert('Configure o Cloudinary primeiro (Pessoal › Armazenamento de arquivos).'); e.target.value = ''; return; }
+      if (!Array.isArray(this.cardRef.anexos)) this.cardRef.anexos = [];
+      this.uploadando = true; let ok = 0, falhou = 0;
+      try {
+        for (const file of files) {
+          try {
+            const url = await this.uploadArquivo(file);
+            if (!url) { falhou++; continue; }
+            this.cardRef.anexos.push({ id: MD.uid(), nome: file.name || 'arquivo', url, em: new Date().toISOString() });
+            if (this.cardRef.isPost && /^image\//i.test(file.type || '')) {
+              if (!Array.isArray(this.cardRef.criativos)) this.cardRef.criativos = this.cardRef.criativo ? [this.cardRef.criativo] : [];
+              this.cardRef.criativos.push(url);
+              if (!this.cardRef.criativo) this.cardRef.criativo = url; // compat: 1ª imagem no campo antigo
+            }
+            ok++;
+          } catch { falhou++; }
+        }
+        await this.salvarCard();
+        if (falhou) alert(ok + ' enviado(s), ' + falhou + ' falhou(aram).');
+      } finally { this.uploadando = false; e.target.value = ''; }
+    },
     async quickAdd(status) {
       const t = (this.quickAddText || '').trim(); if (!t) { this.quickAddCol = ''; return; }
       try { await this.salvarProjetoApi({ id: '', nome: t, cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, boardId: this.boardSel || 'geral', prazo: '', progresso: 0, notas: '', labels: [], membros: [], checklist: [] }); await this.carregarProjetos(); this.quickAddText = ''; }
@@ -1762,7 +1788,9 @@ ${this._docFoot()}
       if (!this.layoutAtual) return;
       const snap = this.layoutPostsAtual.map(p => ({
         prazo: p.prazo, tipoPost: p.tipoPost || 'Estático', tema: p.tema || p.nome || '',
-        legenda: p.legenda || '', criativo: p.criativo || '', status: p.status || '',
+        legenda: p.legenda || '', criativo: p.criativo || '',
+        criativos: Array.isArray(p.criativos) && p.criativos.length ? p.criativos : (p.criativo ? [p.criativo] : []),
+        status: p.status || '',
       }));
       if (!snap.length && !confirm('Não há posts nesta semana. Enviar mesmo assim (só o PDF/observações)?')) return;
       await this.patchLayout({ status: 'ENVIADO', postsSnapshot: snap });
