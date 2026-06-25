@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-06-25-i">
+  <meta name="build" content="2026-06-25-j">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -1142,21 +1142,17 @@
                 <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
                   <i class="ic-ph" style="font-size:20px" :class="phClass(interIcon(ev.tipo))"></i>
                   <div style="flex:1;min-width:0">
-                    <template x-if="editInter===ev.id">
-                      <div>
-                        <textarea class="form-textarea" style="min-height:54px" x-model="editInterTexto"></textarea>
-                        <div class="flex gap-2" style="margin-top:5px">
-                          <button class="btn btn-primary btn-sm" @click="salvarEditInter(monitorCliente, ev)">Salvar</button>
-                          <button class="btn btn-ghost btn-sm" @click="cancelarEditInter()">Cancelar</button>
-                        </div>
+                    <div x-show="editInter===ev.id">
+                      <textarea class="form-textarea" style="min-height:54px" x-model="editInterTexto"></textarea>
+                      <div class="flex gap-2" style="margin-top:5px">
+                        <button class="btn btn-primary btn-sm" @click="salvarEditInter(monitorCliente, ev)">Salvar</button>
+                        <button class="btn btn-ghost btn-sm" @click="cancelarEditInter()">Cancelar</button>
                       </div>
-                    </template>
-                    <template x-if="editInter!==ev.id">
-                      <div>
-                        <div class="fs-13" style="white-space:pre-wrap" x-text="ev.texto"></div>
-                        <div class="text-3 fs-12" x-text="ev.tipo+' · '+fmtDataHora(ev.em)+(ev.por?(' · '+ev.por):'')+(ev.editadoEm?' · (editado)':'')"></div>
-                      </div>
-                    </template>
+                    </div>
+                    <div x-show="editInter!==ev.id">
+                      <div class="fs-13" style="white-space:pre-wrap" x-text="ev.texto"></div>
+                      <div class="text-3 fs-12" x-text="ev.tipo+' · '+fmtDataHora(ev.em)+(ev.por?(' · '+ev.por):'')+(ev.editadoEm?' · (editado)':'')"></div>
+                    </div>
                   </div>
                   <button class="btn btn-ghost btn-sm" x-show="ehAdmin && editInter!==ev.id" @click="iniciarEditInter(ev)" title="Editar"><i class="ph ph-pencil-simple ic-ph"></i></button>
                   <button class="btn btn-ghost btn-sm" x-show="editInter!==ev.id" @click="removerInteracao(monitorCliente, ev.id)" title="Remover"><i class="ph ph-trash ic-ph"></i></button>
