@@ -1560,7 +1560,10 @@ ${this._docFoot()}
     get boardAtual() { return this.boards.find(b => b.id === this.boardSel) || this.boards[0] || BOARD_PADRAO(); },
     projBoardId(p) { return p.boardId || 'geral'; }, // projetos antigos (sem boardId) caem no quadro 'Geral'
     projetosDoBoard(bid) { return this.projects.filter(p => this.projBoardId(p) === bid); },
-    projetosDoBoardStatus(colNome) { const q = this.busca.toLowerCase(); return this.projects.filter(p => this.projBoardId(p) === this.boardSel && (p.status || 'A Fazer') === colNome && (!q || ((p.nome || '') + ' ' + (p.cliente || '')).toLowerCase().includes(q))); },
+    projetosDoBoardStatus(colNome) { const q = this.busca.toLowerCase(); return this.projects.filter(p => this.projBoardId(p) === this.boardSel && (p.status || 'A Fazer') === colNome && !p.arquivado && (!q || ((p.nome || '') + ' ' + (p.tema || '') + ' ' + (p.cliente || '')).toLowerCase().includes(q))); },
+    // Resultados da busca no Operacional — INCLUI os arquivados (o board os esconde). Arquivados vão pro fim.
+    get buscaCards() { const q = (this.busca || '').toLowerCase().trim(); if (!q || this.page !== 'operacional') return []; return this.projects.filter(p => this.projBoardId(p) === this.boardSel && ((p.nome || '') + ' ' + (p.tema || '') + ' ' + (p.cliente || '')).toLowerCase().includes(q)).sort((a, b) => (a.arquivado ? 1 : 0) - (b.arquivado ? 1 : 0)); },
+    async arquivarCard() { const p = this.cardRef; if (!p) return; p.arquivado = !p.arquivado; try { await this.salvarProjetoApi(p); } catch (e) { alert(e.message); } this.cardModal = false; },
     selecionarBoard(id) { this.boardSel = id; this.boardEdit = false; },
     novoBoard() {
       const nome = (prompt('Nome do novo quadro:', 'Novo quadro') || '').trim(); if (!nome) return;

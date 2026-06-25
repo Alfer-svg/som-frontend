@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-06-25-a">
+  <meta name="build" content="2026-06-25-b">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -766,6 +766,21 @@
           <button class="btn btn-ghost btn-sm" @click="renomearBoard()" title="Renomear este quadro"><i class="ph ph-pencil-simple ic-ph"></i></button>
           <button class="btn btn-sm" :class="boardEdit?'btn-primary':'btn-ghost'" @click="boardEdit=!boardEdit" title="Editar as colunas deste quadro"><i class="ph ph-columns ic-ph"></i> <span x-text="boardEdit?'concluir':'editar colunas'"></span></button>
           <button class="btn btn-ghost btn-sm" @click="excluirBoard()" title="Excluir este quadro"><i class="ph ph-trash ic-ph"></i></button>
+        </div>
+        <!-- Busca do Operacional: lista os resultados (INCLUSIVE arquivados) num menu suspenso -->
+        <div x-show="opTab==='quadro' && busca.trim()" class="card" style="margin-bottom:12px;padding:8px;max-height:340px;overflow:auto" x-cloak>
+          <div class="fs-12 text-3" style="padding:2px 6px 6px" x-text="buscaCards.length+' resultado(s) para \''+busca.trim()+'\' — inclui arquivados'"></div>
+          <template x-for="p in buscaCards" :key="'bc'+p.id">
+            <div class="flex items-center gap-2" style="padding:7px 8px;border-radius:8px;cursor:pointer" @click="abrirCard(p)" @mouseenter="$el.style.background='#f1f5f9'" @mouseleave="$el.style.background=''">
+              <i class="ph" :class="p.isPost?'ph-image':'ph-kanban'" style="color:#8a8ba3"></i>
+              <span class="fs-13 fw-700" x-text="p.tema||p.nome||'(sem título)'"></span>
+              <span class="text-3 fs-12" x-show="p.cliente" x-text="'· '+p.cliente"></span>
+              <span style="margin-left:auto"></span>
+              <span class="badge" x-show="p.arquivado" style="background:#e5e7eb;color:#6b7280">arquivado</span>
+              <span class="badge" x-show="!p.arquivado" :style="'background:'+projStatusInfo(p.status).color+'22;color:'+projStatusInfo(p.status).color" x-text="p.status"></span>
+            </div>
+          </template>
+          <div x-show="!buscaCards.length" class="fs-12 text-3" style="padding:8px">Nada encontrado.</div>
         </div>
         <div class="kanban" x-show="opTab==='quadro'">
           <template x-for="col in boardAtual.colunas" :key="col.nome">
@@ -2312,6 +2327,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" @click="excluirProjeto(cardRef); cardModal=false">Excluir</button>
+      <button class="btn btn-ghost" @click="arquivarCard()" x-text="cardRef&&cardRef.arquivado?'Desarquivar':'Arquivar'"></button>
       <button class="btn btn-primary" @click="fecharCard()">Pronto</button>
     </div>
   </div>
