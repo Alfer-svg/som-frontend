@@ -8,6 +8,24 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
+  <meta name="build" content="2026-06-25-a">
+  <script>
+  // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
+  // (resolve o cache do GitHub Pages — não precisa hard refresh).
+  (function () {
+    var meu = (document.querySelector('meta[name=build]') || {}).content || '';
+    function checa() {
+      fetch('index.html?_=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { return r.text(); })
+        .then(function (t) {
+          var m = t.match(/name="build" content="([^"]*)"/);
+          if (m && m[1] && m[1] !== meu) location.reload();
+        }).catch(function () {});
+    }
+    setInterval(checa, 90000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) checa(); });
+  })();
+  </script>
   <link rel="icon" href="assets/favicon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
