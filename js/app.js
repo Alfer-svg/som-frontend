@@ -282,6 +282,9 @@ document.addEventListener('alpine:init', () => {
     STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, FORN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
+    metaStatus: {},   // {clienteId: {conectado, igUsername, pageName, ...}} — conexão Meta por cliente
+    metaMetricas: {}, // {clienteId: {instagram, facebook, posts}} — métricas reais puxadas da Meta
+    metaBusy: false,
     radarAberto: true, // painel Radar do Monitoramento expandido
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
     novaInter: { tipo: 'Ligação', texto: '' }, // form de nova interação na timeline
@@ -369,6 +372,17 @@ document.addEventListener('alpine:init', () => {
       this.fornecedores = MD.get('som_fornecedores', []); // cadastro de fornecedores (despesas)
       this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento (cache; fonte = backend)
       if (this.token) { this.page = MD.get('som_page', 'dashboard'); this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.startHeartbeat(); this.startChatMonitor(); this.go(this.page); }
+      // Retorno do OAuth da Meta (?meta=ok|erro) — mostra toast, limpa a URL e reabre o cliente
+      const _qp = new URLSearchParams(location.search);
+      if (_qp.get('meta')) {
+        const _ok = _qp.get('meta') === 'ok';
+        const _cli = _qp.get('cliente') || localStorage.getItem('som_meta_cli') || '';
+        const _motivo = _qp.get('motivo');
+        this.mostrarToast(_ok ? '✅ Conta Meta conectada!' : ('❌ Falha ao conectar a conta Meta' + (_motivo ? ' (' + _motivo + ')' : '')));
+        localStorage.removeItem('som_meta_cli');
+        history.replaceState({}, '', location.pathname);
+        if (_ok && _cli && this.token) { this.page = 'monitoramento'; this.$nextTick(() => this.abrirMonitor(_cli)); }
+      }
       // áudio e permissão de notificação precisam de um gesto do usuário
       document.addEventListener('click', () => { this.initAudio(); this.pedirNotif(); }, { once: true });
     },
@@ -1214,7 +1228,39 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     idadeDe(nasc) { if (!nasc) return null; const d = new Date(nasc + 'T00:00:00'); if (isNaN(d.getTime())) return null; const h = new Date(); let a = h.getFullYear() - d.getFullYear(); const m = h.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && h.getDate() < d.getDate())) a--; return a; },
     mediaRedes(c) { const rs = this.redesDoCliente(c).filter(r => r.id !== 'gmn'); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; }, // GMN é nota 0–5, não % — fica fora da média
     get monitorCliente() { const list = this.clientesFiltrados; if (!list.length) return null; return list.find(c => c.id === this.monitorSel) || list[0]; },
-    async abrirMonitor(id) { this.monitorSel = id; await this.carregarCredenciais(id); },
+    async abrirMonitor(id) { this.monitorSel = id; await this.carregarCredenciais(id); this.carregarMetaStatus(id); },
+    // ── Monitoramento Meta (Instagram/Facebook) — OAuth por cliente ──
+    async conectarMeta(clienteId) {
+      if (!clienteId) return;
+      this.metaBusy = true;
+      try {
+        const { url } = await this.api('GET', '/monitoramento/meta/connect?clienteId=' + clienteId);
+        localStorage.setItem('som_meta_cli', clienteId); // reabrir o cliente no retorno
+        window.location.href = url; // vai pro login/consentimento da Meta; volta no callback
+      } catch (e) { this.mostrarToast('Erro ao conectar: ' + e.message); this.metaBusy = false; }
+    },
+    async carregarMetaStatus(clienteId) {
+      if (!clienteId) return;
+      try { this.metaStatus = { ...this.metaStatus, [clienteId]: await this.api('GET', '/monitoramento/meta/status/' + clienteId) }; }
+      catch { this.metaStatus = { ...this.metaStatus, [clienteId]: { conectado: false } }; }
+      if (this.metaStatus[clienteId] && this.metaStatus[clienteId].conectado) this.carregarMetaMetricas(clienteId);
+    },
+    async carregarMetaMetricas(clienteId) {
+      if (!clienteId) return;
+      this.metaBusy = true;
+      try { this.metaMetricas = { ...this.metaMetricas, [clienteId]: await this.api('GET', '/monitoramento/meta/' + clienteId) }; }
+      catch (e) { this.metaMetricas = { ...this.metaMetricas, [clienteId]: { erro: e.message } }; }
+      finally { this.metaBusy = false; }
+    },
+    async desconectarMeta(clienteId) {
+      if (!confirm('Desconectar a conta Meta deste cliente?')) return;
+      try {
+        await this.api('POST', '/monitoramento/meta/desconectar/' + clienteId);
+        this.metaStatus = { ...this.metaStatus, [clienteId]: { conectado: false } };
+        this.metaMetricas = { ...this.metaMetricas, [clienteId]: null };
+        this.mostrarToast('Conta Meta desconectada.');
+      } catch (e) { this.mostrarToast('Erro: ' + e.message); }
+    },
     async carregarCredenciais(clienteId) {
       this.revelar = {}; this.cofreRevelado = {};
       if (!clienteId) { this.credenciais = []; return; }

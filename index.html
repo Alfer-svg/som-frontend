@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-06-25-k">
+  <meta name="build" content="2026-06-25-l">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -968,6 +968,53 @@
                       <span class="fs-13" x-text="p.label"></span>
                       <i class="ph ph-info ic-ph text-3" style="font-size:13px" :title="p.como"></i>
                       <span class="badge" style="background:#dcfce7;color:#16a34a;margin-left:auto;font-weight:700" title="Estimativa de ganho na saúde se você fizer isso" x-text="'+'+p.ganho+'%'"></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- REDES SOCIAIS — MÉTRICAS REAIS (Meta / OAuth por cliente) -->
+              <div class="card" style="box-shadow:none;border:1px solid var(--border);padding:12px;margin-bottom:10px">
+                <div class="flex items-center gap-2" style="margin-bottom:8px">
+                  <span class="fw-800 fs-12" style="text-transform:uppercase;letter-spacing:.5px"><i class="ph ph-chart-line ic-ph"></i> Redes sociais — métricas reais</span>
+                  <span class="badge" style="background:#dcfce7;color:#16a34a;margin-left:auto" x-show="metaStatus[monitorCliente.id] && metaStatus[monitorCliente.id].conectado"><i class="ph ph-check-circle ic-ph"></i> conectado</span>
+                </div>
+                <!-- não conectado -->
+                <div x-show="!metaStatus[monitorCliente.id] || !metaStatus[monitorCliente.id].conectado">
+                  <div class="text-3 fs-12" style="margin-bottom:8px">Conecte o Instagram/Facebook do cliente pra puxar seguidores, alcance, engajamento e posts reais. O próprio cliente autoriza na janela da Meta — ninguém entra no Business dele.</div>
+                  <button class="btn btn-sm" style="background:#1877F2;color:#fff;border:none" :disabled="metaBusy" @click="conectarMeta(monitorCliente.id)"><i class="ph ph-instagram-logo ic-ph"></i> Conectar Instagram/Facebook</button>
+                </div>
+                <!-- conectado -->
+                <div x-show="metaStatus[monitorCliente.id] && metaStatus[monitorCliente.id].conectado">
+                  <div class="flex items-center gap-2 fs-12 text-3" style="flex-wrap:wrap;margin-bottom:8px">
+                    <span x-show="metaStatus[monitorCliente.id].igUsername">IG: @<span x-text="metaStatus[monitorCliente.id].igUsername"></span></span>
+                    <span x-show="metaStatus[monitorCliente.id].pageName">· FB: <span x-text="metaStatus[monitorCliente.id].pageName"></span></span>
+                    <button class="btn btn-sm" style="margin-left:auto" :disabled="metaBusy" @click="carregarMetaMetricas(monitorCliente.id)"><i class="ph ph-arrows-clockwise ic-ph"></i> Atualizar</button>
+                    <button class="btn btn-sm" style="color:#dc2626" @click="desconectarMeta(monitorCliente.id)">desconectar</button>
+                  </div>
+                  <div x-show="metaBusy" class="text-3 fs-12">carregando…</div>
+                  <div class="fs-12" style="color:#dc2626" x-show="metaMetricas[monitorCliente.id] && metaMetricas[monitorCliente.id].erro" x-text="'Erro: '+(metaMetricas[monitorCliente.id]?metaMetricas[monitorCliente.id].erro:'')"></div>
+                  <template x-if="metaMetricas[monitorCliente.id] && !metaMetricas[monitorCliente.id].erro">
+                    <div>
+                      <div class="flex gap-2" style="flex-wrap:wrap" x-show="metaMetricas[monitorCliente.id].instagram && !metaMetricas[monitorCliente.id].instagram.erro">
+                        <div class="card" style="box-shadow:none;background:var(--surface-2);padding:8px 12px;min-width:96px"><div class="fs-12 text-3">Seguidores IG</div><div class="fw-800 fs-16" x-text="(metaMetricas[monitorCliente.id].instagram.seguidores??'—').toLocaleString('pt-BR')"></div></div>
+                        <div class="card" style="box-shadow:none;background:var(--surface-2);padding:8px 12px;min-width:96px"><div class="fs-12 text-3">Alcance 28d</div><div class="fw-800 fs-16" x-text="(metaMetricas[monitorCliente.id].instagram.alcance28d??'—').toLocaleString?(metaMetricas[monitorCliente.id].instagram.alcance28d??'—').toLocaleString('pt-BR'):'—'"></div></div>
+                        <div class="card" style="box-shadow:none;background:var(--surface-2);padding:8px 12px;min-width:96px"><div class="fs-12 text-3">Engajamento</div><div class="fw-800 fs-16" x-text="(metaMetricas[monitorCliente.id].instagram.engajamentoPct!=null?metaMetricas[monitorCliente.id].instagram.engajamentoPct+'%':'—')"></div></div>
+                      </div>
+                      <div class="flex gap-2" style="flex-wrap:wrap;margin-top:6px" x-show="metaMetricas[monitorCliente.id].facebook && !metaMetricas[monitorCliente.id].facebook.erro">
+                        <div class="card" style="box-shadow:none;background:var(--surface-2);padding:8px 12px;min-width:96px"><div class="fs-12 text-3">Curtidas FB</div><div class="fw-800 fs-16" x-text="(metaMetricas[monitorCliente.id].facebook.curtidas??'—').toLocaleString?(metaMetricas[monitorCliente.id].facebook.curtidas??'—').toLocaleString('pt-BR'):'—'"></div></div>
+                        <div class="card" style="box-shadow:none;background:var(--surface-2);padding:8px 12px;min-width:96px"><div class="fs-12 text-3">Seguidores FB</div><div class="fw-800 fs-16" x-text="(metaMetricas[monitorCliente.id].facebook.seguidores??'—').toLocaleString?(metaMetricas[monitorCliente.id].facebook.seguidores??'—').toLocaleString('pt-BR'):'—'"></div></div>
+                      </div>
+                      <div style="margin-top:8px" x-show="metaMetricas[monitorCliente.id].posts && metaMetricas[monitorCliente.id].posts.length">
+                        <div class="fs-12 text-3" style="font-weight:700;margin-bottom:4px">Posts recentes</div>
+                        <template x-for="p in metaMetricas[monitorCliente.id].posts.slice(0,6)" :key="p.link">
+                          <a :href="p.link" target="_blank" rel="noopener" class="flex items-center gap-2" style="padding:4px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit">
+                            <img x-show="p.img" :src="p.img" style="width:34px;height:34px;border-radius:6px;object-fit:cover" alt="">
+                            <span class="fs-12" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.texto||'(sem legenda)'"></span>
+                            <span class="fs-12 text-3" style="white-space:nowrap">❤ <span x-text="p.likes"></span> · 💬 <span x-text="p.comentarios"></span></span>
+                          </a>
+                        </template>
+                      </div>
                     </div>
                   </template>
                 </div>
