@@ -206,6 +206,10 @@ a { color: inherit; text-decoration: none; }
 /* ---------- Modal ---------- */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(20,18,31,.45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 50; overflow-y: auto; }
 .modal { background: var(--surface); border-radius: 16px; width: 100%; max-width: 560px; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+/* Detalhe em TELA CHEIA (molde SIAGO) — abre como página, não como popup */
+.modal-backdrop.pagemode { background: var(--bg); padding: 0; z-index: 60; align-items: flex-start; }
+.modal-backdrop.pagemode > .modal { max-width: 940px; border-radius: 0; box-shadow: none; min-height: 100vh; }
+.modal-backdrop.pagemode .modal-head { position: sticky; top: 0; background: var(--surface); z-index: 2; gap: 12px; justify-content: flex-start; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); }
 .modal-title { font-weight: 800; font-size: 16px; }
 .modal-body { padding: 20px; }
