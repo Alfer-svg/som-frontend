@@ -210,14 +210,15 @@
       var rodape;
       if (PREVIEW)             rodape = ''; // pré-visualização: sem botões de decisão
       else if (si.cls==='ok')  rodape = '<div class="decided-tag ok">✓ Aprovado por você</div>';
-      else if (si.cls==='no')  rodape = '<div class="decided-tag no">✕ Reprovado</div>';
+      else if (si.cls==='no')  rodape = '<div class="decided-tag no">✕ Reprovado'+(p.ajuste?': '+esc(p.ajuste):'')+'</div>';
       else if (si.cls==='adj') rodape = '<div class="decided-tag adj">✎ Ajuste solicitado: '+esc(p.ajuste||'')+'</div>';
       else rodape = '<div class="acts">'
         + '<button class="b-ok" onclick="decidir('+i+",'aprovar')\">&#10003; Aprovar</button>"
         + '<button class="b-adj" onclick="abrirAjuste('+i+')">&#9998; Ajustes</button>'
-        + '<button class="b-no" onclick="decidir('+i+",'reprovar')\">&#10005; Reprovar</button>"
+        + '<button class="b-no" onclick="abrirReprovar('+i+')">&#10005; Reprovar</button>'
         + '</div>'
-        + '<div class="adjbox" id="adj-'+i+'" x-hide><textarea id="adjtx-'+i+'" placeholder="O que ajustar neste post?"></textarea><button class="send" onclick="decidir('+i+",'ajuste')\">Enviar ajuste</button></div>";
+        + '<div class="adjbox" id="adj-'+i+'" x-hide><textarea id="adjtx-'+i+'" placeholder="O que ajustar neste post?"></textarea><button class="send" onclick="decidir('+i+",'ajuste')\">Enviar ajuste</button></div>"
+        + '<div class="adjbox" id="rep-'+i+'" x-hide><textarea id="reptx-'+i+'" placeholder="Por que está reprovando? (obrigatório)"></textarea><button class="send" onclick="decidir('+i+",'reprovar')\">Confirmar reprovação</button></div>";
 
       return '<div class="post" id="post-'+i+'">'+ meta + arte + leg + rodape + '<div class="err" id="err-'+i+'"></div></div>';
     }
@@ -251,6 +252,7 @@
     }
 
     function abrirAjuste(i){ var b=document.getElementById('adj-'+i); if(b.hasAttribute('x-hide')) b.removeAttribute('x-hide'); else b.setAttribute('x-hide',''); }
+    function abrirReprovar(i){ var b=document.getElementById('rep-'+i); if(b.hasAttribute('x-hide')) b.removeAttribute('x-hide'); else b.setAttribute('x-hide',''); }
 
     function decidir(i, acao){
       var errEl = document.getElementById('err-'+i); errEl.textContent='';
@@ -260,13 +262,18 @@
         if(!c){ errEl.textContent='Descreva o ajuste.'; return; }
         body.comentario = c;
       }
+      else if (acao==='reprovar'){
+        var r = (document.getElementById('reptx-'+i).value||'').trim();
+        if(!r){ errEl.textContent='Diga o motivo da reprovação.'; return; }
+        body.comentario = r;
+      }
       var btns = document.querySelectorAll('#post-'+i+' button'); btns.forEach(function(b){b.disabled=true;});
       fetch(API + '/' + encodeURIComponent(TOKEN) + '/post', {
         method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
       }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); })
         .then(function(d){
           if(d && Array.isArray(d.posts)){ L.posts = d.posts; }
-          else if(L.posts && L.posts[i]){ L.posts[i].status = acao==='aprovar'?'Aprovado':acao==='reprovar'?'Reprovado':'Ajuste'; if(acao==='ajuste')L.posts[i].ajuste=body.comentario; }
+          else if(L.posts && L.posts[i]){ L.posts[i].status = acao==='aprovar'?'Aprovado':acao==='reprovar'?'Reprovado':'Ajuste'; if(acao==='ajuste'||acao==='reprovar')L.posts[i].ajuste=body.comentario; }
           document.getElementById('post-'+i).outerHTML = cardPost(L.posts[i], i);
         })
         .catch(function(){ btns.forEach(function(b){b.disabled=false;}); errEl.textContent='Não consegui registrar agora. Tente de novo.'; });
