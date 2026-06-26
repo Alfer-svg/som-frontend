@@ -473,6 +473,19 @@ document.addEventListener('alpine:init', () => {
       await this.carregarLeads(); await this.carregarProjetos(); await this.carregarPropostas();
       await this.carregarColecoesSync(); // contratos, financeiro, catálogo, fornecedores (compartilhados)
       this._aprovarOrcamentosComContrato(); // backfill: orçamento que já virou contrato → Aprovado
+      this._ativarContratosRascunho();       // backfill 1x: contratos antigos em Rascunho/Pendente → Assinado (ativo)
+    },
+    // Backfill ONE-TIME: os contratos que ficaram em Rascunho/Pendente (o fluxo de
+    // assinatura digital não foi usado) já estão ativos na prática → marca Assinado.
+    // Roda só uma vez por navegador (flag); contratos NOVOS continuam nascendo Rascunho.
+    _ativarContratosRascunho() {
+      if (localStorage.getItem('som_contr_backfill_ativos_v1')) return;
+      let mudou = false;
+      for (const c of this.contracts) {
+        if (c.status === 'Rascunho' || c.status === 'Pendente' || !c.status) { c.status = 'Assinado'; mudou = true; }
+      }
+      localStorage.setItem('som_contr_backfill_ativos_v1', '1');
+      if (mudou) this.persist('contracts', this.contracts);
     },
     // Backfill: orçamentos que JÁ têm contrato gerado (mesmo propostaNumero) mas
     // ficaram com status antigo (Rascunho/Enviado) → marca Aprovado e persiste.
