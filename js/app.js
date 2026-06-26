@@ -344,8 +344,9 @@ document.addEventListener('alpine:init', () => {
     fornForm: {},
 
     // modais
-    modal: null, // 'lead' | 'client' | 'finance' | 'project'
+    modal: null, // 'lead' | 'client' | 'finance' | 'project' | 'venc'
     editing: {},
+    vencEdit: {}, // modal de alterar vencimento (calendário + cascata p/ faturas seguintes)
     projetoSel: '', // dropdown de tipo de projeto no orçamento ('Outros' libera texto livre)
     docHtml: '', docTipo: '', docObj: null, // preview de documento pronto (contrato/proposta)
     assinaturaLoading: false, // gerando PDF / enviando p/ ZapSign
@@ -1539,11 +1540,37 @@ ${this._docFoot()}
     finCardBorder(f) { return 'border-left:3px solid ' + this.finDotCor(f); },
     copiar(txt, label) { if (!txt) return; (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => alert((label || 'Texto') + ' copiado!')).catch(() => prompt('Copie:', txt)); },
     abrirUrl(u) { if (u) window.open(u, '_blank'); else alert('Sem link disponível.'); },
+    // Base da série de um lançamento de contrato: tira o sufixo " (n/N)" da
+    // descrição, sobrando "Contrato Nº — Cliente". Faturas da mesma série batem.
+    _serieBase(desc) { return String(desc || '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim(); },
     alterarVencimento(f) {
-      const resp = prompt('Nova data de vencimento (dd/mm/aaaa):', MD.fmtDate(f.vencimento || MD.today()));
-      if (resp === null) return;
-      const iso = this._parseDataBR(resp); if (!iso) return alert('Data inválida (use dd/mm/aaaa).');
-      f.vencimento = iso; this.persist('finance', this.finance);
+      const base = this._serieBase(f.descricao);
+      // Tem faturas SEGUINTES na mesma série (pendentes, venc > esta)?
+      const temFuturas = this.finance.some(x => x.id !== f.id && x.tipo === 'receita' && x.status !== 'pago'
+        && this._serieBase(x.descricao) === base && (x.vencimento || '') > (f.vencimento || ''));
+      this.vencEdit = { lancId: f.id, descricao: f.descricao, base, vencAntigo: f.vencimento || '', nova: f.vencimento || MD.today(), futuras: false, temFuturas };
+      this.modal = 'venc';
+    },
+    salvarVencimento() {
+      const ve = this.vencEdit; if (!ve.nova) return alert('Escolha a nova data de vencimento.');
+      const f = this.finance.find(x => x.id === ve.lancId); if (!f) { this.modal = null; return; }
+      f.vencimento = ve.nova;
+      let n = 0;
+      if (ve.futuras && ve.temFuturas) {
+        const dia = Number(ve.nova.slice(8, 10));
+        this.finance.forEach(x => {
+          if (x.id === f.id || x.tipo !== 'receita' || x.status === 'pago' || x.boletoId) return; // pagas/com boleto emitido: intactas
+          if (this._serieBase(x.descricao) !== ve.base) return;
+          if (!((x.vencimento || '') > ve.vencAntigo)) return; // só as seguintes
+          const [yy, mm] = x.vencimento.split('-').map(Number);
+          const ultimo = new Date(yy, mm, 0).getDate(); // último dia do mês de x
+          x.vencimento = `${yy}-${String(mm).padStart(2, '0')}-${String(Math.min(dia, ultimo)).padStart(2, '0')}`;
+          n++;
+        });
+      }
+      this.persist('finance', this.finance);
+      this.modal = null;
+      if (n > 0) alert(`Vencimento alterado. ${n} fatura(s) seguinte(s) também atualizada(s).`);
     },
     receberPagar(f) { this.togglePago(f); }, // "Receber"/"Pagar" = liquidar (pede a data)
     async sincronizarBoleto(f) {
