@@ -472,6 +472,21 @@ document.addEventListener('alpine:init', () => {
       if (a || b || c) console.info('Migrados pro backend — leads:', a, 'projetos:', b, 'orçamentos:', c);
       await this.carregarLeads(); await this.carregarProjetos(); await this.carregarPropostas();
       await this.carregarColecoesSync(); // contratos, financeiro, catálogo, fornecedores (compartilhados)
+      this._aprovarOrcamentosComContrato(); // backfill: orçamento que já virou contrato → Aprovado
+    },
+    // Backfill: orçamentos que JÁ têm contrato gerado (mesmo propostaNumero) mas
+    // ficaram com status antigo (Rascunho/Enviado) → marca Aprovado e persiste.
+    // Conserta os que viraram contrato antes desta lógica existir.
+    _aprovarOrcamentosComContrato() {
+      let mudou = false;
+      for (const o of this.proposals) {
+        if (o.status === 'Aprovado' || o.status === 'Recusado') continue;
+        if (o.numero && this.contracts.some(c => c.propostaNumero === o.numero)) {
+          o.status = 'Aprovado'; mudou = true;
+          try { const { _token, _envio, ...dados } = o; this.api('POST', '/propostas', { id: o.id || undefined, numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), dados }); } catch (e) { /* offline */ }
+        }
+      }
+      if (mudou) this.persist('proposals', this.proposals);
     },
     // Orçamentos agora ficam no backend (compartilhados entre todos os usuários).
     async carregarPropostas() {
