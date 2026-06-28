@@ -132,6 +132,7 @@ const EMPRESA = {
   fone: '(11) 96624-9876',
   endereco: 'Av. A, 4165 – Torre 6, Sl 611 e 612 – Paiva, Cabo de Santo Agostinho – PE · CEP 54522-005',
   cidade: 'Cabo de Santo Agostinho/PE',
+  representante: '', // representante legal da Maracatu nas assinaturas do contrato (preencher nome)
 };
 // Texto institucional fixo da proposta (modelo Bella Napoli).
 const PROPOSTA_INTRO = 'É com satisfação que encaminhamos esta proposta comercial para a sua avaliação. A proposta foi elaborada segundo as melhores práticas profissionais, a fim de atender aos altos padrões de qualidade de serviço. As informações contidas neste documento são confidenciais e de propriedade da Maracatu Digital Intelligence.\n\nEm um mundo que vive quase 100% conectado, a Maracatu Digital Intelligence nasceu para tornar a sua presença on-line cada vez mais forte. Somos uma agência de marketing digital com foco em RESULTADOS. Unimos vibrações, ferramentas atuais, inteligência de mercado e muita criatividade para elevar o potencial do seu negócio.';
@@ -2600,46 +2601,96 @@ ${this._docFoot()}
     // ===== CONTRATO (prestação de serviços de marketing digital — modelo legal) =====
     _contratoHTML(c) {
       const e = this._esc;
-      const meses = +c.meses || 6, fid = +c.fidelidadeMeses || 6, multa = +c.multaPercentual || 50;
-      const aprov = +c.aprovacaoDias || 2, susp = +c.suspensaoDias || 10, idx = c.indiceReajuste || 'IPCA';
+      const meses = +c.meses || 12, multa = +c.multaPercentual || 50;
       const foro = c.foro || EMPRESA.cidade, dia = +c.diaVencimento || 5;
-      const valorLabel = MD.fmtCur(c.valor) + (c.periodicidade === 'Mensal' ? '/mês' : '');
-      const objeto = String(c.objeto || '').split('\n').filter(Boolean).map(l => `<p>${e(l)}</p>`).join('') || '<p>Conforme Proposta Comercial.</p>';
-      const cl = (n, t, ps) => `<div class="clausula"><h3>CLÁUSULA ${n} — ${e(t)}</h3>${ps.map(p => `<p>${p}</p>`).join('')}</div>`;
-      const anexoPolitico = c.politico ? `${cl('ANEXO II', 'MARKETING POLÍTICO / ELEITORAL', [
+      const valorMensal = MD.fmtCur(c.valor);
+      const plano = c.plano || c.propostaNumero || 'conforme proposta comercial aprovada';
+      const formaPag = c.formaPagamento ? (e(c.formaPagamento) + ', com vencimento no dia ' + dia + ' de cada mês') : ('vencimento no dia ' + dia + ' de cada mês');
+      const repContratante = c.representante || '[preencher]';
+      const repContratada = EMPRESA.representante || '[preencher]';
+      const cl = (n, t, ps) => `<div class="clausula"><h3>${e(n)}. ${e(t)}</h3>${ps.map(p => `<p>${p}</p>`).join('')}</div>`;
+      const anexoPolitico = c.politico ? `${cl('ANEXO', 'MARKETING POLÍTICO / ELEITORAL', [
         'Aplica-se quando a CONTRATANTE for candidato(a), partido, federação ou comitê. Regido pela Lei 9.504/1997 e Resolução TSE nº 23.607/2019 e alterações.',
         'Os serviços observarão integralmente a legislação eleitoral. <b>Todo pagamento à CONTRATADA será feito exclusivamente pela conta bancária específica de campanha</b>, e a verba de impulsionamento seguirá as regras e os limites de gastos do TSE para o cargo disputado.',
-        'A CONTRATADA fornecerá a documentação necessária à prestação de contas perante a Justiça Eleitoral. O impulsionamento ocorrerá apenas nas formas permitidas, por iniciativa e responsabilidade do candidato/partido.',
-        'A CONTRATANTE é a única responsável pelo conteúdo eleitoral, sua veracidade e a observância dos limites de gastos, respondendo por eventuais penalidades (ex.: multa de 100% sobre o excesso de gasto).',
+        'A CONTRATANTE é a única responsável pelo conteúdo eleitoral, sua veracidade e a observância dos limites de gastos.',
       ])}` : '';
       return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Contrato ${e(c.numero)}</title><style>${this._cssDoc()}</style></head><body>
 ${this._docHead('CONTRATO', c.numero, [])}
 <div class="ct-title"><span class="ct-kicker">CONTRATO DE</span><div class="ct-name">Prestação de Serviços de Marketing Digital</div></div>
-<div class="bloco"><b>CONTRATADA:</b> ${e(EMPRESA.nome)}, CNPJ nº ${e(EMPRESA.cnpj)}, com sede em ${e(EMPRESA.endereco)}.</div>
-<div class="bloco"><b>CONTRATANTE:</b> ${e(c.cliente || '—')}${c.documento ? ', CNPJ/CPF nº ' + e(c.documento) : ''}${c.endereco ? ', com sede em ' + e(c.endereco) : ''}${c.representante ? ', neste ato representada por ' + e(c.representante) : ''}.</div>
-<p style="color:#333">As partes acima celebram o presente Contrato, que se regerá pelas cláusulas seguintes.</p>
-${cl('1', 'DO OBJETO', ['Prestação, pela CONTRATADA, dos serviços de marketing digital descritos na Proposta Comercial' + (c.propostaNumero ? ' nº ' + e(c.propostaNumero) : '') + ' (Anexo I), a saber:' + objeto])}
-${cl('2', 'DO ESCOPO E DAS ENTREGAS', ['O escopo, entregáveis e periodicidade são os do Anexo I (Proposta). Serviços não previstos serão objeto de orçamento e aditivo escrito. Os prazos correm a partir do recebimento das informações, materiais, aprovações e acessos sob responsabilidade da CONTRATANTE.'])}
-${cl('3', 'DA NATUREZA DA OBRIGAÇÃO', ['Os serviços constituem <b>obrigação de meio, e não de resultado</b>. A CONTRATADA empregará as melhores práticas, <b>não garantindo</b> resultados específicos (vendas, faturamento, seguidores, leads, posições, alcance ou conversões), que dependem de fatores alheios ao seu controle.'])}
-${cl('4', 'DAS OBRIGAÇÕES DA CONTRATADA', ['Executar os serviços com zelo e técnica nos prazos acordados; informar por relatórios periódicos; manter sigilo (Cláusula 13); tratar dados conforme a LGPD (Cláusula 14); submeter peças à aprovação prévia quando aplicável.'])}
-${cl('5', 'DAS OBRIGAÇÕES DA CONTRATANTE', ['Fornecer em tempo hábil informações, materiais, acessos e aprovações; <b>responsabilizar-se pela veracidade, legalidade e titularidade</b> do material que fornecer; aprovar peças nos prazos da Cláusula 6; efetuar os pagamentos; arcar com a verba de mídia (Cláusula 7).'])}
-${cl('6', 'DA APROVAÇÃO DE MATERIAIS', ['As peças que exijam aprovação serão submetidas à CONTRATANTE, que deverá se manifestar em até ' + aprov + ' dias úteis. O silêncio por esse prazo implica <b>aprovação tácita</b>, autorizando a veiculação.'])}
-${cl('7', 'DA VERBA DE MÍDIA (TRÁFEGO PAGO)', ['A remuneração da gestão de tráfego pago <b>não inclui</b> a verba de mídia, custeada pela CONTRATANTE e paga diretamente às plataformas ou reembolsada mediante comprovação. A CONTRATADA não responde por suspensão/bloqueio de contas ou anúncios decorrentes das políticas das plataformas, nem por oscilações de custo de mídia.'])}
-${cl('8', 'DO PREÇO E PAGAMENTO', ['Pela prestação dos serviços, a CONTRATANTE pagará <b>' + e(valorLabel) + '</b>, conforme o cronograma do Anexo I, via ' + e(c.formaPagamento || 'Boleto') + ', com vencimento no dia ' + dia + ' de cada competência. O atraso sujeita a CONTRATANTE a multa de 2%, juros de 1% ao mês e correção, podendo os serviços ser suspensos após ' + susp + ' dias de inadimplência.'])}
-${cl('9', 'DO REAJUSTE', ['Os valores serão reajustados anualmente, a cada 12 meses, pela variação do ' + e(idx) + ' acumulado (ou índice que o substitua).'])}
-${cl('10', 'DA VIGÊNCIA', ['Vigência de <b>' + meses + ' meses</b> a partir da assinatura, <b>renovando-se automaticamente por períodos sucessivos de 6 meses</b>, salvo manifestação em contrário com a antecedência da Cláusula 11. A vigência total não excederá 4 anos (art. 598, CC), renovável por novo ajuste.'])}
-${cl('11', 'DA RESCISÃO E DA MULTA', ['Qualquer parte poderá rescindir mediante aviso prévio escrito de no mínimo 30 dias. A rescisão imotivada pela CONTRATANTE antes do ' + fid + 'º mês sujeita-a a multa de ' + multa + '% sobre as mensalidades remanescentes do período de fidelidade. A rescisão por inadimplemento não sanado em 10 dias após notificação independe de multa, respondendo a parte inadimplente por perdas e danos. A rescisão não desobriga do pagamento dos serviços já prestados.'])}
-${cl('12', 'DA PROPRIEDADE INTELECTUAL', ['Os direitos patrimoniais sobre as peças aprovadas e <b>efetivamente pagas</b> são cedidos à CONTRATANTE para os usos contratados, a partir da quitação. Os direitos morais do autor são inalienáveis (Lei 9.610/1998). Enquanto houver valores em aberto, os materiais permanecem da CONTRATADA. A CONTRATADA poderá usar as peças em seu portfólio, salvo vedação escrita. Em sites/sistemas, transfere-se a licença de uso do produto final; código-base e ferramentas proprietárias permanecem da CONTRATADA; itens de terceiros seguem suas licenças.'])}
-${cl('13', 'DA CONFIDENCIALIDADE', ['As partes manterão sigilo sobre informações confidenciais, não as divulgando sem autorização escrita. A obrigação estende-se a sócios, empregados e subcontratados e subsiste por 5 anos após o término.'])}
-${cl('14', 'DA PROTEÇÃO DE DADOS (LGPD)', ['No tratamento de dados pessoais para execução deste Contrato, a CONTRATANTE atua como <b>CONTROLADORA</b> e a CONTRATADA como <b>OPERADORA</b> (art. 5º, VI e VII, Lei 13.709/2018), tratando os dados conforme as instruções e finalidades da CONTRATANTE. A CONTRATADA adotará medidas de segurança, manterá sigilo, comunicará incidentes sem demora, auxiliará no atendimento aos direitos dos titulares e eliminará/devolverá os dados ao término. Poderá utilizar suboperadores necessários (ex.: Google, Meta, hospedagem), garantindo proteção equivalente.'])}
-${cl('15', 'DA RESPONSABILIDADE PELO CONTEÚDO', ['A CONTRATANTE responde pela veracidade e legalidade das informações e produtos anunciados; a CONTRATADA observará a autorregulamentação publicitária (CONAR) e a legislação aplicável. Quem der causa a violação de direitos de terceiros responderá perante o prejudicado e ressarcirá a outra parte.'])}
-${cl('16', 'DA LIMITAÇÃO DE RESPONSABILIDADE', ['Salvo dolo ou culpa grave, a responsabilidade da CONTRATADA por perdas e danos limita-se ao valor dos serviços pagos nos 3 meses anteriores ao evento, excluídos lucros cessantes e danos indiretos.'])}
-${cl('17', 'DAS DISPOSIÇÕES GERAIS', ['As partes são independentes, sem vínculo societário ou trabalhista. A tolerância não importa novação. Caso fortuito e força maior excluem responsabilidade pelo período do impedimento. As comunicações usarão os contatos da qualificação/Proposta. As partes reconhecem a validade da assinatura eletrônica (MP 2.200-2/2001 e Lei 14.063/2020).'])}
-${cl('18', 'DO FORO', ['Fica eleito o foro da Comarca de ' + e(foro) + ' para dirimir as questões deste Contrato, com renúncia a qualquer outro.'])}
-${c.observacoes ? `<div class="bloco"><b>Observações</b>${e(c.observacoes)}</div>` : ''}
-<p style="margin-top:18px;color:#333">E por estarem assim justas e contratadas, firmam o presente em via eletrônica. ${e(EMPRESA.cidade)}, ${MD.fmtDate(c.inicio)}.</p>
-<div class="assin"><div>${e(EMPRESA.nome)}<br>CONTRATADA</div><div>${e(c.cliente || 'Cliente')}<br>CONTRATANTE</div></div>
-<div class="assin assin-test"><div>Testemunha 1<br>Nome / CPF:</div><div>Testemunha 2<br>Nome / CPF:</div></div>
+<p style="color:#333">Pelo presente instrumento, as partes abaixo identificadas celebram o presente contrato de prestação de serviços de marketing digital, conforme as cláusulas e condições seguintes.</p>
+<div class="bloco"><b>CONTRATANTE</b><br>${e(c.cliente || '[preencher]')}<br>CNPJ/CPF: ${e(c.documento || '[preencher]')}<br>Endereço: ${e(c.endereco || '[preencher]')}<br>Representante: ${e(repContratante)}</div>
+<div class="bloco"><b>CONTRATADA</b><br>${e(EMPRESA.nome)}<br>CNPJ: ${e(EMPRESA.cnpj)}<br>Endereço: ${e(EMPRESA.endereco)}<br>Representante: ${e(repContratada)}</div>
+<div class="bloco"><b>Proposta vinculada:</b> ${e(c.propostaNumero || '[preencher]')}</div>
+${cl('1', 'OBJETO', [
+  '1.1. O presente contrato tem como objeto a prestação de serviços de marketing digital, conforme proposta comercial aprovada entre as partes, podendo contemplar, conforme o plano contratado: planejamento, criação de conteúdo para canais digitais, gestão de redes sociais, produção de conteúdo audiovisual, gestão de tráfego pago e relatórios de desempenho.',
+  '1.2. O valor mensal contratado será de <b>' + e(valorMensal) + '</b>, referente ao plano ' + e(plano) + ', conforme proposta comercial aprovada.',
+  '1.3. A mensalidade será paga pela CONTRATANTE da seguinte forma: ' + formaPag + '.',
+  '1.4. A atuação da CONTRATADA é voltada ao ambiente digital. Demandas como materiais impressos, stands, ambientações, sinalizações, apresentações, peças offline, reformas, layouts físicos, projetos gráficos especiais ou qualquer solicitação fora do escopo contratado não estão incluídas, salvo se previstas na proposta ou aprovadas em orçamento à parte.',
+])}
+${cl('2', 'ESCOPO, ENTREGAS E APROVAÇÕES', [
+  '2.1. As entregas seguirão o escopo definido na proposta comercial aprovada entre as partes.',
+  '2.2. Quando houver gestão de redes sociais, a CONTRATADA poderá apresentar uma programação de conteúdo para aprovação da CONTRATANTE, conforme periodicidade combinada entre as partes.',
+  '2.3. Os conteúdos poderão incluir artes estáticas, carrosséis, fotos, vídeos, reels, stories ou outros formatos digitais, de acordo com a estratégia definida.',
+  '2.4. A contratação não implica produção exclusiva para cada rede social. O mesmo conteúdo poderá ser utilizado em diferentes plataformas, com adaptações de formato, legenda ou linguagem, quando necessário.',
+  '2.5. A CONTRATANTE deverá avaliar os materiais enviados em até 2 dias úteis. A ausência de retorno poderá impactar o calendário de publicações, sem caracterizar falha da CONTRATADA.',
+  '2.6. Ajustes simples nas peças estão incluídos, desde que estejam alinhados ao briefing original. Mudança de conceito, refação integral, novo roteiro, nova edição, troca de direção criativa ou adaptação para finalidade não contratada poderão ser orçados à parte.',
+])}
+${cl('3', 'CAPTAÇÕES AUDIOVISUAIS', [
+  '3.1. Caso o serviço de captação audiovisual esteja incluído na proposta, as gravações e fotos deverão ser previamente agendadas entre as partes, respeitando a disponibilidade da equipe e do cliente.',
+  '3.2. Caso alguma captação, entrega ou publicação não ocorra por falta de agenda, ausência de retorno, cancelamento, atraso, falta de acesso ou impedimento relacionado à CONTRATANTE, a entrega poderá ser remanejada, sem abatimento ou desconto na mensalidade.',
+  '3.3. A CONTRATANTE será responsável por autorizar gravações em seus ambientes, obras, imóveis, escritórios ou locais indicados, bem como obter autorização de uso de imagem de colaboradores, clientes, fornecedores ou terceiros que apareçam nos conteúdos.',
+])}
+${cl('4', 'TRÁFEGO PAGO', [
+  '4.1. Quando contratado, o serviço de gestão de tráfego pago inclui planejamento, configuração, acompanhamento e otimização de campanhas em plataformas como Meta Ads, Google Ads, LinkedIn Ads ou outras previstas na proposta.',
+  '4.2. A verba de mídia é de responsabilidade exclusiva da CONTRATANTE e não integra os honorários da CONTRATADA, podendo ser paga diretamente às plataformas ou reembolsada mediante comprovação.',
+  '4.3. A CONTRATADA não se responsabiliza por bloqueios, reprovações, instabilidades, restrições, alterações de algoritmo, aumento de custo de mídia ou decisões unilaterais das plataformas.',
+  '4.4. A CONTRATADA não garante resultados específicos de vendas, leads, seguidores, engajamento, alcance, visualizações, faturamento ou retorno financeiro, pois tais resultados dependem de fatores externos à sua atuação.',
+])}
+${cl('5', 'OBRIGAÇÕES DA CONTRATADA', [
+  '5.1. Executar os serviços contratados com zelo, técnica e boas práticas profissionais.',
+  '5.2. Conduzir as estratégias com liberdade técnica e criativa, respeitando o posicionamento da marca, os objetivos comerciais e as informações fornecidas pela CONTRATANTE.',
+  '5.3. Submeter materiais à aprovação prévia quando aplicável.',
+  '5.4. Manter sigilo sobre informações estratégicas, comerciais e operacionais da CONTRATANTE.',
+  '5.5. Enviar relatórios de desempenho quando previsto na proposta comercial.',
+])}
+${cl('6', 'OBRIGAÇÕES DA CONTRATANTE', [
+  '6.1. Fornecer informações, materiais, acessos, referências, aprovações e retornos necessários à execução dos serviços.',
+  '6.2. Garantir acesso às contas, perfis, gerenciadores, páginas, canais e demais ativos digitais necessários.',
+  '6.3. Responsabilizar-se pela veracidade das informações, ofertas, preços, promessas comerciais, condições de venda, atendimento ao cliente e execução dos produtos ou serviços divulgados.',
+  '6.4. Atrasos, ausência de retorno, falta de acesso, informações incompletas ou mudanças constantes de direcionamento poderão impactar prazos e entregas, sem caracterizar descumprimento da CONTRATADA.',
+])}
+${cl('7', 'ARQUIVOS, DIREITOS DE USO E PORTFÓLIO', [
+  '7.1. Após a quitação dos valores devidos, a CONTRATANTE poderá utilizar os materiais finais aprovados e publicados em seus canais próprios de comunicação.',
+  '7.2. Não fazem parte da entrega arquivos brutos, editáveis, projetos abertos, templates, arquivos internos, presets, fontes, bancos de imagem, projetos de edição ou arquivos em Canva, Figma, Photoshop, Illustrator, Premiere ou similares, salvo contratação específica à parte.',
+  '7.3. A CONTRATADA mantém a titularidade sobre seus métodos, processos criativos, estratégias, estruturas, templates, fluxos de trabalho e materiais internos.',
+  '7.4. A CONTRATADA poderá utilizar os materiais produzidos como portfólio, estudo de caso, apresentação comercial ou divulgação institucional, desde que não exponha informações confidenciais da CONTRATANTE.',
+])}
+${cl('8', 'PRAZO, PAGAMENTO E RESCISÃO', [
+  '8.1. O presente contrato terá vigência mínima de <b>' + meses + ' meses</b>, contados a partir da assinatura ou aceite da proposta.',
+  '8.2. O pagamento será realizado conforme valor, forma e vencimento definidos na proposta comercial ou neste contrato.',
+  '8.3. O atraso no pagamento poderá acarretar suspensão dos serviços, sem abatimento proporcional da mensalidade, além de multa de 2%, juros de 1% ao mês e correção monetária.',
+  '8.4. Após o período mínimo contratado, o contrato seguirá por prazo indeterminado, podendo ser encerrado por qualquer uma das partes mediante aviso prévio escrito de 30 dias.',
+  '8.5. A rescisão sem justa causa antes do término do período mínimo contratado sujeitará a parte que der causa ao pagamento de multa equivalente a ' + multa + '% das mensalidades vincendas até o fim do período mínimo, sem prejuízo dos valores já vencidos ou serviços executados.',
+  '8.6. Após 12 meses de vigência, os valores poderão ser reajustados conforme índice definido entre as partes ou nova proposta comercial.',
+])}
+${cl('9', 'CONFIDENCIALIDADE, LGPD E RESPONSABILIDADE', [
+  '9.1. As partes comprometem-se a manter sigilo sobre informações estratégicas, comerciais, financeiras, operacionais e dados sensíveis a que tiverem acesso em razão deste contrato.',
+  '9.2. No tratamento de dados pessoais, as partes comprometem-se a observar a legislação aplicável, especialmente a Lei Geral de Proteção de Dados - LGPD.',
+  '9.3. A responsabilidade da CONTRATADA limita-se à execução dos serviços efetivamente contratados, dentro do escopo aprovado na proposta comercial.',
+  '9.4. A CONTRATADA não será responsável por fatores externos à sua atuação, incluindo atendimento comercial da CONTRATANTE, qualidade do produto ou serviço divulgado, reputação da marca, sazonalidade, concorrência, verba insuficiente, instabilidades de plataformas ou comportamento do público.',
+])}
+${cl('10', 'DISPOSIÇÕES GERAIS', [
+  '10.1. Este contrato, juntamente com a proposta comercial aprovada, representa o acordo integral entre as partes.',
+  '10.2. Alterações de escopo, valores, prazos ou condições somente terão validade se aprovadas por escrito entre as partes.',
+  '10.3. A relação entre as partes é estritamente comercial, não gerando vínculo trabalhista, societário, exclusividade ou subordinação.',
+  '10.4. As partes reconhecem a validade da assinatura eletrônica deste contrato.',
+  '10.5. Fica eleito o foro da comarca de ' + e(foro) + ', para dirimir eventuais controvérsias, salvo disposição legal obrigatória em sentido diverso.',
+])}
+${c.observacoes ? `<div class="bloco"><b>Observações</b><br>${e(c.observacoes)}</div>` : ''}
+<p style="margin-top:18px;color:#333">E por estarem justas e contratadas, as partes assinam o presente instrumento.</p>
+<p style="color:#333">${e(EMPRESA.cidade)}, ${MD.fmtDate(c.inicio)}.</p>
+<div class="assin"><div>${e(c.cliente || 'CONTRATANTE')}<br>CONTRATANTE<br>Representante: ${e(repContratante)}<br>CPF:</div><div>${e(EMPRESA.nome)}<br>CONTRATADA<br>Representante: ${e(repContratada)}<br>CPF:</div></div>
+<div class="assin assin-test"><div>TESTEMUNHA 1<br>Nome:<br>CPF:</div><div>TESTEMUNHA 2<br>Nome:<br>CPF:</div></div>
 ${anexoPolitico}
 ${this._docFoot()}
 </body></html>`;
