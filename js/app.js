@@ -132,7 +132,8 @@ const EMPRESA = {
   fone: '(11) 96624-9876',
   endereco: 'Av. A, 4165 – Torre 6, Sl 611 e 612 – Paiva, Cabo de Santo Agostinho – PE · CEP 54522-005',
   cidade: 'Cabo de Santo Agostinho/PE',
-  representante: '', // representante legal da Maracatu nas assinaturas do contrato (preencher nome)
+  representante: 'Laura', // representante legal da Maracatu (CONTRATADA) — completar nome
+  repCpf: '',            // CPF da representante da Maracatu (preencher)
 };
 // Texto institucional fixo da proposta (modelo Bella Napoli).
 const PROPOSTA_INTRO = 'É com satisfação que encaminhamos esta proposta comercial para a sua avaliação. A proposta foi elaborada segundo as melhores práticas profissionais, a fim de atender aos altos padrões de qualidade de serviço. As informações contidas neste documento são confidenciais e de propriedade da Maracatu Digital Intelligence.\n\nEm um mundo que vive quase 100% conectado, a Maracatu Digital Intelligence nasceu para tornar a sua presença on-line cada vez mais forte. Somos uma agência de marketing digital com foco em RESULTADOS. Unimos vibrações, ferramentas atuais, inteligência de mercado e muita criatividade para elevar o potencial do seu negócio.';
@@ -211,7 +212,7 @@ const briefingMerge = (b) => { const v = briefingVazio(); b = b || {}; return {
   palavrasChave: b.palavrasChave || '',
 }; };
 // Responsável/contato do cliente (até 5 por cliente). Salvo em dados.responsaveis.
-const respVazio = () => ({ id: '', nome: '', cargo: '', whatsapp: '', email: '', nascimento: '', instagram: '', linkedin: '', seguindo: false, notas: '' });
+const respVazio = () => ({ id: '', nome: '', cpf: '', cargo: '', whatsapp: '', email: '', nascimento: '', instagram: '', linkedin: '', seguindo: false, notas: '' });
 const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => ({ ...respVazio(), ...r, id: r.id || MD.uid() }));
 // Documentos do cliente (links — contrato, proposta, etc.). Salvo em dados.documentos.
 const TIPOS_DOC = ['Contrato', 'Proposta', 'Apresentação', 'Relatório', 'Briefing', 'Identidade visual', 'Outro'];
@@ -2391,8 +2392,16 @@ ${this._docFoot()}
         const c = this._clientePorNome(o.cliente); // puxa CNPJ/endereço/representante do cadastro
         const resp0 = c && Array.isArray(c.responsaveis) ? c.responsaveis[0] : null;
         const objeto = this._servicosTexto(o.servicos) || o.descricao || '';
-        ct = { id: MD.uid(), numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || (c && (c.empresa || c.razaoSocial)) || '', documento: (c && (c.cnpj || c.documento || c.cpf)) || '', endereco: this._enderecoCliente(c), representante: o.contato || (resp0 && resp0.nome) || (c && c.contato) || '', projeto: o.projeto || '', objeto, servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: o.vigenciaMeses == 1 ? 'Único' : 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: num, status: 'Rascunho', observacoes: o.observacoes || '' };
+        ct = { id: MD.uid(), numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || (c && (c.empresa || c.razaoSocial)) || '', documento: (c && (c.cnpj || c.documento || c.cpf)) || '', endereco: this._enderecoCliente(c), representante: o.contato || (resp0 && resp0.nome) || (c && c.contato) || '', representanteCpf: (resp0 && resp0.cpf) || '', projeto: o.projeto || '', objeto, servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: o.vigenciaMeses == 1 ? 'Único' : 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: num, status: 'Rascunho', observacoes: o.observacoes || '' };
         this.contracts.unshift(ct); this.persist('contracts', this.contracts);
+        // Avisa quais dados faltam pro contrato sair completo (saem como [preencher] no documento).
+        const faltam = [];
+        if (!ct.documento) faltam.push('CNPJ/CPF do cliente');
+        if (!ct.endereco) faltam.push('endereço do cliente');
+        if (!ct.representante) faltam.push('representante do cliente');
+        if (!ct.representanteCpf) faltam.push('CPF do representante do cliente');
+        if (!EMPRESA.representante || !EMPRESA.repCpf) faltam.push('representante/CPF da Maracatu');
+        if (faltam.length) alert('Contrato ' + ct.numero + ' gerado como rascunho.\n\nFaltam dados (complete no cadastro do cliente):\n• ' + faltam.join('\n• '));
       }
       this.editing = { ...ct };
       this._marcarOrcamentoAprovado(o); // orçamento aprovado → sai de Ativos, vai pra Arquivados
@@ -2608,6 +2617,8 @@ ${this._docFoot()}
       const formaPag = c.formaPagamento ? (e(c.formaPagamento) + ', com vencimento no dia ' + dia + ' de cada mês') : ('vencimento no dia ' + dia + ' de cada mês');
       const repContratante = c.representante || '[preencher]';
       const repContratada = EMPRESA.representante || '[preencher]';
+      const cpfContratante = c.representanteCpf || '';
+      const cpfContratada = EMPRESA.repCpf || '';
       const cl = (n, t, ps) => `<div class="clausula"><h3>${e(n)}. ${e(t)}</h3>${ps.map(p => `<p>${p}</p>`).join('')}</div>`;
       const anexoPolitico = c.politico ? `${cl('ANEXO', 'MARKETING POLÍTICO / ELEITORAL', [
         'Aplica-se quando a CONTRATANTE for candidato(a), partido, federação ou comitê. Regido pela Lei 9.504/1997 e Resolução TSE nº 23.607/2019 e alterações.',
@@ -2689,7 +2700,7 @@ ${cl('10', 'DISPOSIÇÕES GERAIS', [
 ${c.observacoes ? `<div class="bloco"><b>Observações</b><br>${e(c.observacoes)}</div>` : ''}
 <p style="margin-top:18px;color:#333">E por estarem justas e contratadas, as partes assinam o presente instrumento.</p>
 <p style="color:#333">${e(EMPRESA.cidade)}, ${MD.fmtDate(c.inicio)}.</p>
-<div class="assin"><div>${e(c.cliente || 'CONTRATANTE')}<br>CONTRATANTE<br>Representante: ${e(repContratante)}<br>CPF:</div><div>${e(EMPRESA.nome)}<br>CONTRATADA<br>Representante: ${e(repContratada)}<br>CPF:</div></div>
+<div class="assin"><div>${e(c.cliente || 'CONTRATANTE')}<br>CONTRATANTE<br>Representante: ${e(repContratante)}<br>CPF: ${e(cpfContratante)}</div><div>${e(EMPRESA.nome)}<br>CONTRATADA<br>Representante: ${e(repContratada)}<br>CPF: ${e(cpfContratada)}</div></div>
 <div class="assin assin-test"><div>TESTEMUNHA 1<br>Nome:<br>CPF:</div><div>TESTEMUNHA 2<br>Nome:<br>CPF:</div></div>
 ${anexoPolitico}
 ${this._docFoot()}

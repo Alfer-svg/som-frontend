@@ -1429,6 +1429,7 @@
       <template x-for="(r,i) in (editing.responsaveis||[])" :key="r.id">
         <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div class="form-group" style="margin:0"><label class="form-label">Nome <span class="hq" data-tip="Nome.">?</span></label><input class="form-input" x-model="r.nome"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">CPF <span class="hq" data-tip="CPF do representante — usado na assinatura do contrato.">?</span></label><input class="form-input" x-model="r.cpf" placeholder="000.000.000-00"></div>
           <div class="form-group" style="margin:0"><label class="form-label">Cargo / papel <span class="hq" data-tip="Cargo ou papel do contato (sócio, marketing…).">?</span></label><input class="form-input" x-model="r.cargo" placeholder="Sócio, Marketing, Financeiro…"></div>
           <div class="form-group" style="margin:0"><label class="form-label">WhatsApp <span class="hq" data-tip="WhatsApp com DDD para contato.">?</span></label><input class="form-input" x-model="r.whatsapp"></div>
           <div class="form-group" style="margin:0"><label class="form-label">E-mail <span class="hq" data-tip="E-mail de contato.">?</span></label><input class="form-input" x-model="r.email"></div>
@@ -2696,7 +2697,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=156"></script>
+<script src="js/app.js?v=157"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
