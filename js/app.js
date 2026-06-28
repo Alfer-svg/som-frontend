@@ -2016,7 +2016,7 @@ ${this._docFoot()}
     descartarIA(obj, campo) { delete obj['_ia_' + campo]; },
     progColaboradores() {
       const q = this.busca.toLowerCase();
-      const posts = this.projects.filter(p => p.isPost && !p.avulso); // criativo avulso fica fora da programação semanal
+      const posts = this.projects.filter(p => p.isPost && !p.avulso && !p.arquivado); // criativo avulso e arquivados ficam fora da programação semanal
       const nomes = this.equipe.map(m => m.nome);
       const temSem = posts.some(p => !(p.responsavel || '').trim());
       const lista = [...nomes]; if (temSem) lista.push('');
