@@ -60,6 +60,17 @@ const STAGES = [
   { id: 'Perdido',     ico: '✕',  color: '#dc2626', desc: 'Não avançou — registre o motivo pra aprender e melhorar.' },
 ];
 const SERVICOS = ['Gestão de Redes Sociais', 'Criação de Conteúdo', 'ADS / Tráfego Pago', 'Audiovisual', 'Sites & Apps', 'Branding', 'SEO / Growth', 'Marketing Político', 'Consultoria'];
+// Tipos de ação/follow-up do lead no CRM (cada uma agendada com data + feedback).
+const ACAO_TIPOS = [
+  { id: 'Ligar', ico: 'ph-phone-call' },
+  { id: 'Reunião', ico: 'ph-handshake' },
+  { id: 'Enviar proposta', ico: 'ph-file-text' },
+  { id: 'Novo contato', ico: 'ph-chat-circle-dots' },
+  { id: 'E-mail', ico: 'ph-envelope-simple' },
+  { id: 'Follow-up', ico: 'ph-arrow-clockwise' },
+  { id: 'Visita', ico: 'ph-map-pin' },
+  { id: 'Outro', ico: 'ph-dot-outline' },
+];
 // Objetivos comuns de agência (sugestões no dropdown; aceita texto livre).
 const OBJETIVOS = [
   'Seguidores no Instagram', 'Seguidores no TikTok', 'Inscritos no YouTube', 'Curtidas no Facebook',
@@ -316,6 +327,7 @@ document.addEventListener('alpine:init', () => {
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
     crmStages: STAGES.map(s => ({ ...s })), crmEdit: false, dragLeadId: null, dropStage: null, dragStageId: '', // CRM: colunas editáveis + drag
+    ACAO_TIPOS, novaAcao: { tipo: 'Ligar', data: '', descricao: '' }, mostrarAlertas: true, // CRM: ações/follow-ups do lead + alertas
     cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, membroDrop: false, novoItemCheck: '', // card-detalhe Trello
     historicoModal: false, historicoItens: [], historicoCardNome: '', // histórico de criação/alterações do card
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
@@ -985,6 +997,51 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
     async moverLead(l, stage) { const antes = l.stage; l.stage = stage; try { await this.salvarLeadApi(l); } catch {} if (stage === 'Ganho' && antes !== 'Ganho') this.registrarProducao('negocio', l.empresa || '', +l.valor || 0); },
     async excluirLead(l) { if (!confirm('Excluir o lead ' + l.empresa + '?')) return; try { await this.api('DELETE', '/leads/' + l.id); this.leads = this.leads.filter(x => x.id !== l.id); this.modal = null; } catch (err) { alert(err.message); } },
+    // ── CRM: ações/follow-ups do lead (agendamento + feedback + histórico + alertas) ──
+    acaoTipoIco(t) { const a = ACAO_TIPOS.find(x => x.id === t); return a ? a.ico : 'ph-dot-outline'; },
+    acaoEmDias(d) { const dt = new Date(); dt.setDate(dt.getDate() + d); this.novaAcao.data = dt.toISOString().slice(0, 10); },
+    async _salvarLeadInline() {
+      try {
+        await this.salvarLeadApi(this.editing);
+        const i = this.leads.findIndex(x => x.id === this.editing.id);
+        if (i > -1) this.leads[i] = { ...this.editing }; else if (this.editing.id) this.leads.unshift({ ...this.editing });
+      } catch (e) { alert(e.message || 'Falha ao salvar a ação.'); }
+    },
+    async addAcao() {
+      const l = this.editing;
+      if (!l.empresa) return alert('Preencha o nome do lead antes de agendar ações.');
+      const na = this.novaAcao;
+      if (!na.data) return alert('Escolha a data da ação.');
+      if (!Array.isArray(l.acoes)) l.acoes = [];
+      l.acoes.push({ id: MD.uid(), tipo: na.tipo, data: na.data, descricao: (na.descricao || '').trim(), status: 'pendente', feedback: '', criadoPorNome: (this.usuario && this.usuario.nome) || 'Alguém', criadoEm: new Date().toISOString() });
+      this.novaAcao = { tipo: na.tipo, data: '', descricao: '' };
+      await this._salvarLeadInline();
+    },
+    async concluirAcao(a) {
+      const fb = prompt('Feedback da ação (o que aconteceu?):', a.feedback || '');
+      if (fb === null) return;
+      a.status = 'feita'; a.feedback = (fb || '').trim(); a.feitoPorNome = (this.usuario && this.usuario.nome) || 'Alguém'; a.feitoEm = new Date().toISOString();
+      await this._salvarLeadInline();
+    },
+    async reabrirAcao(a) { a.status = 'pendente'; a.feitoEm = null; await this._salvarLeadInline(); },
+    async removerAcao(a) { if (!confirm('Remover esta ação?')) return; this.editing.acoes = (this.editing.acoes || []).filter(x => x.id !== a.id); await this._salvarLeadInline(); },
+    // pendentes primeiro (por data), feitas no fim (mais recente primeiro)
+    acoesOrdenadas(l) {
+      const arr = [...((l && l.acoes) || [])];
+      return arr.sort((a, b) => {
+        if ((a.status === 'feita') !== (b.status === 'feita')) return a.status === 'feita' ? 1 : -1;
+        if (a.status === 'feita') return (b.feitoEm || '') < (a.feitoEm || '') ? -1 : 1;
+        return (a.data || '') < (b.data || '') ? -1 : 1;
+      });
+    },
+    proxAcao(l) { return ((l && l.acoes) || []).filter(a => a.status === 'pendente' && a.data).sort((a, b) => (a.data < b.data ? -1 : 1))[0] || null; },
+    acaoCor(a) { if (!a || !a.data) return ''; const h = MD.today(); if (a.data < h) return '#dc2626'; if (a.data === h) return '#d97706'; return ''; },
+    // alertas: ações pendentes vencendo hoje ou atrasadas (de todos os leads)
+    get alertasAcoes() {
+      const h = MD.today(); const out = [];
+      for (const l of this.leads) for (const a of (l.acoes || [])) if (a.status === 'pendente' && a.data && a.data <= h) out.push({ lead: l, acao: a, atrasada: a.data < h });
+      return out.sort((x, y) => (x.acao.data < y.acao.data ? -1 : 1));
+    },
 
     // ───────────────── COMERCIAL: clientes ─────────────────
     get clientesFiltrados() {
