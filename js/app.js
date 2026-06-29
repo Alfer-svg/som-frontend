@@ -315,6 +315,7 @@ document.addEventListener('alpine:init', () => {
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
+    crmStages: STAGES.map(s => ({ ...s })), crmEdit: false, dragLeadId: null, dropStage: null, dragStageId: '', // CRM: colunas editáveis + drag
     cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, membroDrop: false, novoItemCheck: '', // card-detalhe Trello
     historicoModal: false, historicoItens: [], historicoCardNome: '', // histórico de criação/alterações do card
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
@@ -571,7 +572,7 @@ document.addEventListener('alpine:init', () => {
       const nome = cls.split('ph-').pop();
       return 'assets/icons/' + nome + '.png?v=7';
     },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -937,10 +938,41 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     // ───────────────── CRM ─────────────────
     leadsDoEstagio(s) {
       const q = this.busca.toLowerCase();
-      return this.leads.filter(l => l.stage === s && (!q || (l.empresa + ' ' + l.contato).toLowerCase().includes(q)));
+      const ids = (this.crmStages || []).map(x => x.id);
+      const primeira = ids[0];
+      return this.leads.filter(l => {
+        const st = ids.includes(l.stage) ? l.stage : primeira; // lead órfão (estágio removido/renomeado) cai na 1ª coluna
+        return st === s && (!q || ((l.empresa || '') + ' ' + (l.contato || '')).toLowerCase().includes(q));
+      });
     },
-    stageInfo(s) { return STAGES.find(x => x.id === s) || STAGES[0]; },
-    novoLead(stage = 'Novo') { this.editing = { id: '', empresa: '', contato: '', whatsapp: '', email: '', cidade: '', servico: '', origem: 'Instagram', cnpj: '', valor: 0, stage, notas: '', createdAt: MD.today() }; this.cnpjMsg = ''; this.modal = 'lead'; },
+    stageInfo(s) { return (this.crmStages || []).find(x => x.id === s) || (this.crmStages || [])[0] || STAGES[0]; },
+    novoLead(stage) { stage = stage || ((this.crmStages || [])[0] || {}).id || 'Novo'; this.editing = { id: '', empresa: '', contato: '', whatsapp: '', email: '', cidade: '', servico: '', origem: 'Instagram', cnpj: '', valor: 0, stage, notas: '', createdAt: MD.today() }; this.cnpjMsg = ''; this.modal = 'lead'; },
+    // ── CRM: colunas (estágios) editáveis + drag (mesmo padrão do Operacional) ──
+    async carregarCrmStages() {
+      try { const r = await this.api('GET', '/config/ui.crmStages'); const v = r && r.valor ? JSON.parse(r.valor) : null; if (Array.isArray(v) && v.length) this.crmStages = v; } catch { }
+    },
+    salvarCrmStages() { try { this.api('PUT', '/config/ui.crmStages', { valor: JSON.stringify(this.crmStages) }); } catch (e) { } },
+    addStage() { const id = (prompt('Nome da nova coluna:', 'Nova etapa') || '').trim(); if (!id) return; if (this.crmStages.some(s => s.id === id)) return alert('Já existe uma coluna com esse nome.'); this.crmStages.push({ id, ico: '•', color: '#8a8ba3', desc: '' }); this.salvarCrmStages(); },
+    moverStage(s, dir) { const i = this.crmStages.indexOf(s), j = i + dir; if (j < 0 || j >= this.crmStages.length) return; this.crmStages.splice(i, 1); this.crmStages.splice(j, 0, s); this.salvarCrmStages(); },
+    async renomearStage(s) {
+      const id = (prompt('Nome da coluna:', s.id) || '').trim(); if (!id || id === s.id) return;
+      if (this.crmStages.some(x => x.id === id)) return alert('Já existe uma coluna com esse nome.');
+      const antigos = this.leads.filter(l => l.stage === s.id); s.id = id; this.salvarCrmStages();
+      for (const l of antigos) { l.stage = id; try { await this.salvarLeadApi(l); } catch { } } // migra os leads
+    },
+    async removerStage(s) {
+      if (this.crmStages.length <= 1) return alert('O funil precisa de ao menos uma coluna.');
+      const cards = this.leads.filter(l => l.stage === s.id), destino = this.crmStages.find(x => x.id !== s.id);
+      if (!confirm('Remover a coluna "' + s.id + '"?' + (cards.length ? (' Os ' + cards.length + ' lead(s) vão pra "' + destino.id + '".') : ''))) return;
+      for (const l of cards) { l.stage = destino.id; try { await this.salvarLeadApi(l); } catch { } }
+      this.crmStages = this.crmStages.filter(x => x.id !== s.id); this.salvarCrmStages();
+    },
+    onDropLead(stage) { const l = this.leads.find(x => x.id === this.dragLeadId); if (l && (l.stage || '') !== stage) this.moverLead(l, stage); this.dragLeadId = null; this.dropStage = null; },
+    onDropStage(alvoId) {
+      const from = this.crmStages.findIndex(s => s.id === this.dragStageId), to = this.crmStages.findIndex(s => s.id === alvoId);
+      if (from > -1 && to > -1 && from !== to) { const [st] = this.crmStages.splice(from, 1); this.crmStages.splice(to, 0, st); this.salvarCrmStages(); }
+      this.dragStageId = ''; this.dropStage = null;
+    },
     editarLead(l) { this.editing = { ...l }; this.cnpjMsg = ''; this.modal = 'lead'; },
     async salvarLead() {
       const e = this.editing;

@@ -227,6 +227,8 @@
         <span class="ico"><i class="ph ph-magnifying-glass ic-ph"></i></span>
         <input type="text" placeholder="Buscar…" x-model="busca">
       </div>
+      <button class="btn btn-ghost btn-sm" x-show="page==='crm' && crmEdit" @click="addStage()" title="Adicionar coluna ao funil"><i class="ph ph-plus ic-ph"></i> Coluna</button>
+      <button class="btn btn-sm" :class="crmEdit?'btn-primary':'btn-ghost'" x-show="page==='crm'" @click="crmEdit=!crmEdit" title="Editar as colunas do funil (renomear, mover, excluir)"><i class="ph ph-columns ic-ph"></i> <span x-text="crmEdit?'concluir':'editar colunas'"></span></button>
       <button class="btn btn-primary" x-show="page==='crm'" @click="novoLead()">+ Lead</button>
       <button class="btn btn-primary" x-show="page==='comercial' && (comTab==='lista' || !podeVer('onboarding'))" @click="novoCliente()">+ Cliente</button>
       <button class="btn btn-primary" x-show="page==='orcamentos'" @click="novoOrcamento()">+ Orçamento</button>
@@ -282,7 +284,7 @@
         <div class="grid grid-2">
           <div class="card">
             <div class="card-title mb-3">Funil — leads por estágio</div>
-            <template x-for="s in STAGES" :key="s.id">
+            <template x-for="s in crmStages" :key="s.id">
               <div class="flex items-center gap-2 mb-2">
                 <span class="dot" :style="'background:'+s.color"></span>
                 <span class="fs-12" style="width:110px"><i class="ic-ph" :class="phClass(s.ico)" :style="phCor(s.ico)?('color:'+phCor(s.ico)):''"></i> <span x-text="s.id"></span></span>
@@ -307,16 +309,23 @@
       <!-- ========== CRM (kanban) ========== -->
       <section x-show="page==='crm'">
         <div class="kanban">
-          <template x-for="s in STAGES" :key="s.id">
-            <div class="kanban-col">
-              <div class="kanban-head" :title="s.desc" style="cursor:help">
+          <template x-for="s in crmStages" :key="s.id">
+            <div class="kanban-col" :class="(dropStage===s.id?'drop-on':'')+(dragStageId===s.id?' col-dragging':'')"
+                 @dragover.prevent="dropStage=s.id" @dragleave="if(dropStage===s.id)dropStage=null" @drop.prevent="dragStageId ? onDropStage(s.id) : onDropLead(s.id)">
+              <div class="kanban-head" :title="s.desc" draggable="true" @dragstart="dragStageId=s.id; dragLeadId=null" @dragend="dragStageId=''; dropStage=null" style="cursor:grab" title="Arraste para reordenar a coluna">
                 <span class="dot" :style="'background:'+s.color"></span>
                 <span class="fw-700 fs-12"><i class="ic-ph" :class="phClass(s.ico)" :style="phCor(s.ico)?('color:'+phCor(s.ico)):''"></i> <span x-text="s.id"></span></span>
                 <span class="count" x-text="leadsDoEstagio(s.id).length"></span>
-                <span class="fs-12 text-3">ⓘ</span>
+                <template x-if="crmEdit"><span class="flex items-center" style="margin-left:auto;gap:1px">
+                  <button class="btn btn-icon btn-ghost btn-sm" @click.stop="moverStage(s,-1)" title="Mover para a esquerda">‹</button>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click.stop="moverStage(s,1)" title="Mover para a direita">›</button>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click.stop="renomearStage(s)" title="Renomear coluna"><i class="ph ph-pencil-simple"></i></button>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click.stop="removerStage(s)" title="Remover coluna">🗑</button>
+                </span></template>
+                <template x-if="!crmEdit"><span class="fs-12 text-3" style="margin-left:auto">ⓘ</span></template>
               </div>
               <template x-for="l in leadsDoEstagio(s.id)" :key="l.id">
-                <div class="kanban-card" @click="editarLead(l)">
+                <div class="kanban-card" draggable="true" @dragstart="dragLeadId=l.id; dragStageId=''" @dragend="dragLeadId=null; dropStage=null" @click="editarLead(l)" style="cursor:grab">
                   <div class="fw-700" x-text="l.empresa"></div>
                   <div class="text-3 fs-12" x-text="l.contato||'—'"></div>
                   <div class="flex items-center justify-between mt-2">
@@ -1390,7 +1399,7 @@
       <div class="form-group"><label class="form-label">Cidade <span class="hq" data-tip="Cidade.">?</span></label><input class="form-input" x-model="editing.cidade"></div>
       <div class="form-group"><label class="form-label">Serviço de interesse <span class="hq" data-tip="Serviço que o lead procura.">?</span></label><select class="form-select" x-model="editing.servico"><option value="">—</option><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
       <div class="form-group"><label class="form-label">Origem <span class="hq" data-tip="De onde veio o lead (site, indicação, anúncio…).">?</span></label><select class="form-select" x-model="editing.origem"><template x-for="o in ORIGENS"><option x-text="o"></option></template></select></div>
-      <div class="form-group"><label class="form-label">Estágio <span class="hq" data-tip="Etapa do lead no funil de vendas.">?</span></label><select class="form-select" x-model="editing.stage"><template x-for="s in STAGES"><option :value="s.id" x-text="s.id"></option></template></select></div>
+      <div class="form-group"><label class="form-label">Estágio <span class="hq" data-tip="Etapa do lead no funil de vendas.">?</span></label><select class="form-select" x-model="editing.stage"><template x-for="s in crmStages"><option :value="s.id" x-text="s.id"></option></template></select></div>
       <div class="form-group"><label class="form-label">Valor estimado (R$) <span class="hq" data-tip="Valor potencial estimado do negócio.">?</span></label><input class="form-input" type="number" x-model="editing.valor"></div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas <span class="hq" data-tip="Anotações livres.">?</span></label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
     </div>
@@ -2737,7 +2746,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=166"></script>
+<script src="js/app.js?v=167"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
