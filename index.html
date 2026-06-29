@@ -662,7 +662,7 @@
             <template x-for="u in presenca" :key="u.id">
               <div class="flex items-center gap-2" style="padding:7px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface)" :style="u.online?'':'opacity:.55'">
                 <span style="position:relative;display:inline-flex">
-                  <span :style="'position:relative;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;overflow:hidden;background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor">
+                  <span :style="'position:relative;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;overflow:hidden;background:'+avatarBg(u.nome)+';color:'+avatarFg(u.nome)">
                     <span x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
                     <template x-if="fotoDe(u.nome)"><img :src="fotoDe(u.nome)" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></template>
                   </span>
@@ -1297,7 +1297,7 @@
                 <tr>
                   <td>
                     <div class="flex items-center gap-3">
-                      <div :style="'position:relative;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;overflow:hidden;font-size:13px;background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor">
+                      <div :style="'position:relative;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;overflow:hidden;font-size:13px;background:'+avatarBg(u.nome)+';color:'+avatarFg(u.nome)">
                         <span x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
                         <template x-if="u.foto"><img :src="u.foto" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></template>
                       </div>
@@ -1346,7 +1346,7 @@
           <template x-if="!usuarios.length"><div class="empty">Nenhum usuário. Clique em <b>+ Usuário</b>.</div></template>
           <template x-for="u in usuarios" :key="u.id">
             <div class="flex items-center gap-3" style="padding:11px 14px;border-bottom:1px solid var(--border)">
-              <div :style="'position:relative;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;overflow:hidden;background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor">
+              <div :style="'position:relative;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;overflow:hidden;background:'+avatarBg(u.nome)+';color:'+avatarFg(u.nome)">
                 <span x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
                 <template x-if="u.foto"><img :src="u.foto" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></template>
               </div>
@@ -2324,7 +2324,7 @@
               <template x-if="!equipeForaDoCard.length"><div class="text-3 fs-12" style="padding:4px">Todos já estão no projeto.</div></template>
               <template x-for="m in equipeForaDoCard" :key="m.id">
                 <div class="flex items-center gap-2 lbl-row-plain" style="cursor:pointer;padding:7px 8px;border-radius:8px" @click="toggleMembro(m.nome); membroDrop=false">
-                  <span class="tl-avatar" style="width:22px;height:22px" :style="m.foto?('background-image:url('+m.foto+')'):('background:'+papelInfo(m.papel).bg+';color:'+papelInfo(m.papel).cor)" x-text="m.foto?'':iniciais(m.nome)"></span>
+                  <span class="tl-avatar" style="width:22px;height:22px" :style="m.foto?('background-image:url('+m.foto+')'):('background:'+avatarBg(m.nome)+';color:'+avatarFg(m.nome))" x-text="m.foto?'':iniciais(m.nome)"></span>
                   <span class="fs-13 fw-600" x-text="m.nome"></span>
                 </div>
               </template>
@@ -2605,7 +2605,7 @@
     <div class="modal-head"><div class="modal-title">Ficha de registro</div><button class="btn btn-icon btn-ghost" @click="fichaModal=false">✕</button></div>
     <div class="modal-body">
       <div class="flex items-center gap-3" style="margin-bottom:6px">
-        <div style="width:48px;height:48px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;overflow:hidden" :style="fichaForm.foto?('background-image:url('+fichaForm.foto+');background-size:cover;background-position:center'):('background:'+papelInfo(fichaForm.papel).bg+';color:'+papelInfo(fichaForm.papel).cor)" x-text="fichaForm.foto?'':iniciais(fichaForm.nome)"></div>
+        <div style="width:48px;height:48px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;overflow:hidden" :style="fichaForm.foto?('background-image:url('+fichaForm.foto+');background-size:cover;background-position:center'):('background:'+avatarBg(fichaForm.nome)+';color:'+avatarFg(fichaForm.nome))" x-text="fichaForm.foto?'':iniciais(fichaForm.nome)"></div>
         <div><div class="fw-800 fs-16" x-text="fichaForm.nome"></div><div class="text-3 fs-12">Perfil: <span x-text="papelInfo(fichaForm.papel).nome"></span> · acesso/senha em Configurações</div></div>
       </div>
 
@@ -2746,7 +2746,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=167"></script>
+<script src="js/app.js?v=168"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
