@@ -713,16 +713,16 @@
         <!-- ===== PROGRAMAÇÃO SEMANAL (checklist por colaborador) ===== -->
         <div x-show="opTab==='semana'">
           <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
-            <div class="text-3 fs-12">Todos os posts por colaborador · use a aba <b>Layouts</b> pra montar a semana</div>
+            <div class="text-3 fs-12">Todos os posts por etiqueta · use a aba <b>Layouts</b> pra montar a semana</div>
             <button class="btn btn-primary btn-sm" @click="novoProjeto()">+ Projeto</button>
           </div>
-          <template x-if="!progColaboradores().length"><div class="card empty">Nenhum projeto atribuído ainda. Crie um projeto e escolha o responsável.</div></template>
+          <template x-if="!progPorEtiqueta().length"><div class="card empty">Nenhum post nesta semana. Crie um post no quadro e adicione uma etiqueta.</div></template>
           <div class="grid grid-2" style="align-items:start">
-            <template x-for="g in progColaboradores()" :key="g.nome">
+            <template x-for="g in progPorEtiqueta()" :key="g.ref">
               <div class="card" style="padding:0;overflow:hidden">
                 <div class="flex items-center justify-between" style="padding:11px 14px;border-bottom:1px solid var(--border)">
                   <div>
-                    <div class="fw-800 fs-14" x-text="g.nome"></div>
+                    <div class="fw-800 fs-14" style="display:flex;align-items:center;gap:7px"><span :style="'width:11px;height:11px;border-radius:3px;flex-shrink:0;background:'+g.cor"></span><span x-text="g.nome"></span></div>
                     <div class="text-3 fs-12" x-show="g.projetos.some(p=>p.cliente)" x-text="[...new Set(g.projetos.map(p=>p.cliente).filter(Boolean))].join(' · ')"></div>
                   </div>
                   <span class="badge" :style="progFeitos(g.projetos)===g.projetos.length?'background:#dcfce7;color:#16a34a':'background:var(--surface-2);color:var(--text-2)'" x-text="progFeitos(g.projetos)+'/'+g.projetos.length+' feitos'"></span>
@@ -2737,7 +2737,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=163"></script>
+<script src="js/app.js?v=164"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
