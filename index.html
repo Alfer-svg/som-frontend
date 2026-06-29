@@ -2440,6 +2440,13 @@
           <button class="chat-send" @click="addComentario()" title="Enviar">➤</button>
         </div>
       </div>
+
+      <!-- autoria + histórico (discreto, no rodapé do card) -->
+      <div x-show="cardRef && (cardRef.criadoPorNome || cardRef.atualizadoPorNome)" style="margin-top:16px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11.5px;color:var(--text-3);line-height:1.5">
+        <span x-show="cardRef.criadoPorNome">Criado por <b x-text="cardRef.criadoPorNome"></b><span x-show="cardRef._criadoEm" x-text="' · '+fmtDataHora(cardRef._criadoEm)"></span></span>
+        <span x-show="cardRef.atualizadoPorNome">• Última atualização por <b x-text="cardRef.atualizadoPorNome"></b><span x-show="cardRef._atualizadoEm" x-text="' · '+fmtDataHora(cardRef._atualizadoEm)"></span></span>
+        <button @click="abrirHistorico(cardRef)" style="margin-left:auto;background:none;border:none;color:var(--text-3);text-decoration:underline;cursor:pointer;font-size:11.5px;padding:0;white-space:nowrap">ver histórico</button>
+      </div>
     </div>
     <div class="modal-foot">
       <div class="flex gap-2" style="margin-right:auto">
@@ -2448,6 +2455,30 @@
       </div>
       <button class="btn btn-primary" @click="fecharCard()">Pronto</button>
     </div>
+  </div>
+</div>
+
+<!-- Histórico de criação/alterações do card (operacional) -->
+<div class="modal-backdrop" x-show="historicoModal" x-cloak @click.self="historicoModal=false">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head">
+      <div style="font-weight:800;font-size:15px"><i class="ph ph-clock-counter-clockwise"></i> Histórico — <span x-text="historicoCardNome"></span></div>
+      <button class="btn btn-icon btn-ghost" @click="historicoModal=false">✕</button>
+    </div>
+    <div class="modal-body">
+      <template x-if="!historicoItens.length"><div class="text-3 fs-13" style="text-align:center;padding:20px 0">Sem histórico ainda.</div></template>
+      <template x-for="h in historicoItens" :key="h.id">
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border)">
+          <span :style="'flex-shrink:0;width:8px;height:8px;border-radius:50%;margin-top:5px;background:'+(h.acao==='CRIADO'?'#16a34a':'#2563eb')"></span>
+          <div style="flex:1;min-width:0">
+            <div class="fs-13"><b x-text="h.acao==='CRIADO'?'Criou o card':'Atualizou'"></b> · <span x-text="h.usuarioNome"></span></div>
+            <div class="text-3 fs-12" x-text="fmtDataHora(h.createdAt)"></div>
+            <div class="text-3 fs-12" x-show="h.resumo" x-text="h.resumo"></div>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div class="modal-foot"><button class="btn btn-primary" @click="historicoModal=false">Fechar</button></div>
   </div>
 </div>
 
@@ -2706,7 +2737,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=162"></script>
+<script src="js/app.js?v=163"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

@@ -313,6 +313,7 @@ document.addEventListener('alpine:init', () => {
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
     cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, membroDrop: false, novoItemCheck: '', // card-detalhe Trello
+    historicoModal: false, historicoItens: [], historicoCardNome: '', // histórico de criação/alterações do card
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
     cloudCfg: { cloud: '', preset: '' }, uploadando: false, // storage de arquivos (Cloudinary)
     cronTick: 0, // tique de 1s pra o cronômetro ao vivo
@@ -448,7 +449,9 @@ document.addEventListener('alpine:init', () => {
     async carregarProjetos() {
       try {
         const r = await this.api('GET', '/projetos');
-        let lista = (r || []).map(x => ({ id: x.id, ...(x.dados || {}) }));
+        let lista = (r || []).map(x => ({ id: x.id, ...(x.dados || {}),
+          criadoPorNome: x.criadoPorNome || null, atualizadoPorNome: x.atualizadoPorNome || null,
+          _criadoEm: x.createdAt || null, _atualizadoEm: x.updatedAt || null }));
         // Colaborador 2 só enxerga os trabalhos em que está envolvido (responsável ou membro).
         if (this.papel === 'colaborador2') {
           const eu = (this.usuario && this.usuario.nome) || '';
@@ -458,7 +461,26 @@ document.addEventListener('alpine:init', () => {
       } catch { }
     },
     async salvarLeadApi(l) { const { id, ...dados } = l; const r = await this.api('POST', '/leads', { id, dados }); if (r && r.id && !id) l.id = r.id; return r; },
-    async salvarProjetoApi(p) { const { id, ...dados } = p; const r = await this.api('POST', '/projetos', { id, dados }); if (r && r.id && !id) p.id = r.id; return r; },
+    async salvarProjetoApi(p) {
+      // Tira os campos de metadado/autoria do `dados` (são colunas no backend, não fazem parte do conteúdo do card).
+      const { id, criadoPorNome, atualizadoPorNome, _criadoEm, _atualizadoEm, ...dados } = p;
+      const r = await this.api('POST', '/projetos', { id, dados });
+      if (r && r.id && !id) p.id = r.id;
+      // Atualiza autoria/datas locais com o que o backend gravou (pra o rodapé refletir na hora).
+      if (r) { p.atualizadoPorNome = r.atualizadoPorNome || p.atualizadoPorNome; p._atualizadoEm = r.updatedAt || p._atualizadoEm; if (!p.criadoPorNome) p.criadoPorNome = r.criadoPorNome || null; if (!p._criadoEm) p._criadoEm = r.createdAt || null; }
+      return r;
+    },
+    // Histórico completo do card (operacional). Abre o modal e carrega do backend.
+    async abrirHistorico(p) {
+      if (!p || !p.id) { this.historicoItens = []; this.historicoCardNome = (p && (p.nome || p.tema)) || 'Card'; this.historicoModal = true; return; }
+      this.historicoCardNome = p.nome || p.tema || 'Card'; this.historicoItens = []; this.historicoModal = true;
+      try { this.historicoItens = (await this.api('GET', '/projetos/' + p.id + '/historico')) || []; }
+      catch (e) { this.historicoItens = []; }
+    },
+    fmtDataHora(d) {
+      if (!d) return '';
+      try { return new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return ''; }
+    },
     // migração one-time: o 1º navegador com dados locais semeia o backend; os demais usam o backend
     async migrarColecao(chave, recurso) {
       const locais = MD.get(chave, []);
