@@ -2041,21 +2041,22 @@ ${this._docFoot()}
     },
     aprovarIA(obj, campo) { if (obj['_ia_' + campo]) { obj[campo] = obj['_ia_' + campo]; delete obj['_ia_' + campo]; if (obj === this.cardRef) this.salvarCard(); } },
     descartarIA(obj, campo) { delete obj['_ia_' + campo]; },
-    // Programação agrupada por ETIQUETA (a coluna leva o nome da etiqueta, não do responsável).
-    progPorEtiqueta() {
+    // Programação agrupada por MEMBRO (a coluna leva o nome do membro do card).
+    progPorMembro() {
       const q = this.busca.toLowerCase();
       const posts = this.projects.filter(p => p.isPost && !p.avulso && !p.arquivado); // criativo avulso e arquivados ficam fora da programação semanal
       const passa = p => !q || (p.nome + ' ' + (p.cliente || '')).toLowerCase().includes(q);
       const SEM = '__sem__';
-      const grupos = new Map(); // key da etiqueta -> { nome, cor, ref, projetos }
+      const grupos = new Map(); // nome do membro -> { nome, ref, projetos }
       for (const p of posts) {
         if (!passa(p)) continue;
-        const labs = (p.labels || []).filter(Boolean);
-        const key = labs.length ? labs[0] : SEM; // 1ª etiqueta vira a coluna (não duplica o card em várias)
+        // pessoas do card = membros; se não houver, cai no responsável.
+        const pessoas = (Array.isArray(p.membros) && p.membros.length) ? p.membros : (p.responsavel ? [p.responsavel] : []);
+        const key = pessoas.length ? pessoas[0] : SEM; // 1º membro vira a coluna (não duplica o card em várias)
         if (!grupos.has(key)) {
           grupos.set(key, key === SEM
-            ? { nome: 'Sem etiqueta', cor: '#b3b9c4', ref: SEM, projetos: [] }
-            : { nome: this.labelNome(key) || 'Sem nome', cor: this.labelCor(key), ref: key, projetos: [] });
+            ? { nome: 'Sem responsável', ref: SEM, projetos: [] }
+            : { nome: key, ref: key, projetos: [] });
         }
         grupos.get(key).projetos.push(p);
       }
