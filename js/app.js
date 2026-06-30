@@ -477,7 +477,7 @@ document.addEventListener('alpine:init', () => {
       this.finance   = MD.get('som_finance', []);
       this.fornecedores = MD.get('som_fornecedores', []); // cadastro de fornecedores (despesas)
       this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento (cache; fonte = backend)
-      if (this.token) { this.page = MD.get('som_page', 'dashboard'); this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis(); this.startHeartbeat(); this.startChatMonitor(); this.registrarPush(); this.go(this.page);
+      if (this.token) { this.page = MD.get('som_page', 'dashboard'); this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis(); this.startHeartbeat(); this.startChatMonitor(); this.startOnboardingMonitor(); this.registrarPush(); this.go(this.page);
         const _card = new URLSearchParams(location.search).get('card'); // abriu pela notificação → vai direto no card
         if (_card) { history.replaceState({}, '', location.pathname); this.$nextTick(() => this.abrirCardPorId(_card)); }
       }
@@ -517,7 +517,7 @@ document.addEventListener('alpine:init', () => {
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
         localStorage.setItem('som_login_visto', '1');
         if (this.lembrarLogin) localStorage.setItem('som_login_email', this.loginEmail); else localStorage.removeItem('som_login_email');
-        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); this.registrarPush(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis();
+        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); this.startOnboardingMonitor(); this.registrarPush(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -2207,6 +2207,30 @@ ${this._docFoot()}
         this._chatSeen[r.id] = maxTs;
       }
       this._chatBaseline = true;
+    },
+    // Monitor de onboardings: avisa (som + visual) quando um briefing novo é respondido.
+    // Roda pra admin e colaboradores que enxergam a fila de Onboardings.
+    startOnboardingMonitor() {
+      if (this._onbMonitor) return;
+      if (!this.ehAdmin && !this.podeVer('onboarding')) return;
+      this._onbBaseline = false; this._onbSeen = {};
+      this._onbMonitor = setInterval(() => this.monitorOnboardings(), 25000);
+      this.monitorOnboardings();
+    },
+    async monitorOnboardings() {
+      if (!this.token) return;
+      let lista; try { lista = (await this.api('GET', '/onboarding/admin')) || []; } catch { return; }
+      this.onboardings = lista; // mantém a fila e o contador de pendentes vivos
+      const pend = lista.filter(o => o.status === 'pendente');
+      if (!this._onbBaseline) { pend.forEach(o => this._onbSeen[o.id] = 1); this._onbBaseline = true; return; } // 1ª passada: só marca o que já existe
+      const novos = pend.filter(o => !this._onbSeen[o.id]);
+      novos.forEach(o => this._onbSeen[o.id] = 1);
+      if (novos.length) {
+        const nomes = novos.slice(0, 3).map(o => o.empresa).join(', ') + (novos.length > 3 ? ' +' + (novos.length - 3) : '');
+        const tSite = (novos.length === 1 && (novos[0].dados || {}).tipo === 'site') ? ' de site' : '';
+        this.notificarSistema('📩 Briefing respondido' + tSite, nomes);
+        this.mostrarToast('📩 Briefing respondido: ' + nomes);
+      }
     },
     initAudio() { try { this._audioCtx = this._audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (this._audioCtx.state === 'suspended') this._audioCtx.resume(); } catch { } },
     tocarBeep() {
