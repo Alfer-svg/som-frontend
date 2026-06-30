@@ -552,8 +552,9 @@
   </div>
 
   <div class="field">
-    <label>CPF ou CNPJ</label>
-    <input type="text" data-q="empresa_documento" inputmode="numeric" placeholder="00.000.000/0000-00 ou 000.000.000-00" />
+    <label>CNPJ <span class="req">*</span></label>
+    <input type="text" data-q="empresa_cnpj" data-required="true" inputmode="numeric" placeholder="00.000.000/0000-00" />
+    <p class="hint">Usamos o CNPJ pra localizar seu cadastro no nosso sistema.</p>
   </div>
 
   <div class="field">
@@ -881,7 +882,7 @@
     var QUESTIONS = [
       { section: 'Sua empresa', step: 1, items: [
         { q: 'empresa_nome', label: 'Nome da empresa' },
-        { q: 'empresa_documento', label: 'CPF / CNPJ' },
+        { q: 'empresa_cnpj', label: 'CNPJ' },
         { q: 'empresa_site', label: 'Site' },
         { q: 'empresa_slogan', label: 'Slogan' },
         { q: 'empresa_gmn', label: 'Google Meu Negócio' },

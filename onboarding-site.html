@@ -552,6 +552,12 @@
   </div>
 
   <div class="field">
+    <label>CNPJ <span class="req">*</span></label>
+    <input type="text" data-q="empresa_cnpj" data-required="true" inputmode="numeric" placeholder="00.000.000/0000-00" />
+    <p class="hint">Usamos o CNPJ pra localizar seu cadastro no nosso sistema.</p>
+  </div>
+
+  <div class="field">
     <label>Em uma frase, o que a empresa faz? <span class="req">*</span></label>
     <input type="text" data-q="empresa_frase" data-required="true" placeholder='Ex: "Bolos artesanais sob encomenda no Recife"' />
   </div>
@@ -931,6 +937,7 @@
     var QUESTIONS = [
       { section: 'Sua empresa', step: 1, items: [
         { q: 'empresa_nome', label: 'Nome da empresa ou marca' },
+        { q: 'empresa_cnpj', label: 'CNPJ' },
         { q: 'empresa_frase', label: 'O que a empresa faz (em uma frase)' },
         { q: 'empresa_tempo', label: 'Tempo de mercado' },
         { q: 'empresa_historia', label: 'História da empresa' },
