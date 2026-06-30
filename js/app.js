@@ -1958,7 +1958,7 @@ ${this._docFoot()}
           const novas = coms.filter(c => (new Date(c.em).getTime() || 0) > prev && c.autor !== eu);
           const envolvido = (d.membros || []).includes(eu) || d.responsavel === eu;
           const aberto = this.cardModal && this.cardRef && this.cardRef.id === r.id;
-          if (novas.length && envolvido && !aberto) { const u = novas[novas.length - 1]; this.notificarMsg(d.tema || d.nome || 'Card', u.autor, u.texto); }
+          if (novas.length && envolvido && !aberto) { const u = novas[novas.length - 1]; this.notificarMsg(d.tema || d.nome || 'Card', u.autor, u.texto, { id: r.id, ...d }); }
         }
         this._chatSeen[r.id] = maxTs;
       }
@@ -1973,12 +1973,14 @@ ${this._docFoot()}
       } catch { }
     },
     async pedirNotif() { try { if (window.Notification && Notification.permission === 'default') await Notification.requestPermission(); } catch { } },
-    notificarMsg(card, autor, texto) {
+    notificarMsg(card, autor, texto, projeto) {
       this.tocarBeep();
+      const corte = (texto || '').length > 80 ? (texto.slice(0, 80) + '…') : (texto || '');
+      this.mostrarToast('💬 ' + autor + ' · ' + card + ': ' + corte, projeto); // visual garantido dentro do app
       try {
         if (window.Notification && Notification.permission === 'granted') {
           const n = new Notification(autor + ' · ' + card, { body: texto, icon: new URL('assets/icon.png?v=6', location.href).href, tag: 'som-chat-' + card });
-          n.onclick = () => { window.focus(); n.close(); };
+          n.onclick = () => { window.focus(); if (projeto) { if (this.page !== 'operacional') this.go('operacional'); this.abrirCard(projeto); } n.close(); };
         }
       } catch { }
     },
@@ -1992,8 +1994,9 @@ ${this._docFoot()}
         }
       } catch { }
     },
-    // Toast visível dentro do app (some sozinho).
-    mostrarToast(msg) { this.toastMsg = msg; clearTimeout(this._toastT); this._toastT = setTimeout(() => { this.toastMsg = ''; }, 8000); },
+    // Toast visível dentro do app (some sozinho). `card` opcional = projeto a abrir ao clicar.
+    mostrarToast(msg, card) { this.toastMsg = msg; this._toastCard = card || null; clearTimeout(this._toastT); this._toastT = setTimeout(() => { this.toastMsg = ''; this._toastCard = null; }, 9000); },
+    onToastClick() { const c = this._toastCard; this.toastMsg = ''; this._toastCard = null; if (c) { if (this.page !== 'operacional') this.go('operacional'); this.abrirCard(c); } },
     toggleLabelCard(key) { const a = this.cardRef.labels; const i = a.indexOf(key); if (i >= 0) a.splice(i, 1); else a.push(key); this.salvarCard(); },
     toggleMembro(nome) { const a = this.cardRef.membros; const i = a.indexOf(nome); if (i >= 0) a.splice(i, 1); else a.push(nome); this.salvarCard(); },
     get equipeForaDoCard() { const ja = (this.cardRef && this.cardRef.membros) || []; return this.equipe.filter(m => !ja.includes(m.nome)); }, // quem ainda NÃO está no projeto

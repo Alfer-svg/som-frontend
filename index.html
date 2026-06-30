@@ -35,7 +35,7 @@
 <body x-data="app()" x-cloak>
 
 <!-- Toast de alerta do sistema (ex.: novo onboarding) -->
-<div x-show="toastMsg" x-transition @click="toastMsg=''" style="position:fixed;top:18px;right:18px;z-index:9999;max-width:360px;background:#141210;color:#fff;padding:14px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px;font-weight:600;cursor:pointer;display:flex;gap:8px;align-items:center">
+<div x-show="toastMsg" x-transition @click="onToastClick()" title="Clique para abrir" style="position:fixed;top:18px;right:18px;z-index:9999;max-width:360px;background:#141210;color:#fff;padding:14px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px;font-weight:600;cursor:pointer;display:flex;gap:8px;align-items:center">
   <span x-text="toastMsg"></span>
 </div>
 
@@ -2819,7 +2819,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=170"></script>
+<script src="js/app.js?v=171"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
