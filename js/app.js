@@ -80,6 +80,49 @@ const OBJETIVOS = [
   'Avaliações no Google Meu Negócio', 'Posições no topo do Google (SEO)', 'Reconhecimento de marca',
 ];
 const ORIGENS = ['Instagram', 'Indicação', 'Google', 'WhatsApp', 'Prospecção ativa', 'Site', 'Evento', 'Outros'];
+// Salmos e Provérbios — exibidos aleatoriamente no topo do Operacional (como no SIAGO).
+const VERSICULOS = [
+  { texto: 'O Senhor é o meu pastor; nada me faltará.', ref: 'Salmos 23:1' },
+  { texto: 'Em ti, Senhor, ponho a minha confiança.', ref: 'Salmos 31:1' },
+  { texto: 'O Senhor é a minha luz e a minha salvação; a quem temerei?', ref: 'Salmos 27:1' },
+  { texto: 'Bendize, ó minha alma, ao Senhor, e tudo o que há em mim bendiga o seu santo nome.', ref: 'Salmos 103:1' },
+  { texto: 'Aquietai-vos, e sabei que eu sou Deus.', ref: 'Salmos 46:10' },
+  { texto: 'Este é o dia que o Senhor fez; regozijemo-nos e alegremo-nos nele.', ref: 'Salmos 118:24' },
+  { texto: 'Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará.', ref: 'Salmos 37:5' },
+  { texto: 'O Senhor é bom para todos, e as suas misericórdias estão sobre todas as suas obras.', ref: 'Salmos 145:9' },
+  { texto: 'Tu és o meu refúgio e a minha fortaleza, ó meu Deus, em quem confio.', ref: 'Salmos 91:2' },
+  { texto: 'Ainda que eu andasse pelo vale da sombra da morte, não temeria mal algum, porque tu estás comigo.', ref: 'Salmos 23:4' },
+  { texto: 'Lâmpada para os meus pés é a tua palavra, e luz para o meu caminho.', ref: 'Salmos 119:105' },
+  { texto: 'O Senhor é o meu rochedo, e o meu lugar forte, e o meu libertador.', ref: 'Salmos 18:2' },
+  { texto: 'Deleita-te também no Senhor, e ele te concederá o que deseja o teu coração.', ref: 'Salmos 37:4' },
+  { texto: 'Espera no Senhor, anima-te, e ele fortalecerá o teu coração.', ref: 'Salmos 27:14' },
+  { texto: 'Deus é o nosso refúgio e fortaleza, socorro bem presente na angústia.', ref: 'Salmos 46:1' },
+  { texto: 'Provai, e vede que o Senhor é bom; bem-aventurado o homem que nele confia.', ref: 'Salmos 34:8' },
+  { texto: 'Os justos clamam, e o Senhor os ouve, e os livra de todas as suas angústias.', ref: 'Salmos 34:17' },
+  { texto: 'Confia no Senhor, e faze o bem; habitarás na terra, e te alimentarás em segurança.', ref: 'Salmos 37:3' },
+  { texto: 'Os passos de um homem bom são confirmados pelo Senhor, e deleita-se no seu caminho.', ref: 'Salmos 37:23' },
+  { texto: 'Tu me darás a vereda da vida; na tua presença há fartura de alegrias.', ref: 'Salmos 16:11' },
+  { texto: 'Os que semeiam em lágrimas, com alegria ceifarão.', ref: 'Salmos 126:5' },
+  { texto: 'O Senhor faz prosperar o que empreendes.', ref: 'Salmos 90:17' },
+  { texto: 'O temor do Senhor é o princípio da sabedoria.', ref: 'Salmos 111:10' },
+  { texto: 'O Senhor abençoará o seu povo com paz.', ref: 'Salmos 29:11' },
+  { texto: 'Confiai no Senhor para sempre, porque o Senhor Deus é uma rocha eterna.', ref: 'Salmos 31:14' },
+  { texto: 'O temor do Senhor é o princípio do conhecimento; os loucos desprezam a sabedoria e a instrução.', ref: 'Provérbios 1:7' },
+  { texto: 'Confia no Senhor de todo o teu coração, e não te estribes no teu próprio entendimento.', ref: 'Provérbios 3:5' },
+  { texto: 'Reconhece-o em todos os teus caminhos, e ele endireitará as tuas veredas.', ref: 'Provérbios 3:6' },
+  { texto: 'O coração do homem planeja o seu caminho, mas o Senhor lhe dirige os passos.', ref: 'Provérbios 16:9' },
+  { texto: 'Entrega ao Senhor as tuas obras, e os teus pensamentos serão estabelecidos.', ref: 'Provérbios 16:3' },
+  { texto: 'Melhor é o pouco com o temor do Senhor do que um grande tesouro onde há inquietação.', ref: 'Provérbios 15:16' },
+  { texto: 'A resposta branda desvia o furor, mas a palavra dura suscita a ira.', ref: 'Provérbios 15:1' },
+  { texto: 'Como o ferro com o ferro se afia, assim o homem afia o rosto do seu amigo.', ref: 'Provérbios 27:17' },
+  { texto: 'O nome do Senhor é torre forte; para ela corre o justo, e está seguro.', ref: 'Provérbios 18:10' },
+  { texto: 'A bênção do Senhor é que enriquece, e ele não acrescenta dores.', ref: 'Provérbios 10:22' },
+  { texto: 'Em todo trabalho há proveito, mas o falar dos lábios só leva à penúria.', ref: 'Provérbios 14:23' },
+  { texto: 'O justo cai sete vezes, e se levanta; mas os ímpios tropeçam no mal.', ref: 'Provérbios 24:16' },
+  { texto: 'Vês um homem diligente na sua obra? Perante reis será posto; não permanecerá entre os de posição obscura.', ref: 'Provérbios 22:29' },
+  { texto: 'Melhor é o fim das coisas do que o seu princípio.', ref: 'Eclesiastes 7:8' },
+  { texto: 'Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu.', ref: 'Eclesiastes 3:1' },
+];
 const PROJ_STATUS = [
   { id: 'A Fazer',      color: '#8a8ba3' },
   { id: 'Em Andamento', color: '#2563eb' },
@@ -349,6 +392,7 @@ document.addEventListener('alpine:init', () => {
     modeloSel: '', // modelo escolhido no dropdown do "Novo projeto"
     modelosFav: MD.get('som_modelos_fav', []), // nomes dos modelos favoritados (sobem no dropdown)
     colaboradores: MD.get('som_colaboradores', []), // nomes da equipe (cresce sozinho ao salvar projeto)
+    versiculo: null, // Salmo/Provérbio aleatório do topo do Operacional
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
@@ -385,6 +429,7 @@ document.addEventListener('alpine:init', () => {
     carregando: false,
 
     init() {
+      this.versiculo = this.sorteiaVersiculo(); // Salmo/Provérbio do topo do Operacional
       // login: e-mail lembrado + dica de trabalho aleatória
       const emailLembrado = localStorage.getItem('som_login_email') || '';
       this.loginEmail = emailLembrado; this.lembrarLogin = !!emailLembrado || !localStorage.getItem('som_login_visto');
@@ -587,7 +632,8 @@ document.addEventListener('alpine:init', () => {
       const nome = cls.split('ph-').pop();
       return 'assets/icons/' + nome + '.png?v=7';
     },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -1959,7 +2005,9 @@ ${this._docFoot()}
         // mensagem nova de OUTRA pessoa, em card onde estou envolvido, e que não está aberto
         if (this._chatBaseline && maxTs > prev) {
           const novas = coms.filter(c => (new Date(c.em).getTime() || 0) > prev && c.autor !== eu);
-          const envolvido = (d.membros || []).includes(eu) || d.responsavel === eu;
+          // Avisa todos os colaboradores (função colaborador) + quem está no card (membros/responsável).
+          const souColaborador = this.papel === 'colaborador';
+          const envolvido = souColaborador || (d.membros || []).includes(eu) || d.responsavel === eu;
           const aberto = this.cardModal && this.cardRef && this.cardRef.id === r.id;
           if (novas.length && envolvido && !aberto) { const u = novas[novas.length - 1]; this.notificarMsg(d.tema || d.nome || 'Card', u.autor, u.texto, { id: r.id, ...d }); }
         }
