@@ -184,7 +184,7 @@ const CONDICOES_PAGAMENTO = ['À Vista', 'Parcelado', 'Mensal', 'Semanal', 'Quin
 // Cobre o onboarding de SITE e o de MARKETING. A ORDEM aqui define a ordem de exibição no briefing.
 const ONB_LABELS = {
   // — SITE —
-  empresa_nome: 'Nome da empresa/marca', empresa_cnpj: 'CNPJ', empresa_frase: 'O que a empresa faz (frase)', empresa_tempo: 'Tempo de mercado',
+  empresa_nome: 'Nome da empresa/marca', empresa_cnpj: 'CNPJ', empresa_razao: 'Razão social', empresa_frase: 'O que a empresa faz (frase)', empresa_tempo: 'Tempo de mercado',
   empresa_historia: 'História da empresa', empresa_missao: 'Missão / valores', empresa_quem: 'Quem está por trás',
   id_logo: 'Já tem logo?', id_cores: 'Cores / estilo', id_evitar: 'O que NÃO quer no visual', id_tratamento: 'Trata o cliente por',
   id_estilo: 'Estilo de comunicação', id_referencias: 'Sites de referência (design)',
@@ -909,7 +909,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         (d.fileLinks || []).forEach(fl => { if (fl && fl.url) docs.push({ id: MD.uid(), nome: fl.filename || fl.name || 'Arquivo', tipo: 'Identidade visual', url: fl.url }); });
         if (a.mat_mailing_url) docs.push({ id: MD.uid(), nome: 'Mailing de clientes', tipo: 'Outro', url: a.mat_mailing_url });
         dados = {
-          cnpj: a.empresa_cnpj || a.empresa_documento || '', razaoSocial: '', empresa: o.empresa, slogan: a.empresa_slogan || '',
+          cnpj: a.empresa_cnpj || a.empresa_documento || '', razaoSocial: a.empresa_razao || '', empresa: o.empresa, slogan: a.empresa_slogan || '',
           cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
           contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
           servicos: [], redes: redesVazias(), site: { url: a.empresa_site || '', seo: 0, sgo: 0 },
