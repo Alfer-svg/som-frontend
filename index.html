@@ -2070,7 +2070,7 @@
       <div class="grid grid-2" style="gap:14px">
         <div class="form-group"><label class="form-label">Número <span class="hq" data-tip="Número/identificador do documento (gerado automático, dá pra ajustar).">?</span></label><input class="form-input" x-model="editing.numero"></div>
         <div class="form-group"><label class="form-label">Status <span class="hq" data-tip="Situação atual do registro.">?</span></label><select class="form-select" x-model="editing.status"><template x-for="s in ORC_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
-        <div class="form-group"><label class="form-label">Cliente <span class="hq" data-tip="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clientesLista"><option :value="c.empresa"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">Cliente <span class="hq" data-tip="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clientesListaProposta"><option :value="c.empresa"></option></template></datalist></div>
         <div class="form-group"><label class="form-label">Projeto <span class="hq" data-tip="Tipo/nome do projeto (ex.: Gestão + Tráfego).">?</span></label>
           <select class="form-select" x-model="projetoSel" @change="if(projetoSel!=='Outros'){editing.projeto=projetoSel}else if(PROJETO_OPCOES.includes(editing.projeto)){editing.projeto=''}">
             <option value="" disabled>Selecione…</option>
@@ -3050,7 +3050,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=180"></script>
+<script src="js/app.js?v=181"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

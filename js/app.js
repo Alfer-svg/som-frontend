@@ -56,7 +56,7 @@ const STAGES = [
   { id: 'Reunião',     ico: '🤝', color: '#0ea5e9', desc: 'Reunião ou diagnóstico agendado / realizado.' },
   { id: 'Proposta',    ico: '📄', color: '#f97316', desc: 'Proposta comercial enviada, aguardando retorno.' },
   { id: 'Negociação',  ico: '💬', color: '#db2777', desc: 'Ajustes finais de escopo, preço e condições.' },
-  { id: 'Ganho',       ico: '🏆', color: '#16a34a', desc: 'Fechou! O lead vira cliente ativo.' },
+  { id: 'Ganho',       ico: '🏆', color: '#16a34a', desc: 'Fechou! O lead vira cliente (arquivado até fechar o contrato).' },
   { id: 'Perdido',     ico: '✕',  color: '#dc2626', desc: 'Não avançou — registre o motivo pra aprender e melhorar.' },
 ];
 const SERVICOS = ['Gestão de Redes Sociais', 'Criação de Conteúdo', 'ADS / Tráfego Pago', 'Audiovisual', 'Sites & Apps', 'Branding', 'SEO / Growth', 'Marketing Político', 'Consultoria'];
@@ -865,7 +865,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
           contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
           servicos: [], redes: redesVazias(), site: { url: a.empresa_site || '', seo: 0, sgo: 0 },
           dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
-          briefing: b, responsaveis: [], documentos: docs, mensalidade: 0, status: 'Ativo', desde: MD.today(),
+          briefing: b, responsaveis: [], documentos: docs, mensalidade: 0, status: 'Inativo', desde: MD.today(),
           notas: a.empresa_gmn ? ('Google Meu Negócio: ' + a.empresa_gmn) : '',
         };
       } else {
@@ -879,7 +879,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
           dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
           briefing: briefingMerge(d.briefing),
           responsaveis: (r.nome || r.email || r.whatsapp) ? [{ id: MD.uid(), nome: r.nome || '', cargo: r.cargo || '', whatsapp: r.whatsapp || '', email: r.email || '', nascimento: '', instagram: '', linkedin: '', seguindo: false, notas: '' }] : [],
-          documentos: [], mensalidade: 0, status: 'Ativo', desde: MD.today(),
+          documentos: [], mensalidade: 0, status: 'Inativo', desde: MD.today(),
           notas: (d.gmn && d.gmn.acesso) ? ('Google Meu Negócio: ' + d.gmn.acesso) : '',
         };
       }
@@ -1207,8 +1207,17 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     get clientesArquivadosCount() { return this.clients.filter(c => c.status === 'Inativo').length; },
     // Lista de clientes pros dropdowns/datalists dos formulários — só ATIVOS (não Inativo).
     get clientesLista() { return this.clients.filter(c => (c.status || 'Ativo') !== 'Inativo').sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '')); },
+    // Igual ao clientesLista, mas INCLUI arquivados — usado só no seletor de cliente da proposta:
+    // arquivado pode RECEBER proposta; só vira Ativo quando fecha contrato (ver _ativarClienteDoContrato).
+    get clientesListaProposta() { return [...this.clients].sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '')); },
     ativarCliente(c) { c.status = 'Ativo'; return this.persistirCliente(c); },
     arquivarCliente(c) { c.status = 'Inativo'; return this.persistirCliente(c); },
+    // Fechou contrato (Assinado) ⇒ o cliente arquivado é promovido a Ativo. Chamado no aceite digital e na marcação manual.
+    _ativarClienteDoContrato(c) {
+      if (!c || c.status !== 'Assinado') return;
+      const cli = this._clientePorNome(c.cliente);
+      if (cli && (cli.status || 'Ativo') === 'Inativo') return this.ativarCliente(cli);
+    },
     async puxarDoSite() {
       const url = (this.editing.site && this.editing.site.url) || '';
       if (!url) { this.enriqMsg = 'Informe a URL do site primeiro.'; this.enriqResult = null; return; }
@@ -1284,7 +1293,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         hospedagem: { provedor: '', vencimento: '' },
         ads: adsVazio(),
         objetivos: [], briefing: briefingVazio(), responsaveis: [], documentos: [],
-        mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
+        mensalidade: 0, status: 'Inativo', desde: MD.today(), notas: '',
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -2752,7 +2761,7 @@ ${this._docFoot()}
       try {
         const resp = await this.api('POST', '/assinatura/status', { token: c.assinatura.token });
         c.assinatura = { ...c.assinatura, ...resp };
-        if (resp.status === 'signed') c.status = 'Assinado';
+        if (resp.status === 'signed') { c.status = 'Assinado'; this._ativarClienteDoContrato(c); } // contrato fechado ⇒ ativa o cliente
         const i = this.contracts.findIndex(x => x.id === c.id); if (i > -1) this.contracts[i] = { ...c };
         this.persist('contracts', this.contracts);
         if (this.docObj && this.docObj.id === c.id) this.docObj = c;
@@ -2832,7 +2841,9 @@ ${this._docFoot()}
       const e = this.editing; if (!e.cliente && !e.objeto) return alert('Informe ao menos o cliente ou o objeto.');
       if (e.id) { const i = this.contracts.findIndex(x => x.id === e.id); if (i > -1) this.contracts[i] = { ...e }; }
       else { e.id = MD.uid(); this.contracts.unshift({ ...e }); }
-      this.persist('contracts', this.contracts); this.modal = null;
+      this.persist('contracts', this.contracts);
+      this._ativarClienteDoContrato(e); // marcado como Assinado manualmente ⇒ ativa o cliente
+      this.modal = null;
     },
     excluirContrato(c) { if (!confirm('Excluir o contrato ' + (c.numero || '') + '?')) return; this.contracts = this.contracts.filter(x => x.id !== c.id); this.persist('contracts', this.contracts); this.modal = null; },
 
@@ -3110,7 +3121,7 @@ ${this._docFoot()}
       l.stage = 'Ganho'; try { await this.salvarLeadApi(l); } catch {}
       if (antes !== 'Ganho') this.registrarProducao('negocio', l.empresa || '', +l.valor || 0);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
+        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, status: 'Inativo', desde: MD.today(), notas: l.notas };
         try { await this.api('POST', '/clientes', { empresa: l.empresa, dados }); await this.carregarClientes(); } catch (e) { alert('Lead ganho, mas falhou ao criar o cliente: ' + e.message); }
       }
       this.modal = null;
