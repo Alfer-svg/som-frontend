@@ -827,7 +827,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       catch (e) { alert(e.message); }
     },
     // ── Onboardings recebidos do site ──
-    async carregarOnboardings() { try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch { this.onboardings = []; } this.autoConverterOnboardings(); },
+    async carregarOnboardings() { try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch { this.onboardings = []; } }, // não auto-converte: onboarding fica pendente pra você revisar e escolher o tipo
     get onbPendentes() { return (this.onboardings || []).filter(o => o.status === 'pendente'); },
     onbStatusInfo(o) {
       const s = o.status || 'pendente';
@@ -904,13 +904,12 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         this.onbModal = false; await this.carregarOnboardings();
         return;
       }
-      const dados = this._dadosDoOnboarding(o);
-      try {
-        await this.api('POST', '/clientes', { empresa: o.empresa, dados });
-        await this.api('POST', '/onboarding/admin/' + o.id + '/convertido', {});
-        this.onbModal = false; await this.carregarClientes(); await this.carregarOnboardings();
-        alert('Cliente "' + o.empresa + '" criado a partir do onboarding. ✅');
-      } catch (e) { alert(e.message || 'Falha ao converter.'); }
+      // Abre o cadastro pré-preenchido pra você ESCOLHER O TIPO (site sugere Avulso) e revisar.
+      // Nasce arquivado (Inativo) — vira ativo só ao fechar contrato. Ao salvar, marca o onboarding como convertido.
+      this.editing = { id: '', ...this._dadosDoOnboarding(o), empresa: o.empresa,
+        tipoCliente: ((o.dados || {}).tipo === 'site') ? 'avulso' : 'recorrente', status: 'Inativo', desde: MD.today() };
+      this._onbConvertendo = o.id;
+      this.cnpjMsg = ''; this.cepMsg = ''; this.onbModal = false; this.modal = 'client';
     },
     // Auto-converte onboardings pendentes em clientes (roda ao abrir o SOM). Trava anti-duplicado por nome; mantém o registro (status convertido) como histórico.
     async autoConverterOnboardings() {
@@ -1302,6 +1301,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       finally { this.psiLoading = false; }
     },
     novoCliente() {
+      this._onbConvertendo = null;
       this.editing = {
         id: '', cnpj: '', razaoSocial: '', empresa: '', slogan: '', inscEstadual: '',
         cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
@@ -1326,6 +1326,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       return rs;
     },
     editarCliente(c) {
+      this._onbConvertendo = null;
       this.editing = {
         ...c,
         tipoCliente: c.tipoCliente || 'recorrente',
@@ -1672,6 +1673,10 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       const { id, ...dados } = e;
       try {
         await this.api('POST', '/clientes', { id: id || undefined, empresa: e.empresa, dados });
+        if (this._onbConvertendo) { // veio de um onboarding → tira da fila (marca convertido)
+          try { await this.api('POST', '/onboarding/admin/' + this._onbConvertendo + '/convertido', {}); } catch {}
+          this._onbConvertendo = null; this.carregarOnboardings();
+        }
         await this.carregarClientes(); this.modal = null;
       } catch (err) { alert(err.message || 'Falha ao salvar o cliente.'); }
     },
