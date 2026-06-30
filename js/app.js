@@ -365,6 +365,7 @@ document.addEventListener('alpine:init', () => {
     fichaModal: false, fichaMsg: '',
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     verArquivados: false, // lista de Clientes: mostrar arquivados (inativos) em vez dos ativos
+    cliTipoTab: 'recorrente', // aba de tipo na lista de Clientes: 'recorrente' | 'avulso'
     verArquivadosContrato: false, // lista de Contratos: mostrar arquivados (encerrados/vencidos +10d)
     orcFiltro: 'ativos', // filtro da lista de Orçamentos: 'ativos' | 'rascunhos' | 'arquivados'
     presenca: [], // quem está online (Operacional); admin vê todos
@@ -873,7 +874,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
           contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
           servicos: [], redes: redesVazias(), site: { url: a.empresa_site || '', seo: 0, sgo: 0 },
           dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
-          briefing: b, responsaveis: [], documentos: docs, mensalidade: 0, status: 'Inativo', desde: MD.today(),
+          briefing: b, responsaveis: [], documentos: docs, mensalidade: 0, tipoCliente: 'recorrente', status: 'Inativo', desde: MD.today(),
           notas: a.empresa_gmn ? ('Google Meu Negócio: ' + a.empresa_gmn) : '',
         };
       } else {
@@ -887,7 +888,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
           dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
           briefing: briefingMerge(d.briefing),
           responsaveis: (r.nome || r.email || r.whatsapp) ? [{ id: MD.uid(), nome: r.nome || '', cargo: r.cargo || '', whatsapp: r.whatsapp || '', email: r.email || '', nascimento: '', instagram: '', linkedin: '', seguindo: false, notas: '' }] : [],
-          documentos: [], mensalidade: 0, status: 'Inativo', desde: MD.today(),
+          documentos: [], mensalidade: 0, tipoCliente: 'recorrente', status: 'Inativo', desde: MD.today(),
           notas: (d.gmn && d.gmn.acesso) ? ('Google Meu Negócio: ' + d.gmn.acesso) : '',
         };
       }
@@ -990,7 +991,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
 
     // ───────────────── DASHBOARD ─────────────────
-    get clientesAtivos() { return this.clients.filter(c => c.status !== 'Inativo').length; },
+    get clientesAtivos() { return this.clients.filter(c => c.status !== 'Inativo' && this.clienteTipo(c) === 'recorrente').length; }, // recorrentes ativos (KPI)
     get leadsAbertos()   { return this.leads.filter(l => !['Ganho', 'Perdido'].includes(l.stage)).length; },
     get projetosAndamento() { return this.projects.filter(p => p.status !== 'Concluído').length; },
     // chave 'YYYY-MM' do mês selecionado nas abas do Financeiro
@@ -1014,7 +1015,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       if (f.vencimento && f.vencimento < MD.today()) return 'background:rgba(239,68,68,.07)';
       return (i % 2) ? 'background:rgba(0,0,0,.022)' : '';
     },
-    get mrr()        { return this.clients.filter(c => c.status !== 'Inativo').reduce((a, c) => a + (+c.mensalidade || 0), 0); },
+    get mrr()        { return this.clients.filter(c => c.status !== 'Inativo' && this.clienteTipo(c) === 'recorrente').reduce((a, c) => a + (+c.mensalidade || 0), 0); },
 
     // ───────────────── PAINEL COMERCIAL ─────────────────
     // Período navegável (dia/semana/mês + deslocamento), em America/Recife.
@@ -1211,13 +1212,18 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
 
     // ───────────────── COMERCIAL: clientes ─────────────────
+    clienteTipo(c) { return (c && c.tipoCliente) || 'recorrente'; }, // tipo: recorrente (mensalidade) | avulso (esporádico)
     get clientesFiltrados() {
       const q = this.busca.toLowerCase();
       return this.clients
+        .filter(c => this.clienteTipo(c) === this.cliTipoTab) // separa Recorrentes × Avulsos
         .filter(c => this.verArquivados ? (c.status === 'Inativo') : (c.status !== 'Inativo'))
         .filter(c => !q || (c.empresa + ' ' + (c.razaoSocial || '') + ' ' + (c.contato || '')).toLowerCase().includes(q));
     },
-    get clientesArquivadosCount() { return this.clients.filter(c => c.status === 'Inativo').length; },
+    // Ativos por tipo + arquivados do tipo selecionado.
+    get clientesRecorrentesCount() { return this.clients.filter(c => c.status !== 'Inativo' && this.clienteTipo(c) === 'recorrente').length; },
+    get clientesAvulsosCount() { return this.clients.filter(c => c.status !== 'Inativo' && this.clienteTipo(c) === 'avulso').length; },
+    get clientesArquivadosCount() { return this.clients.filter(c => c.status === 'Inativo' && this.clienteTipo(c) === this.cliTipoTab).length; },
     // Lista de clientes pros dropdowns/datalists dos formulários — só ATIVOS (não Inativo).
     get clientesLista() { return this.clients.filter(c => (c.status || 'Ativo') !== 'Inativo').sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '')); },
     // Igual ao clientesLista, mas INCLUI arquivados — usado só no seletor de cliente da proposta:
@@ -1306,7 +1312,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         hospedagem: { provedor: '', vencimento: '' },
         ads: adsVazio(),
         objetivos: [], briefing: briefingVazio(), responsaveis: [], documentos: [],
-        mensalidade: 0, status: 'Inativo', desde: MD.today(), notas: '',
+        mensalidade: 0, tipoCliente: this.cliTipoTab || 'recorrente', status: 'Inativo', desde: MD.today(), notas: '',
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -1322,6 +1328,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     editarCliente(c) {
       this.editing = {
         ...c,
+        tipoCliente: c.tipoCliente || 'recorrente',
         servicos: c.servicos || (c.servico ? [c.servico] : []),
         redes: redesMerge(c.redes),
         site: { url: '', seo: 0, sgo: 0, ...(c.site || {}) },
@@ -3134,7 +3141,7 @@ ${this._docFoot()}
       l.stage = 'Ganho'; try { await this.salvarLeadApi(l); } catch {}
       if (antes !== 'Ganho') this.registrarProducao('negocio', l.empresa || '', +l.valor || 0);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, status: 'Inativo', desde: MD.today(), notas: l.notas };
+        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, tipoCliente: 'recorrente', status: 'Inativo', desde: MD.today(), notas: l.notas };
         try { await this.api('POST', '/clientes', { empresa: l.empresa, dados }); await this.carregarClientes(); } catch (e) { alert('Lead ganho, mas falhou ao criar o cliente: ' + e.message); }
       }
       this.modal = null;
