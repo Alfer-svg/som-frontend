@@ -180,6 +180,37 @@ const PERIODICIDADES = ['Mensal', 'Único', 'Trimestral', 'Anual'];
 const FORMAS_PAGAMENTO = ['Pix', 'Boleto', 'Dinheiro', 'Cartão de crédito', 'Cartão de débito', 'Transferência/TED', 'Depósito', 'Cheque', 'Débito Automático', 'Faturado'];
 // Condições no padrão Operand: À Vista (1x) · Parcelado (divide o valor final) · demais = recorrente (cada período = valor final).
 const CONDICOES_PAGAMENTO = ['À Vista', 'Parcelado', 'Mensal', 'Semanal', 'Quinzenal', 'Trimestral', 'Semestral', 'Anual'];
+// Rótulos legíveis das respostas dos onboardings (formato novo: dados.answers por chave data-q).
+// Cobre o onboarding de SITE e o de MARKETING. A ORDEM aqui define a ordem de exibição no briefing.
+const ONB_LABELS = {
+  // — SITE —
+  empresa_nome: 'Nome da empresa/marca', empresa_frase: 'O que a empresa faz (frase)', empresa_tempo: 'Tempo de mercado',
+  empresa_historia: 'História da empresa', empresa_missao: 'Missão / valores', empresa_quem: 'Quem está por trás',
+  id_logo: 'Já tem logo?', id_cores: 'Cores / estilo', id_evitar: 'O que NÃO quer no visual', id_tratamento: 'Trata o cliente por',
+  id_estilo: 'Estilo de comunicação', id_referencias: 'Sites de referência (design)',
+  prod_tipo: 'Vende principalmente', prod_lista: 'Produtos / serviços', prod_diferencial: 'Diferenciais',
+  prod_setores: 'Setores / perfis de cliente', prod_transformacao: 'Transformação que o cliente sente', prod_precos: 'Mostrar preços no site?',
+  pub_ideal: 'Cliente ideal', pub_problema: 'Problema que resolve', pub_atende: 'Onde atende',
+  pub_porque: 'Por que escolher você', pub_concorrentes: 'Concorrentes / referências',
+  cred_depoimentos: 'Depoimentos', cred_numeros: 'Números de impacto', cred_certificacoes: 'Certificações / prêmios / parcerias',
+  cred_secao: 'Mostrar seção de clientes?', cred_empresas: 'Empresas a destacar',
+  obj_acao: 'Ação principal do site', obj_whatsapp: 'WhatsApp', obj_telefone: 'Telefone', obj_email: 'E-mail',
+  obj_endereco: 'Endereço e horário', obj_redes: 'Redes sociais',
+  tec_conteudo: 'O que quer no site', tec_fotos: 'Tem fotos próprias?', tec_blog: 'Quer blog?',
+  tec_materiais: 'Link com materiais', tec_dominio: 'Domínio registrado?', tec_dominio_empresa: 'Onde o domínio está registrado',
+  tec_hospedagem: 'Hospedagem atual', tec_palavras: 'Palavras-chave do Google',
+  // — MARKETING —
+  empresa_documento: 'CPF / CNPJ', empresa_site: 'Site', empresa_slogan: 'Slogan', empresa_gmn: 'Google Meu Negócio',
+  mat_logo_url: 'Logo (link)', mat_manual_url: 'Manual de marca (link)', mat_fotos: 'Drive de fotos/vídeos', mat_mailing_url: 'Mailing (link)',
+  pub_idade: 'Faixa etária', pub_escolaridade: 'Escolaridade', pub_sexo: 'Sexo', pub_alvo: 'Público-alvo',
+  neg_descricao: 'Descrição do negócio', neg_concorrentes: 'Concorrentes', neg_percepcao: 'Percepção do produto',
+  neg_recorrencia: 'Recorrência de consumo', neg_fechamento: 'Tempo de fechamento da venda',
+  hist_gostava: 'Gostava (agência anterior)', hist_faltava: 'Sentia falta',
+  est_anuncios: 'Experiência com anúncios', est_campanhas: 'Campanhas / datas',
+  cri_linguagem: 'Linguagem', cri_termos_evitar: 'Termos a evitar', cri_hashtags: 'Hashtags / slogan',
+  cri_inspiracao: 'Marcas que inspiram', cri_datas_gerais: 'Datas comemorativas', cri_datas_segmento: 'Datas do segmento',
+  pal_chave: 'Palavras-chave',
+};
 // Dados oficiais da agência (cabeçalho/rodapé de proposta e contrato).
 const EMPRESA = {
   nome: 'Maracatu Digital Intelligence',
@@ -844,6 +875,15 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     verOnboarding(o) { this.onbSel = o; this.onbModal = true; },
     onbLinhas(o) {
       const d = (o && o.dados) || {}; const out = []; const add = (l, v) => { if (v != null && String(v).trim()) out.push({ label: l, v: String(v) }); };
+      // Formato NOVO (site / onboarding atual): respostas por chave em d.answers
+      if (d.answers && typeof d.answers === 'object') {
+        const a = d.answers, vistos = {};
+        Object.keys(ONB_LABELS).forEach(k => { if (a[k] != null && String(a[k]).trim()) { add(ONB_LABELS[k], a[k]); vistos[k] = 1; } });
+        // chaves que por acaso não estejam no mapa (humaniza pra não perder nada)
+        Object.keys(a).forEach(k => { if (!vistos[k]) add(k.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase()), a[k]); });
+        (d.fileLinks || []).forEach(f => add('Arquivo', (f.filename || 'arquivo') + (f.url ? (' — ' + f.url) : '')));
+        return out;
+      }
       add('Site', d.site); add('Slogan', d.slogan); add('Google Meu Negócio', d.gmn && d.gmn.acesso);
       const r = d.responsavel || {}; add('Quem preencheu', [r.nome, r.cargo].filter(Boolean).join(' · ')); add('WhatsApp', r.whatsapp); add('E-mail', r.email);
       this.briefingItens({ briefing: d.briefing, slogan: '' }).forEach(x => out.push(x));
