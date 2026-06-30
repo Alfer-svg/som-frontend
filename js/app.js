@@ -177,7 +177,9 @@ const CONTR_STATUS = [
   { id: 'Cancelado', color: '#dc2626' }, // cancelado → arquiva
 ];
 const PERIODICIDADES = ['Mensal', 'Único', 'Trimestral', 'Anual'];
-const FORMAS_PAGAMENTO = ['Boleto', 'Pix', 'Cartão de crédito', 'Transferência/TED'];
+const FORMAS_PAGAMENTO = ['Pix', 'Boleto', 'Dinheiro', 'Cartão de crédito', 'Cartão de débito', 'Transferência/TED', 'Depósito', 'Cheque', 'Débito Automático', 'Faturado'];
+// Condições no padrão Operand: À Vista (1x) · Parcelado (divide o valor final) · demais = recorrente (cada período = valor final).
+const CONDICOES_PAGAMENTO = ['À Vista', 'Parcelado', 'Mensal', 'Semanal', 'Quinzenal', 'Trimestral', 'Semestral', 'Anual'];
 // Dados oficiais da agência (cabeçalho/rodapé de proposta e contrato).
 const EMPRESA = {
   nome: 'Maracatu Digital Intelligence',
@@ -339,7 +341,7 @@ document.addEventListener('alpine:init', () => {
     page: 'dashboard',
     comOpen: true, // grupo "Comercial" (CRM + Clientes) aberto na barra lateral
     finOpen: false, // grupo "Financeiro" (Lançamentos + Fornecedores)
-    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, FORN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
+    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, FORN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, CONDICOES_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
     metaStatus: {},   // {clienteId: {conectado, igUsername, pageName, ...}} — conexão Meta por cliente
@@ -2540,13 +2542,50 @@ ${this._docFoot()}
     orcStatusInfo(s) { return ORC_STATUS.find(x => x.id === s) || ORC_STATUS[0]; },
     // Total mensal = soma dos serviços (fallback no campo valor legado de orçamentos antigos).
     orcTotal(o) { const s = o && o.servicos; if (Array.isArray(s) && s.length) return s.reduce((a, x) => a + (+x.valor || 0), 0); return +(o && o.valor) || 0; },
+    // ── Valores (estilo Operand): subtotal → encargos/desconto/honorários → valor final ──
+    orcEncargos(o) { return Math.round(this.orcTotal(o) * (+(o && o.encargoPct) || 0)) / 100; },
+    orcFinal(o) { return Math.max(0, Math.round((this.orcTotal(o) - (+(o && o.desconto) || 0) + (+(o && o.honorarios) || 0) + this.orcEncargos(o)) * 100) / 100); },
+    orcCustosExternos(o) { return ((o && o.custosExternos) || []).reduce((a, x) => a + (+x.valor || 0), 0); },
+    orcMargem(o) { return this.orcFinal(o) - this.orcCustosExternos(o); }, // quanto sobra após custos da entrega
+    orcFatTotal(o) { return ((o && o.faturamento) || []).reduce((a, x) => a + (+x.valor || 0), 0); }, // soma das parcelas
+    // Parcelas conferem se a soma = valor final (Parcelado) OU = final×nº (recorrente).
+    orcFatConfere(o) { const s = this.orcFatTotal(o), f = this.orcFinal(o), n = ((o && o.faturamento) || []).length || 1; return Math.abs(s - f) < 0.02 || Math.abs(s - f * n) < 0.02; },
+    _condRecorrente(c) { return c === 'Semanal' || c === 'Quinzenal' || c === 'Mensal' || c === 'Trimestral' || c === 'Semestral' || c === 'Anual'; },
+    // Gera a tabela de parcelas a partir de condição + nº parcelas + valor final (padrão Operand).
+    gerarParcelas() {
+      const o = this.editing;
+      const cond = o.condicao || 'À Vista';
+      const MESES = { Mensal: 1, Trimestral: 3, Semestral: 6, Anual: 12 }; // intervalo em meses
+      const recorrente = this._condRecorrente(cond);
+      const n = cond === 'À Vista' ? 1 : Math.max(1, Math.min(120, +o.parcelas || 1));
+      const final = this.orcFinal(o);
+      const cada = Math.floor((final / n) * 100) / 100; // só usado no Parcelado (divide o final)
+      const base = o.data ? new Date(o.data + 'T00:00:00') : new Date();
+      const diaV = Math.min(28, Math.max(1, +o.diaVencimento || base.getDate()));
+      const venc = (i) => {
+        if (cond === 'Semanal') { const d = new Date(base.getTime()); d.setDate(d.getDate() + 7 * i); return d; }
+        if (cond === 'Quinzenal') { const d = new Date(base.getTime()); d.setDate(d.getDate() + 15 * i); return d; }
+        const m = MESES[cond] || 1; // Parcelado e Mensal: 1 mês entre vencimentos
+        return new Date(base.getFullYear(), base.getMonth() + m * i, n === 1 ? base.getDate() : diaV);
+      };
+      const arr = [];
+      for (let i = 0; i < n; i++) {
+        const val = recorrente ? final : (i === n - 1 ? Math.round((final - cada * (n - 1)) * 100) / 100 : cada);
+        arr.push({ id: MD.uid(), vencimento: venc(i).toISOString().slice(0, 10), valor: val, forma: o.formaPagamento || 'Pix', faturamento: '' });
+      }
+      o.faturamento = arr;
+    },
+    addParcela() { (this.editing.faturamento = this.editing.faturamento || []).push({ id: MD.uid(), vencimento: MD.today(), valor: 0, forma: this.editing.formaPagamento || 'Pix', faturamento: '' }); },
+    removeParcela(i) { this.editing.faturamento.splice(i, 1); },
+    addCustoExterno() { (this.editing.custosExternos = this.editing.custosExternos || []).push({ id: MD.uid(), descricao: '', valor: 0 }); },
+    removeCustoExterno(i) { this.editing.custosExternos.splice(i, 1); },
     servicoVazio() { return { id: MD.uid(), nome: '', valor: 0, escopo: '', _open: true }; },
     // Acordeão dos serviços: recolher (salva o item visualmente) / abrir (1 por vez)
     recolherServico(s) { if (!s.nome) return alert('Dê um nome ao serviço antes de recolher.'); s._open = false; },
     abrirServico(s) { (this.editing.servicos || []).forEach(x => x._open = false); s._open = true; },
     _projSel(p) { return PROJETO_OPCOES.includes(p) ? p : (p ? 'Outros' : ''); }, // deriva o valor do dropdown a partir do texto salvo
-    novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', contato: '', email: '', projeto: '', servicos: [this.servicoVazio()], vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, status: 'Rascunho', data: MD.today(), validade: 30, observacoes: '', modoAssinatura: 'presencial' }; this.projetoSel = ''; this.modal = 'orcamento'; },
-    editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Boleto', diaVencimento: 5, validade: 30, modoAssinatura: 'presencial', ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, escopo: '', ...s, _open: false })); this.projetoSel = this._projSel(this.editing.projeto); this.modal = 'orcamento'; },
+    novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', contato: '', email: '', projeto: '', servicos: [this.servicoVazio()], vigenciaMeses: 6, formaPagamento: 'Pix', diaVencimento: 5, status: 'Rascunho', data: MD.today(), validade: 30, observacoes: '', modoAssinatura: 'presencial', desconto: 0, honorarios: 0, encargoPct: 0, condicao: 'À Vista', parcelas: 1, faturamento: [], custosExternos: [], consideracoes: '' }; this.projetoSel = ''; this.modal = 'orcamento'; },
+    editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Pix', diaVencimento: 5, validade: 30, modoAssinatura: 'presencial', desconto: 0, honorarios: 0, encargoPct: 0, condicao: 'À Vista', parcelas: 1, faturamento: [], custosExternos: [], consideracoes: '', ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, escopo: '', ...s, _open: false })); this.projetoSel = this._projSel(this.editing.projeto); this.modal = 'orcamento'; },
     addServicoOrc() { if (!Array.isArray(this.editing.servicos)) this.editing.servicos = []; this.editing.servicos.forEach(s => s._open = false); this.editing.servicos.push(this.servicoVazio()); },
     removeServicoOrc(i) { this.editing.servicos.splice(i, 1); if (!this.editing.servicos.length) this.editing.servicos.push(this.servicoVazio()); },
     // Preenche o máximo possível a partir do cliente selecionado (contato/e-mail, com fallback no 1º responsável).
@@ -2925,6 +2964,22 @@ h2{break-after:avoid}.serv-head{break-after:avoid}.serv{break-inside:auto}
         return `<div class="serv"><div class="serv-head"><span class="n">${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(s.valor))}<small>/mês</small></span></div>${chips}${verbaNota}${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
       }).join('');
       const cron = this.cronograma(o).map(p => `<tr><td>${p.n}º mês — ${e(MD.fmtDate(p.venc))}</td><td>${e(MD.fmtCur(p.valor))}</td><td>${e(o.formaPagamento || 'Boleto')}</td></tr>`).join('');
+      // ── Valores e parcelas (padrão Operand) ──
+      const final = this.orcFinal(o), enc = this.orcEncargos(o), desc = +o.desconto || 0, hon = +o.honorarios || 0;
+      const parcelas = Array.isArray(o.faturamento) ? o.faturamento : [];
+      const temParcelas = parcelas.length > 0;
+      const temAjuste = enc > 0 || desc > 0 || hon > 0 || Math.abs(final - total) > 0.01;
+      const valoresHTML = (temAjuste || temParcelas) ? `<h2>Resumo de valores</h2><table><tbody>`
+        + `<tr><td>Subtotal dos serviços</td><td>${e(MD.fmtCur(total))}</td></tr>`
+        + (enc > 0 ? `<tr><td>+ Encargos${o.encargoPct ? ` (${e(o.encargoPct)}%)` : ''}</td><td>${e(MD.fmtCur(enc))}</td></tr>` : '')
+        + (hon > 0 ? `<tr><td>+ Honorários</td><td>${e(MD.fmtCur(hon))}</td></tr>` : '')
+        + (desc > 0 ? `<tr><td>− Desconto</td><td>− ${e(MD.fmtCur(desc))}</td></tr>` : '')
+        + `<tr><td><b>Valor final</b></td><td><b>${e(MD.fmtCur(final))}</b></td></tr>`
+        + `</tbody></table>` : '';
+      const parcelasHTML = parcelas.map((p, i) => `<tr><td>${i + 1}ª — ${e(MD.fmtDate(p.vencimento))}</td><td>${e(MD.fmtCur(+p.valor || 0))}</td><td>${e(p.forma || o.formaPagamento || 'Pix')}</td></tr>`).join('');
+      const pagamentoHTML = temParcelas
+        ? `<h2>Condições de pagamento</h2><div class="bloco">${e(o.condicao || 'À Vista')}${parcelas.length > 1 ? ` — ${parcelas.length}×` : ''}</div><table><thead><tr><th>Parcela / Vencimento</th><th>Valor</th><th>Forma</th></tr></thead><tbody>${parcelasHTML}</tbody></table>`
+        : `<h2>Cronograma de cobranças</h2><table><thead><tr><th>Competência / Vencimento</th><th>Mensalidade</th><th>Forma</th></tr></thead><tbody>${cron}</tbody></table>`;
       const metaCli = [o.contato && `<span><b>Contato:</b> ${e(o.contato)}</span>`, o.email && `<span><b>E-mail:</b> ${e(o.email)}</span>`].filter(Boolean).join('');
       return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Proposta ${e(o.numero)}</title><style>${this._cssDoc()}</style></head><body>
 ${this._docHead('PROPOSTA', o.numero, ['Data: ' + MD.fmtDate(o.data), 'Validade: ' + (o.validade || 30) + ' dias'])}
@@ -2935,8 +2990,9 @@ ${o.projeto ? `<div class="meta-cli"><span><b>Projeto:</b> ${e(o.projeto)}</span
 <h2>Serviços incluídos</h2>${servHTML || '<div class="intro">—</div>'}
 <div class="total"><span>MENSALIDADE TOTAL</span><b>${e(MD.fmtCur(total))}/mês</b></div>
 <div class="nota-perfil">Os valores sugeridos nesta proposta, incluindo a verba de investimento em mídia, foram definidos a partir de uma análise prévia do perfil e dos objetivos do cliente, podendo ser ajustados em conjunto conforme a estratégia acordada.</div>
+${valoresHTML}
 <h2>Vigência do contrato</h2><div class="bloco">${e(o.vigenciaMeses || 6)} meses via ${e(o.formaPagamento || 'Boleto')}</div>
-<h2>Cronograma de cobranças</h2><table><thead><tr><th>Competência / Vencimento</th><th>Mensalidade</th><th>Forma</th></tr></thead><tbody>${cron}</tbody></table>
+${pagamentoHTML}
 <h2>Considerações finais</h2>
 <div class="bloco"><b>Condições Comerciais</b>Os serviços serão remunerados por fee mensal, pelo período de vigência de ${e(o.vigenciaMeses || 6)} meses.</div>
 <div class="bloco"><b>Prazo e Rescisão</b>Início a partir da aceitação desta Proposta; vigência de ${e(o.vigenciaMeses || 6)} meses com renovação automática por iguais 6 meses. Rescisão a partir do 6º mês, com aviso prévio de 30 dias; antes do 6º mês, multa de 50% dos fees restantes.</div>

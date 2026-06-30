@@ -2147,9 +2147,70 @@
       <datalist id="serv-list"><template x-for="sv in SERVICOS"><option :value="sv"></option></template></datalist>
       <div class="flex" style="justify-content:space-between;align-items:center;margin:6px 0 4px">
         <button class="btn btn-ghost btn-sm" @click="addServicoOrc()">+ Serviço</button>
-        <div class="fw-700">Mensalidade total: <span class="text-green" x-text="fmtCur(orcTotal(editing))+'/mês'"></span></div>
+        <div class="fw-700">Subtotal dos serviços: <span class="text-green" x-text="fmtCur(orcTotal(editing))"></span></div>
       </div>
-      <div class="form-group" style="margin-top:10px"><label class="form-label">Observações <span class="hq" data-tip="Anotações livres sobre este registro.">?</span></label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
+
+      <!-- ===== VALORES E PAGAMENTO (modelo Operand) ===== -->
+      <div class="card" style="padding:14px 16px;margin-top:12px;background:rgba(0,0,0,.02)">
+        <div class="fw-800 fs-14 mb-2"><i class="ph ph-calculator ic-ph"></i> Valores e pagamento</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+          <div class="form-group"><label class="form-label">Desconto (R$)</label><input class="form-input" type="number" min="0" step="0.01" x-model.number="editing.desconto"></div>
+          <div class="form-group"><label class="form-label">Honorários (R$) <span class="hq" data-tip="Acréscimo de honorários da agência.">?</span></label><input class="form-input" type="number" min="0" step="0.01" x-model.number="editing.honorarios"></div>
+          <div class="form-group"><label class="form-label">Encargos/impostos (%) <span class="hq" data-tip="Percentual de encargos/impostos sobre o subtotal.">?</span></label><input class="form-input" type="number" min="0" step="0.01" x-model.number="editing.encargoPct"></div>
+        </div>
+        <div class="flex" style="flex-wrap:wrap;gap:16px;justify-content:flex-end;align-items:baseline;border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
+          <div class="fs-13 text-3">Subtotal: <b x-text="fmtCur(orcTotal(editing))"></b></div>
+          <div class="fs-13 text-3" x-show="orcEncargos(editing)">+ Encargos: <b x-text="fmtCur(orcEncargos(editing))"></b></div>
+          <div class="fs-13 text-3" x-show="+editing.honorarios">+ Honorários: <b x-text="fmtCur(editing.honorarios)"></b></div>
+          <div class="fs-13 text-3" x-show="+editing.desconto">− Desconto: <b style="color:#dc2626" x-text="fmtCur(editing.desconto)"></b></div>
+          <div class="fw-800 fs-16">Valor final: <span class="text-green" x-text="fmtCur(orcFinal(editing))"></span></div>
+        </div>
+
+        <div class="flex items-end gap-2" style="flex-wrap:wrap;margin-top:12px">
+          <div class="form-group" style="min-width:180px"><label class="form-label">Condição de pagamento</label><select class="form-select" x-model="editing.condicao"><template x-for="c in CONDICOES_PAGAMENTO"><option x-text="c"></option></template></select></div>
+          <div class="form-group" style="width:110px" x-show="editing.condicao!=='À Vista'"><label class="form-label">Parcelas</label><input class="form-input" type="number" min="1" max="120" x-model.number="editing.parcelas"></div>
+          <button type="button" class="btn btn-ghost btn-sm" @click="gerarParcelas()" style="margin-bottom:2px"><i class="ph ph-arrows-clockwise ic-ph"></i> Gerar parcelas</button>
+        </div>
+
+        <div x-show="(editing.faturamento||[]).length" style="margin-top:10px;overflow-x:auto">
+          <table style="width:100%;font-size:13px;border-collapse:collapse">
+            <thead><tr style="text-align:left;color:var(--text-3,#777)"><th style="padding:4px 6px">#</th><th style="padding:4px 6px">Vencimento</th><th style="padding:4px 6px">Valor (R$)</th><th style="padding:4px 6px">Forma de pagamento</th><th style="padding:4px 6px">Faturamento</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="(p,i) in editing.faturamento" :key="p.id">
+                <tr style="border-top:1px solid var(--border)">
+                  <td style="padding:4px 6px" x-text="i+1"></td>
+                  <td style="padding:4px 6px"><input class="form-input" type="date" style="padding:5px 7px" x-model="p.vencimento"></td>
+                  <td style="padding:4px 6px"><input class="form-input" type="number" step="0.01" style="padding:5px 7px;width:110px" x-model.number="p.valor"></td>
+                  <td style="padding:4px 6px"><select class="form-select" style="padding:5px 7px" x-model="p.forma"><template x-for="f in FORMAS_PAGAMENTO"><option x-text="f"></option></template></select></td>
+                  <td style="padding:4px 6px"><input class="form-input" style="padding:5px 7px;width:120px" x-model="p.faturamento" placeholder="ex.: NF, boleto"></td>
+                  <td style="padding:4px 6px"><button type="button" class="btn btn-icon btn-ghost btn-sm" @click="removeParcela(i)"><i class="ph ph-trash ic-ph"></i></button></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <div class="flex items-center justify-between" style="margin-top:6px">
+            <button type="button" class="btn btn-ghost btn-sm" @click="addParcela()">+ Parcela</button>
+            <div class="fs-13" :style="orcFatConfere(editing)?'color:#16a34a':'color:#dc2626'">Soma das parcelas: <b x-text="fmtCur(orcFatTotal(editing))"></b><span x-show="!orcFatConfere(editing)" x-text="' (≠ valor final '+fmtCur(orcFinal(editing))+')'"></span><span x-show="orcFatConfere(editing)"> ✓</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+          <div class="flex items-center justify-between mb-1"><div class="fw-700 fs-13"><i class="ph ph-receipt ic-ph"></i> Custos externos <span class="hq" data-tip="Custos da entrega (terceiros, mídia, fornecedores) — uso interno, não aparece pro cliente.">?</span></div><div class="fs-12 text-3">Total: <b x-text="fmtCur(orcCustosExternos(editing))"></b></div></div>
+          <template x-for="(c,i) in (editing.custosExternos||[])" :key="c.id">
+            <div class="flex items-center gap-2" style="margin-bottom:6px">
+              <input class="form-input" style="flex:1;padding:5px 8px" x-model="c.descricao" placeholder="Descrição do custo">
+              <span class="fs-12 text-3">R$</span>
+              <input class="form-input" type="number" step="0.01" style="width:120px;padding:5px 8px" x-model.number="c.valor">
+              <button type="button" class="btn btn-icon btn-ghost btn-sm" @click="removeCustoExterno(i)"><i class="ph ph-trash ic-ph"></i></button>
+            </div>
+          </template>
+          <div class="flex items-center justify-between"><button type="button" class="btn btn-ghost btn-sm" @click="addCustoExterno()">+ Custo externo</button><div class="fs-12 text-3" x-show="orcCustosExternos(editing)">Margem (final − custos): <b x-text="fmtCur(orcMargem(editing))"></b></div></div>
+        </div>
+
+        <div class="form-group" style="margin-top:12px;margin-bottom:0"><label class="form-label">Considerações finais <span class="hq" data-tip="Texto livre que aparece no rodapé da proposta enviada ao cliente.">?</span></label><textarea class="form-textarea" rows="2" x-model="editing.consideracoes" placeholder="Condições gerais, observações ao cliente…"></textarea></div>
+      </div>
+
+      <div class="form-group" style="margin-top:10px"><label class="form-label">Observações internas <span class="hq" data-tip="Anotações internas (não saem na proposta).">?</span></label><textarea class="form-textarea" x-model="editing.observacoes"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirOrcamento(editing)">Excluir</button>
@@ -2989,7 +3050,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=179"></script>
+<script src="js/app.js?v=180"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
