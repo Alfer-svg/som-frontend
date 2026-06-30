@@ -2824,7 +2824,14 @@
     <div class="modal-body">
       <div class="flex items-center gap-3" style="margin-bottom:6px">
         <div style="width:48px;height:48px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;overflow:hidden" :style="fichaForm.foto?('background-image:url('+fichaForm.foto+');background-size:cover;background-position:center'):('background:'+avatarBg(fichaForm.nome)+';color:'+avatarFg(fichaForm.nome))" x-text="fichaForm.foto?'':iniciais(fichaForm.nome)"></div>
-        <div><div class="fw-800 fs-16" x-text="fichaForm.nome"></div><div class="text-3 fs-12">Perfil: <span x-text="papelInfo(fichaForm.papel).nome"></span> · acesso/senha em Configurações</div></div>
+        <div style="flex:1">
+          <div class="fw-800 fs-16" x-text="fichaForm.nome"></div>
+          <div class="text-3 fs-12">Perfil: <span x-text="papelInfo(fichaForm.papel).nome"></span> · acesso/senha em Configurações</div>
+        </div>
+        <div class="flex items-center gap-2" style="flex-shrink:0">
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer" :class="uploadando?'is-loading':''"><i class="ph ph-camera ic-ph"></i> <span x-text="uploadando?'Enviando…':(fichaForm.foto?'Trocar foto':'Adicionar foto')"></span><input type="file" accept="image/*" @change="lerFotoArquivo($event, fichaForm)" style="display:none"></label>
+          <button class="btn btn-ghost btn-sm" x-show="fichaForm.foto" @click="fichaForm.foto=''" title="Remover foto">remover</button>
+        </div>
       </div>
 
       <div class="ficha-sec-title" style="margin-top:14px"><i class="ph ph-briefcase ic-ph"></i> Dados profissionais</div>
@@ -2964,7 +2971,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=175"></script>
+<script src="js/app.js?v=176"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

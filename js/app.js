@@ -714,8 +714,8 @@ document.addEventListener('alpine:init', () => {
       const f = this.fichaForm; this.fichaMsg = '';
       try {
         // admin edita a ficha de qualquer um; demais editam só a própria (via /auth/me)
-        if (this.ehAdmin) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, ficha: f.ficha || {} });
-        else await this.api('PATCH', '/auth/me', { nome: f.nome, ficha: f.ficha || {} });
+        if (this.ehAdmin) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, ficha: f.ficha || {}, foto: f.foto || '' });
+        else await this.api('PATCH', '/auth/me', { nome: f.nome, ficha: f.ficha || {}, foto: f.foto || '' });
         await this.carregarUsuarios(); this.carregarEquipe(); this.fichaModal = false;
       } catch (e) { this.fichaMsg = '⚠ ' + e.message; }
     },
@@ -782,13 +782,15 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         await this.carregarUsuarios(); this.carregarEquipe(); this.pessoaModal = false;
       } catch (e) { this.pessoaMsg = '⚠ ' + e.message; }
     },
-    // foto de perfil: lê arquivo, redimensiona no navegador e guarda como base64
-    async lerFotoArquivo(e) {
+    // foto de perfil: lê arquivo, redimensiona no navegador e guarda como base64.
+    // `form` = objeto-alvo (pessoaForm do admin OU fichaForm da própria ficha); default pessoaForm.
+    async lerFotoArquivo(e, form) {
+      form = form || this.pessoaForm;
       const file = e.target.files && e.target.files[0]; if (!file) return;
       if (!file.type.startsWith('image/')) { alert('Selecione uma imagem.'); return; }
       if (this.cloudOk) { // sobe pro Cloudinary (não pesa o banco)
         this.uploadando = true;
-        try { const u = await this.uploadArquivo(file); if (u) this.pessoaForm.foto = u; }
+        try { const u = await this.uploadArquivo(file); if (u) form.foto = u; }
         catch (err) { alert(err.message); } finally { this.uploadando = false; e.target.value = ''; }
         return;
       }
@@ -797,7 +799,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         const S = 240; const cv = document.createElement('canvas'); cv.width = S; cv.height = S; const ctx = cv.getContext('2d');
         const sc = Math.max(S / img.width, S / img.height); const w = img.width * sc, h = img.height * sc;
         ctx.drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
-        this.pessoaForm.foto = cv.toDataURL('image/jpeg', 0.82); URL.revokeObjectURL(url);
+        form.foto = cv.toDataURL('image/jpeg', 0.82); URL.revokeObjectURL(url);
       };
       img.src = url;
     },
