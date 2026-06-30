@@ -2022,9 +2022,8 @@ ${this._docFoot()}
       try { const url = await this.uploadArquivo(file); if (url) { this.cardRef.anexos.push({ id: MD.uid(), nome: file.name || 'arquivo', url, em: new Date().toISOString() }); await this.salvarCard(); } }
       catch (err) { alert(err.message); } finally { this.uploadando = false; e.target.value = ''; }
     },
-    // Sobe VÁRIOS arquivos de uma vez (input multiple). Cada um vira anexo do card; e
-    // se o card é um POST e o arquivo é imagem, também entra nos slides do carrossel
-    // (criativos[]) — assim subir 5 imagens monta o carrossel direto pro cliente.
+    // Sobe VÁRIOS arquivos de uma vez (input multiple). Cada um vira SÓ anexo do card.
+    // Criativo é separado: só entra no carrossel pelo campo de Criativos (uploadCriativos).
     async uploadAnexos(e) {
       const files = Array.from(e.target.files || []); if (!files.length) return;
       if (!this.cloudOk) { alert('Configure o Cloudinary primeiro (Pessoal › Armazenamento de arquivos).'); e.target.value = ''; return; }
@@ -2036,11 +2035,6 @@ ${this._docFoot()}
             const url = await this.uploadArquivo(file);
             if (!url) { falhou++; continue; }
             this.cardRef.anexos.push({ id: MD.uid(), nome: file.name || 'arquivo', url, em: new Date().toISOString() });
-            if (this.cardRef.isPost && /^image\//i.test(file.type || '')) {
-              if (!Array.isArray(this.cardRef.criativos)) this.cardRef.criativos = this.cardRef.criativo ? [this.cardRef.criativo] : [];
-              this.cardRef.criativos.push(url);
-              if (!this.cardRef.criativo) this.cardRef.criativo = url; // compat: 1ª imagem no campo antigo
-            }
             ok++;
           } catch { falhou++; }
         }
