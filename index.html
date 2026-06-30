@@ -322,9 +322,9 @@
       <!-- ===== ABA: COMERCIAL (painel + metas) ===== -->
       <div x-show="dashTab==='comercial'">
         <!-- Alerta motivacional (passou do meio-dia e hoje ainda falta atividade) -->
-        <div x-show="motivacao" class="card" style="margin-bottom:14px;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;display:flex;align-items:center;gap:12px">
-          <i class="ph ph-rocket-launch ic-ph" style="color:#f59e0b;font-size:22px"></i>
-          <div class="fw-700 fs-14" style="color:#92400e" x-text="motivacaoMsg"></div>
+        <div x-show="motivacao" x-transition class="card" style="margin-bottom:16px;padding:16px 20px;background:linear-gradient(90deg,#fff7ed,#fffbeb);border:1.5px solid #fbbf24;display:flex;align-items:center;gap:14px;box-shadow:0 4px 14px rgba(251,191,36,.18)">
+          <i class="ph ph-rocket-launch ic-ph" style="color:#f59e0b;font-size:30px;flex-shrink:0"></i>
+          <div class="fw-800" style="color:#92400e;font-size:16px;line-height:1.35" x-text="motivacaoMsg"></div>
         </div>
         <!-- Metas do período — destaque com gráfico de rosca + navegação dia/semana/mês -->
         <div class="card" style="padding:18px 18px 20px;margin-bottom:18px">
@@ -353,8 +353,8 @@
                   <circle cx="50" cy="50" r="42" fill="none" :stroke="metaCor(c)" stroke-width="11" stroke-linecap="round"
                     stroke-dasharray="263.9" :stroke-dashoffset="263.9*(1-Math.min(100,pctMeta(c.atual,c.meta))/100)"
                     transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .5s ease"></circle>
-                  <text x="50" y="47" text-anchor="middle" font-size="22" font-weight="800" :fill="metaCor(c)" x-text="pctMeta(c.atual,c.meta)+'%'"></text>
-                  <text x="50" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#6b7280" x-text="c.atual+'/'+c.meta"></text>
+                  <text x="50" y="47" text-anchor="middle" font-size="21" font-weight="800" :fill="metaCor(c)" x-text="c.atual+'/'+c.meta"></text>
+                  <text x="50" y="63" text-anchor="middle" font-size="13" font-weight="700" fill="#6b7280" x-text="pctMeta(c.atual,c.meta)+'%'"></text>
                 </svg>
                 <div class="flex items-center justify-center gap-1" style="margin-top:2px">
                   <i class="ph ic-ph" :class="c.ico" :style="'color:'+c.cor"></i>
@@ -839,13 +839,13 @@
           </p>
         </div>
         <!-- 🟢 Equipe online — quem está logado e há quanto tempo -->
-        <div class="card" x-show="presenca.length" style="margin-bottom:14px;padding:12px 14px">
+        <div class="card" x-show="presenca.filter(p=>p.online).length" style="margin-bottom:14px;padding:12px 14px">
           <div class="flex items-center justify-between mb-2">
             <div class="fw-800 fs-14">Equipe online</div>
-            <div class="text-3 fs-12" x-text="ehAdmin ? (presenca.filter(p=>p.online).length+' de '+presenca.length+' online') : (presenca.length+' online agora')"></div>
+            <div class="text-3 fs-12" x-text="presenca.filter(p=>p.online).length+' online agora'"></div>
           </div>
           <div class="flex gap-2" style="flex-wrap:wrap">
-            <template x-for="u in presenca" :key="u.id">
+            <template x-for="u in presenca.filter(p=>p.online)" :key="u.id">
               <div class="flex items-center gap-2" style="padding:7px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface)" :style="u.online?'':'opacity:.55'">
                 <span style="position:relative;display:inline-flex">
                   <span :style="'position:relative;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;overflow:hidden;background:'+avatarBg(u.nome)+';color:'+avatarFg(u.nome)">
@@ -2989,7 +2989,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=177"></script>
+<script src="js/app.js?v=178"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
