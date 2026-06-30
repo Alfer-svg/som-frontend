@@ -1658,6 +1658,17 @@
   <div class="modal">
     <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div></div>
     <div class="modal-body" style="display:block">
+      <!-- Tipo de cliente — sempre à vista, editável a qualquer momento -->
+      <div class="card" style="padding:10px 12px;margin-bottom:12px;background:rgba(0,0,0,.02)">
+        <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
+          <div class="fw-700 fs-13"><i class="ph ph-tag ic-ph"></i> Tipo de cliente</div>
+          <div class="flex items-center gap-2">
+            <button type="button" class="btn btn-sm" :class="(editing.tipoCliente||'recorrente')==='recorrente'?'btn-primary':'btn-ghost'" @click="editing.tipoCliente='recorrente'"><i class="ph ph-arrows-clockwise ic-ph"></i> Recorrente</button>
+            <button type="button" class="btn btn-sm" :class="(editing.tipoCliente||'recorrente')==='avulso'?'btn-primary':'btn-ghost'" @click="editing.tipoCliente='avulso'"><i class="ph ph-lightning ic-ph"></i> Avulso</button>
+          </div>
+        </div>
+        <div class="fs-12 text-3" style="margin-top:4px" x-text="(editing.tipoCliente||'recorrente')==='recorrente' ? 'Paga mensalidade — entra no MRR.' : 'Serviço esporádico (ex.: criação de site) — cobrança por projeto, fora do MRR.'"></div>
+      </div>
       <div @click="secCli=secCli==='empresa'?'':'empresa'" class="accH"><span><i class="ph ph-buildings ic-ph"></i> Empresa</span><span class="accX" x-text="secCli==='empresa'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='empresa'">
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche Receita + endereço</span> <span class="hq" data-tip="Digite o CNPJ e busque para puxar razão social e endereço.">?</span></label>
@@ -1740,7 +1751,6 @@
           </template>
         </div>
       </div>
-      <div class="form-group"><label class="form-label">Tipo de cliente <span class="hq" data-tip="Recorrente paga mensalidade (entra no MRR). Avulso é serviço esporádico, ex.: criação de site (cobrança por projeto).">?</span></label><select class="form-select" x-model="editing.tipoCliente"><option value="recorrente">Recorrente (mensalidade)</option><option value="avulso">Avulso (serviço esporádico)</option></select></div>
       <div class="form-group" x-show="(editing.tipoCliente||'recorrente')==='recorrente'"><label class="form-label">Mensalidade (R$) <span class="hq" data-tip="Valor da mensalidade do cliente, em reais.">?</span></label><input class="form-input" type="number" x-model="editing.mensalidade"></div>
       <div class="form-group"><label class="form-label">Status <span class="hq" data-tip="Situação atual do registro.">?</span></label><select class="form-select" x-model="editing.status"><option>Ativo</option><option>Inativo</option></select></div>
       <div class="form-group"><label class="form-label">Cliente desde <span class="hq" data-tip="Data em que virou cliente.">?</span></label><input class="form-input" type="date" x-model="editing.desde"></div>
