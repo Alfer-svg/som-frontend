@@ -395,7 +395,10 @@ document.addEventListener('alpine:init', () => {
       this.finance   = MD.get('som_finance', []);
       this.fornecedores = MD.get('som_fornecedores', []); // cadastro de fornecedores (despesas)
       this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento (cache; fonte = backend)
-      if (this.token) { this.page = MD.get('som_page', 'dashboard'); this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis(); this.startHeartbeat(); this.startChatMonitor(); this.go(this.page); }
+      if (this.token) { this.page = MD.get('som_page', 'dashboard'); this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis(); this.startHeartbeat(); this.startChatMonitor(); this.registrarPush(); this.go(this.page);
+        const _card = new URLSearchParams(location.search).get('card'); // abriu pela notificação → vai direto no card
+        if (_card) { history.replaceState({}, '', location.pathname); this.$nextTick(() => this.abrirCardPorId(_card)); }
+      }
       // Retorno do OAuth da Meta (?meta=ok|erro) — mostra toast, limpa a URL e reabre o cliente
       const _qp = new URLSearchParams(location.search);
       if (_qp.get('meta')) {
@@ -432,7 +435,7 @@ document.addEventListener('alpine:init', () => {
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
         localStorage.setItem('som_login_visto', '1');
         if (this.lembrarLogin) localStorage.setItem('som_login_email', this.loginEmail); else localStorage.removeItem('som_login_email');
-        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis();
+        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); this.registrarPush(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -1972,7 +1975,35 @@ ${this._docFoot()}
         beep(880, 0, 0.32); beep(1175, 0.16, 0.34);
       } catch { }
     },
-    async pedirNotif() { try { if (window.Notification && Notification.permission === 'default') await Notification.requestPermission(); } catch { } },
+    async pedirNotif() { try { if (window.Notification && Notification.permission === 'default') await Notification.requestPermission(); } catch { } this.registrarPush(); },
+    // ── Web Push (PWA): notificação do sistema mesmo com a aba fechada ──
+    async registrarPush() {
+      try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        const reg = await navigator.serviceWorker.register('sw.js');
+        if (!this._swMsg) { this._swMsg = true; navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.tipo === 'abrir-card') this.abrirCardPorId(e.data.cardId); }); }
+        if (!this.token) return;                                                    // assinatura precisa de login
+        if (!window.Notification || Notification.permission !== 'granted') return;  // sem permissão ainda (pedida no 1º clique)
+        const r = await this.api('GET', '/push/vapid').catch(() => null);
+        const key = r && r.key; if (!key) return;                                   // backend ainda sem VAPID
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this._urlB64ToUint8(key) });
+        await this.api('POST', '/push/subscribe', { subscription: sub.toJSON(), ua: navigator.userAgent });
+      } catch { /* push é melhoria; nunca pode travar o app */ }
+    },
+    _urlB64ToUint8(b64) {
+      const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+      const s = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = atob(s); const arr = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+      return arr;
+    },
+    abrirCardPorId(id) {
+      if (!id) return;
+      const abrir = () => { const p = (this.projects || []).find(x => x.id === id); if (p) { if (this.page !== 'operacional') this.go('operacional'); this.$nextTick(() => this.abrirCard(p)); } };
+      if ((this.projects || []).some(x => x.id === id)) abrir();
+      else { if (this.page !== 'operacional') this.go('operacional'); this.carregarProjetos().then(abrir); }
+    },
     notificarMsg(card, autor, texto, projeto) {
       this.tocarBeep();
       const corte = (texto || '').length > 80 ? (texto.slice(0, 80) + '…') : (texto || '');

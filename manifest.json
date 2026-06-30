@@ -1,0 +1,14 @@
+{
+  "name": "SOM · Sistema Operacional Maracatu",
+  "short_name": "SOM",
+  "description": "Sistema interno da Maracatu Digital Intelligence",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0c0b0a",
+  "theme_color": "#141210",
+  "icons": [
+    { "src": "assets/icon.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
