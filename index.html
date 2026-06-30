@@ -321,11 +321,29 @@
 
       <!-- ===== ABA: COMERCIAL (painel + metas) ===== -->
       <div x-show="dashTab==='comercial'">
-        <!-- Metas da semana — destaque com gráfico de rosca -->
+        <!-- Alerta motivacional (passou do meio-dia e hoje ainda falta atividade) -->
+        <div x-show="motivacao" class="card" style="margin-bottom:14px;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;display:flex;align-items:center;gap:12px">
+          <i class="ph ph-rocket-launch ic-ph" style="color:#f59e0b;font-size:22px"></i>
+          <div class="fw-700 fs-14" style="color:#92400e" x-text="motivacaoMsg"></div>
+        </div>
+        <!-- Metas do período — destaque com gráfico de rosca + navegação dia/semana/mês -->
         <div class="card" style="padding:18px 18px 20px;margin-bottom:18px">
-          <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:8px">
-            <div class="fw-800 fs-18"><i class="ph ph-target ic-ph" style="color:#818cf8"></i> Metas da semana <span class="text-3 fs-13 fw-600" x-text="'· '+semanaMetasLabel"></span></div>
-            <button class="btn btn-ghost btn-sm" x-show="ehAdmin" @click="abrirEditMetas()"><i class="ph ph-pencil-simple ic-ph"></i> Editar metas</button>
+          <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:10px">
+            <div class="fw-800 fs-18"><i class="ph ph-target ic-ph" style="color:#818cf8"></i> <span x-text="periodoTituloMeta"></span></div>
+            <div class="flex items-center gap-2" style="flex-wrap:wrap">
+              <div class="flex" style="background:#f1f2f5;border-radius:9px;padding:3px;gap:2px">
+                <template x-for="t in [['dia','Dia'],['semana','Semana'],['mes','Mês']]" :key="t[0]">
+                  <button class="btn btn-sm" :class="comPerTipo===t[0]?'btn-primary':'btn-ghost'" style="padding:5px 12px" @click="setComPer(t[0])" x-text="t[1]"></button>
+                </template>
+              </div>
+              <div class="flex items-center gap-1">
+                <button class="btn btn-ghost btn-sm" @click="comPerOff--" title="Anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                <span class="fs-13 fw-700 text-3" style="min-width:160px;text-align:center" x-text="periodoLabel"></span>
+                <button class="btn btn-ghost btn-sm" @click="comPerOff++" :disabled="comPerOff>=0" title="Próximo"><i class="ph ph-caret-right ic-ph"></i></button>
+              </div>
+              <button class="btn btn-ghost btn-sm" x-show="comPerOff!==0" @click="comPerOff=0">hoje</button>
+              <button class="btn btn-ghost btn-sm" x-show="ehAdmin" @click="abrirEditMetas()"><i class="ph ph-pencil-simple ic-ph"></i> Editar metas</button>
+            </div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
             <template x-for="c in metasCards" :key="c.key">
@@ -426,7 +444,7 @@
             <div x-show="!leadsParados.length" class="text-3 fs-13">Funil fluindo. 🚀</div>
           </div>
         </div>
-        <div class="text-3 fs-12" style="margin-top:14px">Atividade da semana: <b x-text="acoesConcluidasSemana"></b> ações concluídas · <b x-text="metricaProspeccoes"></b> leads novos.</div>
+        <div class="text-3 fs-12" style="margin-top:14px">Atividade do período (<span x-text="periodoLabel"></span>): <b x-text="acoesConcluidasSemana"></b> ações concluídas · <b x-text="metricaProspeccoes"></b> leads novos.</div>
 
         <!-- Modal: editar metas (admin) -->
         <div x-show="metasEdit" x-transition.opacity style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px" @click.self="metasEdit=false">
@@ -2971,7 +2989,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=176"></script>
+<script src="js/app.js?v=177"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
