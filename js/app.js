@@ -279,7 +279,6 @@ const AVATAR_CORES = ['#E11D48', '#F97316', '#0EA5E9', '#16A34A', '#7C3AED', '#D
 /* ---------- Pessoal: perfis de acesso (papéis) e o que cada um enxerga ---------- */
 const PAPEIS_INFO = [
   { id: 'admin', nome: 'Admin', desc: 'Acesso total + gerencia a equipe', cor: '#7c3aed', bg: '#ede9fe' },
-  { id: 'master', nome: 'Master', desc: 'Diretor comercial: painel + CRM, clientes, orçamentos e contratos (sem Financeiro/Operacional nem Visão geral)', cor: '#c026d3', bg: '#fae8ff' },
   { id: 'gestor', nome: 'Gestor', desc: 'Tudo, menos gerenciar a equipe', cor: '#2563eb', bg: '#dbeafe' },
   { id: 'comercial', nome: 'Comercial', desc: 'Vendas: CRM, clientes, orçamentos e contratos (sem Financeiro nem Operacional)', cor: '#0d9488', bg: '#ccfbf1' },
   { id: 'colaborador', nome: 'Colaborador', desc: 'Operacional e Monitoramento (sem CRM, Financeiro nem senhas)', cor: '#16a34a', bg: '#dcfce7' },
@@ -289,10 +288,9 @@ const PAPEIS_INFO = [
 // '*' = todas as páginas. Demais: lista de páginas liberadas.
 const PERMISSOES = {
   admin: '*',
-  // Dashboard: SÓ admin e master. Admin vê as 2 abas (Visão geral + Comercial); master vê só a aba Comercial. 'pessoal' liberado a todos.
-  master: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'pessoal'], // diretor comercial: aba Comercial do dash + área comercial (sem Visão geral/financeiro/operacional)
+  // Dashboard: SÓ admin e "Master" (= perfil id 'comercial', renomeado p/ Master em ui.papeis). Admin vê as 2 abas; comercial/Master vê só a aba Comercial (ehAdmin gateia a Visão geral). 'pessoal' liberado a todos.
   gestor: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
-  comercial: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding', 'pessoal'],
+  comercial: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding', 'pessoal'],
   colaborador: ['comercial', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
   colaborador2: ['operacional', 'pessoal'], // Operacional (só os trabalhos em que está) + a própria ficha
   financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'pessoal'],
