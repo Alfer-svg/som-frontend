@@ -328,6 +328,21 @@ const PERMISSOES = {
   colaborador2: ['operacional', 'pessoal'], // Operacional (só os trabalhos em que está) + a própria ficha
   financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'pessoal'],
 };
+// Páginas do sistema que o admin pode liberar/bloquear por perfil (checkboxes em Configurações).
+// 'pessoal' (a própria ficha) é sempre liberado e 'configuracoes' é sempre só-admin — por isso
+// ficam fora da matriz. 'onboarding' anda junto de 'comercial' (Clientes), tratado no podeVer.
+const PAGINAS_SISTEMA = [
+  { id: 'dashboard', nome: 'Dashboard' },
+  { id: 'crm', nome: 'CRM' },
+  { id: 'comercial', nome: 'Clientes' },
+  { id: 'orcamentos', nome: 'Orçamentos' },
+  { id: 'servicos', nome: 'Serviços' },
+  { id: 'contratos', nome: 'Contratos' },
+  { id: 'financeiro', nome: 'Financeiro' },
+  { id: 'operacional', nome: 'Operacional' },
+  { id: 'monitoramento', nome: 'Monitoramento' },
+  { id: 'relatorios', nome: 'Relatórios' },
+];
 
 /* ---------- Operacional: modelos de projeto comuns de agência ---------- */
 const AREAS_PROJETO = ['📱 Redes Sociais', '🎯 Tráfego Pago', '🌐 Sites & Apps', '🎬 Audiovisual', '🎨 Branding', '🗳️ Marketing Político', '🤝 Recorrente'];
@@ -389,8 +404,11 @@ document.addEventListener('alpine:init', () => {
     TIPOS_INTER,
     // Pessoal — perfis de acesso + gestão de equipe
     PAPEIS_INFO,
+    PAGINAS_SISTEMA,
     // nomes/descrições editáveis dos perfis (sobrescrevem PAPEIS_INFO; salvos em /config/ui.papeis)
     papeisCustom: PAPEIS_INFO.reduce((m, p) => { m[p.id] = { nome: p.nome, desc: p.desc }; return m; }, {}),
+    // permissões editáveis por perfil {papelId: [páginas]} — sobrescrevem PERMISSOES; salvas em /config/ui.permissoes
+    permissoesCustom: {},
     usuarios: [], // equipe completa (só admin lê)
     equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' },
@@ -684,7 +702,29 @@ document.addEventListener('alpine:init', () => {
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
-    podeVer(p) { const perm = PERMISSOES[this.papel]; return perm === '*' ? true : (Array.isArray(perm) && perm.includes(p)); },
+    podeVer(p) {
+      if (this.papel === 'admin') return true;        // admin sempre vê tudo
+      if (p === 'pessoal') return true;               // a própria ficha é de todos
+      if (p === 'configuracoes') return false;        // Configurações é só-admin
+      if (p === 'onboarding') p = 'comercial';        // onboarding anda com Clientes
+      return this.permsDoPapel(this.papel).includes(p);
+    },
+    // Permissões EFETIVAS de um perfil: usa o customizado (config) se existir, senão o padrão do código.
+    permsDoPapel(id) {
+      if (id === 'admin') return PAGINAS_SISTEMA.map(x => x.id);
+      const c = this.permissoesCustom[id];
+      if (Array.isArray(c)) return c;
+      const base = PERMISSOES[id];
+      return base === '*' ? PAGINAS_SISTEMA.map(x => x.id) : (Array.isArray(base) ? base : []);
+    },
+    temPerm(id, page) { return this.permsDoPapel(id).includes(page); },
+    togglePerm(id, page) {
+      if (id === 'admin') return;                     // admin não é editável (acesso total)
+      const atual = this.permsDoPapel(id).slice();
+      const i = atual.indexOf(page);
+      if (i >= 0) atual.splice(i, 1); else atual.push(page);
+      this.permissoesCustom = { ...this.permissoesCustom, [id]: atual };
+    },
     get paginaInicial() { return this.podeVer('dashboard') ? 'dashboard' : (['operacional', 'monitoramento', 'crm', 'financeiro', 'comercial', 'pessoal'].find(p => this.podeVer(p)) || 'pessoal'); },
     garantirPaginaPermitida() { if (this.token && !this.podeVer(this.page)) this.page = this.paginaInicial; },
     // ── Pessoal: gestão de equipe (admin) ──
@@ -697,10 +737,20 @@ document.addEventListener('alpine:init', () => {
       const m = {};
       PAPEIS_INFO.forEach(p => { const o = custom[p.id] || {}; m[p.id] = { nome: o.nome || p.nome, desc: o.desc || p.desc }; });
       this.papeisCustom = m;
+      // permissões editáveis (o que cada perfil acessa)
+      try { const r = await this.api('GET', '/config/ui.permissoes'); const v = (r && r.valor) ? JSON.parse(r.valor) : null; this.permissoesCustom = (v && typeof v === 'object') ? v : {}; } catch { this.permissoesCustom = {}; }
+      this.garantirPaginaPermitida();
     },
     async salvarPapeis() {
       if (!this.ehAdmin) return;
       try { await this.api('PUT', '/config/ui.papeis', { valor: JSON.stringify(this.papeisCustom) }); try { await this.carregarEquipe(); } catch {} alert('Nomes dos perfis salvos.'); } catch (e) { alert(e.message || e); }
+    },
+    async salvarPermissoes() {
+      if (!this.ehAdmin) return;
+      // Grava o que está marcado pra cada perfil (não-admin). Admin fica sempre com acesso total.
+      const out = {};
+      PAPEIS_INFO.filter(p => p.id !== 'admin').forEach(p => { out[p.id] = this.permsDoPapel(p.id); });
+      try { await this.api('PUT', '/config/ui.permissoes', { valor: JSON.stringify(out) }); this.permissoesCustom = out; alert('Permissões dos perfis salvas. ✅ Cada pessoa vê a mudança no próximo carregamento.'); } catch (e) { alert(e.message || e); }
     },
     async carregarUsuarios() {
       try {

@@ -1759,7 +1759,51 @@
             </div>
           </template>
         </div>
-        <template x-if="ehAdmin"><div class="mb-3"><button class="btn btn-primary btn-sm" @click="salvarPapeis()"><i class="ph ph-check ic-ph"></i> Salvar nomes dos perfis</button> <span class="text-3 fs-12" style="margin-left:6px">Só muda o nome exibido — o que cada perfil acessa continua igual.</span></div></template>
+        <template x-if="ehAdmin"><div class="mb-3"><button class="btn btn-ghost btn-sm" @click="salvarPapeis()"><i class="ph ph-check ic-ph"></i> Salvar nomes dos perfis</button></div></template>
+
+        <!-- ===== MATRIZ DE PERMISSÕES POR PERFIL (só admin) ===== -->
+        <template x-if="ehAdmin">
+          <div class="card mb-4" style="padding:0;overflow:hidden">
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+              <div class="fw-800 fs-14"><i class="ph ph-lock-key ic-ph"></i> O que cada perfil acessa</div>
+              <div class="text-3 fs-12" style="margin-top:2px">Marque/desmarque as áreas do sistema que cada perfil pode abrir. <b>Admin</b> tem acesso total (não editável). A <b>própria ficha</b> (Pessoal) é sempre liberada.</div>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="perm-table" style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;padding:9px 12px;position:sticky;left:0;background:var(--surface);white-space:nowrap">Perfil</th>
+                    <template x-for="pg in PAGINAS_SISTEMA" :key="pg.id">
+                      <th style="padding:9px 8px;text-align:center;white-space:nowrap;color:var(--text-2)" x-text="pg.nome"></th>
+                    </template>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="pr in PAPEIS_INFO" :key="pr.id">
+                    <tr style="border-top:1px solid var(--border)">
+                      <td style="padding:9px 12px;position:sticky;left:0;background:var(--surface);white-space:nowrap">
+                        <span class="badge" :style="'background:'+pr.bg+';color:'+pr.cor" x-text="(papeisCustom[pr.id]&&papeisCustom[pr.id].nome)||pr.nome"></span>
+                      </td>
+                      <template x-for="pg in PAGINAS_SISTEMA" :key="pr.id+'-'+pg.id">
+                        <td style="padding:6px 8px;text-align:center">
+                          <template x-if="pr.id==='admin'">
+                            <i class="ph ph-check-fat ic-ph" style="color:#16a34a" title="Acesso total"></i>
+                          </template>
+                          <template x-if="pr.id!=='admin'">
+                            <input type="checkbox" style="width:16px;height:16px;cursor:pointer;accent-color:#22c55e" :checked="temPerm(pr.id,pg.id)" @change="togglePerm(pr.id,pg.id)">
+                          </template>
+                        </td>
+                      </template>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div style="padding:12px 14px;border-top:1px solid var(--border)">
+              <button class="btn btn-primary btn-sm" @click="salvarPermissoes()"><i class="ph ph-check ic-ph"></i> Salvar permissões</button>
+            </div>
+          </div>
+        </template>
         <div class="card mb-4" style="padding:0;overflow:hidden">
           <template x-if="!usuarios.length"><div class="empty">Nenhum usuário. Clique em <b>+ Usuário</b>.</div></template>
           <template x-for="u in usuarios" :key="u.id">
@@ -3305,7 +3349,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=207"></script>
+<script src="js/app.js?v=208"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
