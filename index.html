@@ -1162,6 +1162,16 @@
                 </div>
               </div>
 
+              <!-- ===== EQUIPE RESPONSÁVEL ===== -->
+              <div class="flex items-center gap-4 mb-3" style="flex-wrap:wrap" x-show="monitorCliente.time && (monitorCliente.time.atendimento||monitorCliente.time.trafego||monitorCliente.time.social)">
+                <template x-for="papel in [['Atendimento','atendimento'],['Tráfego','trafego'],['Social Media','social']]" :key="papel[1]">
+                  <div class="flex items-center gap-2" x-show="monitorCliente.time && monitorCliente.time[papel[1]]">
+                    <div class="av" style="width:34px;height:34px;font-size:12px;font-weight:800;color:#555" x-text="(monitorCliente.time[papel[1]]||'?').trim().slice(0,2).toUpperCase()"></div>
+                    <div><div class="text-3 fs-11" x-text="papel[0]"></div><div class="fw-700 fs-13" x-text="monitorCliente.time[papel[1]]"></div></div>
+                  </div>
+                </template>
+              </div>
+
               <!-- ===== CARDS KPI (formato ficha) ===== -->
               <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
                 <div class="card" style="padding:12px 14px">
@@ -1776,6 +1786,15 @@
           </div>
         </div>
         <div class="fs-12 text-3" style="margin-top:4px" x-text="(editing.tipoCliente||'recorrente')==='recorrente' ? 'Paga mensalidade — entra no MRR.' : 'Serviço esporádico (ex.: criação de site) — cobrança por projeto, fora do MRR.'"></div>
+      </div>
+      <!-- Equipe responsável por papel -->
+      <div class="card" style="padding:10px 12px;margin-bottom:12px;background:rgba(0,0,0,.02)">
+        <div class="fw-700 fs-13 mb-2"><i class="ph ph-users-three ic-ph"></i> Equipe responsável</div>
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+          <div class="form-group" style="margin:0"><label class="form-label">Atendimento</label><select class="form-select" x-model="editing.time.atendimento"><option value="">—</option><template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template></select></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Tráfego</label><select class="form-select" x-model="editing.time.trafego"><option value="">—</option><template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template></select></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Social Media</label><select class="form-select" x-model="editing.time.social"><option value="">—</option><template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template></select></div>
+        </div>
       </div>
       <div @click="secCli=secCli==='empresa'?'':'empresa'" class="accH"><span><i class="ph ph-buildings ic-ph"></i> Empresa</span><span class="accX" x-text="secCli==='empresa'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='empresa'">
@@ -3176,7 +3195,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=197"></script>
+<script src="js/app.js?v=198"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

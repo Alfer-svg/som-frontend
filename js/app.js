@@ -1381,6 +1381,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         ads: adsVazio(),
         objetivos: [], briefing: briefingVazio(), responsaveis: [], documentos: [],
         mensalidade: 0, tipoCliente: this.cliTipoTab || 'recorrente', status: 'Ativo', desde: MD.today(), notas: '',
+        time: { atendimento: '', trafego: '', social: '' }, // equipe responsável por papel
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -1398,6 +1399,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       this.editing = {
         ...c,
         tipoCliente: c.tipoCliente || 'recorrente',
+        time: { atendimento: '', trafego: '', social: '', ...(c.time || {}) },
         servicos: c.servicos || (c.servico ? [c.servico] : []),
         redes: redesMerge(c.redes),
         site: { url: '', seo: 0, sgo: 0, ...(c.site || {}) },
