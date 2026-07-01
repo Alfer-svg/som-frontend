@@ -865,6 +865,13 @@ document.addEventListener('alpine:init', () => {
     },
     // Resumo dos 3 últimos eventos que já aconteceram (mais recente primeiro).
     get agUltimos3() { const h = this._hojeStr(); return this.agAgendados.filter(e => e.data <= h).sort((a, b) => this._agKey(b).localeCompare(this._agKey(a))).slice(0, 3); },
+    // ── Saldos das contas de anúncio (campo manual cliente.ads.{google|meta}.saldo, da seção Tráfego Pago) ──
+    // "Conta" = cliente com aquele canal marcado como ativo. Limite de "saldo baixo" = R$ 200.
+    _contasCanal(canal) { return (this.clients || []).filter(c => c.ads && c.ads[canal] && c.ads[canal].ativo).map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', saldo: Number(c.ads[canal].saldo) || 0 })).sort((a, b) => a.saldo - b.saldo); },
+    get contasGoogle() { return this._contasCanal('google'); },
+    get contasMeta() { return this._contasCanal('meta'); },
+    saldoSem(lista) { return (lista || []).filter(x => x.saldo <= 0); },
+    saldoBaixo(lista) { return (lista || []).filter(x => x.saldo > 0 && x.saldo < 200); },
     get agContagemPorDia() { const m = {}; for (const e of this.agEventos) m[e.data] = (m[e.data] || 0) + 1; return m; },
     // Grade do mês: 42 células (6 semanas), domingo→sábado.
     get agGrade() {
