@@ -1746,20 +1746,33 @@
         </div>
         <div class="text-3 fs-12 mb-3">Quem entra no sistema e o que cada perfil enxerga.</div>
         <div class="grid grid-4 mb-3">
-          <template x-for="p in PAPEIS_INFO" :key="p.id">
-            <div class="card" style="padding:12px">
-              <span class="badge" :style="'background:'+p.bg+';color:'+p.cor" x-text="(papeisCustom[p.id]&&papeisCustom[p.id].nome)||p.nome"></span>
+          <template x-for="p in perfisTodos" :key="p.id">
+            <div class="card" style="padding:12px;border-top:3px solid" :style="'border-top-color:'+p.cor">
+              <div class="flex items-center justify-between" style="gap:6px">
+                <span class="badge" :style="'background:'+p.bg+';color:'+p.cor" x-text="p.nome"></span>
+                <template x-if="ehAdmin && p.custom">
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="removerPerfil(p.id)" title="Excluir perfil personalizado" style="color:var(--red)"><i class="ph ph-trash ic-ph"></i></button>
+                </template>
+              </div>
               <template x-if="ehAdmin">
                 <div style="margin-top:8px">
-                  <input class="form-input fs-12" x-model="papeisCustom[p.id].nome" placeholder="Nome do perfil">
-                  <input class="form-input fs-12" style="margin-top:4px" x-model="papeisCustom[p.id].desc" placeholder="Descrição">
+                  <input class="form-input fs-12" :value="p.nome" @input="setNomePerfil(p.id,$event.target.value)" placeholder="Nome do perfil">
+                  <input class="form-input fs-12" style="margin-top:4px" :value="p.desc" @input="setDescPerfil(p.id,$event.target.value)" placeholder="Descrição">
                 </div>
               </template>
-              <template x-if="!ehAdmin"><div class="text-3 fs-12" style="margin-top:6px" x-text="(papeisCustom[p.id]&&papeisCustom[p.id].desc)||p.desc"></div></template>
+              <template x-if="!ehAdmin"><div class="text-3 fs-12" style="margin-top:6px" x-text="p.desc"></div></template>
+            </div>
+          </template>
+          <!-- Card: criar novo perfil -->
+          <template x-if="ehAdmin">
+            <div class="card" style="padding:12px;border:1.5px dashed var(--border);display:flex;flex-direction:column;justify-content:center;gap:6px">
+              <div class="fw-700 fs-12 text-2"><i class="ph ph-plus-circle ic-ph"></i> Novo perfil</div>
+              <input class="form-input fs-12" x-model="perfilNovoNome" placeholder="Ex.: Social Media" @keydown.enter="criarPerfil()">
+              <button class="btn btn-primary btn-sm" @click="criarPerfil()" :disabled="!perfilNovoNome.trim()"><i class="ph ph-plus ic-ph"></i> Criar perfil</button>
             </div>
           </template>
         </div>
-        <template x-if="ehAdmin"><div class="mb-3"><button class="btn btn-ghost btn-sm" @click="salvarPapeis()"><i class="ph ph-check ic-ph"></i> Salvar nomes dos perfis</button></div></template>
+        <template x-if="ehAdmin"><div class="mb-3"><button class="btn btn-ghost btn-sm" @click="salvarPapeis()"><i class="ph ph-check ic-ph"></i> Salvar nomes/descrições</button> <span class="text-3 fs-12" style="margin-left:6px">Perfil novo já aparece na matriz abaixo — marque o que ele acessa e salve.</span></div></template>
 
         <!-- ===== MATRIZ DE PERMISSÕES POR PERFIL (só admin) ===== -->
         <template x-if="ehAdmin">
@@ -1771,26 +1784,26 @@
             <div style="overflow-x:auto">
               <table class="perm-table" style="width:100%;border-collapse:collapse;font-size:12px">
                 <thead>
-                  <tr>
-                    <th style="text-align:left;padding:9px 12px;position:sticky;left:0;background:var(--surface);white-space:nowrap">Perfil</th>
+                  <tr style="background:var(--surface-2)">
+                    <th style="text-align:left;padding:10px 12px;position:sticky;left:0;background:var(--surface-2);white-space:nowrap;font-weight:800">Perfil</th>
                     <template x-for="pg in PAGINAS_SISTEMA" :key="pg.id">
-                      <th style="padding:9px 8px;text-align:center;white-space:nowrap;color:var(--text-2)" x-text="pg.nome"></th>
+                      <th style="padding:10px 8px;text-align:center;white-space:nowrap;color:var(--text-2);font-weight:700" x-text="pg.nome"></th>
                     </template>
                   </tr>
                 </thead>
                 <tbody>
-                  <template x-for="pr in PAPEIS_INFO" :key="pr.id">
-                    <tr style="border-top:1px solid var(--border)">
-                      <td style="padding:9px 12px;position:sticky;left:0;background:var(--surface);white-space:nowrap">
-                        <span class="badge" :style="'background:'+pr.bg+';color:'+pr.cor" x-text="(papeisCustom[pr.id]&&papeisCustom[pr.id].nome)||pr.nome"></span>
+                  <template x-for="(pr,ri) in perfisTodos" :key="pr.id">
+                    <tr :style="'border-top:1px solid var(--border);background:'+(ri%2?'var(--surface-2)':'transparent')">
+                      <td style="padding:9px 12px;position:sticky;left:0;white-space:nowrap" :style="'background:'+(ri%2?'var(--surface-2)':'var(--surface)')+';border-left:3px solid '+pr.cor">
+                        <span class="badge" :style="'background:'+pr.bg+';color:'+pr.cor" x-text="pr.nome"></span>
                       </td>
                       <template x-for="pg in PAGINAS_SISTEMA" :key="pr.id+'-'+pg.id">
                         <td style="padding:6px 8px;text-align:center">
                           <template x-if="pr.id==='admin'">
-                            <i class="ph ph-check-fat ic-ph" style="color:#16a34a" title="Acesso total"></i>
+                            <i class="ph ph-check-fat ic-ph" style="color:#16a34a;font-size:15px" title="Acesso total"></i>
                           </template>
                           <template x-if="pr.id!=='admin'">
-                            <input type="checkbox" style="width:16px;height:16px;cursor:pointer;accent-color:#22c55e" :checked="temPerm(pr.id,pg.id)" @change="togglePerm(pr.id,pg.id)">
+                            <label style="display:inline-flex;cursor:pointer"><input type="checkbox" style="width:17px;height:17px;cursor:pointer;accent-color:#22c55e" :checked="temPerm(pr.id,pg.id)" @change="togglePerm(pr.id,pg.id)"></label>
                           </template>
                         </td>
                       </template>
@@ -3349,7 +3362,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=208"></script>
+<script src="js/app.js?v=209"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

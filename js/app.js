@@ -409,6 +409,8 @@ document.addEventListener('alpine:init', () => {
     papeisCustom: PAPEIS_INFO.reduce((m, p) => { m[p.id] = { nome: p.nome, desc: p.desc }; return m; }, {}),
     // permissões editáveis por perfil {papelId: [páginas]} — sobrescrevem PERMISSOES; salvas em /config/ui.permissoes
     permissoesCustom: {},
+    perfisCustom: [], // perfis personalizados criados pelo admin [{id,nome,desc,cor,bg}] — salvos em /config/ui.perfisCustom
+    perfilNovoNome: '', // input do "+ Novo perfil"
     usuarios: [], // equipe completa (só admin lê)
     equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' },
@@ -729,28 +731,84 @@ document.addEventListener('alpine:init', () => {
     garantirPaginaPermitida() { if (this.token && !this.podeVer(this.page)) this.page = this.paginaInicial; },
     // ── Pessoal: gestão de equipe (admin) ──
     // PAPEIS_INFO com os nomes/descrições editados aplicados (cor/bg/permissões seguem fixos pelo id).
-    get papeis() { return PAPEIS_INFO.map(p => { const o = this.papeisCustom[p.id] || {}; return { ...p, nome: o.nome || p.nome, desc: o.desc || p.desc }; }); },
-    papelInfo(id) { return this.papeis.find(x => x.id === id) || { nome: id || '—', cor: '#6b7280', bg: '#f1f5f9', desc: '' }; },
+    // Perfis FIXOS (com nome/desc editados) + perfis PERSONALIZADOS criados pelo admin.
+    get perfisTodos() {
+      const base = PAPEIS_INFO.map(p => { const o = this.papeisCustom[p.id] || {}; return { ...p, nome: o.nome || p.nome, desc: o.desc || p.desc, custom: false }; });
+      const extra = (this.perfisCustom || []).map(p => ({ id: p.id, nome: p.nome || p.id, desc: p.desc || '', cor: p.cor || '#6b7280', bg: p.bg || '#f1f5f9', custom: true }));
+      return [...base, ...extra];
+    },
+    get papeis() { return this.perfisTodos; },
+    papelInfo(id) { return this.perfisTodos.find(x => x.id === id) || { nome: id || '—', cor: '#6b7280', bg: '#f1f5f9', desc: '' }; },
+    ehPerfilCustom(id) { return (this.perfisCustom || []).some(p => p.id === id); },
+    // Nome/desc: nos fixos edita papeisCustom; nos personalizados edita o próprio item de perfisCustom.
+    nomePerfil(id) { return this.papelInfo(id).nome; },
+    descPerfil(id) { return this.papelInfo(id).desc; },
+    setNomePerfil(id, v) {
+      if (this.ehPerfilCustom(id)) { this.perfisCustom = this.perfisCustom.map(p => p.id === id ? { ...p, nome: v } : p); }
+      else { this.papeisCustom = { ...this.papeisCustom, [id]: { ...(this.papeisCustom[id] || {}), nome: v } }; }
+    },
+    setDescPerfil(id, v) {
+      if (this.ehPerfilCustom(id)) { this.perfisCustom = this.perfisCustom.map(p => p.id === id ? { ...p, desc: v } : p); }
+      else { this.papeisCustom = { ...this.papeisCustom, [id]: { ...(this.papeisCustom[id] || {}), desc: v } }; }
+    },
+    criarPerfil() {
+      if (!this.ehAdmin) return;
+      const nome = (this.perfilNovoNome || '').trim();
+      if (!nome) { alert('Dê um nome ao novo perfil.'); return; }
+      const slug = nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '').slice(0, 16) || 'perfil';
+      let id = slug, n = 2;
+      const existe = (x) => PAPEIS_INFO.some(p => p.id === x) || (this.perfisCustom || []).some(p => p.id === x);
+      while (existe(id)) id = slug + (n++);
+      const usadas = new Set(this.perfisTodos.map(p => p.cor));
+      const cor = AVATAR_CORES.find(c => !usadas.has(c)) || AVATAR_CORES[(this.perfisCustom.length) % AVATAR_CORES.length];
+      const bg = cor + '22';
+      this.perfisCustom = [...(this.perfisCustom || []), { id, nome, desc: '', cor, bg }];
+      this.permissoesCustom = { ...this.permissoesCustom, [id]: ['pessoal'] }; // começa só com a própria ficha
+      this.perfilNovoNome = '';
+      this.salvarPerfis();
+    },
+    async removerPerfil(id) {
+      if (!this.ehAdmin || !this.ehPerfilCustom(id)) return;
+      const emUso = (this.usuarios || []).filter(u => u.papel === id);
+      if (emUso.length) { alert('Não dá pra excluir: ' + emUso.length + ' usuário(s) usam esse perfil. Troque o perfil deles antes.'); return; }
+      if (!confirm('Excluir o perfil "' + this.nomePerfil(id) + '"?')) return;
+      this.perfisCustom = this.perfisCustom.filter(p => p.id !== id);
+      const perms = { ...this.permissoesCustom }; delete perms[id]; this.permissoesCustom = perms;
+      await this.salvarPerfis();
+    },
     async carregarPapeis() {
       let custom = {};
       try { const r = await this.api('GET', '/config/ui.papeis'); custom = (r && r.valor) ? JSON.parse(r.valor) : {}; } catch { custom = {}; }
       const m = {};
       PAPEIS_INFO.forEach(p => { const o = custom[p.id] || {}; m[p.id] = { nome: o.nome || p.nome, desc: o.desc || p.desc }; });
       this.papeisCustom = m;
+      // perfis personalizados
+      try { const r = await this.api('GET', '/config/ui.perfisCustom'); const v = (r && r.valor) ? JSON.parse(r.valor) : null; this.perfisCustom = Array.isArray(v) ? v : []; } catch { this.perfisCustom = []; }
       // permissões editáveis (o que cada perfil acessa)
       try { const r = await this.api('GET', '/config/ui.permissoes'); const v = (r && r.valor) ? JSON.parse(r.valor) : null; this.permissoesCustom = (v && typeof v === 'object') ? v : {}; } catch { this.permissoesCustom = {}; }
       this.garantirPaginaPermitida();
     },
-    async salvarPapeis() {
+    // Salva nomes/descrições dos fixos (ui.papeis) + os perfis personalizados (ui.perfisCustom).
+    async salvarPerfis() {
       if (!this.ehAdmin) return;
-      try { await this.api('PUT', '/config/ui.papeis', { valor: JSON.stringify(this.papeisCustom) }); try { await this.carregarEquipe(); } catch {} alert('Nomes dos perfis salvos.'); } catch (e) { alert(e.message || e); }
+      try {
+        await this.api('PUT', '/config/ui.papeis', { valor: JSON.stringify(this.papeisCustom) });
+        await this.api('PUT', '/config/ui.perfisCustom', { valor: JSON.stringify(this.perfisCustom || []) });
+        try { await this.carregarEquipe(); } catch {}
+      } catch (e) { alert(e.message || e); }
     },
+    async salvarPapeis() { await this.salvarPerfis(); alert('Perfis salvos.'); },
     async salvarPermissoes() {
       if (!this.ehAdmin) return;
-      // Grava o que está marcado pra cada perfil (não-admin). Admin fica sempre com acesso total.
+      // Grava o que está marcado pra cada perfil (não-admin, incluindo os personalizados). Admin = acesso total.
       const out = {};
-      PAPEIS_INFO.filter(p => p.id !== 'admin').forEach(p => { out[p.id] = this.permsDoPapel(p.id); });
-      try { await this.api('PUT', '/config/ui.permissoes', { valor: JSON.stringify(out) }); this.permissoesCustom = out; alert('Permissões dos perfis salvas. ✅ Cada pessoa vê a mudança no próximo carregamento.'); } catch (e) { alert(e.message || e); }
+      this.perfisTodos.filter(p => p.id !== 'admin').forEach(p => { out[p.id] = this.permsDoPapel(p.id); });
+      try {
+        await this.api('PUT', '/config/ui.perfisCustom', { valor: JSON.stringify(this.perfisCustom || []) }); // garante que perfis novos existem no back
+        await this.api('PUT', '/config/ui.permissoes', { valor: JSON.stringify(out) });
+        this.permissoesCustom = out;
+        alert('Permissões salvas. ✅ Cada pessoa vê a mudança no próximo carregamento.');
+      } catch (e) { alert(e.message || e); }
     },
     async carregarUsuarios() {
       try {
