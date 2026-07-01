@@ -1435,6 +1435,21 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     // Métricas reais do Meta pra ficha (null quando não conectado / sem dado). fmtNum formata milhar.
     metaVal(c, rede, campo) { const m = c && this.metaMetricas[c.id]; const r = m && m[rede]; return (r && !r.erro && r[campo] != null) ? r[campo] : null; },
     fmtNum(n) { return (n == null) ? '—' : Number(n).toLocaleString('pt-BR'); },
+    // Snapshot diário das métricas do IG no histórico do cliente (pra montar a tendência ao longo do tempo).
+    _snapshotMetricas(clienteId) {
+      const m = this.metaMetricas[clienteId], ig = m && m.instagram;
+      if (!ig || ig.erro) return;
+      const c = (this.clients || []).find(x => x.id === clienteId); if (!c) return;
+      const hoje = MD.today();
+      if (!Array.isArray(c.metricasHist)) c.metricasHist = [];
+      if (c.metricasHist.some(s => s.data === hoje)) return; // já tem ponto de hoje
+      c.metricasHist.push({ data: hoje, seguidores: ig.seguidores ?? null, alcance: ig.alcance28d ?? null, engaj: ig.engajamentoPct ?? null });
+      if (c.metricasHist.length > 90) c.metricasHist = c.metricasHist.slice(-90);
+      this.persistirCliente(c);
+    },
+    metaSerie(c, campo) { return ((c && c.metricasHist) || []).map(s => s[campo]).filter(v => v != null); },
+    metaTrend(c, campo) { const s = this.metaSerie(c, campo); if (s.length < 2) return null; const a = s[s.length - 2], b = s[s.length - 1]; return a ? Math.round((b - a) / a * 100) : null; },
+    sparkPath(vals, w, h) { if (!vals || vals.length < 2) return ''; const mn = Math.min(...vals), mx = Math.max(...vals), rng = (mx - mn) || 1; return vals.map((v, i) => ((i ? 'L' : 'M') + ((i / (vals.length - 1)) * w).toFixed(1) + ' ' + (h - ((v - mn) / rng) * h).toFixed(1))).join(' '); },
     // ── Tarefas / próximas ações do cliente (vive em Cliente.dados.tarefas) ──
     tarefasCliente(c) { return (c && Array.isArray(c.tarefas)) ? c.tarefas : []; },
     tarefasPendentes(c) { return this.tarefasCliente(c).filter(t => t.status !== 'feito').sort((a, b) => ((a.data || '9999') < (b.data || '9999') ? -1 : 1)); },
@@ -1701,7 +1716,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     async carregarMetaMetricas(clienteId) {
       if (!clienteId) return;
       this.metaBusy = true;
-      try { this.metaMetricas = { ...this.metaMetricas, [clienteId]: await this.api('GET', '/monitoramento/meta/' + clienteId) }; }
+      try { this.metaMetricas = { ...this.metaMetricas, [clienteId]: await this.api('GET', '/monitoramento/meta/' + clienteId) }; this._snapshotMetricas(clienteId); }
       catch (e) { this.metaMetricas = { ...this.metaMetricas, [clienteId]: { erro: e.message } }; }
       finally { this.metaBusy = false; }
     },
