@@ -1726,9 +1726,9 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     // (dados.adsAuto, alimentado de hora em hora pelo backend) → lançamento manual.
     adsResumo(c) {
       const live = c && this.adsLive[c.id];
-      if (live && live.configurado && !live.semConta && !live.erro) return { fonte: 'auto', leads: live.leads, custoLead: live.custoLead, gasto: live.gasto };
+      if (live && live.configurado && !live.semConta && !live.erro) return { fonte: 'auto', ...live };
       const snap = c && c.adsAuto;
-      if (snap && (snap.leads != null || snap.custoLead != null)) return { fonte: 'auto', leads: snap.leads, custoLead: snap.custoLead, gasto: snap.gasto };
+      if (snap && (snap.leads != null || snap.custoLead != null)) return { fonte: 'auto', ...snap };
       const m = (c && c.adsManual) || {};
       return { fonte: 'manual', leads: m.leads, custoLead: m.custoLead };
     },
