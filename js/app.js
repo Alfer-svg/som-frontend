@@ -433,7 +433,9 @@ document.addEventListener('alpine:init', () => {
     comPerTipo: 'semana', comPerOff: 0, // período do painel comercial: 'dia'|'semana'|'mes' + deslocamento (0=atual)
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
-    onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
+    onboardings: [], onbModal: false, onbSel: {},
+    onbLink: 'https://maracatumktdigital.com/onboarding',          // formulário de MARKETING (endereço Maracatu)
+    onbLinkSite: 'https://maracatumktdigital.com/onboarding-site', // formulário de SITE (endereço Maracatu)
     toastMsg: '', // alerta visível (ex.: novo onboarding convertido em cliente)
     perfilAberto: true, // perfil do cliente (recolhível)
     enriqLoading: false, enriqMsg: '', enriqResult: null, // enriquecimento a partir do site

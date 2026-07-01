@@ -602,11 +602,18 @@
         <!-- ABA: onboardings recebidos do site -->
         <div x-show="comTab==='onboarding' && podeVer('onboarding')">
           <div class="card" style="margin-bottom:14px">
-            <div class="fs-12 text-2" style="font-weight:600"><i class="ph ph-link ic-ph"></i> Link público do formulário (mande pro cliente):</div>
+            <div class="fs-12 text-2" style="font-weight:600"><i class="ph ph-link ic-ph"></i> Links públicos dos formulários (mande pro cliente):</div>
             <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:8px">
+              <span class="badge" style="background:#dcfce7;color:#166534;min-width:66px;justify-content:center">Marketing</span>
               <code style="background:var(--surface-2);padding:7px 11px;border-radius:8px;font-size:12px;word-break:break-all" x-text="onbLink"></code>
               <button class="btn btn-ghost btn-sm" @click="navigator.clipboard.writeText(onbLink)">copiar</button>
               <a :href="onbLink" target="_blank" class="btn btn-ghost btn-sm">abrir ↗</a>
+            </div>
+            <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:8px">
+              <span class="badge" style="background:#dbeafe;color:#1e40af;min-width:66px;justify-content:center">Site</span>
+              <code style="background:var(--surface-2);padding:7px 11px;border-radius:8px;font-size:12px;word-break:break-all" x-text="onbLinkSite"></code>
+              <button class="btn btn-ghost btn-sm" @click="navigator.clipboard.writeText(onbLinkSite)">copiar</button>
+              <a :href="onbLinkSite" target="_blank" class="btn btn-ghost btn-sm">abrir ↗</a>
             </div>
           </div>
           <div class="card">
@@ -3098,7 +3105,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=193"></script>
+<script src="js/app.js?v=194"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
