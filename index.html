@@ -180,6 +180,11 @@
         </div>
       </template>
 
+      <!-- Agenda / Calendário de eventos (admin + Gestor de Tráfego) -->
+      <div class="nav-item" x-show="podeVer('agenda')" :class="page==='agenda'?'active':''" @click="go('agenda')" title="Calendário de eventos, contatos e histórico dos clientes.">
+        <span class="nav-icon"><i class="ph ph-calendar-dots ic-ph" style="color:#ea580c"></i></span><span>Agenda</span>
+      </div>
+
       <!-- Relatórios (só admin) -->
       <div class="nav-item" x-show="ehAdmin" :class="page==='relatorios'?'active':''" @click="go('relatorios')" title="Ponto e produção da equipe.">
         <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph"></i></span><span>Relatórios</span>
@@ -1640,6 +1645,130 @@
               <div class="mt-3"><button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><i class="ph ph-pencil-simple ic-ph"></i> Editar ficha do cliente</button></div>
             </div>
           </template>
+        </div>
+      </section>
+
+      <!-- ========== AGENDA / CALENDÁRIO DE EVENTOS (Tráfego) ========== -->
+      <section x-show="page==='agenda'">
+        <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:10px">
+          <div>
+            <div class="fw-800 fs-18"><i class="ph ph-calendar-dots ic-ph" style="color:#ea580c"></i> Agenda de Eventos</div>
+            <div class="text-3 fs-12">Calendário com eventos, contatos e histórico dos clientes.</div>
+          </div>
+          <div class="flex items-center gap-2" style="flex-wrap:wrap">
+            <select class="form-select fs-13" style="max-width:220px" x-model="agendaFiltro">
+              <option value="">Todos os clientes</option>
+              <template x-for="c in agClientes" :key="c.id"><option :value="c.id" x-text="c.empresa||c.nome||'—'"></option></template>
+            </select>
+            <button class="btn btn-primary btn-sm" @click="novoEvento()"><i class="ph ph-plus ic-ph"></i> Novo evento</button>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:1fr 340px;gap:14px;align-items:start">
+          <!-- ===== Calendário ===== -->
+          <div class="card" style="padding:14px">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <button class="btn btn-icon btn-ghost btn-sm" @click="agNavMes(-1)"><i class="ph ph-caret-left ic-ph"></i></button>
+                <div class="fw-800 fs-15" style="min-width:150px;text-align:center" x-text="agMesLabel()"></div>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="agNavMes(1)"><i class="ph ph-caret-right ic-ph"></i></button>
+              </div>
+              <button class="btn btn-ghost btn-sm" @click="agHoje()">Hoje</button>
+            </div>
+            <div class="grid" style="grid-template-columns:repeat(7,1fr);gap:4px">
+              <template x-for="w in ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']" :key="w">
+                <div class="text-3 fs-11 fw-700" style="text-align:center;padding:4px 0" x-text="w"></div>
+              </template>
+              <template x-for="cel in agGrade" :key="cel.data">
+                <div @click="agendaDiaSel=cel.data"
+                     :style="'min-height:74px;border:1px solid var(--border);border-radius:8px;padding:5px 6px;cursor:pointer;overflow:hidden;'+(cel.doMes?'':'opacity:.4;')+(agendaDiaSel===cel.data?'outline:2px solid #ea580c;':'')+(cel.hoje?'background:#fff7ed;':'')">
+                  <div class="flex items-center justify-between">
+                    <span class="fs-12" :style="cel.hoje?'font-weight:800;color:#ea580c':'font-weight:600'" x-text="cel.dia"></span>
+                    <span x-show="cel.n" class="badge" style="background:#ffedd5;color:#c2410c;font-weight:800;min-width:16px;justify-content:center;padding:0 5px" x-text="cel.n"></span>
+                  </div>
+                  <div style="margin-top:2px;display:flex;flex-direction:column;gap:2px">
+                    <template x-for="ev in agEventosDoDia(cel.data).slice(0,3)" :key="ev.fonte+'-'+(ev.id||ev.titulo)+ev.clienteId">
+                      <div @click.stop="agendaDiaSel=cel.data; agendaHistCli=ev.clienteId"
+                           :style="'font-size:10px;line-height:1.3;border-radius:4px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:'+agTipoCor(ev.tipo)+'22;color:'+agTipoCor(ev.tipo)"
+                           :title="ev.cliente+' — '+ev.titulo">
+                        <span x-text="agTipoIcon(ev.tipo)"></span> <span x-text="ev.cliente"></span>
+                      </div>
+                    </template>
+                    <div x-show="agEventosDoDia(cel.data).length>3" class="text-3" style="font-size:10px" x-text="'+'+(agEventosDoDia(cel.data).length-3)+' mais'"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <!-- legenda -->
+            <div class="flex items-center gap-2 mt-3" style="flex-wrap:wrap">
+              <template x-for="t in ['Reunião','Campanha','Entrega','Ligação','WhatsApp','Tarefa']" :key="t">
+                <span class="fs-11" :style="'display:inline-flex;align-items:center;gap:3px;color:'+agTipoCor(t)"><span style="width:8px;height:8px;border-radius:2px;display:inline-block" :style="'background:'+agTipoCor(t)"></span> <span x-text="t"></span></span>
+              </template>
+            </div>
+          </div>
+
+          <!-- ===== Painel lateral: dia selecionado / próximos + histórico ===== -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="card" style="padding:12px">
+              <div class="flex items-center justify-between mb-2">
+                <div class="fw-800 fs-13" x-text="agendaDiaSel ? ('Dia '+fmtDate(agendaDiaSel)) : 'Próximos eventos'"></div>
+                <button x-show="agendaDiaSel" class="btn btn-ghost btn-sm" @click="novoEvento(agendaDiaSel)" title="Novo evento neste dia"><i class="ph ph-plus ic-ph"></i></button>
+              </div>
+              <template x-if="agendaDiaSel">
+                <div>
+                  <template x-for="ev in agEventosDoDia(agendaDiaSel)" :key="ev.fonte+'-'+(ev.id||ev.titulo)+ev.clienteId">
+                    <div class="flex items-start gap-2" style="padding:7px 0;border-bottom:1px solid var(--border)">
+                      <span :style="'font-size:15px'" x-text="agTipoIcon(ev.tipo)"></span>
+                      <div style="flex:1;min-width:0;cursor:pointer" @click="agendaHistCli=ev.clienteId">
+                        <div class="fw-700 fs-12 truncate" x-text="ev.titulo"></div>
+                        <div class="text-3 fs-11 truncate"><span x-text="ev.cliente"></span> · <span :style="'color:'+agTipoCor(ev.tipo)" x-text="ev.tipo"></span><span x-show="ev.fonte!=='agenda'" class="text-3"> · do histórico</span></div>
+                      </div>
+                      <template x-if="ev.fonte==='agenda'">
+                        <div class="flex gap-1">
+                          <button class="btn btn-icon btn-ghost btn-sm" @click="editarEvento(ev)" title="Editar"><i class="ph ph-pencil-simple ic-ph"></i></button>
+                          <button class="btn btn-icon btn-ghost btn-sm" @click="removerEventoAg(ev)" title="Excluir" style="color:var(--red)"><i class="ph ph-trash ic-ph"></i></button>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                  <div x-show="!agEventosDoDia(agendaDiaSel).length" class="text-3 fs-12" style="padding:8px 0">Nada neste dia. <a style="cursor:pointer;text-decoration:underline" @click="novoEvento(agendaDiaSel)">Adicionar evento</a></div>
+                </div>
+              </template>
+              <template x-if="!agendaDiaSel">
+                <div>
+                  <template x-for="ev in agProximos" :key="ev.fonte+'-'+(ev.id||ev.titulo)+ev.clienteId+ev.data">
+                    <div class="flex items-start gap-2" style="padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="agendaDiaSel=ev.data; agendaHistCli=ev.clienteId">
+                      <span style="font-size:15px" x-text="agTipoIcon(ev.tipo)"></span>
+                      <div style="flex:1;min-width:0">
+                        <div class="fw-700 fs-12 truncate" x-text="ev.titulo"></div>
+                        <div class="text-3 fs-11 truncate"><span x-text="fmtDate(ev.data)"></span> · <span x-text="ev.cliente"></span></div>
+                      </div>
+                    </div>
+                  </template>
+                  <div x-show="!agProximos.length" class="text-3 fs-12" style="padding:8px 0">Sem eventos futuros. Clique num dia pra adicionar.</div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Histórico do cliente selecionado -->
+            <div class="card" x-show="agendaHistCli" style="padding:12px">
+              <div class="flex items-center justify-between mb-2">
+                <div class="fw-800 fs-13"><i class="ph ph-clock-counter-clockwise ic-ph"></i> Histórico</div>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="agendaHistCli=''" title="Fechar"><i class="ph ph-x ic-ph"></i></button>
+              </div>
+              <div class="fw-700 fs-13 mb-1" x-text="clienteNome(agendaHistCli)"></div>
+              <template x-for="h in histCliente(agendaHistCli)" :key="h.id">
+                <div class="flex items-start gap-2" style="padding:6px 0;border-bottom:1px solid var(--border)">
+                  <span style="font-size:14px" x-text="agTipoIcon(h.tipo)"></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fs-12" x-text="h.texto||h.tipo"></div>
+                    <div class="text-3 fs-11"><span x-text="fmtDate(h.data||h.em)"></span><span x-show="h.por"> · <span x-text="h.por"></span></span></div>
+                  </div>
+                </div>
+              </template>
+              <div x-show="!histCliente(agendaHistCli).length" class="text-3 fs-12" style="padding:6px 0">Sem histórico de contatos ainda.</div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -3206,6 +3335,32 @@
   </div>
 </div>
 
+<!-- NOVO/EDITAR EVENTO (Agenda) -->
+<div class="modal-backdrop" x-show="eventoModal" x-cloak>
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><div class="modal-title" x-text="eventoForm.id?'Editar evento':'Novo evento'"></div><button class="btn btn-icon btn-ghost" @click="eventoModal=false">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Cliente *</label>
+        <select class="form-select" x-model="eventoForm.clienteId">
+          <option value="">Escolha o cliente…</option>
+          <template x-for="c in agClientes" :key="c.id"><option :value="c.id" x-text="c.empresa||c.nome||'—'"></option></template>
+        </select>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="form-group" style="margin:0"><label class="form-label">Data *</label><input class="form-input" type="date" x-model="eventoForm.data"></div>
+        <div class="form-group" style="margin:0"><label class="form-label">Tipo</label><select class="form-select" x-model="eventoForm.tipo"><template x-for="t in TIPOS_EVENTO" :key="t"><option :value="t" x-text="t"></option></template></select></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Título *</label><input class="form-input" x-model="eventoForm.titulo" placeholder="Ex.: Reunião de alinhamento / Início da campanha"></div>
+      <div class="form-group"><label class="form-label">Observação</label><textarea class="form-input" rows="3" x-model="eventoForm.nota" placeholder="Detalhes (opcional)"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="eventoModal=false">Cancelar</button>
+      <button class="btn btn-primary" @click="salvarEvento()"><i class="ph ph-check ic-ph"></i> Salvar evento</button>
+    </div>
+  </div>
+</div>
+
 <!-- FICHA DE REGISTRO (Pessoal) — RH -->
 <div class="modal-backdrop" x-show="fichaModal" x-cloak>
   <div class="modal" style="max-width:640px">
@@ -3362,7 +3517,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=209"></script>
+<script src="js/app.js?v=210"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

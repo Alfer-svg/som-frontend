@@ -317,6 +317,7 @@ const PAPEIS_INFO = [
   { id: 'colaborador', nome: 'Colaborador', desc: 'Operacional e Monitoramento (sem CRM, Financeiro nem senhas)', cor: '#16a34a', bg: '#dcfce7' },
   { id: 'colaborador2', nome: 'Colaborador 2', desc: 'Só o Operacional — e só os trabalhos em que está envolvido', cor: '#0891b2', bg: '#cffafe' },
   { id: 'financeiro', nome: 'Financeiro', desc: 'Financeiro + Dashboard', cor: '#d97706', bg: '#fef3c7' },
+  { id: 'gestortrafego', nome: 'Gestor de Tráfego', desc: 'Agenda de eventos + Monitoramento dos clientes', cor: '#ea580c', bg: '#ffedd5' },
 ];
 // '*' = todas as páginas. Demais: lista de páginas liberadas.
 const PERMISSOES = {
@@ -327,6 +328,7 @@ const PERMISSOES = {
   colaborador: ['comercial', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
   colaborador2: ['operacional', 'pessoal'], // Operacional (só os trabalhos em que está) + a própria ficha
   financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'pessoal'],
+  gestortrafego: ['agenda', 'monitoramento', 'pessoal'], // painel exclusivo de agenda/tráfego + monitoramento
 };
 // Páginas do sistema que o admin pode liberar/bloquear por perfil (checkboxes em Configurações).
 // 'pessoal' (a própria ficha) é sempre liberado e 'configuracoes' é sempre só-admin — por isso
@@ -342,6 +344,7 @@ const PAGINAS_SISTEMA = [
   { id: 'operacional', nome: 'Operacional' },
   { id: 'monitoramento', nome: 'Monitoramento' },
   { id: 'relatorios', nome: 'Relatórios' },
+  { id: 'agenda', nome: 'Agenda' },
 ];
 
 /* ---------- Operacional: modelos de projeto comuns de agência ---------- */
@@ -411,6 +414,14 @@ document.addEventListener('alpine:init', () => {
     permissoesCustom: {},
     perfisCustom: [], // perfis personalizados criados pelo admin [{id,nome,desc,cor,bg}] — salvos em /config/ui.perfisCustom
     perfilNovoNome: '', // input do "+ Novo perfil"
+    // Agenda / calendário de eventos (painel Tráfego)
+    agendaRef: null,        // {ano, mes} do mês exibido (setado no 1º acesso)
+    agendaFiltro: '',       // clienteId do filtro ('' = todos)
+    agendaDiaSel: '',       // 'YYYY-MM-DD' selecionado
+    agendaHistCli: '',      // clienteId cujo histórico está aberto no painel lateral
+    eventoModal: false,
+    eventoForm: { id: '', clienteId: '', data: '', tipo: 'Reunião', titulo: '', nota: '' },
+    TIPOS_EVENTO: ['Reunião', 'Campanha', 'Entrega', 'Ligação', 'WhatsApp', 'E-mail', 'Visita', 'Evento'],
     usuarios: [], // equipe completa (só admin lê)
     equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' },
@@ -727,7 +738,7 @@ document.addEventListener('alpine:init', () => {
       if (i >= 0) atual.splice(i, 1); else atual.push(page);
       this.permissoesCustom = { ...this.permissoesCustom, [id]: atual };
     },
-    get paginaInicial() { return this.podeVer('dashboard') ? 'dashboard' : (['operacional', 'monitoramento', 'crm', 'financeiro', 'comercial', 'pessoal'].find(p => this.podeVer(p)) || 'pessoal'); },
+    get paginaInicial() { return this.podeVer('dashboard') ? 'dashboard' : (['agenda', 'operacional', 'monitoramento', 'crm', 'financeiro', 'comercial', 'pessoal'].find(p => this.podeVer(p)) || 'pessoal'); },
     garantirPaginaPermitida() { if (this.token && !this.podeVer(this.page)) this.page = this.paginaInicial; },
     // ── Pessoal: gestão de equipe (admin) ──
     // PAPEIS_INFO com os nomes/descrições editados aplicados (cor/bg/permissões seguem fixos pelo id).
@@ -810,6 +821,73 @@ document.addEventListener('alpine:init', () => {
         alert('Permissões salvas. ✅ Cada pessoa vê a mudança no próximo carregamento.');
       } catch (e) { alert(e.message || e); }
     },
+
+    /* ─────────── AGENDA / CALENDÁRIO DE EVENTOS (painel Tráfego) ─────────── */
+    _iso(d) { const p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); },
+    _hojeStr() { return this._iso(new Date()); },
+    get agRef() { if (!this.agendaRef) { const d = new Date(); this.agendaRef = { ano: d.getFullYear(), mes: d.getMonth() }; } return this.agendaRef; },
+    agNavMes(delta) { let { ano, mes } = this.agRef; mes += delta; if (mes < 0) { mes = 11; ano--; } if (mes > 11) { mes = 0; ano++; } this.agendaRef = { ano, mes }; this.agendaDiaSel = ''; },
+    agHoje() { const d = new Date(); this.agendaRef = { ano: d.getFullYear(), mes: d.getMonth() }; this.agendaDiaSel = this._hojeStr(); },
+    agMesLabel() { const m = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']; return m[this.agRef.mes] + ' ' + this.agRef.ano; },
+    agTipoCor(t) { const m = { 'Reunião': '#7c3aed', 'Ligação': '#2563eb', 'WhatsApp': '#16a34a', 'E-mail': '#0891b2', 'Visita': '#db2777', 'Nota': '#6b7280', 'Tarefa': '#d97706', 'Evento': '#ea580c', 'Campanha': '#ea580c', 'Entrega': '#0d9488' }; return m[t] || '#ea580c'; },
+    agTipoIcon(t) { const m = { 'Reunião': '🤝', 'Ligação': '📞', 'WhatsApp': '💬', 'E-mail': '✉️', 'Visita': '📍', 'Nota': '📝', 'Tarefa': '✅', 'Evento': '📅', 'Campanha': '🚀', 'Entrega': '📦' }; return m[t] || '📅'; },
+    clienteNome(id) { const c = (this.clients || []).find(x => x.id === id); return c ? (c.empresa || c.nome || '—') : '—'; },
+    histCliente(id) { const c = (this.clients || []).find(x => x.id === id); return c ? (c.timeline || []).slice(0, 25) : []; },
+    // Clientes ordenados p/ o seletor de evento/filtro
+    get agClientes() { return (this.clients || []).slice().sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '')); },
+    // Todos os eventos agregados: agenda cadastrada + interações (contatos) + tarefas com prazo.
+    get agEventos() {
+      const out = [], fil = this.agendaFiltro;
+      for (const c of (this.clients || [])) {
+        if (fil && c.id !== fil) continue;
+        const nome = c.empresa || c.nome || '—';
+        for (const e of (c.agenda || [])) { if (e && e.data) out.push({ data: String(e.data).slice(0, 10), tipo: e.tipo || 'Evento', titulo: e.titulo || e.tipo || 'Evento', nota: e.nota || '', clienteId: c.id, cliente: nome, fonte: 'agenda', id: e.id }); }
+        for (const t of (c.timeline || [])) { const d = String(t.data || t.em || '').slice(0, 10); if (d) out.push({ data: d, tipo: t.tipo || 'Nota', titulo: t.texto || t.tipo || 'Contato', clienteId: c.id, cliente: nome, fonte: 'interacao', por: t.por || '' }); }
+        for (const tk of (c.tarefas || [])) { if (tk && tk.data) out.push({ data: String(tk.data).slice(0, 10), tipo: 'Tarefa', titulo: tk.titulo || 'Tarefa', clienteId: c.id, cliente: nome, fonte: 'tarefa', status: tk.status || '' }); }
+      }
+      return out;
+    },
+    agEventosDoDia(d) { return this.agEventos.filter(e => e.data === d); },
+    get agContagemPorDia() { const m = {}; for (const e of this.agEventos) m[e.data] = (m[e.data] || 0) + 1; return m; },
+    // Grade do mês: 42 células (6 semanas), domingo→sábado.
+    get agGrade() {
+      const { ano, mes } = this.agRef;
+      const primeiro = new Date(ano, mes, 1);
+      const inicio = new Date(ano, mes, 1 - primeiro.getDay());
+      const hoje = this._hojeStr(), cont = this.agContagemPorDia, dias = [];
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
+        const iso = this._iso(d);
+        dias.push({ data: iso, dia: d.getDate(), doMes: d.getMonth() === mes, hoje: iso === hoje, n: cont[iso] || 0 });
+      }
+      return dias;
+    },
+    get agProximos() { const h = this._hojeStr(); return this.agEventos.filter(e => e.data >= h).sort((a, b) => a.data.localeCompare(b.data)).slice(0, 12); },
+    novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), tipo: 'Reunião', titulo: '', nota: '' }; this.eventoModal = true; },
+    editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '' }; this.eventoModal = true; },
+    async salvarEvento() {
+      const f = this.eventoForm;
+      if (!f.clienteId) return alert('Escolha o cliente.');
+      if (!f.data) return alert('Escolha a data.');
+      if (!(f.titulo || '').trim()) return alert('Dê um título ao evento.');
+      const c = (this.clients || []).find(x => x.id === f.clienteId); if (!c) return alert('Cliente não encontrado.');
+      const agenda = Array.isArray(c.agenda) ? c.agenda.slice() : [];
+      if (f.id) { const i = agenda.findIndex(e => e.id === f.id); if (i >= 0) agenda[i] = { ...agenda[i], data: f.data, tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota }; }
+      else agenda.push({ id: MD.uid(), data: f.data, tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota || '', por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString() });
+      const { id, ...resto } = c; resto.agenda = agenda;
+      try { await this.api('POST', '/clientes', { id: c.id, empresa: c.empresa, dados: resto }); c.agenda = agenda; this.eventoModal = false; this.agendaDiaSel = f.data; this.mostrarToast('Evento salvo. 📅'); }
+      catch (e) { alert(e.message || e); }
+    },
+    async removerEventoAg(ev) {
+      if (!ev || ev.fonte !== 'agenda') return;
+      if (!confirm('Excluir o evento "' + ev.titulo + '"?')) return;
+      const c = (this.clients || []).find(x => x.id === ev.clienteId); if (!c) return;
+      const agenda = (c.agenda || []).filter(e => e.id !== ev.id);
+      const { id, ...resto } = c; resto.agenda = agenda;
+      try { await this.api('POST', '/clientes', { id: c.id, empresa: c.empresa, dados: resto }); c.agenda = agenda; this.mostrarToast('Evento excluído.'); }
+      catch (e) { alert(e.message || e); }
+    },
+
     async carregarUsuarios() {
       try {
         if (this.ehAdmin) this.usuarios = (await this.api('GET', '/auth/usuarios')) || [];
