@@ -440,6 +440,7 @@ document.addEventListener('alpine:init', () => {
     // ── Gestão de Tráfego (página trafego: admin + gestortrafego) ──
     TRAF_TAREFAS,
     trafDia: '',            // 'YYYY-MM-DD' do checklist em edição (default hoje)
+    trafTab: 'rotina',      // aba da página: rotina | contas | indicadores (admin)
     trafCliSel: '',         // cliente selecionado no checklist (as 8 tarefas são POR CLIENTE)
     trafChecklists: [],     // coleção trafego.checklist — um doc por dia+cliente
     trafLog: [],            // coleção trafego.log — otimizações registradas

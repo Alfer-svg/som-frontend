@@ -1840,7 +1840,7 @@
         </div>
       </div>
 
-      <!-- ========== GESTÃO DE TRÁFEGO (checklist diário + log + indicadores) ========== -->
+      <!-- ========== GESTÃO DE TRÁFEGO (rotina por cliente + contas + indicadores) ========== -->
       <section x-show="page==='trafego'">
         <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
           <div>
@@ -1853,56 +1853,23 @@
           </div>
         </div>
 
-        <!-- KPIs rápidos: contas sem saldo / saldo baixo / campanhas ativas -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px">
-          <div class="card" style="padding:12px;border-left:4px solid #dc2626">
-            <div class="text-3 fs-11">🚨 Contas sem saldo</div>
-            <div class="fw-800" style="font-size:24px;color:#dc2626" x-text="trafSaldoAlertas.sem.length"></div>
+        <div class="tabs">
+          <div class="tab" :class="trafTab==='rotina'?'active':''" @click="trafTab='rotina'"><i class="ph ph-check-square ic-ph"></i> Rotina do dia</div>
+          <div class="tab" :class="trafTab==='contas'?'active':''" @click="trafTab='contas'">
+            <i class="ph ph-wallet ic-ph"></i> Contas &amp; Campanhas
+            <span x-show="trafSaldoAlertas.sem.length" class="badge fs-11 fw-800" style="background:#fee2e2;color:#dc2626;margin-left:4px" x-text="trafSaldoAlertas.sem.length"></span>
           </div>
-          <div class="card" style="padding:12px;border-left:4px solid #d97706">
-            <div class="text-3 fs-11">⚠️ Contas com saldo baixo</div>
-            <div class="fw-800" style="font-size:24px;color:#d97706" x-text="trafSaldoAlertas.baixo.length"></div>
-          </div>
-          <div class="card" style="padding:12px;border-left:4px solid #2563eb">
-            <div class="text-3 fs-11">🎯 Campanhas ativas agora <span style="font-size:9px">(Google Ads)</span></div>
-            <div class="fw-800" style="font-size:24px;color:#2563eb" x-text="trafCampanhasAtivas"></div>
-          </div>
+          <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
 
-        <!-- Alerta: contas de anúncio sem saldo / saldo baixo (saldo manual da seção Tráfego Pago) -->
-        <div class="card" style="padding:14px;margin-bottom:14px" :style="trafSaldoAlertas.sem.length?'border-left:4px solid #dc2626':(trafSaldoAlertas.baixo.length?'border-left:4px solid #d97706':'border-left:4px solid #16a34a')">
-          <div class="fw-800 fs-13 mb-2"><i class="ph ph-wallet ic-ph" :style="trafSaldoAlertas.sem.length?'color:#dc2626':'color:#16a34a'"></i> Saldo das contas de anúncio</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
-            <div>
-              <div class="fs-12 fw-700 mb-1" style="color:#dc2626">🚨 Sem saldo (<span x-text="trafSaldoAlertas.sem.length"></span>)</div>
-              <template x-for="a in trafSaldoAlertas.sem" :key="'ss'+a.canal+a.id">
-                <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
-                  <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
-                  <span class="fw-700" style="color:#dc2626;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
-                </div>
-              </template>
-              <div x-show="!trafSaldoAlertas.sem.length" class="text-3 fs-11" style="padding:4px 0">Nenhuma 🎉</div>
-            </div>
-            <div>
-              <div class="fs-12 fw-700 mb-1" style="color:#d97706">⚠️ Saldo baixo — abaixo de R$ 200 (<span x-text="trafSaldoAlertas.baixo.length"></span>)</div>
-              <template x-for="a in trafSaldoAlertas.baixo" :key="'sb'+a.canal+a.id">
-                <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
-                  <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
-                  <span class="fw-700" style="color:#d97706;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
-                </div>
-              </template>
-              <div x-show="!trafSaldoAlertas.baixo.length" class="text-3 fs-11" style="padding:4px 0">Nenhuma 👍</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start">
-          <!-- Checklist do dia -->
+        <!-- ─────── Aba: Rotina do dia (checklist por cliente + log) ─────── -->
+        <div x-show="trafTab==='rotina'" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start">
+          <!-- Checklist por cliente -->
           <div class="card" style="padding:14px">
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
               <span class="text-3 fs-11 fw-400" x-show="trafCliSel && trafCheckDia().por" x-text="'· por '+trafCheckDia().por"></span>
             </div>
-            <!-- Cliente do checklist: dropdown só de ativos — ✓ = já fechou as 8 do dia -->
+            <!-- Dropdown só de ativos — ✓ = já fechou as 8 do dia -->
             <div class="flex items-center gap-2" style="margin-bottom:10px">
               <select class="form-select" style="flex:1" x-model="trafCliSel">
                 <option value="">Escolha o cliente…</option>
@@ -1912,7 +1879,7 @@
               </select>
               <span class="badge fs-11 fw-700" x-show="trafCliSel" :style="trafFeitos>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="trafFeitos+'/'+TRAF_TAREFAS.length"></span>
             </div>
-            <div x-show="!trafCliSel" class="text-3 fs-12" style="padding:6px 0;text-align:center">Escolha um cliente pra abrir o checklist dele.</div>
+            <div x-show="!trafCliSel" class="text-3 fs-12" style="padding:16px 0;text-align:center">Escolha um cliente pra abrir o checklist dele.</div>
             <template x-for="t in trafCliSel ? TRAF_TAREFAS : []" :key="trafCliSel+t.id">
               <div style="padding:8px 0;border-bottom:1px solid var(--border)">
                 <label class="flex items-center gap-2" style="cursor:pointer">
@@ -1931,7 +1898,7 @@
             <div class="form-group" style="margin-bottom:8px">
               <select class="form-select" x-model="trafLogForm.clienteId">
                 <option value="">Cliente…</option>
-                <template x-for="c in clients.filter(x=>x.status!=='Inativo')" :key="'lf'+c.id"><option :value="c.id" x-text="c.empresa||c.nome"></option></template>
+                <template x-for="c in trafClientes" :key="'lf'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
               </select>
             </div>
             <div class="form-group" style="margin-bottom:8px"><input class="form-input" x-model="trafLogForm.alteracao" placeholder="Alteração — ex.: pausado anúncio X, verba R$50→R$80"></div>
@@ -1943,7 +1910,7 @@
               <span class="text-3 fs-12" x-text="trafLogVisivel.length+' registro(s)'"></span>
               <select class="form-select" style="width:auto;font-size:12px;padding:4px 26px 4px 8px" x-model="trafLogFiltro">
                 <option value="">Todos os clientes</option>
-                <template x-for="c in clients.filter(x=>x.status!=='Inativo')" :key="'ff'+c.id"><option :value="c.id" x-text="c.empresa||c.nome"></option></template>
+                <template x-for="c in trafClientes" :key="'ff'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
               </select>
             </div>
             <div style="max-height:360px;overflow-y:auto">
@@ -1965,44 +1932,86 @@
           </div>
         </div>
 
-        <!-- Indicadores do gestor (só admin) -->
-        <div class="card" style="padding:14px;margin-top:14px" x-show="ehAdmin">
-          <div class="fw-800 fs-13 mb-2"><i class="ph ph-gauge ic-ph" style="color:#ea580c"></i> Indicadores do gestor <span class="text-3 fs-11 fw-400">· últimos 30 dias, medidos por evidência</span></div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
-            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Contas revisadas hoje</div><div class="fw-800" style="font-size:20px" x-text="trafInd.contasHoje"></div></div>
-            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Otimizações hoje</div><div class="fw-800" style="font-size:20px" x-text="trafInd.otimHoje"></div></div>
-            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Checklist 100% (dias)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.pctCompleto+'%'"></div></div>
-            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Média de itens/dia</div><div class="fw-800" style="font-size:20px" x-text="trafInd.mediaItens+'/'+TRAF_TAREFAS.length"></div></div>
-            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Otimizações (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.otim30"></div></div>
-            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Contas distintas (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.contas30"></div></div>
-            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Dias com rotina (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.diasAtivos30"></div></div>
+        <!-- ─────── Aba: Contas & Campanhas (saldos + resultados) ─────── -->
+        <div x-show="trafTab==='contas'">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px">
+            <div class="card" style="padding:12px;border-left:4px solid #dc2626">
+              <div class="text-3 fs-11">Contas sem saldo</div>
+              <div class="fw-800" style="font-size:24px;color:#dc2626" x-text="trafSaldoAlertas.sem.length"></div>
+            </div>
+            <div class="card" style="padding:12px;border-left:4px solid #d97706">
+              <div class="text-3 fs-11">Contas com saldo baixo</div>
+              <div class="fw-800" style="font-size:24px;color:#d97706" x-text="trafSaldoAlertas.baixo.length"></div>
+            </div>
+            <div class="card" style="padding:12px;border-left:4px solid #2563eb">
+              <div class="text-3 fs-11">Campanhas ativas agora <span style="font-size:9px">(Google Ads)</span></div>
+              <div class="fw-800" style="font-size:24px;color:#2563eb" x-text="trafCampanhasAtivas"></div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:14px;margin-bottom:14px" x-show="trafSaldoAlertas.sem.length || trafSaldoAlertas.baixo.length">
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i> Contas precisando de recarga</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+              <div x-show="trafSaldoAlertas.sem.length">
+                <div class="fs-12 fw-700 mb-1" style="color:#dc2626">Sem saldo</div>
+                <template x-for="a in trafSaldoAlertas.sem" :key="'ss'+a.canal+a.id">
+                  <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
+                    <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
+                    <span class="fw-700" style="color:#dc2626;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
+                  </div>
+                </template>
+              </div>
+              <div x-show="trafSaldoAlertas.baixo.length">
+                <div class="fs-12 fw-700 mb-1" style="color:#d97706">Saldo baixo — abaixo de R$ 200</div>
+                <template x-for="a in trafSaldoAlertas.baixo" :key="'sb'+a.canal+a.id">
+                  <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
+                    <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
+                    <span class="fw-700" style="color:#d97706;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:0;overflow:hidden">
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-800 fs-13"><i class="ph ph-google-logo ic-ph" style="color:#2563eb"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Google Ads, mês corrente (snapshot automático)</span></div>
+            <div style="overflow-x:auto">
+              <table class="table">
+                <thead><tr><th>Cliente</th><th>Leads</th><th>Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas ativas</th></tr></thead>
+                <tbody>
+                  <template x-for="r in trafResultados" :key="r.id">
+                    <tr>
+                      <td class="fw-700" x-text="r.nome"></td>
+                      <td x-text="r.leads ?? '—'"></td>
+                      <td><span x-show="r.dLeads !== null" :style="r.dLeads>=0?'color:#15803d':'color:#b91c1c'" x-text="(r.dLeads>=0?'+':'')+r.dLeads"></span><span x-show="r.dLeads === null" class="text-3">—</span></td>
+                      <td x-text="r.custoLead != null ? mascCur(r.custoLead) : '—'"></td>
+                      <td x-text="r.gasto != null ? mascCur(r.gasto) : '—'"></td>
+                      <td x-text="r.campanhas ?? '—'"></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+              <div x-show="!trafResultados.length" class="text-3 fs-12" style="padding:14px;text-align:center">Nenhum cliente com Google Ads sincronizado ainda — preencha o Customer ID no cadastro.</div>
+            </div>
           </div>
         </div>
 
-        <!-- Resultados das contas (Google Ads, mês corrente) -->
-        <div class="card" style="padding:0;margin-top:14px;overflow:hidden">
-          <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-800 fs-13"><i class="ph ph-google-logo ic-ph" style="color:#2563eb"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Google Ads, mês corrente (snapshot automático)</span></div>
-          <div style="overflow-x:auto">
-            <table class="table">
-              <thead><tr><th>Cliente</th><th>Leads</th><th>Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas ativas</th></tr></thead>
-              <tbody>
-                <template x-for="r in trafResultados" :key="r.id">
-                  <tr>
-                    <td class="fw-700" x-text="r.nome"></td>
-                    <td x-text="r.leads ?? '—'"></td>
-                    <td><span x-show="r.dLeads !== null" :style="r.dLeads>=0?'color:#15803d':'color:#b91c1c'" x-text="(r.dLeads>=0?'+':'')+r.dLeads"></span><span x-show="r.dLeads === null" class="text-3">—</span></td>
-                    <td x-text="r.custoLead != null ? mascCur(r.custoLead) : '—'"></td>
-                    <td x-text="r.gasto != null ? mascCur(r.gasto) : '—'"></td>
-                    <td x-text="r.campanhas ?? '—'"></td>
-                  </tr>
-                </template>
-              </tbody>
-            </table>
-            <div x-show="!trafResultados.length" class="text-3 fs-12" style="padding:14px;text-align:center">Nenhum cliente com Google Ads sincronizado ainda — preencha o Customer ID no cadastro.</div>
+        <!-- ─────── Aba: Indicadores do gestor (só admin) ─────── -->
+        <div x-show="trafTab==='indicadores' && ehAdmin">
+          <div class="card" style="padding:14px">
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-gauge ic-ph" style="color:#ea580c"></i> Indicadores do gestor <span class="text-3 fs-11 fw-400">· últimos 30 dias, medidos por evidência</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Contas revisadas hoje</div><div class="fw-800" style="font-size:20px" x-text="trafInd.contasHoje"></div></div>
+              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Otimizações hoje</div><div class="fw-800" style="font-size:20px" x-text="trafInd.otimHoje"></div></div>
+              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Checklists 100%</div><div class="fw-800" style="font-size:20px" x-text="trafInd.pctCompleto+'%'"></div></div>
+              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Média de itens/checklist</div><div class="fw-800" style="font-size:20px" x-text="trafInd.mediaItens+'/'+TRAF_TAREFAS.length"></div></div>
+              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Otimizações (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.otim30"></div></div>
+              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Contas distintas (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.contas30"></div></div>
+              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Dias com rotina (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.diasAtivos30"></div></div>
+            </div>
           </div>
         </div>
       </section>
-
       <!-- ========== RELATÓRIOS (ponto + produção) ========== -->
       <section x-show="page==='relatorios'">
         <!-- seletor de período -->
@@ -3769,7 +3778,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=219"></script>
+<script src="js/app.js?v=220"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
