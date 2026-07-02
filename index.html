@@ -1813,8 +1813,9 @@
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
 
-        <!-- ─────── Aba: Rotina do dia — layout mesclado: checklist principal + lateral (tarefas em cima, log embaixo) ─────── -->
+        <!-- ─────── Aba: Rotina do dia — esquerda: checklist + log; direita: rosca, tarefas do quadro e insights ─────── -->
         <div x-show="trafTab==='rotina'" class="traf-rotina">
+          <div class="traf-rotina-lateral">
           <!-- Checklist por cliente -->
           <div class="card" style="padding:14px">
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
@@ -1866,65 +1867,7 @@
             </div>
             <button class="btn" x-show="trafCliSel" @click="salvarTrafego(true)" style="width:100%;margin-top:12px;background:#16a34a;color:#fff;border-color:#16a34a;justify-content:center"><i class="ph ph-floppy-disk ic-ph"></i> Salvar checklist no fichário</button>
           </div>
-          <div class="traf-rotina-lateral">
-            <!-- Rosca: quanto falta pra cumprir a demanda do dia (clientes × 8 tarefas) -->
-            <div class="card" style="padding:14px;display:flex;align-items:center;gap:14px">
-              <svg viewBox="0 0 120 120" width="110" height="110" style="flex-shrink:0">
-                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#dcfce7':'#EDE9FE'" stroke-width="13"/>
-                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#16a34a':'#7c3aed'" stroke-width="13" stroke-linecap="round"
-                  :stroke-dasharray="(trafProgressoDia.pct*3.1416)+' 999'" transform="rotate(-90 60 60)" style="transition:stroke-dasharray .4s"/>
-                <text x="60" y="57" text-anchor="middle" style="font-size:24px;font-weight:800" :fill="trafProgressoDia.falta===0?'#16a34a':'#7c3aed'" x-text="trafProgressoDia.falta===0?'100%':trafProgressoDia.falta+'%'"></text>
-                <text x="60" y="76" text-anchor="middle" style="font-size:11px;font-weight:700" fill="#8a8ba3" x-text="trafProgressoDia.falta===0?'cumprido':'faltam'"></text>
-              </svg>
-              <div style="min-width:0">
-                <div class="fw-800 fs-13"><i class="ph ph-target ic-ph" style="color:#7c3aed"></i> Demanda do dia</div>
-                <div class="fs-12" style="margin-top:4px" x-show="trafProgressoDia.falta>0"><b x-text="trafProgressoDia.itensFaltam"></b> itens restantes de <span x-text="trafProgressoDia.total"></span> (<span x-text="trafClientes.length"></span> clientes × <span x-text="TRAF_TAREFAS.length"></span> tarefas)</div>
-                <div class="fs-12 fw-700" style="margin-top:4px;color:#16a34a" x-show="trafProgressoDia.falta===0">Rotina do dia 100% cumprida! 🎉</div>
-                <div class="text-3 fs-11" style="margin-top:2px" x-text="trafCliConcluidos+'/'+trafClientes.length+' clientes concluídos · '+trafProgressoDia.pct+'% feito'"></div>
-              </div>
-            </div>
-            <!-- Insights da IA: análise das contas → o que fazer hoje -->
-            <div class="card" style="padding:14px">
-              <div class="flex items-center justify-between mb-2" style="gap:8px">
-                <div class="fw-800 fs-13"><i class="ph ph-sparkle ic-ph" style="color:#d97706"></i> Insights da IA</div>
-                <button class="btn btn-sm" @click="gerarTrafInsights()" :disabled="trafInsightsGerando" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap">
-                  <i class="ph ph-magic-wand ic-ph"></i> <span x-text="trafInsightsGerando?'Analisando…':'Analisar contas'"></span>
-                </button>
-              </div>
-              <div class="text-3 fs-11 mb-2" x-show="trafInsights && trafInsights.geradoEm" x-text="'Análise de '+fmtDataHora(trafInsights && trafInsights.geradoEm)"></div>
-              <div style="max-height:340px;overflow-y:auto">
-                <template x-for="(i, ix) in (trafInsights && trafInsights.itens) || []" :key="'ins'+ix">
-                  <div style="padding:8px 0;border-bottom:1px solid var(--border)">
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="badge fs-11 fw-800" :style="'background:'+trafPrioCor(i.prioridade)+'1a;color:'+trafPrioCor(i.prioridade)" x-text="i.prioridade"></span>
-                      <span class="fw-700 fs-12 truncate" x-text="i.cliente"></span>
-                    </div>
-                    <div class="fs-12" x-text="i.insight"></div>
-                    <div class="fs-12 fw-700" style="margin-top:3px;color:#7c3aed">→ <span x-text="i.acao"></span></div>
-                  </div>
-                </template>
-                <div x-show="!trafInsights || !(trafInsights.itens||[]).length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Clique em <b>Analisar contas</b> — a IA lê os dados do Google Ads de cada cliente e sugere as tarefas do dia.</div>
-              </div>
-            </div>
-
-            <!-- Tarefas do quadro Tráfego, por prioridade -->
-          <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#7c3aed"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· por prioridade</span></div>
-            <div style="max-height:420px;overflow-y:auto">
-              <template x-for="p in trafCardsPrioridade" :key="'tcp'+p.id">
-                <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="abrirCardTrafego(p)" :title="'Abrir card no quadro Tráfego'">
-                  <span class="badge fs-11 fw-800" style="min-width:64px;justify-content:center" :style="'background:'+trafPrioCor(p.prioridade)+'1a;color:'+trafPrioCor(p.prioridade)" x-text="p.prioridade||'—'"></span>
-                  <div style="flex:1;min-width:0">
-                    <div class="fw-700 fs-12 truncate" x-text="p.nome"></div>
-                    <div class="text-3 fs-11 truncate"><span x-text="p.cliente||'—'"></span><span x-show="p.prazo" x-text="' · prazo '+fmtDate(p.prazo)"></span></div>
-                  </div>
-                  <span class="badge fs-11" style="background:var(--surface-2);color:var(--text-2);white-space:nowrap" x-text="p.status"></span>
-                </div>
-              </template>
-              <div x-show="!trafCardsPrioridade.length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Nenhum card aberto no quadro Tráfego — crie pelo <b>+ Tráfego</b> no Operacional.</div>
-            </div>
-          </div>
-            <!-- Log de otimizações -->
+          <!-- Log de otimizações -->
           <div class="card" style="padding:14px">
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-list-plus ic-ph" style="color:#7c3aed"></i> Log de otimizações</div>
             <div class="text-3 fs-11 mb-2">Só mudanças relevantes: pausou, escalou, novo público, verba…</div>
@@ -1964,7 +1907,66 @@
             </div>
           </div>
           </div>
+          <div class="traf-rotina-lateral">
+            <!-- Rosca: quanto falta pra cumprir a demanda do dia (clientes × 8 tarefas) -->
+            <div class="card" style="padding:14px;display:flex;align-items:center;gap:14px">
+              <svg viewBox="0 0 120 120" width="110" height="110" style="flex-shrink:0">
+                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#dcfce7':'#EDE9FE'" stroke-width="13"/>
+                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#16a34a':'#7c3aed'" stroke-width="13" stroke-linecap="round"
+                  :stroke-dasharray="(trafProgressoDia.pct*3.1416)+' 999'" transform="rotate(-90 60 60)" style="transition:stroke-dasharray .4s"/>
+                <text x="60" y="57" text-anchor="middle" style="font-size:24px;font-weight:800" :fill="trafProgressoDia.falta===0?'#16a34a':'#7c3aed'" x-text="trafProgressoDia.falta===0?'100%':trafProgressoDia.falta+'%'"></text>
+                <text x="60" y="76" text-anchor="middle" style="font-size:11px;font-weight:700" fill="#8a8ba3" x-text="trafProgressoDia.falta===0?'cumprido':'faltam'"></text>
+              </svg>
+              <div style="min-width:0">
+                <div class="fw-800 fs-13"><i class="ph ph-target ic-ph" style="color:#7c3aed"></i> Demanda do dia</div>
+                <div class="fs-12" style="margin-top:4px" x-show="trafProgressoDia.falta>0"><b x-text="trafProgressoDia.itensFaltam"></b> itens restantes de <span x-text="trafProgressoDia.total"></span> (<span x-text="trafClientes.length"></span> clientes × <span x-text="TRAF_TAREFAS.length"></span> tarefas)</div>
+                <div class="fs-12 fw-700" style="margin-top:4px;color:#16a34a" x-show="trafProgressoDia.falta===0">Rotina do dia 100% cumprida! 🎉</div>
+                <div class="text-3 fs-11" style="margin-top:2px" x-text="trafCliConcluidos+'/'+trafClientes.length+' clientes concluídos · '+trafProgressoDia.pct+'% feito'"></div>
+              </div>
+            </div>
+            <!-- Tarefas do quadro Tráfego, por prioridade -->
+          <div class="card" style="padding:14px">
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#7c3aed"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· por prioridade</span></div>
+            <div style="max-height:420px;overflow-y:auto">
+              <template x-for="p in trafCardsPrioridade" :key="'tcp'+p.id">
+                <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="abrirCardTrafego(p)" :title="'Abrir card no quadro Tráfego'">
+                  <span class="badge fs-11 fw-800" style="min-width:64px;justify-content:center" :style="'background:'+trafPrioCor(p.prioridade)+'1a;color:'+trafPrioCor(p.prioridade)" x-text="p.prioridade||'—'"></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fw-700 fs-12 truncate" x-text="p.nome"></div>
+                    <div class="text-3 fs-11 truncate"><span x-text="p.cliente||'—'"></span><span x-show="p.prazo" x-text="' · prazo '+fmtDate(p.prazo)"></span></div>
+                  </div>
+                  <span class="badge fs-11" style="background:var(--surface-2);color:var(--text-2);white-space:nowrap" x-text="p.status"></span>
+                </div>
+              </template>
+              <div x-show="!trafCardsPrioridade.length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Nenhum card aberto no quadro Tráfego — crie pelo <b>+ Tráfego</b> no Operacional.</div>
+            </div>
+          </div>
+            <!-- Insights da IA: análise das contas → o que fazer hoje -->
+            <div class="card" style="padding:14px">
+              <div class="flex items-center justify-between mb-2" style="gap:8px">
+                <div class="fw-800 fs-13"><i class="ph ph-sparkle ic-ph" style="color:#d97706"></i> Insights da IA</div>
+                <button class="btn btn-sm" @click="gerarTrafInsights()" :disabled="trafInsightsGerando" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap">
+                  <i class="ph ph-magic-wand ic-ph"></i> <span x-text="trafInsightsGerando?'Analisando…':'Analisar contas'"></span>
+                </button>
+              </div>
+              <div class="text-3 fs-11 mb-2" x-show="trafInsights && trafInsights.geradoEm" x-text="'Análise de '+fmtDataHora(trafInsights && trafInsights.geradoEm)"></div>
+              <div style="max-height:340px;overflow-y:auto">
+                <template x-for="(i, ix) in (trafInsights && trafInsights.itens) || []" :key="'ins'+ix">
+                  <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="badge fs-11 fw-800" :style="'background:'+trafPrioCor(i.prioridade)+'1a;color:'+trafPrioCor(i.prioridade)" x-text="i.prioridade"></span>
+                      <span class="fw-700 fs-12 truncate" x-text="i.cliente"></span>
+                    </div>
+                    <div class="fs-12" x-text="i.insight"></div>
+                    <div class="fs-12 fw-700" style="margin-top:3px;color:#7c3aed">→ <span x-text="i.acao"></span></div>
+                  </div>
+                </template>
+                <div x-show="!trafInsights || !(trafInsights.itens||[]).length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Clique em <b>Analisar contas</b> — a IA lê os dados do Google Ads de cada cliente e sugere as tarefas do dia.</div>
+              </div>
+            </div>
+          </div>
         </div>
+
         <!-- ─────── Aba: Contas & Campanhas (saldos + resultados) ─────── -->
         <div x-show="trafTab==='contas'">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px">
@@ -3970,7 +3972,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=242"></script>
+<script src="js/app.js?v=243"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
