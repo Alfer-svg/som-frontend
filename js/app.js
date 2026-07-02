@@ -436,7 +436,7 @@ document.addEventListener('alpine:init', () => {
     agendaTempo: 'futuros', // filtro da lista linear: 'todos' | 'futuros' | 'passados'
     eventoModal: false,
     eventoForm: { id: '', clienteId: '', data: '', hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '', membros: [] },
-    TIPOS_EVENTO: ['Reunião', 'Ligação', 'WhatsApp', 'E-mail', 'Visita', 'Campanha', 'Entrega', 'Reunião online', 'Outro'],
+    TIPOS_EVENTO: ['Reunião', 'Ligação', 'WhatsApp', 'E-mail', 'Visita', 'Campanha', 'Reunião online', 'Outro'], // 'Entrega' removido 02/07 (eventos antigos seguem renderizando)
     // ── Gestão de Tráfego (página trafego: admin + gestortrafego) ──
     TRAF_TAREFAS,
     trafDia: '',            // 'YYYY-MM-DD' do checklist em edição (default hoje)
