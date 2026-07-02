@@ -1980,6 +1980,10 @@
               <div class="text-3 fs-11">Campanhas ativas agora <span style="font-size:9px">(Google Ads)</span></div>
               <div class="fw-800" style="font-size:24px;color:#2563eb" x-text="trafCampanhasAtivas"></div>
             </div>
+            <div class="card" style="padding:12px;border-left:4px solid #0866FF" x-show="trafResultadosMeta.length">
+              <div class="text-3 fs-11">Campanhas ativas <span style="font-size:9px">(Meta Ads)</span> <span class="badge fs-11 fw-800" x-show="trafMetaEhDemo" style="background:#fef3c7;color:#92400e;margin-left:2px">DEMO</span></div>
+              <div class="fw-800" style="font-size:24px;color:#0866FF" x-text="trafCampanhasMeta"></div>
+            </div>
           </div>
 
           <div class="card" style="padding:14px;margin-bottom:14px" x-show="trafSaldoAlertas.sem.length || trafSaldoAlertas.baixo.length || trafSaldoAlertas.semInfo.length">
@@ -2035,6 +2039,32 @@
               </table>
               <div x-show="!trafResultados.length" class="text-3 fs-12" style="padding:14px;text-align:center">Nenhum cliente com Google Ads sincronizado ainda — preencha o Customer ID no cadastro.</div>
             </div>
+          </div>
+
+          <!-- Resultados Meta Ads — tela pronta; números FICTÍCIOS até a integração real -->
+          <div class="card" style="padding:0;margin-top:14px;overflow:hidden" x-show="trafResultadosMeta.length">
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-800 fs-13 flex items-center" >
+              <span><i class="ph ph-meta-logo ic-ph" style="color:#0866FF"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Meta Ads, mês corrente</span></span>
+              <span class="badge fs-11 fw-800" x-show="trafMetaEhDemo" style="background:#fef3c7;color:#92400e;margin-left:8px" title="A integração do Meta Ads ainda não foi ligada — estes números são de exemplo, só pra visualizar a tela.">⚠️ DEMO — números fictícios</span>
+            </div>
+            <div style="overflow-x:auto" :style="trafMetaEhDemo ? 'opacity:.75' : ''">
+              <table class="table">
+                <thead><tr><th>Cliente</th><th>Leads</th><th>Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas ativas</th></tr></thead>
+                <tbody>
+                  <template x-for="r in trafResultadosMeta" :key="'meta'+r.id">
+                    <tr>
+                      <td class="fw-700" x-text="r.nome"></td>
+                      <td x-text="r.leads ?? '—'"></td>
+                      <td><span x-show="r.dLeads !== null" :style="r.dLeads>=0?'color:#15803d':'color:#b91c1c'" x-text="(r.dLeads>=0?'+':'')+r.dLeads"></span><span x-show="r.dLeads === null" class="text-3">—</span></td>
+                      <td x-text="r.custoLead != null ? mascCur(r.custoLead) : '—'"></td>
+                      <td x-text="r.gasto != null ? mascCur(r.gasto) : '—'"></td>
+                      <td x-text="r.campanhas ?? '—'"></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div x-show="trafMetaEhDemo" class="text-3 fs-11" style="padding:8px 14px;border-top:1px solid var(--border)">Quando a integração do Meta Ads for ligada (app próprio + OAuth por cliente), esta tabela passa a mostrar os dados reais automaticamente — o layout já está pronto.</div>
           </div>
         </div>
 
@@ -3940,7 +3970,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=241"></script>
+<script src="js/app.js?v=242"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

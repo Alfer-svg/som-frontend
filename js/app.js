@@ -1212,6 +1212,24 @@ document.addEventListener('alpine:init', () => {
     },
     trafPrioCor(pr) { return pr === 'Alta' ? '#dc2626' : pr === 'Média' ? '#d97706' : pr === 'Baixa' ? '#16a34a' : '#6b7280'; },
     abrirCardTrafego(p) { this.go('operacional'); this.opTab = 'quadro'; this.selecionarBoard('trafego'); this.$nextTick(() => this.abrirCard(p)); },
+    // ── Meta Ads: tela pronta com números FICTÍCIOS (demo) até a integração real ──
+    // Quando existir c.adsMetaAuto (snapshot real, futuro), ele assume no lugar do demo.
+    _trafDemoSeed(s) { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) % 997; return h; },
+    get trafResultadosMeta() {
+      return (this.clients || [])
+        .filter(c => c.status !== 'Inativo' && (c.adsMetaAuto || (c.ads && c.ads.meta && c.ads.meta.ativo)))
+        .map(c => {
+          const nome = c.empresa || c.nome || '—';
+          if (c.adsMetaAuto) return { id: c.id, nome, leads: c.adsMetaAuto.leads, custoLead: c.adsMetaAuto.custoLead, gasto: c.adsMetaAuto.gasto, campanhas: c.adsMetaAuto.campanhasAtivas, dLeads: null, demo: false };
+          const h = this._trafDemoSeed(c.id);
+          const leads = 4 + (h % 28);
+          const custoLead = Math.round((8 + (h % 45)) * 100) / 100;
+          return { id: c.id, nome, leads, custoLead, gasto: Math.round(leads * custoLead * 100) / 100, campanhas: 1 + (h % 3), dLeads: (h % 9) - 4, demo: true };
+        })
+        .sort((a, b) => (Number(b.gasto) || 0) - (Number(a.gasto) || 0));
+    },
+    get trafCampanhasMeta() { return this.trafResultadosMeta.reduce((a, r) => a + (Number(r.campanhas) || 0), 0); },
+    get trafMetaEhDemo() { return this.trafResultadosMeta.some(r => r.demo); },
     // Alerta de recarga: contas (Google+Meta) sem saldo ou abaixo de R$ 200.
     // semInfo = campanha RODANDO no Google mas sem saldo automático (billing inacessível/pós-antiga)
     // e sem valor manual na ficha — pra ninguém ficar invisível pro radar.
