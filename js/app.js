@@ -888,13 +888,29 @@ document.addEventListener('alpine:init', () => {
     },
     // Resumo dos 3 últimos eventos que já aconteceram (mais recente primeiro).
     get agUltimos3() { const h = this._hojeStr(); return this.agAgendados.filter(e => e.data <= h).sort((a, b) => this._agKey(b).localeCompare(this._agKey(a))).slice(0, 3); },
-    // ── Saldos das contas de anúncio (campo manual cliente.ads.{google|meta}.saldo, da seção Tráfego Pago) ──
-    // "Conta" = cliente com aquele canal marcado como ativo. Limite de "saldo baixo" = R$ 200.
-    _contasCanal(canal) { return (this.clients || []).filter(c => c.ads && c.ads[canal] && c.ads[canal].ativo).map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', saldo: Number(c.ads[canal].saldo) || 0 })).sort((a, b) => a.saldo - b.saldo); },
+    // ── Saldos das contas de anúncio. Limite de "saldo baixo" = R$ 200. ──
+    // GOOGLE: saldo REAL vem da API (adsAuto.saldo, snapshot de hora em hora; conta pré-paga =
+    // limite aprovado - consumido). Pós-paga (saldoTipo POS) não tem saldo — fica fora dos alertas.
+    // O campo manual da ficha vale só como fallback de quem ainda não sincronizou. META: segue manual.
+    _contasCanal(canal) {
+      const ativos = (this.clients || []).filter(c => c.status !== 'Inativo');
+      if (canal === 'google') {
+        return ativos.map(c => {
+          const nome = c.empresa || c.nome || '—';
+          const auto = c.adsAuto || {};
+          const man = (c.ads && c.ads.google) || {};
+          if (auto.saldoTipo === 'POS') return { id: c.id, nome, saldo: null, posPago: true };
+          if (auto.saldo !== undefined && auto.saldo !== null) return { id: c.id, nome, saldo: Number(auto.saldo) || 0, auto: true };
+          if (man.ativo) return { id: c.id, nome, saldo: Number(man.saldo) || 0 };
+          return null;
+        }).filter(Boolean).sort((a, b) => ((a.saldo ?? 9e9) - (b.saldo ?? 9e9)));
+      }
+      return ativos.filter(c => c.ads && c.ads[canal] && c.ads[canal].ativo).map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', saldo: Number(c.ads[canal].saldo) || 0 })).sort((a, b) => a.saldo - b.saldo);
+    },
     get contasGoogle() { return this._contasCanal('google'); },
     get contasMeta() { return this._contasCanal('meta'); },
-    saldoSem(lista) { return (lista || []).filter(x => x.saldo <= 0); },
-    saldoBaixo(lista) { return (lista || []).filter(x => x.saldo > 0 && x.saldo < 200); },
+    saldoSem(lista) { return (lista || []).filter(x => !x.posPago && (x.saldo ?? 0) <= 0); },
+    saldoBaixo(lista) { return (lista || []).filter(x => !x.posPago && x.saldo > 0 && x.saldo < 200); },
     get agContagemPorDia() { const m = {}; for (const e of this.agEventos) m[e.data] = (m[e.data] || 0) + 1; return m; },
     // Grade do mês: 42 células (6 semanas), domingo→sábado.
     get agGrade() {
@@ -1050,16 +1066,18 @@ document.addEventListener('alpine:init', () => {
     get trafLogVisivel() { const f = this.trafLogFiltro; return this.trafLog.filter(l => !f || l.clienteId === f).slice(0, 200); },
     // Campanhas ativas AGORA (real, do snapshot Google Ads) somando os clientes ativos.
     get trafCampanhasAtivas() { return (this.clients || []).filter(c => c.status !== 'Inativo' && c.adsAuto).reduce((a, c) => a + (Number(c.adsAuto.campanhasAtivas) || 0), 0); },
-    // Alerta de recarga: contas (Google+Meta) sem saldo ou abaixo de R$ 200 — mesmo saldo manual da Agenda.
-    // semInfo = campanha RODANDO no Google (snapshot real) mas canal/saldo nunca preenchido na ficha —
-    // sem isso o cliente fica invisível pro radar de recarga.
+    // Alerta de recarga: contas (Google+Meta) sem saldo ou abaixo de R$ 200.
+    // semInfo = campanha RODANDO no Google mas sem saldo automático (billing inacessível/pós-antiga)
+    // e sem valor manual na ficha — pra ninguém ficar invisível pro radar.
     get trafSaldoAlertas() {
       const marcar = (lista, canal) => (lista || []).map(x => ({ ...x, canal }));
       const tudo = [...marcar(this.contasGoogle, 'Google'), ...marcar(this.contasMeta, 'Meta')];
       const semInfo = (this.clients || [])
-        .filter(c => c.status !== 'Inativo' && c.adsAuto && Number(c.adsAuto.campanhasAtivas) > 0 && !(c.ads && c.ads.google && c.ads.google.ativo))
+        .filter(c => c.status !== 'Inativo' && c.adsAuto && Number(c.adsAuto.campanhasAtivas) > 0
+          && (c.adsAuto.saldo === undefined || c.adsAuto.saldo === null) && c.adsAuto.saldoTipo !== 'POS'
+          && !(c.ads && c.ads.google && c.ads.google.ativo))
         .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', canal: 'Google' }));
-      return { sem: tudo.filter(x => x.saldo <= 0), baixo: tudo.filter(x => x.saldo > 0 && x.saldo < 200), semInfo };
+      return { sem: this.saldoSem(tudo), baixo: this.saldoBaixo(tudo), semInfo };
     },
     // Indicadores do gestor (admin): rotina medida por EVIDÊNCIA, não por "mexeu na campanha".
     // Checklist é POR CLIENTE — "conta revisada" = cliente com item marcado no checklist OU entrada no log.
