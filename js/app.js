@@ -976,6 +976,7 @@ document.addEventListener('alpine:init', () => {
       if (!(this.projects || []).length) this.carregarProjetos(); // pros cards do quadro Tráfego
       this.carregarTrafInsights(); // última análise da IA (cache)
       this.trafLigarRotacao();     // alterna o nome do cliente no banner
+      this.carregarPresenca();     // avatares online do módulo
       try {
         const [cks, log] = await Promise.all([
           this.api('GET', '/colecoes/trafego.checklist'),
@@ -1073,6 +1074,15 @@ document.addEventListener('alpine:init', () => {
     trafAbrirFichario() { this.trafTab = 'fichario'; if (!this.trafFichSel && this.trafFichDias.length) this.trafFichSel = this.trafFichDias[0].data; },
     // Otimizações de UM cliente num dia — liga o log ao checklist/ficha do cliente.
     trafLogDe(dia, clienteId) { return this.trafLog.filter(l => l.data === dia && l.clienteId === clienteId); },
+    // Quem está ONLINE agora e TEM ACESSO ao módulo Tráfego (admin ou perfil com a página liberada).
+    get trafEquipeOnline() {
+      const papelDe = {};
+      (this.equipe || []).forEach(u => { papelDe[u.id] = u.papel; papelDe[u.nome] = u.papel; });
+      return (this.presenca || []).filter(p => p.online).filter(p => {
+        const papel = papelDe[p.id] || papelDe[p.nome] || (p.id === (this.usuario && this.usuario.id) ? this.papel : '');
+        return papel === 'admin' || this.permsDoPapel(papel).includes('trafego');
+      });
+    },
     // ── Resumo do dia (banner da Rotina): eventos da Agenda + insights pendentes + tarefas do quadro ──
     get trafEventosHoje() {
       const h = this.trafDia || this._hojeStr(); const out = [];
@@ -1390,7 +1400,7 @@ document.addEventListener('alpine:init', () => {
         // (Aba aberta/minimizada sem ninguém na frente NÃO mantém o usuário online — evita "logado há 28h".)
         const presente = !document.hidden && (Date.now() - (this._lastActivity || 0) < 180000);
         if (presente) this.heartbeat();
-        if (this.page === 'operacional') this.carregarPresenca(); // atualiza a lista de online (GET, não conta presença)
+        if (this.page === 'operacional' || this.page === 'trafego') this.carregarPresenca(); // atualiza a lista de online (GET, não conta presença)
       }, 45000);
     },
     durHuman(iso) { if (!iso) return '—'; let s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); if (h > 0) return h + 'h' + (m ? (' ' + m + 'min') : ''); if (m > 0) return m + 'min'; return 'agora mesmo'; },
