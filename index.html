@@ -1715,6 +1715,9 @@
                     <div class="fw-700 fs-12 truncate" x-text="ev.titulo"></div>
                     <div class="text-3 fs-11 truncate"><span x-text="ev.cliente"></span> · <span :style="'color:'+agTipoCor(ev.tipo)" x-text="ev.tipo"></span></div>
                   </div>
+                  <span style="display:inline-flex" x-show="(ev.membros||[]).length">
+                    <template x-for="m in (ev.membros||[])" :key="ev.id+m"><span class="tl-avatar" :style="'width:20px;height:20px;margin-left:-5px;border:2px solid #fff;font-size:9px;'+(fotoDe(m)?('background-image:url('+fotoDe(m)+');background-size:cover'):('background:'+avatarBg(m)+';color:'+avatarFg(m)))" :title="m" x-text="fotoDe(m)?'':iniciais(m)"></span></template>
+                  </span>
                   <a x-show="ev.link" :href="ev.link" target="_blank" class="btn btn-icon btn-ghost btn-sm" title="Entrar na reunião (Meet)" style="color:#7c3aed"><i class="ph ph-video-camera ic-ph"></i></a>
                   <button class="btn btn-icon btn-ghost btn-sm" @click="editarEvento(ev)" title="Editar"><i class="ph ph-pencil-simple ic-ph"></i></button>
                 </div>
@@ -1761,6 +1764,9 @@
                 <div class="fw-700 fs-13 truncate" x-text="ev.titulo"></div>
                 <div class="text-3 fs-12 truncate" style="cursor:pointer" @click="agendaHistCli=ev.clienteId" :title="'Ver histórico de '+ev.cliente"><i class="ph ph-buildings ic-ph"></i> <span x-text="ev.cliente"></span></div>
               </div>
+              <span style="display:inline-flex" x-show="(ev.membros||[]).length">
+                <template x-for="m in (ev.membros||[])" :key="'lin'+ev.id+m"><span class="tl-avatar" :style="'width:22px;height:22px;margin-left:-5px;border:2px solid #fff;font-size:10px;'+(fotoDe(m)?('background-image:url('+fotoDe(m)+');background-size:cover'):('background:'+avatarBg(m)+';color:'+avatarFg(m)))" :title="m" x-text="fotoDe(m)?'':iniciais(m)"></span></template>
+              </span>
               <a x-show="ev.link" :href="ev.link" target="_blank" class="btn btn-sm" title="Entrar na reunião (Meet)" style="background:#7c3aed;color:#fff;border-color:#7c3aed;white-space:nowrap"><i class="ph ph-video-camera ic-ph"></i> Meet</a>
               <button class="btn btn-icon btn-ghost btn-sm" @click="editarEvento(ev)" title="Editar"><i class="ph ph-pencil-simple ic-ph"></i></button>
               <button class="btn btn-icon btn-ghost btn-sm" @click="removerEventoAg(ev)" title="Excluir" style="color:var(--red)"><i class="ph ph-trash ic-ph"></i></button>
@@ -3818,6 +3824,22 @@
           </template>
         </div>
       </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Colaboradores <span class="text-3 fs-11">(um ou mais)</span></label>
+        <select class="form-select" @change="addMembroEvento($event.target.value); $event.target.value=''">
+          <option value="">Adicionar colaborador…</option>
+          <template x-for="m in equipe.filter(x=>!eventoForm.membros.includes(x.nome))" :key="'evm'+m.id"><option :value="m.nome" x-text="m.nome"></option></template>
+        </select>
+        <div class="flex" style="flex-wrap:wrap;gap:6px;margin-top:6px" x-show="eventoForm.membros.length">
+          <template x-for="m in eventoForm.membros" :key="'evc'+m">
+            <span class="badge fs-12 fw-700" style="background:#F4F0FE;color:#5b21b6;display:inline-flex;align-items:center;gap:5px">
+              <span class="tl-avatar" :style="'width:18px;height:18px;font-size:9px;'+(fotoDe(m)?('background-image:url('+fotoDe(m)+');background-size:cover'):('background:'+avatarBg(m)+';color:'+avatarFg(m)))" x-text="fotoDe(m)?'':iniciais(m)"></span>
+              <span x-text="m"></span>
+              <span style="cursor:pointer;font-weight:800" @click="removerMembroEvento(m)" title="Remover">✕</span>
+            </span>
+          </template>
+        </div>
+      </div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">Assunto *</label><input class="form-input" x-model="eventoForm.titulo" placeholder="Ex.: Alinhamento de campanha, retorno da proposta…" @keydown.enter="salvarEvento()"></div>
       <!-- Reunião → link do Google Meet -->
       <div class="form-group" style="margin-bottom:12px" x-show="eventoEhReuniao(eventoForm.tipo)" x-cloak>
@@ -3997,7 +4019,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=248"></script>
+<script src="js/app.js?v=249"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

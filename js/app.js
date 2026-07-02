@@ -435,7 +435,7 @@ document.addEventListener('alpine:init', () => {
     agendaHistCli: '',      // clienteId cujo histórico está aberto no painel lateral
     agendaTempo: 'futuros', // filtro da lista linear: 'todos' | 'futuros' | 'passados'
     eventoModal: false,
-    eventoForm: { id: '', clienteId: '', data: '', hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '' },
+    eventoForm: { id: '', clienteId: '', data: '', hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '', membros: [] },
     TIPOS_EVENTO: ['Reunião', 'Ligação', 'WhatsApp', 'E-mail', 'Visita', 'Campanha', 'Entrega', 'Reunião online', 'Outro'],
     // ── Gestão de Tráfego (página trafego: admin + gestortrafego) ──
     TRAF_TAREFAS,
@@ -865,7 +865,7 @@ document.addEventListener('alpine:init', () => {
       for (const c of (this.clients || [])) {
         if (fil && c.id !== fil) continue;
         const nome = c.empresa || c.nome || '—';
-        for (const e of (c.agenda || [])) { if (e && e.data) out.push({ data: String(e.data).slice(0, 10), hora: e.hora || '', tipo: e.tipo || 'Evento', titulo: e.titulo || e.tipo || 'Evento', nota: e.nota || '', link: e.link || '', clienteId: c.id, cliente: nome, fonte: 'agenda', id: e.id }); }
+        for (const e of (c.agenda || [])) { if (e && e.data) out.push({ data: String(e.data).slice(0, 10), hora: e.hora || '', tipo: e.tipo || 'Evento', titulo: e.titulo || e.tipo || 'Evento', nota: e.nota || '', link: e.link || '', membros: Array.isArray(e.membros) ? e.membros : [], clienteId: c.id, cliente: nome, fonte: 'agenda', id: e.id }); }
         for (const t of (c.timeline || [])) { const d = String(t.data || t.em || '').slice(0, 10); if (d) out.push({ data: d, hora: '', tipo: t.tipo || 'Nota', titulo: t.texto || t.tipo || 'Contato', clienteId: c.id, cliente: nome, fonte: 'interacao', por: t.por || '' }); }
         for (const tk of (c.tarefas || [])) { if (tk && tk.data) out.push({ data: String(tk.data).slice(0, 10), hora: '', tipo: 'Tarefa', titulo: tk.titulo || 'Tarefa', clienteId: c.id, cliente: nome, fonte: 'tarefa', status: tk.status || '' }); }
       }
@@ -926,8 +926,11 @@ document.addEventListener('alpine:init', () => {
       return dias;
     },
     get agProximos() { const h = this._hojeStr(); return this.agAgendados.filter(e => e.data >= h).sort((a, b) => this._agKey(a).localeCompare(this._agKey(b))).slice(0, 8); },
-    novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '' }; this.eventoModal = true; },
-    editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, hora: ev.hora || '', tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '', link: ev.link || '' }; this.eventoModal = true; },
+    novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '', membros: [] }; this.eventoModal = true; },
+    editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, hora: ev.hora || '', tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '', link: ev.link || '', membros: Array.isArray(ev.membros) ? ev.membros.slice() : [] }; this.eventoModal = true; },
+    // Colaboradores do evento (um ou mais): o dropdown vai somando; chip remove.
+    addMembroEvento(nome) { if (!nome) return; if (!this.eventoForm.membros.includes(nome)) this.eventoForm.membros.push(nome); },
+    removerMembroEvento(nome) { this.eventoForm.membros = this.eventoForm.membros.filter(m => m !== nome); },
     // Reunião → gerar sala do Google Meet. 1º tenta pelo backend (Calendar da
     // agência: cria a sala E convida o cliente por e-mail num clique só); se não
     // houver credencial/escopo, plano B: abre meet.google.com/new e captura o
@@ -1340,8 +1343,8 @@ document.addEventListener('alpine:init', () => {
       if (!(f.titulo || '').trim()) return alert('Escreva o assunto do evento.');
       const c = (this.clients || []).find(x => x.id === f.clienteId); if (!c) return alert('Cliente não encontrado.');
       const agenda = Array.isArray(c.agenda) ? c.agenda.slice() : [];
-      if (f.id) { const i = agenda.findIndex(e => e.id === f.id); if (i >= 0) agenda[i] = { ...agenda[i], data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota, link: (f.link || '').trim() }; }
-      else agenda.push({ id: MD.uid(), data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota || '', link: (f.link || '').trim(), por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString() });
+      if (f.id) { const i = agenda.findIndex(e => e.id === f.id); if (i >= 0) agenda[i] = { ...agenda[i], data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota, link: (f.link || '').trim(), membros: f.membros || [] }; }
+      else agenda.push({ id: MD.uid(), data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota || '', link: (f.link || '').trim(), membros: f.membros || [], por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString() });
       const { id, ...resto } = c; resto.agenda = agenda;
       try { await this.api('POST', '/clientes', { id: c.id, empresa: c.empresa, dados: resto }); c.agenda = agenda; this.eventoModal = false; this.agendaDiaSel = f.data; this.mostrarToast('Evento salvo. 📅'); }
       catch (e) { alert(e.message || e); }
