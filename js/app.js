@@ -1115,7 +1115,8 @@ document.addEventListener('alpine:init', () => {
       const ts = this.trafCardsPrioridade;
       if (!ts.length) return '';
       const t = ts[this.trafInsRot % ts.length];
-      return (t.prioridade ? t.prioridade + ' · ' : '') + (t.nome || '') + (t.cliente ? ' — ' + t.cliente : '');
+      const et = this.labelNome((t.labels || [])[0]);
+      return (et ? et + ' · ' : '') + (t.nome || '') + (t.cliente ? ' — ' + t.cliente : '');
     },
     // ── Relatório de tráfego por período (diário/semanal/mensal/personalizado) ──
     trafRelModal: false,
@@ -1273,10 +1274,11 @@ document.addEventListener('alpine:init', () => {
     get trafCampanhasAtivas() { return (this.clients || []).filter(c => c.status !== 'Inativo' && c.adsAuto).reduce((a, c) => a + (Number(c.adsAuto.campanhasAtivas) || 0), 0); },
     // Cards do quadro Tráfego (Operacional) ordenados por prioridade — pra lista do módulo.
     get trafCardsPrioridade() {
-      const peso = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
+      // Urgência vem das ETIQUETAS do card (red=Urgente, sky=PRIORIDADE); depois, prazo mais próximo.
+      const peso = (p) => { const ls = p.labels || []; return ls.includes('red') ? 0 : ls.includes('sky') ? 1 : 2; };
       return (this.projects || [])
         .filter(p => this.projBoardId(p) === 'trafego' && !p.arquivado && p.status !== 'Concluído')
-        .sort((a, b) => ((peso[a.prioridade] ?? 3) - (peso[b.prioridade] ?? 3)) || String(a.prazo || '9999').localeCompare(String(b.prazo || '9999')));
+        .sort((a, b) => (peso(a) - peso(b)) || String(a.prazo || '9999').localeCompare(String(b.prazo || '9999')));
     },
     trafPrioCor(pr) { return pr === 'Alta' ? '#dc2626' : pr === 'Média' ? '#d97706' : pr === 'Baixa' ? '#16a34a' : '#6b7280'; },
     abrirCardTrafego(p) { this.go('operacional'); this.opTab = 'quadro'; this.selecionarBoard('trafego'); this.$nextTick(() => this.abrirCard(p)); },
@@ -3422,7 +3424,7 @@ ${this._docFoot()}
       const novo = {
         id: '', nome: 'Nova tarefa de tráfego', cliente: '', servico: 'ADS / Tráfego Pago',
         responsavel: (gestor && gestor.nome) || '', status: (board.colunas[0] && board.colunas[0].nome) || 'A Fazer',
-        boardId: board.id, prazo: '', prazoEntrega: '', progresso: 0, notas: '', prioridade: 'Média',
+        boardId: board.id, prazo: '', prazoEntrega: '', progresso: 0, notas: '',
         avulso: true, area: '🎯 Tráfego Pago', descricao: '',
         labels: [], membros: [], checklist: DEMANDAS.map(t => ({ id: MD.uid(), texto: t, feito: false })),
       };

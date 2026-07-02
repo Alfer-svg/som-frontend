@@ -1077,11 +1077,6 @@
                       <span x-show="p.prazoEntrega" style="display:inline-flex;align-items:center;gap:5px;background:#E0F2FE;color:#075985;border:1px solid #BAE6FD;border-radius:8px;padding:4px 9px;font-weight:700;font-size:12px" title="Prazo de entrega da arte"><i class="ph ph-package"></i><span x-text="'Entrega '+diaSemanaLabel(p.prazoEntrega)"></span></span>
                       <span class="tl-type" x-text="p.tipoPost||'Estático'"></span>
                     </div>
-                    <template x-if="p.prioridade">
-                      <span class="badge"
-                        :style="'margin-bottom:4px;font-weight:800;font-size:10.5px;background:'+(p.prioridade==='Alta'?'#dc2626':(p.prioridade==='Média'?'#d97706':'#16a34a'))+'1a;color:'+(p.prioridade==='Alta'?'#dc2626':(p.prioridade==='Média'?'#d97706':'#16a34a'))"
-                        x-text="(p.prioridade==='Alta'?'🔴':(p.prioridade==='Média'?'🟠':'🟢'))+' '+p.prioridade"></span>
-                    </template>
                     <div class="fs-13 fw-700" style="line-height:1.3" x-text="p.tema||p.nome"></div>
                     <div class="text-3 fs-12" style="margin-top:2px" x-show="p.cliente" x-text="p.cliente"></div>
                     <!-- rodapé discreto (metadados estilo Trello) -->
@@ -1986,11 +1981,11 @@
             </div>
             <!-- Tarefas do quadro Tráfego, por prioridade -->
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#7c3aed"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· por prioridade</span></div>
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#7c3aed"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· urgentes primeiro</span></div>
             <div style="max-height:420px;overflow-y:auto">
               <template x-for="p in trafCardsPrioridade" :key="'tcp'+p.id">
                 <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="abrirCardTrafego(p)" :title="'Abrir card no quadro Tráfego'">
-                  <span class="badge fs-11 fw-800" :style="'min-width:64px;justify-content:center;background:'+trafPrioCor(p.prioridade)+'1a;color:'+trafPrioCor(p.prioridade)" x-text="p.prioridade||'—'"></span>
+                  <span class="badge fs-11 fw-800" :style="'min-width:64px;justify-content:center;background:'+labelCor((p.labels||[])[0]||'')+'22;color:'+labelTextCor((p.labels||[])[0]||'')+';filter:saturate(2) brightness(.7)'" x-text="labelNome((p.labels||[])[0])||'—'"></span>
                   <div style="flex:1;min-width:0">
                     <div class="fw-700 fs-12 truncate" x-text="p.nome"></div>
                     <div class="text-3 fs-11 truncate"><span x-text="p.cliente||'—'"></span><span x-show="p.prazo" x-text="' · prazo '+fmtDate(p.prazo)"></span></div>
@@ -3557,18 +3552,6 @@
         </div>
       </div>
 
-      <!-- Prioridade (cards de Tráfego) -->
-      <div class="tl-section" x-show="cardRef && projBoardId(cardRef)==='trafego'">
-        <div class="tl-section-label">Prioridade</div>
-        <div class="flex gap-2">
-          <template x-for="pr in [['Alta','#dc2626'],['Média','#d97706'],['Baixa','#16a34a']]" :key="pr[0]">
-            <button type="button" class="btn btn-sm" @click="cardRef.prioridade=pr[0]; salvarCard()"
-              :style="'flex:1;justify-content:center;'+(cardRef.prioridade===pr[0] ? ('background:'+pr[1]+';color:#fff;border-color:'+pr[1]) : ('background:var(--surface-2);color:'+pr[1]))"
-              x-text="pr[0]"></button>
-          </template>
-        </div>
-      </div>
-
       <!-- Responsável (trocável a qualquer momento) -->
       <div class="tl-section">
         <div class="tl-section-label">Responsável</div>
@@ -4054,7 +4037,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=256"></script>
+<script src="js/app.js?v=257"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
