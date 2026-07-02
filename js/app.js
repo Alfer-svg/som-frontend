@@ -474,6 +474,9 @@ document.addEventListener('alpine:init', () => {
     layouts: [], layoutModal: false, layoutAtual: null, // layout da semana (Fase 2/3)
     semanaOffset: 0, // navegação de período na programação/layouts (0=atual, +1=próximo, -1=anterior)
     periodo: 'Semanal', // tipo de período da programação: 'Semanal' | 'Quinzenal' | 'Mensal'
+    periodoManual: null, // {ini,fim,label} quando o período é definido à mão (fora da grade fixa)
+    periodoManualForm: { ini: '', fim: '' }, // inputs do popover "datas manuais"
+    periodoManualAberto: false,
     progModal: false, // modal de criar programação (calendário de posts da semana)
     progForm: { cliente: '', responsavel: '' },
     progPosts: [], // posts sendo montados no modal
@@ -3196,15 +3199,28 @@ ${this._docFoot()}
       }
       return { ini: iso(ini), fim: iso(fim), label: f(ini) + ' a ' + f(fim) };
     },
-    get semanaAtual() { return this.periodoEm(this.semanaOffset || 0); },
-    // Próximo período — sugestão padrão da programação.
-    get proximaSemana() { return this.periodoEm((this.semanaOffset || 0) + 1); },
-    // Navega entre períodos (fecha o layout aberto p/ não misturar).
-    mudarSemana(delta) { this.semanaOffset = (this.semanaOffset || 0) + delta; this.layoutModal = false; this.layoutAtual = null; },
-    // Troca o tipo de período (Semanal/Quinzenal/Mensal) — zera a navegação.
-    mudarPeriodo(p) { this.periodo = p; this.semanaOffset = 0; this.layoutModal = false; this.layoutAtual = null; },
+    // Período em foco: o MANUAL (datas escolhidas à mão) tem prioridade sobre a grade fixa.
+    get semanaAtual() { return this.periodoManual || this.periodoEm(this.semanaOffset || 0); },
+    // Próximo período — sugestão padrão da programação (respeita o manual).
+    get proximaSemana() { return this.periodoManual || this.periodoEm((this.semanaOffset || 0) + 1); },
+    // Navega entre períodos (fecha o layout aberto p/ não misturar). Navegar sai do modo manual.
+    mudarSemana(delta) { this.periodoManual = null; this.semanaOffset = (this.semanaOffset || 0) + delta; this.layoutModal = false; this.layoutAtual = null; },
+    // Troca o tipo de período (Semanal/Quinzenal/Mensal) — zera a navegação e o manual.
+    mudarPeriodo(p) { this.periodoManual = null; this.periodo = p; this.semanaOffset = 0; this.layoutModal = false; this.layoutAtual = null; },
     // Troca o período DENTRO do modal de programação e reposiciona a data sugerida.
     setPeriodoProg(pp) { this.periodo = pp; this.semanaOffset = 0; this.progForm.semanaIni = this.proximaSemana.ini; },
+    // ── Período MANUAL (datas da quinzena/semana escolhidas à mão) ──
+    // Resolve o furo das quinzenas fixas: p/ um cliente cujo ciclo é 06→19/07 (fora da grade),
+    // define ini/fim exatos e a programação para de rachar em duas.
+    aplicarPeriodoManual(ini, fim) {
+      if (!ini || !fim) return alert('Escolha a data de início e de fim.');
+      if (fim < ini) return alert('A data de fim precisa ser depois da de início.');
+      const f = d => { const x = new Date(d + 'T00:00:00'); return String(x.getDate()).padStart(2, '0') + '/' + String(x.getMonth() + 1).padStart(2, '0'); };
+      this.periodoManual = { ini, fim, label: f(ini) + ' a ' + f(fim), manual: true };
+      this.layoutModal = false; this.layoutAtual = null;
+      if (this.progForm) this.progForm.semanaIni = ini;
+    },
+    limparPeriodoManual() { this.periodoManual = null; this.layoutModal = false; this.layoutAtual = null; },
     semanaRotulo() {
       const o = this.semanaOffset || 0;
       const u = this.periodoTipo === 'Mensal' ? 'mês' : this.periodoTipo === 'Quinzenal' ? 'quinzena' : 'semana';

@@ -935,14 +935,28 @@
             <button class="btn btn-ghost btn-sm" @click="mudarSemana(-1)" title="Semana anterior"><i class="ph ph-caret-left ic-ph"></i></button>
             <div style="text-align:center;min-width:150px">
               <div class="fw-800 fs-14" x-text="semanaAtual.label"></div>
-              <div class="text-3" style="font-size:11px" x-text="semanaRotulo()"></div>
+              <div class="text-3" style="font-size:11px" x-text="periodoManual ? 'Período personalizado ✎' : semanaRotulo()"></div>
             </div>
             <button class="btn btn-ghost btn-sm" @click="mudarSemana(1)" title="Próximo período"><i class="ph ph-caret-right ic-ph"></i></button>
-            <button class="btn btn-ghost btn-sm" x-show="semanaOffset!==0" @click="mudarSemana(-semanaOffset)" title="Voltar pro período atual">hoje</button>
-            <div class="flex gap-1" style="margin-left:8px">
+            <button class="btn btn-ghost btn-sm" x-show="semanaOffset!==0 || periodoManual" @click="mudarSemana(-semanaOffset)" title="Voltar pro período atual">hoje</button>
+            <div class="flex gap-1" style="margin-left:8px" x-show="!periodoManual">
               <template x-for="pp in ['Semanal','Quinzenal','Mensal']" :key="'lp'+pp">
                 <button class="btn btn-sm" :class="periodo===pp?'btn-primary':'btn-ghost'" @click="mudarPeriodo(pp)" x-text="pp"></button>
               </template>
+            </div>
+            <!-- Datas manuais da quinzena/semana (resolve ciclos fora da grade fixa) -->
+            <div style="position:relative;margin-left:8px">
+              <button class="btn btn-sm" :class="periodoManual?'btn-primary':'btn-ghost'" @click="periodoManualForm={ini:semanaAtual.ini,fim:semanaAtual.fim}; periodoManualAberto=!periodoManualAberto" title="Definir as datas do período à mão"><i class="ph ph-calendar-plus ic-ph"></i> Datas</button>
+              <div x-show="periodoManualAberto" x-cloak @click.outside="periodoManualAberto=false" class="card" style="position:absolute;z-index:40;top:112%;left:0;padding:12px;width:250px;box-shadow:0 8px 28px rgba(0,0,0,.16)">
+                <div class="fw-700 fs-12 mb-2">Período personalizado</div>
+                <div class="form-group" style="margin-bottom:8px"><label class="form-label fs-11">Início</label><input class="form-input fs-13" type="date" x-model="periodoManualForm.ini"></div>
+                <div class="form-group" style="margin-bottom:10px"><label class="form-label fs-11">Fim</label><input class="form-input fs-13" type="date" x-model="periodoManualForm.fim"></div>
+                <div class="flex gap-2">
+                  <button class="btn btn-primary btn-sm" @click="aplicarPeriodoManual(periodoManualForm.ini,periodoManualForm.fim); periodoManualAberto=false">Aplicar</button>
+                  <button class="btn btn-ghost btn-sm" x-show="periodoManual" @click="limparPeriodoManual(); periodoManualAberto=false">Voltar ao automático</button>
+                </div>
+                <div class="text-3 fs-11" style="margin-top:6px">Ex.: 06/07 → 19/07. Agrupa todos os posts do ciclo num período só.</div>
+              </div>
             </div>
             <span style="flex:1"></span>
             <span class="text-3 fs-12">o layout monta com os posts; aprove e envie pro cliente</span>
@@ -4062,7 +4076,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=263"></script>
+<script src="js/app.js?v=264"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
