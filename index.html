@@ -1714,7 +1714,7 @@
                   </div>
                   <span style="font-size:15px" x-text="agTipoIcon(ev.tipo)"></span>
                   <div style="flex:1;min-width:0">
-                    <div class="fw-700 fs-12 truncate"><span x-text="ev.titulo"></span> <span x-show="ev.satisfacao" :title="'Satisfação: '+ev.satisfacao+'/5'" x-text="satisfacaoEmoji(ev.satisfacao)"></span></div>
+                    <div class="fw-700 fs-12 truncate"><span x-text="ev.titulo"></span> <span x-show="ev.satisfacao" :title="'Satisfação: '+ev.satisfacao+'/5'+(ev.satisfacaoJust ? ' — '+ev.satisfacaoJust : '')" x-text="satisfacaoEmoji(ev.satisfacao)"></span></div>
                     <div class="text-3 fs-11 truncate"><span x-text="ev.cliente"></span> · <span :style="'color:'+agTipoCor(ev.tipo)" x-text="ev.tipo"></span></div>
                   </div>
                   <span style="display:inline-flex" x-show="(ev.membros||[]).length">
@@ -1763,7 +1763,7 @@
               </div>
               <span class="badge" :style="'background:'+agTipoCor(ev.tipo)+'22;color:'+agTipoCor(ev.tipo)+';font-weight:700'"><span x-text="agTipoIcon(ev.tipo)"></span> <span x-text="ev.tipo"></span></span>
               <div style="flex:1;min-width:0">
-                <div class="fw-700 fs-13 truncate"><span x-text="ev.titulo"></span> <span x-show="ev.satisfacao" style="font-size:15px" :title="'Satisfação do cliente: '+ev.satisfacao+'/5'" x-text="satisfacaoEmoji(ev.satisfacao)"></span></div>
+                <div class="fw-700 fs-13 truncate"><span x-text="ev.titulo"></span> <span x-show="ev.satisfacao" style="font-size:15px" :title="'Satisfação do cliente: '+ev.satisfacao+'/5'+(ev.satisfacaoJust ? ' — '+ev.satisfacaoJust : '')" x-text="satisfacaoEmoji(ev.satisfacao)"></span></div>
                 <div class="text-3 fs-12 truncate" style="cursor:pointer" @click="agendaHistCli=ev.clienteId" :title="'Ver histórico de '+ev.cliente"><i class="ph ph-buildings ic-ph"></i> <span x-text="ev.cliente"></span><span x-show="ev.solucao" class="fs-11"> · ✅ <span x-text="ev.solucao"></span></span></div>
               </div>
               <span style="display:inline-flex" x-show="(ev.membros||[]).length">
@@ -3888,6 +3888,10 @@
                 x-text="sN[1]" :title="['','Muito insatisfeito','Insatisfeito','Neutro','Satisfeito','Muito satisfeito'][sN[0]]"></button>
             </template>
           </div>
+          <div class="form-group" x-show="eventoForm.satisfacao" style="margin-top:8px">
+            <label class="form-label">Justificativa * <span class="text-3 fs-11">(por que essa nota)</span></label>
+            <textarea class="form-input" rows="2" x-model="eventoForm.satisfacaoJust" placeholder="Ex.: elogiou os resultados do mês, mas reclamou do prazo dos criativos…"></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -4054,7 +4058,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=261"></script>
+<script src="js/app.js?v=262"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
