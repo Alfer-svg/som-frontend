@@ -1102,12 +1102,13 @@ document.addEventListener('alpine:init', () => {
       if (this._trafInsRotTimer) return;
       this._trafInsRotTimer = setInterval(() => { if (this.page === 'trafego') this.trafInsRot++; }, 2500);
     },
-    // Evento da vez no banner (mesma rotação dos insights): hora · título — cliente.
+    // Evento da vez no banner (mesma rotação dos insights): hora · TIPO (ex.: Reunião) · título — cliente.
     get trafEventoDaVez() {
       const evs = this.trafEventosHoje;
       if (!evs.length) return '';
       const e = evs[this.trafInsRot % evs.length];
-      return (e.hora ? e.hora + ' · ' : '') + (e.titulo || e.tipo || 'Evento') + ' — ' + (e.cliente || '');
+      const tipo = e.tipo ? this.agTipoIcon(e.tipo) + ' ' + e.tipo : '';
+      return [e.hora, tipo, (e.titulo || 'Evento') + (e.cliente ? ' — ' + e.cliente : '')].filter(Boolean).join(' · ');
     },
     // Tarefa do quadro da vez (mesma rotação): prioridade · nome — cliente.
     get trafTarefaDaVez() {
