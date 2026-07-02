@@ -1849,7 +1849,7 @@
           </div>
           <div class="flex items-center gap-2">
             <input class="form-input" type="date" x-model="trafDia" style="width:auto">
-            <span class="badge fs-12 fw-700" :style="trafFeitos>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="trafFeitos+'/'+TRAF_TAREFAS.length+' concluídas'"></span>
+            <span class="badge fs-12 fw-700" :style="trafCliConcluidos>=trafClientes.length&&trafClientes.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="trafCliConcluidos+'/'+trafClientes.length+' clientes concluídos'"></span>
           </div>
         </div>
 
@@ -1899,10 +1899,23 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start">
           <!-- Checklist do dia -->
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia
-              <span class="text-3 fs-11 fw-400" x-show="trafCheckDia().por" x-text="'· por '+trafCheckDia().por"></span>
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
+              <span class="text-3 fs-11 fw-400" x-show="trafCliSel && trafCheckDia().por" x-text="'· por '+trafCheckDia().por"></span>
             </div>
-            <template x-for="t in TRAF_TAREFAS" :key="t.id">
+            <!-- Carteira: um chip por cliente com o progresso do dia (clique pra abrir o checklist dele) -->
+            <div class="flex" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <template x-for="c in trafClientes" :key="'tc'+c.id">
+                <button type="button" class="btn btn-sm" @click="trafCliSel=c.id"
+                  :style="trafCliSel===c.id ? 'background:#7c3aed;color:#fff;border-color:#7c3aed'
+                    : (trafFeitosCli(c.id)>=TRAF_TAREFAS.length ? 'background:#dcfce7;color:#15803d;border-color:#bbf7d0'
+                    : 'background:var(--surface-2);color:var(--text-2)')">
+                  <span x-text="c.nome"></span>
+                  <span class="fw-800" x-text="' '+trafFeitosCli(c.id)+'/'+TRAF_TAREFAS.length"></span>
+                </button>
+              </template>
+              <div x-show="!trafClientes.length" class="text-3 fs-12" style="padding:6px 0">Nenhum cliente ativo com tráfego pago ainda.</div>
+            </div>
+            <template x-for="t in trafCliSel ? TRAF_TAREFAS : []" :key="trafCliSel+t.id">
               <div style="padding:8px 0;border-bottom:1px solid var(--border)">
                 <label class="flex items-center gap-2" style="cursor:pointer">
                   <input type="checkbox" x-model="trafItem(t.id).feito" @change="salvarTrafego()">
@@ -3758,7 +3771,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=217"></script>
+<script src="js/app.js?v=218"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

@@ -440,7 +440,8 @@ document.addEventListener('alpine:init', () => {
     // ── Gestão de Tráfego (página trafego: admin + gestortrafego) ──
     TRAF_TAREFAS,
     trafDia: '',            // 'YYYY-MM-DD' do checklist em edição (default hoje)
-    trafChecklists: [],     // coleção trafego.checklist — um doc por dia
+    trafCliSel: '',         // cliente selecionado no checklist (as 8 tarefas são POR CLIENTE)
+    trafChecklists: [],     // coleção trafego.checklist — um doc por dia+cliente
     trafLog: [],            // coleção trafego.log — otimizações registradas
     trafLogForm: { clienteId: '', alteracao: '', motivo: '' },
     trafLogFiltro: '',
@@ -957,20 +958,40 @@ document.addEventListener('alpine:init', () => {
           this.api('GET', '/colecoes/trafego.checklist'),
           this.api('GET', '/colecoes/trafego.log'),
         ]);
-        this.trafChecklists = Array.isArray(cks) ? cks : [];
+        // Só o formato por-cliente vale (docs antigos sem clienteId são descartados).
+        this.trafChecklists = (Array.isArray(cks) ? cks : []).filter(x => x && x.clienteId);
         this.trafLog = Array.isArray(log) ? log : [];
       } catch (e) { /* sem rede: segue com o que tem em memória */ }
+      if (!this.trafCliSel && this.trafClientes.length) this.trafCliSel = this.trafClientes[0].id;
     },
-    // Checklist do dia selecionado — cria/completa na hora (itens novos entram em dias antigos).
-    trafCheckDia() {
-      let c = this.trafChecklists.find(x => x.data === this.trafDia);
-      if (!c) { c = { data: this.trafDia, por: '', itens: TRAF_TAREFAS.map(t => ({ id: t.id, feito: false, evidencia: '' })), em: '' }; this.trafChecklists.push(c); }
+    // Carteira do gestor: clientes ativos com tráfego pago (Google/Meta ativo ou Ads sincronizado).
+    // Se ninguém estiver marcado ainda, mostra todos os ativos pra página não nascer vazia.
+    get trafClientes() {
+      const ativos = (this.clients || []).filter(c => c.status !== 'Inativo');
+      const comTrafego = ativos.filter(c => (c.ads && ((c.ads.google && c.ads.google.ativo) || (c.ads.meta && c.ads.meta.ativo))) || c.adsAuto);
+      return (comTrafego.length ? comTrafego : ativos).map(c => ({ id: c.id, nome: c.empresa || c.nome || '—' }));
+    },
+    // Checklist do dia+cliente — cria/completa na hora (itens novos entram em dias antigos).
+    trafCheckDia(cliId) {
+      cliId = cliId || this.trafCliSel;
+      if (!cliId) return { data: this.trafDia, clienteId: '', por: '', itens: TRAF_TAREFAS.map(t => ({ id: t.id, feito: false, evidencia: '' })), em: '' };
+      let c = this.trafChecklists.find(x => x.data === this.trafDia && x.clienteId === cliId);
+      if (!c) {
+        const cli = this.trafClientes.find(x => x.id === cliId);
+        c = { data: this.trafDia, clienteId: cliId, cliente: (cli && cli.nome) || '', por: '', itens: TRAF_TAREFAS.map(t => ({ id: t.id, feito: false, evidencia: '' })), em: '' };
+        this.trafChecklists.push(c);
+      }
       for (const t of TRAF_TAREFAS) if (!c.itens.some(i => i.id === t.id)) c.itens.push({ id: t.id, feito: false, evidencia: '' });
       return c;
     },
     trafItem(id) { return this.trafCheckDia().itens.find(i => i.id === id); },
-    get trafFeitos() { return this.trafCheckDia().itens.filter(i => i.feito).length; },
+    // Progresso de UM cliente no dia (x/8) — sem criar o doc à toa.
+    trafFeitosCli(cliId) { const c = this.trafChecklists.find(x => x.data === this.trafDia && x.clienteId === cliId); return c ? c.itens.filter(i => i.feito).length : 0; },
+    get trafFeitos() { return this.trafCliSel ? this.trafFeitosCli(this.trafCliSel) : 0; },
+    // Progresso do DIA: quantos clientes da carteira já fecharam as 8 tarefas.
+    get trafCliConcluidos() { return this.trafClientes.filter(c => this.trafFeitosCli(c.id) >= TRAF_TAREFAS.length).length; },
     async salvarTrafego() {
+      if (!this.trafCliSel) return alert('Escolha o cliente do checklist.');
       const c = this.trafCheckDia();
       c.por = (this.usuario && this.usuario.nome) || c.por;
       c.em = new Date().toISOString();
@@ -1006,20 +1027,22 @@ document.addEventListener('alpine:init', () => {
       return { sem: tudo.filter(x => x.saldo <= 0), baixo: tudo.filter(x => x.saldo > 0 && x.saldo < 200) };
     },
     // Indicadores do gestor (admin): rotina medida por EVIDÊNCIA, não por "mexeu na campanha".
+    // Checklist é POR CLIENTE — "conta revisada" = cliente com item marcado no checklist OU entrada no log.
     get trafInd() {
       const hoje = this._hojeStr();
       const d30 = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
       const logHoje = this.trafLog.filter(l => l.data === hoje);
       const log30 = this.trafLog.filter(l => l.data >= d30);
       const cks30 = this.trafChecklists.filter(c => c.data >= d30 && c.data <= hoje && c.itens.some(i => i.feito));
+      const cksHoje = cks30.filter(c => c.data === hoje);
       const completos = cks30.filter(c => c.itens.filter(i => i.feito).length >= TRAF_TAREFAS.length).length;
       const mediaItens = cks30.length ? Math.round(cks30.reduce((a, c) => a + c.itens.filter(i => i.feito).length, 0) / cks30.length * 10) / 10 : 0;
       return {
-        contasHoje: new Set(logHoje.map(l => l.clienteId).filter(Boolean)).size,
+        contasHoje: new Set([...logHoje.map(l => l.clienteId), ...cksHoje.map(c => c.clienteId)].filter(Boolean)).size,
         otimHoje: logHoje.length,
         otim30: log30.length,
-        contas30: new Set(log30.map(l => l.clienteId).filter(Boolean)).size,
-        diasAtivos30: cks30.length,
+        contas30: new Set([...log30.map(l => l.clienteId), ...cks30.map(c => c.clienteId)].filter(Boolean)).size,
+        diasAtivos30: new Set([...cks30.map(c => c.data), ...log30.map(l => l.data)]).size,
         pctCompleto: cks30.length ? Math.round(completos / cks30.length * 100) : 0,
         mediaItens,
       };
