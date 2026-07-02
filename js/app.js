@@ -1069,6 +1069,14 @@ document.addEventListener('alpine:init', () => {
     trafAbrirFichario() { this.trafTab = 'fichario'; if (!this.trafFichSel && this.trafFichDias.length) this.trafFichSel = this.trafFichDias[0].data; },
     // Otimizações de UM cliente num dia — liga o log ao checklist/ficha do cliente.
     trafLogDe(dia, clienteId) { return this.trafLog.filter(l => l.data === dia && l.clienteId === clienteId); },
+    // ── Resumo do dia (banner da Rotina): eventos da Agenda + insights pendentes + tarefas do quadro ──
+    get trafEventosHoje() {
+      const h = this.trafDia || this._hojeStr(); const out = [];
+      for (const c of (this.clients || [])) for (const e of (c.agenda || [])) if (e && String(e.data).slice(0, 10) === h) out.push({ ...e, cliente: c.empresa || c.nome || '—' });
+      return out.sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+    },
+    get trafInsightsPendentes() { return ((this.trafInsights && this.trafInsights.itens) || []).filter(i => !i.status); },
+    get trafInsightsClientes() { return new Set(this.trafInsightsPendentes.map(i => i.clienteId || i.cliente)).size; },
     // ── Relatório de tráfego por período (diário/semanal/mensal/personalizado) ──
     trafRelModal: false,
     trafRelForm: { periodo: 'hoje', de: '', ate: '', clienteId: '' },

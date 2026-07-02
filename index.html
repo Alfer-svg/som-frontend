@@ -1813,6 +1813,24 @@
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
 
+        <!-- Banner "Seu dia": eventos da Agenda + insights pendentes + tarefas do quadro -->
+        <div x-show="trafTab==='rotina'" class="card" style="margin-bottom:14px;padding:14px 18px;background:linear-gradient(100deg,#7c3aed,#5b21b6);color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div class="fw-800 fs-14" style="white-space:nowrap">☀️ Seu dia</div>
+          <div class="flex items-center gap-2" style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 12px">
+            <i class="ph ph-calendar-dots"></i>
+            <span class="fs-13">Você tem <b class="fs-15" x-text="trafEventosHoje.length"></b> evento(s) na agenda</span>
+            <button class="btn btn-sm" @click="go('agenda')" style="background:#fff;color:#5b21b6;border-color:#fff;font-weight:800;padding:3px 10px">abrir agenda</button>
+          </div>
+          <div class="flex items-center gap-2" style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 12px">
+            <i class="ph ph-sparkle"></i>
+            <span class="fs-13"><b class="fs-15" x-text="trafInsightsPendentes.length"></b> insight(s) de <b class="fs-15" x-text="trafInsightsClientes"></b> cliente(s)</span>
+          </div>
+          <div class="flex items-center gap-2" style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 12px">
+            <i class="ph ph-kanban"></i>
+            <span class="fs-13">Você tem <b class="fs-15" x-text="trafCardsPrioridade.length"></b> tarefa(s) do quadro</span>
+          </div>
+        </div>
+
         <!-- ─────── Aba: Rotina do dia — esquerda: checklist + log; direita: rosca, tarefas do quadro e insights ─────── -->
         <div x-show="trafTab==='rotina'" class="traf-rotina">
           <div class="traf-rotina-lateral">
@@ -3978,7 +3996,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=246"></script>
+<script src="js/app.js?v=247"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
