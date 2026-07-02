@@ -3155,17 +3155,35 @@ ${this._docFoot()}
       try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.abrirCard(novo); }
       catch (e) { alert(e.message || 'Falha ao criar o criativo.'); }
     },
-    // Card de TRÁFEGO no quadro (irmão do + Criativo): tarefa pro gestor de tráfego,
-    // já atribuída a quem tem o perfil gestortrafego na equipe.
-    async novoTrafego(status) {
+    // Card de TRÁFEGO (irmão do + Criativo): nasce SEMPRE no quadro exclusivo "Tráfego"
+    // (criado na 1ª vez), atribuído a quem tem o perfil gestortrafego e já com o
+    // checklist das demandas inerentes à função.
+    async novoTrafego() {
       if (!this.equipe.length) this.carregarEquipe();
-      const col = status || (this.boardAtual && this.boardAtual.colunas[0] && this.boardAtual.colunas[0].nome) || 'A Fazer';
+      let board = this.boards.find(b => b.id === 'trafego' || /tr[áa]fego/i.test(b.nome || ''));
+      if (!board) {
+        board = { id: 'trafego', nome: '🎯 Tráfego', colunas: [{ nome: 'A Fazer', cor: '#8a8ba3' }, { nome: 'Em Andamento', cor: '#2563eb' }, { nome: 'Concluído', cor: '#16a34a' }] };
+        this.boards.push(board); this.salvarBoards();
+      }
+      this.selecionarBoard(board.id); // o card aparece na hora no quadro certo
       const gestor = (this.equipe || []).find(u => u.papel === 'gestortrafego');
+      const DEMANDAS = [
+        'Alinhar objetivo e verba com o cliente',
+        'Configurar/verificar pixel e eventos de conversão',
+        'Definir públicos e segmentação',
+        'Solicitar/subir criativos e copies',
+        'Montar campanha e definir orçamento diário',
+        'Publicar e conferir aprovação dos anúncios',
+        'Acompanhar CPA/CPL dos primeiros dias',
+        'Otimizar: pausar ruins, escalar vencedores',
+        'Registrar resultado no log de otimizações',
+      ];
       const novo = {
         id: '', nome: 'Nova tarefa de tráfego', cliente: '', servico: 'ADS / Tráfego Pago',
-        responsavel: (gestor && gestor.nome) || '', status: col, boardId: this.boardSel || 'geral', prazo: '', prazoEntrega: '', progresso: 0, notas: '',
+        responsavel: (gestor && gestor.nome) || '', status: (board.colunas[0] && board.colunas[0].nome) || 'A Fazer',
+        boardId: board.id, prazo: '', prazoEntrega: '', progresso: 0, notas: '',
         avulso: true, area: '🎯 Tráfego Pago', descricao: '',
-        labels: [], membros: [], checklist: [],
+        labels: [], membros: [], checklist: DEMANDAS.map(t => ({ id: MD.uid(), texto: t, feito: false })),
       };
       try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.abrirCard(novo); }
       catch (e) { alert(e.message || 'Falha ao criar a tarefa de tráfego.'); }
