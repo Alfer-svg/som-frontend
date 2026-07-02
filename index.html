@@ -1831,25 +1831,40 @@
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
 
-        <!-- Banner "Seu dia": eventos da Agenda + insights pendentes + tarefas do quadro -->
-        <div x-show="trafTab==='rotina'" class="card" style="margin-bottom:14px;padding:14px 18px;background:linear-gradient(100deg,#7c3aed,#5b21b6);color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-          <div class="fw-800 fs-14" style="white-space:nowrap">☀️ Seu dia</div>
-          <div class="flex items-center gap-2" style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 12px">
-            <i class="ph ph-calendar-dots"></i>
-            <span class="fs-13">Você tem <b class="fs-15" x-text="trafEventosHoje.length"></b> evento(s) na agenda</span>
-            <span class="badge fs-12 fw-800" x-show="trafEventoDaVez" style="background:#fff;color:#5b21b6;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="trafEventoDaVez" title="Eventos de hoje — alternando um a um"></span>
-            <button class="btn btn-sm" @click="go('agenda')" style="background:#fff;color:#5b21b6;border-color:#fff;font-weight:800;padding:3px 10px">abrir agenda</button>
+        <!-- Banner "Seu dia": blocos de estatística (número grande + rótulo + linha rotativa) -->
+        <div x-show="trafTab==='rotina'" class="card" style="margin-bottom:14px;padding:14px 18px;background:linear-gradient(100deg,#7c3aed,#5b21b6);color:#fff">
+          <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div class="fw-800 fs-14">☀️ Seu dia</div>
+            <span class="fs-12" style="opacity:.75" x-text="fmtDate(trafDia||_hojeStr())"></span>
           </div>
-          <div class="flex items-center gap-2" style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 12px">
-            <i class="ph ph-sparkle"></i>
-            <span class="fs-13"><b class="fs-15" x-text="trafInsightsPendentes.length"></b> insight(s) de <b class="fs-15" x-text="trafInsightsClientes"></b> cliente(s)</span>
-            <span class="badge fs-12 fw-800" x-show="trafInsClienteDaVez" style="background:#fff;color:#5b21b6;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="trafInsClienteDaVez" title="Clientes com insight pendente — alternando um a um"></span>
-          </div>
-          <div class="flex items-center gap-2" style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 12px">
-            <i class="ph ph-kanban"></i>
-            <span class="fs-13">Você tem <b class="fs-15" x-text="trafCardsPrioridade.length"></b> tarefa(s) do quadro</span>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px">
+            <!-- Eventos da agenda (clique abre a Agenda) -->
+            <div style="background:rgba(255,255,255,.13);border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;cursor:pointer" @click="go('agenda')" title="Abrir a Agenda">
+              <div class="fw-800" style="font-size:28px;line-height:1" x-text="trafEventosHoje.length"></div>
+              <div style="min-width:0;flex:1">
+                <div class="fw-700 fs-12" style="display:flex;align-items:center;gap:5px"><i class="ph ph-calendar-dots"></i> eventos na agenda <i class="ph ph-arrow-square-out" style="opacity:.7"></i></div>
+                <div class="fs-11" style="opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafEventoDaVez || 'nenhum evento hoje'"></div>
+              </div>
+            </div>
+            <!-- Insights pendentes -->
+            <div style="background:rgba(255,255,255,.13);border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center">
+              <div class="fw-800" style="font-size:28px;line-height:1" x-text="trafInsightsPendentes.length"></div>
+              <div style="min-width:0;flex:1">
+                <div class="fw-700 fs-12" style="display:flex;align-items:center;gap:5px"><i class="ph ph-sparkle"></i> insights pendentes · <span x-text="trafInsightsClientes"></span> cliente(s)</div>
+                <div class="fs-11" style="opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafInsClienteDaVez || 'nada pendente — analise as contas'"></div>
+              </div>
+            </div>
+            <!-- Tarefas do quadro (clique abre o quadro Tráfego) -->
+            <div style="background:rgba(255,255,255,.13);border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;cursor:pointer" @click="go('operacional'); opTab='quadro'; selecionarBoard('trafego')" title="Abrir o quadro Tráfego">
+              <div class="fw-800" style="font-size:28px;line-height:1" x-text="trafCardsPrioridade.length"></div>
+              <div style="min-width:0;flex:1">
+                <div class="fw-700 fs-12" style="display:flex;align-items:center;gap:5px"><i class="ph ph-kanban"></i> tarefas do quadro <i class="ph ph-arrow-square-out" style="opacity:.7"></i></div>
+                <div class="fs-11" style="opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafTarefaDaVez || 'nenhum card aberto'"></div>
+              </div>
+            </div>
           </div>
         </div>
+
 
         <!-- ─────── Aba: Rotina do dia — esquerda: checklist + log; direita: rosca, tarefas do quadro e insights ─────── -->
         <div x-show="trafTab==='rotina'" class="traf-rotina">
@@ -4032,7 +4047,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=251"></script>
+<script src="js/app.js?v=252"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

@@ -1109,6 +1109,13 @@ document.addEventListener('alpine:init', () => {
       const e = evs[this.trafInsRot % evs.length];
       return (e.hora ? e.hora + ' · ' : '') + (e.titulo || e.tipo || 'Evento') + ' — ' + (e.cliente || '');
     },
+    // Tarefa do quadro da vez (mesma rotação): prioridade · nome — cliente.
+    get trafTarefaDaVez() {
+      const ts = this.trafCardsPrioridade;
+      if (!ts.length) return '';
+      const t = ts[this.trafInsRot % ts.length];
+      return (t.prioridade ? t.prioridade + ' · ' : '') + (t.nome || '') + (t.cliente ? ' — ' + t.cliente : '');
+    },
     // ── Relatório de tráfego por período (diário/semanal/mensal/personalizado) ──
     trafRelModal: false,
     trafRelForm: { periodo: 'hoje', de: '', ate: '', clienteId: '' },
