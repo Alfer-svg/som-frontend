@@ -274,7 +274,7 @@ const ADS_PLATAFORMAS = [
 const adsVazio = () => ({ google: { ativo: false, qualidade: 0, saldo: 0 }, meta: { ativo: false, qualidade: 0, saldo: 0 } });
 
 // Itens comuns pra guardar acesso (login/senha) no cofre.
-const ITENS_CRED = ['Instagram', 'Facebook', 'TikTok', 'YouTube', 'LinkedIn', 'Google Meu Negócio', 'Google Ads', 'Meta Business', 'Google Analytics', 'Search Console', 'Hospedagem', 'Domínio', 'Site / WordPress', 'E-mail', 'Outro'];
+const ITENS_CRED = ['Instagram', 'Facebook', 'TikTok', 'YouTube', 'LinkedIn', 'X (Twitter)', 'Kwai', 'Pinterest', 'Threads', 'WhatsApp Business', 'Google Meu Negócio', 'Meta Business (Gerenciador)', 'Google Ads', 'Google Analytics', 'Search Console', 'Canva', 'Site / WordPress', 'Hospedagem', 'Domínio', 'E-mail'];
 const redesVazias = () => Object.fromEntries(REDES.map(r => [r.id, { tem: false, score: 0, url: '' }]));
 // Merge profundo das redes salvas com o padrão (garante {tem,score,url} mesmo em clientes antigos).
 const redesMerge = (saved) => { const v = redesVazias(), s = saved || {}, out = {}; for (const k in v) out[k] = { ...v[k], ...(s[k] || {}) }; return out; };
@@ -493,7 +493,7 @@ document.addEventListener('alpine:init', () => {
     metas: { prospeccoes: 50, contatos: 25, propostas: 2 }, metasEdit: false, metasForm: {}, // metas semanais do comercial (editáveis pelo admin)
     dashTab: 'geral', // aba do Dashboard: 'geral' (visão geral) | 'comercial' (painel + metas)
     comPerTipo: 'semana', comPerOff: 0, // período do painel comercial: 'dia'|'semana'|'mes' + deslocamento (0=atual)
-    credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
+    credenciais: [], credModal: false, credForm: {}, credItemModo: '', revelar: {}, // cofre de acessos (credItemModo: dropdown do tipo, '__outro__' = livre)
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {},
     onbLink: 'https://maracatumktdigital.com/onboarding',          // formulário de MARKETING (endereço Maracatu)
@@ -2508,8 +2508,8 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         } catch (e) { this.cofreMsg = e.message || 'Falha ao salvar a senha master.'; }
       }
     },
-    novaCredencial() { const c = this.monitorCliente; this.credForm = { id: '', clienteId: c && c.id, item: 'Instagram', login: '', senha: '', url: '', notas: '' }; this.credModal = true; },
-    editarCredencial(c) { this.credForm = { ...c, senha: '' }; this.credModal = true; },
+    novaCredencial() { const c = this.monitorCliente; this.credForm = { id: '', clienteId: c && c.id, item: 'Instagram', login: '', senha: '', url: '', notas: '' }; this.credItemModo = 'Instagram'; this.credModal = true; },
+    editarCredencial(c) { this.credForm = { ...c, senha: '' }; this.credItemModo = ITENS_CRED.includes(c.item) ? c.item : '__outro__'; this.credModal = true; },
     async salvarCredencial() { const f = this.credForm; if (!f.clienteId && this.monitorCliente) f.clienteId = this.monitorCliente.id; if (!f.item) return alert('Informe o item.'); try { await this.api('POST', '/credenciais', f); await this.carregarCredenciais(f.clienteId); this.credModal = false; } catch (e) { alert(e.message); } },
     async excluirCredencial(c) { if (!confirm('Excluir o acesso "' + (c.item || '') + '"?')) return; try { await this.api('DELETE', '/credenciais/' + c.id); await this.carregarCredenciais(c.clienteId); } catch (e) { alert(e.message); } },
     async salvarCliente() {

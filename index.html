@@ -4019,7 +4019,14 @@
   <div class="modal" style="max-width:440px">
     <div class="modal-head"><div class="modal-title" x-text="credForm.id?'Editar acesso':'Novo acesso'"></div><button class="btn btn-icon btn-ghost" @click="credModal=false">✕</button></div>
     <div class="modal-body">
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Item / plataforma <span class="hq" data-tip="Nome do item ou plataforma (ex.: Instagram, Meta Ads).">?</span></label><input class="form-input" x-model="credForm.item" list="itens-cred" placeholder="Instagram, Domínio, Hospedagem…"><datalist id="itens-cred"><template x-for="i in ITENS_CRED"><option :value="i"></option></template></datalist></div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Item / plataforma <span class="hq" data-tip="Rede social ou serviço do acesso.">?</span></label>
+        <select class="form-select" x-model="credItemModo" @change="credForm.item = (credItemModo==='__outro__' ? '' : credItemModo)">
+          <template x-for="i in ITENS_CRED" :key="i"><option :value="i" x-text="i"></option></template>
+          <option value="__outro__">Outro (especificar)…</option>
+        </select>
+        <input x-show="credItemModo==='__outro__'" class="form-input" style="margin-top:8px" x-model="credForm.item" placeholder="Qual plataforma? (ex.: Behance, Spotify, Twitch…)">
+      </div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">Login / usuário <span class="hq" data-tip="Login/usuário do acesso.">?</span></label><input class="form-input" x-model="credForm.login" autocomplete="off"></div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">Senha <span class="text-3" x-show="credForm.id" style="font-weight:400;text-transform:none">— em branco mantém a atual</span> <span class="hq" data-tip="Deixe em branco para não alterar a senha.">?</span></label><input class="form-input" x-model="credForm.senha" autocomplete="off" :placeholder="credForm.id?'••••••• (em branco mantém)':''"></div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">URL (opcional) <span class="hq" data-tip="Endereço do serviço (opcional).">?</span></label><input class="form-input" x-model="credForm.url" placeholder="https://"></div>
@@ -4077,7 +4084,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=265"></script>
+<script src="js/app.js?v=266"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
