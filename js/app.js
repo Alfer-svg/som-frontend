@@ -2856,8 +2856,14 @@ ${this._docFoot()}
     projetosDoStatus(s) { const q = this.busca.toLowerCase(); return this.projects.filter(p => p.status === s && (!q || (p.nome + ' ' + p.cliente).toLowerCase().includes(q))); },
     // ───────────────── QUADROS (Trello — vários, editáveis) ─────────────────
     async carregarBoards() {
-      try { const r = await this.api('GET', '/config/ui.boards'); this.boards = (r && r.valor) ? JSON.parse(r.valor) : []; } catch { this.boards = []; }
-      if (!Array.isArray(this.boards) || !this.boards.length) { this.boards = [BOARD_PADRAO()]; this.salvarBoards(); }
+      // _boardsOk = a lista veio MESMO do servidor. Nunca persistir o fallback:
+      // salvar [Geral] depois de um GET falho APAGAVA os quadros de todo mundo (aconteceu 02/07).
+      try {
+        const r = await this.api('GET', '/config/ui.boards');
+        this.boards = (r && r.valor) ? JSON.parse(r.valor) : [];
+        this._boardsOk = true;
+      } catch { if (!Array.isArray(this.boards)) this.boards = []; this._boardsOk = false; }
+      if (!Array.isArray(this.boards) || !this.boards.length) this.boards = [BOARD_PADRAO()]; // só em memória
       if (!this.boardSel || !this.boards.find(b => b.id === this.boardSel)) this.boardSel = this.boards[0].id;
     },
     salvarBoards() { try { this.api('PUT', '/config/ui.boards', { valor: JSON.stringify(this.boards) }); } catch (e) { } },
@@ -3387,6 +3393,10 @@ ${this._docFoot()}
     // card, que tem tudo (cliente, nome, prazo, responsável, checklist).
     async novoTrafego() {
       if (!this.equipe.length) this.carregarEquipe();
+      // Garante a lista REAL de quadros antes de mexer nela (salvar em cima de um
+      // fallback apagaria os quadros de todo mundo — aconteceu 02/07).
+      if (!this._boardsOk) await this.carregarBoards();
+      if (!this._boardsOk) return alert('Não consegui carregar os quadros — confira a conexão e tente de novo.');
       let board = this.boards.find(b => b.id === 'trafego' || /tr[áa]fego/i.test(b.nome || ''));
       if (!board) {
         board = { id: 'trafego', nome: '🎯 Tráfego', colunas: [{ nome: 'A Fazer', cor: '#a78bfa' }, { nome: 'Em Andamento', cor: '#7c3aed' }, { nome: 'Concluído', cor: '#16a34a' }] };
