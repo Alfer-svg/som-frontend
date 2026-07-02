@@ -1092,6 +1092,13 @@ document.addEventListener('alpine:init', () => {
       if (this._trafInsRotTimer) return;
       this._trafInsRotTimer = setInterval(() => { if (this.page === 'trafego') this.trafInsRot++; }, 2500);
     },
+    // Evento da vez no banner (mesma rotação dos insights): hora · título — cliente.
+    get trafEventoDaVez() {
+      const evs = this.trafEventosHoje;
+      if (!evs.length) return '';
+      const e = evs[this.trafInsRot % evs.length];
+      return (e.hora ? e.hora + ' · ' : '') + (e.titulo || e.tipo || 'Evento') + ' — ' + (e.cliente || '');
+    },
     // ── Relatório de tráfego por período (diário/semanal/mensal/personalizado) ──
     trafRelModal: false,
     trafRelForm: { periodo: 'hoje', de: '', ate: '', clienteId: '' },

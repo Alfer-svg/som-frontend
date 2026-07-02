@@ -1825,6 +1825,7 @@
           <div class="flex items-center gap-2" style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 12px">
             <i class="ph ph-calendar-dots"></i>
             <span class="fs-13">Você tem <b class="fs-15" x-text="trafEventosHoje.length"></b> evento(s) na agenda</span>
+            <span class="badge fs-12 fw-800" x-show="trafEventoDaVez" style="background:#fff;color:#5b21b6;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="trafEventoDaVez" title="Eventos de hoje — alternando um a um"></span>
             <button class="btn btn-sm" @click="go('agenda')" style="background:#fff;color:#5b21b6;border-color:#fff;font-weight:800;padding:3px 10px">abrir agenda</button>
           </div>
           <div class="flex items-center gap-2" style="background:rgba(255,255,255,.14);border-radius:10px;padding:8px 12px">
@@ -4019,7 +4020,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=249"></script>
+<script src="js/app.js?v=250"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
