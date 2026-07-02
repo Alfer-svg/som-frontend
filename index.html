@@ -1853,6 +1853,33 @@
           </div>
         </div>
 
+        <!-- Alerta: contas de anúncio sem saldo / saldo baixo (saldo manual da seção Tráfego Pago) -->
+        <div class="card" style="padding:14px;margin-bottom:14px" :style="trafSaldoAlertas.sem.length?'border-left:4px solid #dc2626':(trafSaldoAlertas.baixo.length?'border-left:4px solid #d97706':'border-left:4px solid #16a34a')">
+          <div class="fw-800 fs-13 mb-2"><i class="ph ph-wallet ic-ph" :style="trafSaldoAlertas.sem.length?'color:#dc2626':'color:#16a34a'"></i> Saldo das contas de anúncio</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+            <div>
+              <div class="fs-12 fw-700 mb-1" style="color:#dc2626">🚨 Sem saldo (<span x-text="trafSaldoAlertas.sem.length"></span>)</div>
+              <template x-for="a in trafSaldoAlertas.sem" :key="'ss'+a.canal+a.id">
+                <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
+                  <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
+                  <span class="fw-700" style="color:#dc2626;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
+                </div>
+              </template>
+              <div x-show="!trafSaldoAlertas.sem.length" class="text-3 fs-11" style="padding:4px 0">Nenhuma 🎉</div>
+            </div>
+            <div>
+              <div class="fs-12 fw-700 mb-1" style="color:#d97706">⚠️ Saldo baixo — abaixo de R$ 200 (<span x-text="trafSaldoAlertas.baixo.length"></span>)</div>
+              <template x-for="a in trafSaldoAlertas.baixo" :key="'sb'+a.canal+a.id">
+                <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
+                  <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
+                  <span class="fw-700" style="color:#d97706;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
+                </div>
+              </template>
+              <div x-show="!trafSaldoAlertas.baixo.length" class="text-3 fs-11" style="padding:4px 0">Nenhuma 👍</div>
+            </div>
+          </div>
+        </div>
+
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start">
           <!-- Checklist do dia -->
           <div class="card" style="padding:14px">
@@ -3715,7 +3742,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=215"></script>
+<script src="js/app.js?v=216"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

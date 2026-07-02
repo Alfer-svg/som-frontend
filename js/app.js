@@ -997,6 +997,12 @@ document.addEventListener('alpine:init', () => {
       try { await this.api('POST', '/colecoes/trafego.log', { itens: this.trafLog }); } catch (e) { }
     },
     get trafLogVisivel() { const f = this.trafLogFiltro; return this.trafLog.filter(l => !f || l.clienteId === f).slice(0, 200); },
+    // Alerta de recarga: contas (Google+Meta) sem saldo ou abaixo de R$ 200 — mesmo saldo manual da Agenda.
+    get trafSaldoAlertas() {
+      const marcar = (lista, canal) => (lista || []).map(x => ({ ...x, canal }));
+      const tudo = [...marcar(this.contasGoogle, 'Google'), ...marcar(this.contasMeta, 'Meta')];
+      return { sem: tudo.filter(x => x.saldo <= 0), baixo: tudo.filter(x => x.saldo > 0 && x.saldo < 200) };
+    },
     // Indicadores do gestor (admin): rotina medida por EVIDÊNCIA, não por "mexeu na campanha".
     get trafInd() {
       const hoje = this._hojeStr();
