@@ -421,7 +421,7 @@ document.addEventListener('alpine:init', () => {
     agendaHistCli: '',      // clienteId cujo histórico está aberto no painel lateral
     agendaTempo: 'futuros', // filtro da lista linear: 'todos' | 'futuros' | 'passados'
     eventoModal: false,
-    eventoForm: { id: '', clienteId: '', data: '', hora: '', tipo: 'Reunião', titulo: '', nota: '' },
+    eventoForm: { id: '', clienteId: '', data: '', hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '' },
     TIPOS_EVENTO: ['Reunião', 'Ligação', 'WhatsApp', 'E-mail', 'Visita', 'Campanha', 'Entrega', 'Reunião online', 'Outro'],
     usuarios: [], // equipe completa (só admin lê)
     equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
@@ -842,7 +842,7 @@ document.addEventListener('alpine:init', () => {
       for (const c of (this.clients || [])) {
         if (fil && c.id !== fil) continue;
         const nome = c.empresa || c.nome || '—';
-        for (const e of (c.agenda || [])) { if (e && e.data) out.push({ data: String(e.data).slice(0, 10), hora: e.hora || '', tipo: e.tipo || 'Evento', titulo: e.titulo || e.tipo || 'Evento', nota: e.nota || '', clienteId: c.id, cliente: nome, fonte: 'agenda', id: e.id }); }
+        for (const e of (c.agenda || [])) { if (e && e.data) out.push({ data: String(e.data).slice(0, 10), hora: e.hora || '', tipo: e.tipo || 'Evento', titulo: e.titulo || e.tipo || 'Evento', nota: e.nota || '', link: e.link || '', clienteId: c.id, cliente: nome, fonte: 'agenda', id: e.id }); }
         for (const t of (c.timeline || [])) { const d = String(t.data || t.em || '').slice(0, 10); if (d) out.push({ data: d, hora: '', tipo: t.tipo || 'Nota', titulo: t.texto || t.tipo || 'Contato', clienteId: c.id, cliente: nome, fonte: 'interacao', por: t.por || '' }); }
         for (const tk of (c.tarefas || [])) { if (tk && tk.data) out.push({ data: String(tk.data).slice(0, 10), hora: '', tipo: 'Tarefa', titulo: tk.titulo || 'Tarefa', clienteId: c.id, cliente: nome, fonte: 'tarefa', status: tk.status || '' }); }
       }
@@ -887,8 +887,24 @@ document.addEventListener('alpine:init', () => {
       return dias;
     },
     get agProximos() { const h = this._hojeStr(); return this.agAgendados.filter(e => e.data >= h).sort((a, b) => this._agKey(a).localeCompare(this._agKey(b))).slice(0, 8); },
-    novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '' }; this.eventoModal = true; },
-    editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, hora: ev.hora || '', tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '' }; this.eventoModal = true; },
+    novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '' }; this.eventoModal = true; },
+    editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, hora: ev.hora || '', tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '', link: ev.link || '' }; this.eventoModal = true; },
+    // Reunião → gerar sala do Google Meet: abre meet.google.com/new (cria a sala na conta logada)
+    // e, quando o usuário voltar pra esta aba com o link copiado, cola sozinho no campo.
+    eventoEhReuniao(t) { return String(t || '').toLowerCase().startsWith('reuni'); },
+    gerarMeet() {
+      window.open('https://meet.google.com/new', '_blank');
+      this.mostrarToast('Sala aberta em outra aba — copie o link do Meet e volte aqui. 🎥');
+      const pegar = async () => {
+        window.removeEventListener('focus', pegar);
+        try {
+          const t = await navigator.clipboard.readText();
+          const m = String(t || '').match(/https:\/\/meet\.google\.com\/[a-z0-9?=/-]+/i);
+          if (m && this.eventoModal && !this.eventoForm.link) { this.eventoForm.link = m[0]; this.mostrarToast('Link do Meet capturado. ✅'); }
+        } catch (e) { /* sem permissão de clipboard — usuário cola manual */ }
+      };
+      window.addEventListener('focus', pegar);
+    },
     async salvarEvento() {
       const f = this.eventoForm;
       if (!f.clienteId) return alert('Escolha o cliente.');
@@ -896,8 +912,8 @@ document.addEventListener('alpine:init', () => {
       if (!(f.titulo || '').trim()) return alert('Escreva o assunto do evento.');
       const c = (this.clients || []).find(x => x.id === f.clienteId); if (!c) return alert('Cliente não encontrado.');
       const agenda = Array.isArray(c.agenda) ? c.agenda.slice() : [];
-      if (f.id) { const i = agenda.findIndex(e => e.id === f.id); if (i >= 0) agenda[i] = { ...agenda[i], data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota }; }
-      else agenda.push({ id: MD.uid(), data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota || '', por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString() });
+      if (f.id) { const i = agenda.findIndex(e => e.id === f.id); if (i >= 0) agenda[i] = { ...agenda[i], data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota, link: (f.link || '').trim() }; }
+      else agenda.push({ id: MD.uid(), data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota || '', link: (f.link || '').trim(), por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString() });
       const { id, ...resto } = c; resto.agenda = agenda;
       try { await this.api('POST', '/clientes', { id: c.id, empresa: c.empresa, dados: resto }); c.agenda = agenda; this.eventoModal = false; this.agendaDiaSel = f.data; this.mostrarToast('Evento salvo. 📅'); }
       catch (e) { alert(e.message || e); }
