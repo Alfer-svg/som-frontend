@@ -2615,7 +2615,11 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
 
     // ───────────────── FINANCEIRO ─────────────────
-    get financeFiltrado() { const q = this.busca.toLowerCase(); return [...this.finance].filter(f => this._finNoMes(f)).sort((a, b) => (a.vencimento || a.data || '').localeCompare(b.vencimento || b.data || '')).filter(f => !q || ((f.descricao || '') + ' ' + (f.cliente || '') + ' ' + (f.categoria || '') + ' ' + (f.tipo || '')).toLowerCase().includes(q)); },
+    // A FATURAR (mesma regra do SIAGO, adaptada): receita pendente SEM cobrança/boleto emitido.
+    finSoAFaturar: false,
+    get finAFaturar() { return this.finance.filter(f => f.tipo === 'receita' && f.status !== 'pago' && !f.boletoId); },
+    get finAFaturarTotal() { return this.finAFaturar.reduce((a, f) => a + (+f.valor || 0), 0); },
+    get financeFiltrado() { const q = this.busca.toLowerCase(); return (this.finSoAFaturar ? this.finAFaturar : [...this.finance].filter(f => this._finNoMes(f))).sort((a, b) => (a.vencimento || a.data || '').localeCompare(b.vencimento || b.data || '')).filter(f => !q || ((f.descricao || '') + ' ' + (f.cliente || '') + ' ' + (f.categoria || '') + ' ' + (f.tipo || '')).toLowerCase().includes(q)); },
     novoLancamento(tipo = 'receita') { this.editing = { id: '', tipo, descricao: '', valor: 0, categoria: tipo === 'receita' ? 'Mensalidade' : 'Ferramentas', cliente: '', fornecedor: '', emailCobranca: '', whatsappCobranca: '', obs: '', status: 'pendente', vencimento: MD.today(), data: MD.today() }; this.modal = 'finance'; },
     editarLancamento(f) { this.editing = { ...f }; this.modal = 'finance'; },
     salvarLancamento() {

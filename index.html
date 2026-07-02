@@ -759,7 +759,12 @@
 
       <!-- ========== FINANCEIRO ========== -->
       <section x-show="page==='financeiro'">
-        <div class="grid grid-4 mb-4">
+        <div class="grid mb-4" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+          <div class="card kpi" @click="finSoAFaturar=!finSoAFaturar" :style="'cursor:pointer;'+(finSoAFaturar?'border:2px solid #7E22CE;background:#FAF5FF':'border-left:4px solid #7E22CE')" :title="finSoAFaturar?'Clique pra limpar o filtro':'Receitas pendentes SEM cobrança emitida — clique pra ver só elas'">
+            <div class="kpi-label" style="color:#7E22CE">A faturar<span x-show="finSoAFaturar"> ✓</span></div>
+            <div class="kpi-value fs-22" style="color:#7E22CE" x-text="fmtCur(finAFaturarTotal)"></div>
+            <div class="text-3 fs-11" x-text="finAFaturar.length + (finAFaturar.length===1 ? ' lançamento sem cobrança' : ' lançamentos sem cobrança')"></div>
+          </div>
           <div class="card kpi"><div class="kpi-label">Receita · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22 text-green" x-text="fmtCur(receitaMes)"></div></div>
           <div class="card kpi"><div class="kpi-label">Despesa · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22 text-red" x-text="fmtCur(despesaMes)"></div></div>
           <div class="card kpi"><div class="kpi-label">Saldo · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
@@ -4047,7 +4052,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=254"></script>
+<script src="js/app.js?v=255"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
