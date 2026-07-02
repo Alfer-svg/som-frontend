@@ -1072,8 +1072,8 @@
                       <span x-show="p.prazoEntrega" style="display:inline-flex;align-items:center;gap:5px;background:#E0F2FE;color:#075985;border:1px solid #BAE6FD;border-radius:8px;padding:4px 9px;font-weight:700;font-size:12px" title="Prazo de entrega da arte"><i class="ph ph-package"></i><span x-text="'Entrega '+diaSemanaLabel(p.prazoEntrega)"></span></span>
                       <span class="tl-type" x-text="p.tipoPost||'Estático'"></span>
                     </div>
-                    <span class="badge" x-show="p.prioridade" style="margin-bottom:4px;font-weight:800;font-size:10.5px"
-                      :style="'background:'+(p.prioridade==='Alta'?'#dc2626':(p.prioridade==='Média'?'#d97706':'#16a34a'))+'1a;color:'+(p.prioridade==='Alta'?'#dc2626':(p.prioridade==='Média'?'#d97706':'#16a34a'))"
+                    <span class="badge" x-show="p.prioridade"
+                      :style="'margin-bottom:4px;font-weight:800;font-size:10.5px;background:'+(p.prioridade==='Alta'?'#dc2626':(p.prioridade==='Média'?'#d97706':'#16a34a'))+'1a;color:'+(p.prioridade==='Alta'?'#dc2626':(p.prioridade==='Média'?'#d97706':'#16a34a'))"
                       x-text="(p.prioridade==='Alta'?'🔴':(p.prioridade==='Média'?'🟠':'🟢'))+' '+p.prioridade"></span>
                     <div class="fs-13 fw-700" style="line-height:1.3" x-text="p.tema||p.nome"></div>
                     <div class="text-3 fs-12" style="margin-top:2px" x-show="p.cliente" x-text="p.cliente"></div>
@@ -1930,7 +1930,7 @@
             <div style="max-height:420px;overflow-y:auto">
               <template x-for="p in trafCardsPrioridade" :key="'tcp'+p.id">
                 <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="abrirCardTrafego(p)" :title="'Abrir card no quadro Tráfego'">
-                  <span class="badge fs-11 fw-800" style="min-width:64px;justify-content:center" :style="'background:'+trafPrioCor(p.prioridade)+'1a;color:'+trafPrioCor(p.prioridade)" x-text="p.prioridade||'—'"></span>
+                  <span class="badge fs-11 fw-800" :style="'min-width:64px;justify-content:center;background:'+trafPrioCor(p.prioridade)+'1a;color:'+trafPrioCor(p.prioridade)" x-text="p.prioridade||'—'"></span>
                   <div style="flex:1;min-width:0">
                     <div class="fw-700 fs-12 truncate" x-text="p.nome"></div>
                     <div class="text-3 fs-11 truncate"><span x-text="p.cliente||'—'"></span><span x-show="p.prazo" x-text="' · prazo '+fmtDate(p.prazo)"></span></div>
@@ -1952,18 +1952,18 @@
               <div class="text-3 fs-11 mb-2" x-show="trafInsights && trafInsights.geradoEm" x-text="'Análise de '+fmtDataHora(trafInsights && trafInsights.geradoEm)"></div>
               <div style="max-height:340px;overflow-y:auto">
                 <template x-for="(i, ix) in (trafInsights && trafInsights.itens) || []" :key="'ins'+ix">
-                  <div style="padding:8px 0;border-bottom:1px solid var(--border)" :style="i.status?'opacity:.55':''">
-                    <div class="flex items-center gap-2 mb-1">
+                  <div :style="'margin-bottom:10px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;border-left:4px solid '+trafPrioCor(i.prioridade)+(i.status?';opacity:.55':'')">
+                    <div class="flex items-center gap-2" style="margin-bottom:8px">
                       <span class="badge fs-11 fw-800" :style="'background:'+trafPrioCor(i.prioridade)+'1a;color:'+trafPrioCor(i.prioridade)" x-text="i.prioridade"></span>
-                      <span class="fw-700 fs-12 truncate" style="flex:1" x-text="i.cliente"></span>
+                      <span class="fw-800 fs-12 truncate" style="flex:1" x-text="i.cliente"></span>
                       <span class="badge fs-11 fw-800" x-show="i.status==='feito'" style="background:#dcfce7;color:#15803d">✔ Feito</span>
                       <span class="badge fs-11 fw-800" x-show="i.status==='descartado'" style="background:#e5e7eb;color:#6b7280">✖ Descartado</span>
                     </div>
-                    <div class="fs-12" x-text="i.insight"></div>
-                    <div class="fs-12 fw-700" style="margin-top:3px;color:#7c3aed">→ <span x-text="i.acao"></span></div>
-                    <div class="flex gap-2" style="margin-top:6px" x-show="!i.status">
-                      <button type="button" class="btn btn-sm" @click="resolverInsight(i,'feito')" style="background:#16a34a;color:#fff;border-color:#16a34a"><i class="ph ph-check ic-ph"></i> Feito</button>
+                    <div class="fs-12" style="line-height:1.55;color:var(--text-2)" x-text="i.insight"></div>
+                    <div class="fs-12 fw-700" style="margin-top:8px;background:#F4F0FE;border-radius:8px;padding:8px 10px;color:#5b21b6;line-height:1.5">→ <span x-text="i.acao"></span></div>
+                    <div class="flex gap-2 justify-end" style="margin-top:10px" x-show="!i.status">
                       <button type="button" class="btn btn-sm btn-ghost" @click="resolverInsight(i,'descartado')" style="color:var(--text-3)"><i class="ph ph-x ic-ph"></i> Descartar</button>
+                      <button type="button" class="btn btn-sm" @click="resolverInsight(i,'feito')" style="background:#16a34a;color:#fff;border-color:#16a34a"><i class="ph ph-check ic-ph"></i> Feito</button>
                     </div>
                   </div>
                 </template>
@@ -2055,7 +2055,7 @@
               <span><i class="ph ph-meta-logo ic-ph" style="color:#0866FF"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Meta Ads, mês corrente</span></span>
               <span class="badge fs-11 fw-800" x-show="trafMetaEhDemo" style="background:#fef3c7;color:#92400e;margin-left:8px" title="A integração do Meta Ads ainda não foi ligada — estes números são de exemplo, só pra visualizar a tela.">⚠️ DEMO — números fictícios</span>
             </div>
-            <div style="overflow-x:auto" :style="trafMetaEhDemo ? 'opacity:.75' : ''">
+            <div :style="'overflow-x:auto'+(trafMetaEhDemo ? ';opacity:.75' : '')">
               <table class="table">
                 <thead><tr><th>Cliente</th><th>Leads</th><th>Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas ativas</th></tr></thead>
                 <tbody>
@@ -2082,8 +2082,8 @@
           <div class="card" style="padding:10px">
             <div class="fw-800 fs-13 mb-2" style="padding:4px 4px 0"><i class="ph ph-folders ic-ph" style="color:#d97706"></i> Dias arquivados</div>
             <template x-for="d in trafFichDias" :key="'fd'+d.data">
-              <button type="button" class="btn btn-sm" style="width:100%;justify-content:space-between;margin-bottom:6px"
-                :style="trafFichSel===d.data ? 'background:#d97706;color:#fff;border-color:#d97706' : 'background:var(--surface-2);color:var(--text-2)'"
+              <button type="button" class="btn btn-sm"
+                :style="'width:100%;justify-content:space-between;margin-bottom:6px;'+(trafFichSel===d.data ? 'background:#d97706;color:#fff;border-color:#d97706' : 'background:var(--surface-2);color:var(--text-2)')"
                 @click="trafFichSel=d.data">
                 <span x-text="fmtDate(d.data)"></span>
                 <span class="badge fs-11 fw-800" :style="d.completos>=d.total?'background:#dcfce7;color:#15803d':'background:#fff7ed;color:#d97706'" x-text="d.completos+'/'+d.total+' ✓'"></span>
@@ -3502,8 +3502,8 @@
         <div class="tl-section-label">Prioridade</div>
         <div class="flex gap-2">
           <template x-for="pr in [['Alta','#dc2626'],['Média','#d97706'],['Baixa','#16a34a']]" :key="pr[0]">
-            <button type="button" class="btn btn-sm" style="flex:1;justify-content:center" @click="cardRef.prioridade=pr[0]; salvarCard()"
-              :style="cardRef.prioridade===pr[0] ? ('background:'+pr[1]+';color:#fff;border-color:'+pr[1]) : ('background:var(--surface-2);color:'+pr[1])"
+            <button type="button" class="btn btn-sm" @click="cardRef.prioridade=pr[0]; salvarCard()"
+              :style="'flex:1;justify-content:center;'+(cardRef.prioridade===pr[0] ? ('background:'+pr[1]+';color:#fff;border-color:'+pr[1]) : ('background:var(--surface-2);color:'+pr[1]))"
               x-text="pr[0]"></button>
           </template>
         </div>
@@ -3978,7 +3978,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=244"></script>
+<script src="js/app.js?v=246"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
