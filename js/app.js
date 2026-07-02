@@ -1007,6 +1007,12 @@ document.addEventListener('alpine:init', () => {
       return c;
     },
     trafItem(id) { return this.trafCheckDia().itens.find(i => i.id === id); },
+    // Ao marcar/desmarcar um item, crava (ou limpa) o horário de conclusão (Recife).
+    trafMarcou(id) {
+      const i = this.trafItem(id); if (!i) return;
+      if (i.feito) { if (!i.hora) i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+      else i.hora = '';
+    },
     // Progresso de UM cliente no dia (x/8) — sem criar o doc à toa.
     trafFeitosCli(cliId) { const c = this.trafChecklists.find(x => x.data === this.trafDia && x.clienteId === cliId); return c ? c.itens.filter(i => i.feito).length : 0; },
     get trafFeitos() { return this.trafCliSel ? this.trafFeitosCli(this.trafCliSel) : 0; },

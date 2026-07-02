@@ -1828,8 +1828,9 @@
             <template x-for="t in trafCliSel ? TRAF_TAREFAS : []" :key="trafCliSel+t.id">
               <div style="padding:8px 0;border-bottom:1px solid var(--border)">
                 <label class="flex items-center gap-2" style="cursor:pointer">
-                  <input type="checkbox" x-model="trafItem(t.id).feito" @change="salvarTrafego()">
+                  <input type="checkbox" x-model="trafItem(t.id).feito" @change="trafMarcou(t.id); salvarTrafego()">
                   <span class="fw-700 fs-13" :style="trafItem(t.id).feito?'color:var(--text-3);text-decoration:line-through':''" x-text="t.texto"></span>
+                  <span class="badge fs-11" x-show="trafItem(t.id).feito && trafItem(t.id).hora" style="background:#dcfce7;color:#15803d;font-weight:700" x-text="trafItem(t.id).hora"></span>
                 </label>
                 <input class="form-input" style="margin-top:6px;font-size:12px" :placeholder="'Evidência: '+t.dica" x-model="trafItem(t.id).evidencia" @change="salvarTrafego()">
               </div>
@@ -1982,6 +1983,7 @@
                     <span :style="i.feito?'color:#16a34a':'color:var(--text-3)'" x-text="i.feito?'✓':'○'"></span>
                     <div style="flex:1;min-width:0">
                       <span :style="i.feito?'':'color:var(--text-3)'" x-text="trafTarefa(i.id).texto"></span>
+                      <span class="text-3 fs-11" x-show="i.hora" x-text="' · '+i.hora"></span>
                       <div class="text-3 fs-11" x-show="i.evidencia" style="font-style:italic" x-text="'Evidência: '+i.evidencia"></div>
                     </div>
                   </div>
@@ -3774,7 +3776,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=224"></script>
+<script src="js/app.js?v=225"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
