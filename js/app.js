@@ -971,10 +971,10 @@ document.addEventListener('alpine:init', () => {
         .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—' }))
         .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     },
-    // Rótulo da opção no dropdown: ✓ quando o cliente fechou as 8 do dia; parcial mostra x/8.
+    // Rótulo da opção no dropdown: ✅ quando o cliente fechou as 8 do dia; parcial mostra x/8.
     trafCliLabel(c) {
       const n = this.trafFeitosCli(c.id);
-      if (n >= TRAF_TAREFAS.length) return '✓ ' + c.nome;
+      if (n >= TRAF_TAREFAS.length) return '✅ ' + c.nome;
       return n > 0 ? c.nome + ' — ' + n + '/' + TRAF_TAREFAS.length : c.nome;
     },
     // Checklist do dia+cliente — cria/completa na hora (itens novos entram em dias antigos).
@@ -996,14 +996,38 @@ document.addEventListener('alpine:init', () => {
     get trafFeitos() { return this.trafCliSel ? this.trafFeitosCli(this.trafCliSel) : 0; },
     // Progresso do DIA: quantos clientes da carteira já fecharam as 8 tarefas.
     get trafCliConcluidos() { return this.trafClientes.filter(c => this.trafFeitosCli(c.id) >= TRAF_TAREFAS.length).length; },
-    async salvarTrafego() {
+    // manual=true → clique no botão Salvar (dá feedback); @change salva silencioso.
+    async salvarTrafego(manual) {
       if (!this.trafCliSel) return alert('Escolha o cliente do checklist.');
       const c = this.trafCheckDia();
       c.por = (this.usuario && this.usuario.nome) || c.por;
       c.em = new Date().toISOString();
-      try { await this.api('POST', '/colecoes/trafego.checklist', { itens: this.trafChecklists }); }
+      try {
+        await this.api('POST', '/colecoes/trafego.checklist', { itens: this.trafChecklists });
+        if (manual) {
+          const n = c.itens.filter(i => i.feito).length;
+          this.mostrarToast(n >= TRAF_TAREFAS.length ? 'Checklist completo — salvo no fichário do dia. 📁✅' : 'Checklist salvo (' + n + '/' + TRAF_TAREFAS.length + '). 📁');
+        }
+      }
       catch (e) { this.mostrarToast('Não salvou o checklist — confira a conexão. ⚠️'); }
     },
+    // ── Fichário: checklists arquivados por dia (tudo que tem pelo menos 1 item feito) ──
+    trafFichSel: '',
+    get trafFichDias() {
+      const m = {};
+      for (const c of this.trafChecklists) { if (c.itens && c.itens.some(i => i.feito)) (m[c.data] = m[c.data] || []).push(c); }
+      return Object.keys(m).sort().reverse().map(d => ({
+        data: d, total: m[d].length,
+        completos: m[d].filter(x => x.itens.filter(i => i.feito).length >= TRAF_TAREFAS.length).length,
+      }));
+    },
+    trafFichDo(dia) {
+      return this.trafChecklists
+        .filter(c => c.data === dia && c.itens && c.itens.some(i => i.feito))
+        .sort((a, b) => (a.cliente || '').localeCompare(b.cliente || '', 'pt-BR'));
+    },
+    trafAbrirFichario() { this.trafTab = 'fichario'; if (!this.trafFichSel && this.trafFichDias.length) this.trafFichSel = this.trafFichDias[0].data; },
+    trafTarefa(id) { return TRAF_TAREFAS.find(t => t.id === id) || { texto: id, dica: '' }; },
     async addTrafLog() {
       const f = this.trafLogForm;
       if (!(f.alteracao || '').trim()) return alert('Descreva a alteração feita.');

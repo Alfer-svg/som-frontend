@@ -1859,6 +1859,7 @@
             <i class="ph ph-wallet ic-ph"></i> Contas &amp; Campanhas
             <span x-show="trafSaldoAlertas.sem.length" class="badge fs-11 fw-800" style="background:#fee2e2;color:#dc2626;margin-left:4px" x-text="trafSaldoAlertas.sem.length"></span>
           </div>
+          <div class="tab" :class="trafTab==='fichario'?'active':''" @click="trafAbrirFichario()"><i class="ph ph-folders ic-ph"></i> Fichário</div>
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
 
@@ -1889,6 +1890,7 @@
                 <input class="form-input" style="margin-top:6px;font-size:12px" :placeholder="'Evidência: '+t.dica" x-model="trafItem(t.id).evidencia" @change="salvarTrafego()">
               </div>
             </template>
+            <button class="btn" x-show="trafCliSel" @click="salvarTrafego(true)" style="width:100%;margin-top:12px;background:#16a34a;color:#fff;border-color:#16a34a;justify-content:center"><i class="ph ph-floppy-disk ic-ph"></i> Salvar checklist no fichário</button>
           </div>
 
           <!-- Log de otimizações -->
@@ -1993,6 +1995,47 @@
               </table>
               <div x-show="!trafResultados.length" class="text-3 fs-12" style="padding:14px;text-align:center">Nenhum cliente com Google Ads sincronizado ainda — preencha o Customer ID no cadastro.</div>
             </div>
+          </div>
+        </div>
+
+        <!-- ─────── Aba: Fichário (checklists arquivados por dia) ─────── -->
+        <div x-show="trafTab==='fichario'" style="display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start">
+          <!-- Gaveta de dias -->
+          <div class="card" style="padding:10px">
+            <div class="fw-800 fs-13 mb-2" style="padding:4px 4px 0"><i class="ph ph-folders ic-ph" style="color:#d97706"></i> Dias arquivados</div>
+            <template x-for="d in trafFichDias" :key="'fd'+d.data">
+              <button type="button" class="btn btn-sm" style="width:100%;justify-content:space-between;margin-bottom:6px"
+                :style="trafFichSel===d.data ? 'background:#d97706;color:#fff;border-color:#d97706' : 'background:var(--surface-2);color:var(--text-2)'"
+                @click="trafFichSel=d.data">
+                <span x-text="fmtDate(d.data)"></span>
+                <span class="badge fs-11 fw-800" :style="d.completos>=d.total?'background:#dcfce7;color:#15803d':'background:#fff7ed;color:#d97706'" x-text="d.completos+'/'+d.total+' ✓'"></span>
+              </button>
+            </template>
+            <div x-show="!trafFichDias.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum checklist arquivado ainda — preencha e salve na aba Rotina.</div>
+          </div>
+          <!-- Fichas do dia -->
+          <div>
+            <template x-for="c in trafFichDo(trafFichSel)" :key="'fich'+c.data+c.clienteId">
+              <div class="card" style="padding:12px;margin-bottom:10px">
+                <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:6px">
+                  <div class="fw-800 fs-13"><i class="ph ph-buildings ic-ph"></i> <span x-text="c.cliente||'—'"></span></div>
+                  <div class="flex items-center gap-2">
+                    <span class="badge fs-11 fw-800" :style="c.itens.filter(i=>i.feito).length>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="c.itens.filter(i=>i.feito).length+'/'+TRAF_TAREFAS.length"></span>
+                    <span class="text-3 fs-11" x-show="c.por" x-text="'por '+c.por"></span>
+                  </div>
+                </div>
+                <template x-for="i in c.itens" :key="c.clienteId+i.id">
+                  <div class="flex items-start gap-2 fs-12" style="padding:5px 0;border-bottom:1px solid var(--border)">
+                    <span :style="i.feito?'color:#16a34a':'color:var(--text-3)'" x-text="i.feito?'✓':'○'"></span>
+                    <div style="flex:1;min-width:0">
+                      <span :style="i.feito?'':'color:var(--text-3)'" x-text="trafTarefa(i.id).texto"></span>
+                      <div class="text-3 fs-11" x-show="i.evidencia" style="font-style:italic" x-text="'Evidência: '+i.evidencia"></div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <div x-show="!trafFichSel || !trafFichDo(trafFichSel).length" class="card text-3 fs-12" style="padding:20px;text-align:center">Escolha um dia na gaveta ao lado.</div>
           </div>
         </div>
 
@@ -3778,7 +3821,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=220"></script>
+<script src="js/app.js?v=221"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
