@@ -1714,7 +1714,7 @@
                   </div>
                   <span style="font-size:15px" x-text="agTipoIcon(ev.tipo)"></span>
                   <div style="flex:1;min-width:0">
-                    <div class="fw-700 fs-12 truncate" x-text="ev.titulo"></div>
+                    <div class="fw-700 fs-12 truncate"><span x-text="ev.titulo"></span> <span x-show="ev.satisfacao" :title="'Satisfação: '+ev.satisfacao+'/5'" x-text="satisfacaoEmoji(ev.satisfacao)"></span></div>
                     <div class="text-3 fs-11 truncate"><span x-text="ev.cliente"></span> · <span :style="'color:'+agTipoCor(ev.tipo)" x-text="ev.tipo"></span></div>
                   </div>
                   <span style="display:inline-flex" x-show="(ev.membros||[]).length">
@@ -1763,8 +1763,8 @@
               </div>
               <span class="badge" :style="'background:'+agTipoCor(ev.tipo)+'22;color:'+agTipoCor(ev.tipo)+';font-weight:700'"><span x-text="agTipoIcon(ev.tipo)"></span> <span x-text="ev.tipo"></span></span>
               <div style="flex:1;min-width:0">
-                <div class="fw-700 fs-13 truncate" x-text="ev.titulo"></div>
-                <div class="text-3 fs-12 truncate" style="cursor:pointer" @click="agendaHistCli=ev.clienteId" :title="'Ver histórico de '+ev.cliente"><i class="ph ph-buildings ic-ph"></i> <span x-text="ev.cliente"></span></div>
+                <div class="fw-700 fs-13 truncate"><span x-text="ev.titulo"></span> <span x-show="ev.satisfacao" style="font-size:15px" :title="'Satisfação do cliente: '+ev.satisfacao+'/5'" x-text="satisfacaoEmoji(ev.satisfacao)"></span></div>
+                <div class="text-3 fs-12 truncate" style="cursor:pointer" @click="agendaHistCli=ev.clienteId" :title="'Ver histórico de '+ev.cliente"><i class="ph ph-buildings ic-ph"></i> <span x-text="ev.cliente"></span><span x-show="ev.solucao" class="fs-11"> · ✅ <span x-text="ev.solucao"></span></span></div>
               </div>
               <span style="display:inline-flex" x-show="(ev.membros||[]).length">
                 <template x-for="m in (ev.membros||[])" :key="'lin'+ev.id+m"><span class="tl-avatar" :style="'width:22px;height:22px;margin-left:-5px;border:2px solid #fff;font-size:10px;'+(fotoDe(m)?('background-image:url('+fotoDe(m)+');background-size:cover'):('background:'+avatarBg(m)+';color:'+avatarFg(m)))" :title="m" x-text="fotoDe(m)?'':iniciais(m)"></span></template>
@@ -3873,6 +3873,23 @@
         <div class="text-3 fs-11" style="margin-top:4px">Cria a sala e já convida o cliente por e-mail. Sem credencial Google, abre o Meet numa aba — copie o link e volte que ele cola sozinho.</div>
       </div>
       <div class="form-group"><label class="form-label">Observação</label><textarea class="form-input" rows="2" x-model="eventoForm.nota" placeholder="Detalhes (opcional)"></textarea></div>
+
+      <!-- Registro do evento (preencher depois que acontecer) -->
+      <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:12px">
+        <div class="fw-800 fs-12 mb-2" style="color:var(--text-2)"><i class="ph ph-notebook ic-ph"></i> Registro do evento <span class="text-3 fs-11 fw-400">· preencha depois que acontecer</span></div>
+        <div class="form-group" style="margin-bottom:10px"><label class="form-label">Desenvolvimento <span class="text-3 fs-11">(resumo do que aconteceu)</span></label><textarea class="form-input" rows="2" x-model="eventoForm.desenvolvimento" placeholder="Como foi o evento, o que foi discutido…"></textarea></div>
+        <div class="form-group" style="margin-bottom:10px"><label class="form-label">Solução / Resolução <span class="text-3 fs-11">(o que ficou resolvido)</span></label><textarea class="form-input" rows="2" x-model="eventoForm.solucao" placeholder="Decisões, encaminhamentos, o que ficou acertado…"></textarea></div>
+        <div class="form-group">
+          <label class="form-label">Satisfação do cliente</label>
+          <div class="flex gap-2">
+            <template x-for="sN in SATISFACOES" :key="'sat'+sN[0]">
+              <button type="button" @click="eventoForm.satisfacao = (eventoForm.satisfacao===sN[0] ? 0 : sN[0])"
+                :style="'font-size:24px;line-height:1;padding:7px 10px;border-radius:10px;cursor:pointer;border:2px solid '+(eventoForm.satisfacao===sN[0] ? sN[2] : 'var(--border)')+';background:'+(eventoForm.satisfacao===sN[0] ? sN[2]+'22' : 'var(--surface)')+';'+(eventoForm.satisfacao && eventoForm.satisfacao!==sN[0] ? 'opacity:.45;filter:grayscale(.6)' : '')"
+                x-text="sN[1]" :title="['','Muito insatisfeito','Insatisfeito','Neutro','Satisfeito','Muito satisfeito'][sN[0]]"></button>
+            </template>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" @click="eventoModal=false">Cancelar</button>
@@ -4037,7 +4054,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=260"></script>
+<script src="js/app.js?v=261"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
