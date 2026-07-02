@@ -972,6 +972,7 @@ document.addEventListener('alpine:init', () => {
       if (!this.trafDia) this.trafDia = this._hojeStr();
       if (!(this.projects || []).length) this.carregarProjetos(); // pros cards do quadro Tráfego
       this.carregarTrafInsights(); // última análise da IA (cache)
+      this.trafLigarRotacao();     // alterna o nome do cliente no banner
       try {
         const [cks, log] = await Promise.all([
           this.api('GET', '/colecoes/trafego.checklist'),
@@ -1077,6 +1078,17 @@ document.addEventListener('alpine:init', () => {
     },
     get trafInsightsPendentes() { return ((this.trafInsights && this.trafInsights.itens) || []).filter(i => !i.status); },
     get trafInsightsClientes() { return new Set(this.trafInsightsPendentes.map(i => i.clienteId || i.cliente)).size; },
+    // Nome do cliente alternando um a um no banner (troca a cada 2,5s).
+    trafInsRot: 0,
+    _trafInsRotTimer: null,
+    get trafInsClienteDaVez() {
+      const nomes = [...new Set(this.trafInsightsPendentes.map(i => i.cliente).filter(Boolean))];
+      return nomes.length ? nomes[this.trafInsRot % nomes.length] : '';
+    },
+    trafLigarRotacao() {
+      if (this._trafInsRotTimer) return;
+      this._trafInsRotTimer = setInterval(() => { if (this.page === 'trafego') this.trafInsRot++; }, 2500);
+    },
     // ── Relatório de tráfego por período (diário/semanal/mensal/personalizado) ──
     trafRelModal: false,
     trafRelForm: { periodo: 'hoje', de: '', ate: '', clienteId: '' },
