@@ -3172,8 +3172,20 @@ ${this._docFoot()}
       obj._novoCriativo = ''; if (persistir) persistir();
     },
     removeCriativo(obj, idx, persistir) {
-      const arr = this.criativosDe(obj); arr.splice(idx, 1); obj.criativo = arr[0] || ''; if (persistir) persistir();
+      const arr = this.criativosDe(obj); const url = arr[idx]; arr.splice(idx, 1); obj.criativo = arr[0] || '';
+      if (Array.isArray(obj.criativosOn)) obj.criativosOn = obj.criativosOn.filter(u => u !== url); // some da seleção também
+      if (persistir) persistir();
     },
+    // ── Seleção de quais criativos entram na PROGRAMAÇÃO (checkbox por imagem) ──
+    // Sem seleção (criativosOn indefinido) = TODAS exibidas (retrocompatível).
+    criativoOn(obj, url) { const on = obj && obj.criativosOn; return !Array.isArray(on) ? true : on.includes(url); },
+    toggleCriativoProg(obj, url, persistir) {
+      const on = Array.isArray(obj.criativosOn) ? obj.criativosOn.slice() : this.criativosDe(obj).slice(); // 1ª vez começa com todas
+      const i = on.indexOf(url); if (i >= 0) on.splice(i, 1); else on.push(url);
+      obj.criativosOn = on; if (persistir) persistir();
+    },
+    // Criativos que realmente vão pro cliente (filtrados pela seleção).
+    criativosProg(obj) { const all = this.criativosDe(obj); const on = obj && obj.criativosOn; return !Array.isArray(on) ? all : all.filter(u => on.includes(u)); },
     async quickAdd(status) {
       const t = (this.quickAddText || '').trim(); if (!t) { this.quickAddCol = ''; return; }
       try { await this.salvarProjetoApi({ id: '', nome: t, cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, boardId: this.boardSel || 'geral', prazo: '', progresso: 0, notas: '', labels: [], membros: [], checklist: [] }); await this.carregarProjetos(); this.quickAddText = ''; }
@@ -3389,10 +3401,11 @@ ${this._docFoot()}
       return this.layoutPostsAtual.map(p => {
         const chave = (p.tema || p.nome || '') + '|' + (p.prazo || '');
         const dec = old.find(s => ((s.tema || '') + '|' + (s.prazo || '')) === chave) || {};
+        const cria = this.criativosProg(p); // só os marcados pra programação
         return {
           prazo: p.prazo, tipoPost: p.tipoPost || 'Estático', tema: p.tema || p.nome || '',
-          legenda: p.legenda || '', criativo: p.criativo || '', formato: p.formato || '',
-          criativos: Array.isArray(p.criativos) && p.criativos.length ? p.criativos : (p.criativo ? [p.criativo] : []),
+          legenda: p.legenda || '', criativo: cria[0] || p.criativo || '', formato: p.formato || '',
+          criativos: cria.length ? cria : (p.criativo ? [p.criativo] : []),
           status: dec.status || '', ajuste: dec.ajuste || null,
         };
       });
