@@ -971,6 +971,7 @@ document.addEventListener('alpine:init', () => {
     async carregarTrafego() {
       if (!this.trafDia) this.trafDia = this._hojeStr();
       if (!(this.projects || []).length) this.carregarProjetos(); // pros cards do quadro Tráfego
+      this.carregarTrafInsights(); // última análise da IA (cache)
       try {
         const [cks, log] = await Promise.all([
           this.api('GET', '/colecoes/trafego.checklist'),
@@ -1068,6 +1069,18 @@ document.addEventListener('alpine:init', () => {
     trafAbrirFichario() { this.trafTab = 'fichario'; if (!this.trafFichSel && this.trafFichDias.length) this.trafFichSel = this.trafFichDias[0].data; },
     // Otimizações de UM cliente num dia — liga o log ao checklist/ficha do cliente.
     trafLogDe(dia, clienteId) { return this.trafLog.filter(l => l.data === dia && l.clienteId === clienteId); },
+    // ── Insights da IA: análise das contas de anúncio de cada cliente → tarefas do dia ──
+    trafInsights: null,        // { geradoEm, itens: [{cliente, prioridade, insight, acao}] }
+    trafInsightsGerando: false,
+    async carregarTrafInsights() {
+      try { const r = await this.api('GET', '/trafego-insights'); if (r && Array.isArray(r.itens)) this.trafInsights = r; } catch (e) { }
+    },
+    async gerarTrafInsights() {
+      this.trafInsightsGerando = true;
+      try { this.trafInsights = await this.api('POST', '/trafego-insights/gerar'); this.mostrarToast('Contas analisadas — insights atualizados. 🤖'); }
+      catch (e) { alert(e.message || e); }
+      finally { this.trafInsightsGerando = false; }
+    },
     // Progresso da demanda diária do gestor: itens resolvidos ÷ total (clientes ativos × 8 tarefas).
     get trafProgressoDia() {
       const total = this.trafClientes.length * TRAF_TAREFAS.length;

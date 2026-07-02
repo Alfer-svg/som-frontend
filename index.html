@@ -1882,6 +1882,30 @@
                 <div class="text-3 fs-11" style="margin-top:2px" x-text="trafCliConcluidos+'/'+trafClientes.length+' clientes concluídos · '+trafProgressoDia.pct+'% feito'"></div>
               </div>
             </div>
+            <!-- Insights da IA: análise das contas → o que fazer hoje -->
+            <div class="card" style="padding:14px">
+              <div class="flex items-center justify-between mb-2" style="gap:8px">
+                <div class="fw-800 fs-13"><i class="ph ph-sparkle ic-ph" style="color:#d97706"></i> Insights da IA</div>
+                <button class="btn btn-sm" @click="gerarTrafInsights()" :disabled="trafInsightsGerando" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap">
+                  <i class="ph ph-magic-wand ic-ph"></i> <span x-text="trafInsightsGerando?'Analisando…':'Analisar contas'"></span>
+                </button>
+              </div>
+              <div class="text-3 fs-11 mb-2" x-show="trafInsights && trafInsights.geradoEm" x-text="'Análise de '+fmtDataHora(trafInsights && trafInsights.geradoEm)"></div>
+              <div style="max-height:340px;overflow-y:auto">
+                <template x-for="(i, ix) in (trafInsights && trafInsights.itens) || []" :key="'ins'+ix">
+                  <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="badge fs-11 fw-800" :style="'background:'+trafPrioCor(i.prioridade)+'1a;color:'+trafPrioCor(i.prioridade)" x-text="i.prioridade"></span>
+                      <span class="fw-700 fs-12 truncate" x-text="i.cliente"></span>
+                    </div>
+                    <div class="fs-12" x-text="i.insight"></div>
+                    <div class="fs-12 fw-700" style="margin-top:3px;color:#7c3aed">→ <span x-text="i.acao"></span></div>
+                  </div>
+                </template>
+                <div x-show="!trafInsights || !(trafInsights.itens||[]).length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Clique em <b>Analisar contas</b> — a IA lê os dados do Google Ads de cada cliente e sugere as tarefas do dia.</div>
+              </div>
+            </div>
+
             <!-- Tarefas do quadro Tráfego, por prioridade -->
           <div class="card" style="padding:14px">
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#7c3aed"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· por prioridade</span></div>
@@ -3857,7 +3881,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=239"></script>
+<script src="js/app.js?v=240"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
