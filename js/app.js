@@ -3182,7 +3182,7 @@ ${this._docFoot()}
       const novo = {
         id: '', nome: 'Nova tarefa de tráfego', cliente: '', servico: 'ADS / Tráfego Pago',
         responsavel: (gestor && gestor.nome) || '', status: (board.colunas[0] && board.colunas[0].nome) || 'A Fazer',
-        boardId: board.id, prazo: '', prazoEntrega: '', progresso: 0, notas: '',
+        boardId: board.id, prazo: '', prazoEntrega: '', progresso: 0, notas: '', prioridade: 'Média',
         avulso: true, area: '🎯 Tráfego Pago', descricao: '',
         labels: [], membros: [], checklist: DEMANDAS.map(t => ({ id: MD.uid(), texto: t, feito: false })),
       };
