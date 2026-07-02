@@ -997,6 +997,8 @@ document.addEventListener('alpine:init', () => {
       try { await this.api('POST', '/colecoes/trafego.log', { itens: this.trafLog }); } catch (e) { }
     },
     get trafLogVisivel() { const f = this.trafLogFiltro; return this.trafLog.filter(l => !f || l.clienteId === f).slice(0, 200); },
+    // Campanhas ativas AGORA (real, do snapshot Google Ads) somando os clientes ativos.
+    get trafCampanhasAtivas() { return (this.clients || []).filter(c => c.status !== 'Inativo' && c.adsAuto).reduce((a, c) => a + (Number(c.adsAuto.campanhasAtivas) || 0), 0); },
     // Alerta de recarga: contas (Google+Meta) sem saldo ou abaixo de R$ 200 — mesmo saldo manual da Agenda.
     get trafSaldoAlertas() {
       const marcar = (lista, canal) => (lista || []).map(x => ({ ...x, canal }));
