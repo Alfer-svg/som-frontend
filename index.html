@@ -3425,6 +3425,10 @@
         <div class="fw-700 fs-13" style="color:#dc2626">✎ Ajuste solicitado pelo cliente</div>
         <div class="text-1 fs-13" style="white-space:pre-wrap;margin-top:4px" x-text="layoutAtual.ajusteCliente"></div>
         <div class="text-3 fs-12" x-show="layoutAtual.aprovadoClienteNome" x-text="'— '+layoutAtual.aprovadoClienteNome"></div>
+        <div class="flex items-center gap-2" style="margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" @click="reenviarLayoutCliente()"><i class="ph ph-paper-plane-tilt ic-ph"></i> Ajuste feito — enviar novamente</button>
+          <span class="text-3 fs-12">Reabre <b x-text="layoutAjustesPendentes"></b> post(s) pro cliente reavaliar (os aprovados continuam aprovados). O link é copiado.</span>
+        </div>
       </div>
     </template>
 
@@ -3445,7 +3449,7 @@
           <input class="form-input" style="flex:1;min-width:200px" readonly :value="linkPublicoLayout()" @focus="$event.target.select()">
           <button class="btn btn-primary btn-sm" @click="copiarLinkAtualizado()">Copiar link</button>
           <a class="btn btn-ghost btn-sm" :href="linkPublicoLayout()" target="_blank" @click="patchLayout({postsSnapshot: montarSnapshot()})">abrir ↗</a>
-          <button class="btn btn-ghost btn-sm" @click="enviarLayoutCliente()" x-show="layoutAtual.status==='AJUSTE'">Reenviar com ajustes</button>
+          <button class="btn btn-primary btn-sm" @click="reenviarLayoutCliente()" x-show="layoutAtual.status==='AJUSTE'"><i class="ph ph-paper-plane-tilt ic-ph"></i> Enviar novamente (reabre ajustes)</button>
         </div>
       </template>
     </div>
@@ -4058,7 +4062,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=262"></script>
+<script src="js/app.js?v=263"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

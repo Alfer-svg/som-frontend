@@ -3372,6 +3372,33 @@ ${this._docFoot()}
       try { await this.patchLayout({ postsSnapshot: this.montarSnapshot() }); } catch { }
       this.copiarLink(this.linkPublicoLayout());
     },
+    // Quantos posts o cliente pediu ajuste/reprovou (pra rotular o botão de reenvio).
+    get layoutAjustesPendentes() {
+      const snap = (this.layoutAtual && Array.isArray(this.layoutAtual.postsSnapshot)) ? this.layoutAtual.postsSnapshot : [];
+      return snap.filter(s => /ajuste|reprov/i.test(String(s?.status || ''))).length;
+    },
+    // ENVIAR NOVAMENTE após corrigir: reabre (volta a "aguardando") os posts que o cliente
+    // pediu ajuste/reprovou — assim ele vê os botões de novo e reavalia — mantendo os já aprovados.
+    // Usa as imagens/legendas ATUAIS (o conserto entra). Volta o status geral pra ENVIADO.
+    async reenviarLayoutCliente() {
+      if (!this.layoutAtual) return;
+      const old = Array.isArray(this.layoutAtual.postsSnapshot) ? this.layoutAtual.postsSnapshot : [];
+      const snap = this.layoutPostsAtual.map(p => {
+        const chave = (p.tema || p.nome || '') + '|' + (p.prazo || '');
+        const dec = old.find(s => ((s.tema || '') + '|' + (s.prazo || '')) === chave) || {};
+        const reabrir = /ajuste|reprov/i.test(String(dec.status || '')); // corrigidos → reavaliar do zero
+        return {
+          prazo: p.prazo, tipoPost: p.tipoPost || 'Estático', tema: p.tema || p.nome || '',
+          legenda: p.legenda || '', criativo: p.criativo || '', formato: p.formato || '',
+          criativos: Array.isArray(p.criativos) && p.criativos.length ? p.criativos : (p.criativo ? [p.criativo] : []),
+          status: reabrir ? '' : (dec.status || ''), ajuste: reabrir ? null : (dec.ajuste || null),
+        };
+      });
+      const reabertos = old.filter(o => /ajuste|reprov/i.test(String(o?.status || ''))).length;
+      await this.patchLayout({ status: 'ENVIADO', postsSnapshot: snap });
+      this.copiarLink(this.linkPublicoLayout());
+      this.mostrarToast('Enviado de novo ao cliente — ' + reabertos + ' post(s) reaberto(s) pra reavaliar. Link copiado. 📤');
+    },
     linkPublicoLayout() {
       if (!this.layoutAtual) return '';
       const base = location.origin + location.pathname.replace(/[^/]*$/, '');
