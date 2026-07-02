@@ -1952,13 +1952,19 @@
               <div class="text-3 fs-11 mb-2" x-show="trafInsights && trafInsights.geradoEm" x-text="'Análise de '+fmtDataHora(trafInsights && trafInsights.geradoEm)"></div>
               <div style="max-height:340px;overflow-y:auto">
                 <template x-for="(i, ix) in (trafInsights && trafInsights.itens) || []" :key="'ins'+ix">
-                  <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+                  <div style="padding:8px 0;border-bottom:1px solid var(--border)" :style="i.status?'opacity:.55':''">
                     <div class="flex items-center gap-2 mb-1">
                       <span class="badge fs-11 fw-800" :style="'background:'+trafPrioCor(i.prioridade)+'1a;color:'+trafPrioCor(i.prioridade)" x-text="i.prioridade"></span>
-                      <span class="fw-700 fs-12 truncate" x-text="i.cliente"></span>
+                      <span class="fw-700 fs-12 truncate" style="flex:1" x-text="i.cliente"></span>
+                      <span class="badge fs-11 fw-800" x-show="i.status==='feito'" style="background:#dcfce7;color:#15803d">✔ Feito</span>
+                      <span class="badge fs-11 fw-800" x-show="i.status==='descartado'" style="background:#e5e7eb;color:#6b7280">✖ Descartado</span>
                     </div>
                     <div class="fs-12" x-text="i.insight"></div>
                     <div class="fs-12 fw-700" style="margin-top:3px;color:#7c3aed">→ <span x-text="i.acao"></span></div>
+                    <div class="flex gap-2" style="margin-top:6px" x-show="!i.status">
+                      <button type="button" class="btn btn-sm" @click="resolverInsight(i,'feito')" style="background:#16a34a;color:#fff;border-color:#16a34a"><i class="ph ph-check ic-ph"></i> Feito</button>
+                      <button type="button" class="btn btn-sm btn-ghost" @click="resolverInsight(i,'descartado')" style="color:var(--text-3)"><i class="ph ph-x ic-ph"></i> Descartar</button>
+                    </div>
                   </div>
                 </template>
                 <div x-show="!trafInsights || !(trafInsights.itens||[]).length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Clique em <b>Analisar contas</b> — a IA lê os dados do Google Ads de cada cliente e sugere as tarefas do dia.</div>
@@ -3972,7 +3978,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=243"></script>
+<script src="js/app.js?v=244"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

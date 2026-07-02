@@ -1166,6 +1166,26 @@ document.addEventListener('alpine:init', () => {
       catch (e) { alert(e.message || e); }
       finally { this.trafInsightsGerando = false; }
     },
+    // Feito/Descartar num insight: grava o desfecho NA FICHA do cliente (via log de
+    // otimizações — aparece no checklist do dia e arquiva no Fichário) e persiste o
+    // status no próprio insight (some da lista de pendentes).
+    async resolverInsight(i, status) {
+      i.status = status; // 'feito' | 'descartado'
+      i.resolvidoEm = new Date().toISOString();
+      i.resolvidoPor = (this.usuario && this.usuario.nome) || '';
+      this.trafLog.unshift({
+        id: MD.uid(), data: this._hojeStr(),
+        hora: new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }),
+        clienteId: i.clienteId || '', cliente: i.cliente || '',
+        alteracao: (status === 'feito' ? '✔ Insight IA executado: ' : '✖ Insight IA descartado: ') + i.acao,
+        motivo: i.insight, por: i.resolvidoPor, em: i.resolvidoEm,
+      });
+      try {
+        await this.api('POST', '/colecoes/trafego.log', { itens: this.trafLog });
+        await this.api('POST', '/colecoes/trafego.insights', { itens: this.trafInsights });
+        this.mostrarToast(status === 'feito' ? 'Insight marcado como feito — registrado na ficha. ✔' : 'Insight descartado — registrado na ficha. ✖');
+      } catch (e) { alert(e.message || e); }
+    },
     // Progresso da demanda diária do gestor: itens resolvidos ÷ total (clientes ativos × 8 tarefas).
     get trafProgressoDia() {
       const total = this.trafClientes.length * TRAF_TAREFAS.length;
