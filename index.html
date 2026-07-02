@@ -946,16 +946,17 @@
             </div>
             <!-- Datas manuais da quinzena/semana (resolve ciclos fora da grade fixa) -->
             <div style="position:relative;margin-left:8px">
-              <button class="btn btn-sm" :class="periodoManual?'btn-primary':'btn-ghost'" @click="periodoManualForm={ini:semanaAtual.ini,fim:semanaAtual.fim}; periodoManualAberto=!periodoManualAberto" title="Definir as datas do período à mão"><i class="ph ph-calendar-plus ic-ph"></i> Datas</button>
-              <div x-show="periodoManualAberto" x-cloak @click.outside="periodoManualAberto=false" class="card" style="position:absolute;z-index:40;top:112%;left:0;padding:12px;width:250px;box-shadow:0 8px 28px rgba(0,0,0,.16)">
+              <button class="btn btn-sm" :class="periodoManual?'btn-primary':'btn-ghost'" @click="abrirDatasManual()" title="Definir as datas do período à mão (junta a quinzena que a grade fixa racha)"><i class="ph ph-calendar-plus ic-ph"></i> Datas</button>
+              <div x-show="periodoManualAberto" x-cloak @click.outside="periodoManualAberto=false" class="card" style="position:absolute;z-index:40;top:112%;left:0;padding:12px;width:260px;box-shadow:0 8px 28px rgba(0,0,0,.16)">
                 <div class="fw-700 fs-12 mb-2">Período personalizado</div>
                 <div class="form-group" style="margin-bottom:8px"><label class="form-label fs-11">Início</label><input class="form-input fs-13" type="date" x-model="periodoManualForm.ini"></div>
-                <div class="form-group" style="margin-bottom:10px"><label class="form-label fs-11">Fim</label><input class="form-input fs-13" type="date" x-model="periodoManualForm.fim"></div>
+                <div class="form-group" style="margin-bottom:8px"><label class="form-label fs-11">Fim</label><input class="form-input fs-13" type="date" x-model="periodoManualForm.fim"></div>
+                <a class="text-3 fs-11" style="cursor:pointer;text-decoration:underline;display:inline-block;margin-bottom:8px" @click="periodoManualForm=sugerirPeriodoManual()">📌 Detectar do calendário (14 dias a partir do 1º post)</a>
                 <div class="flex gap-2">
                   <button class="btn btn-primary btn-sm" @click="aplicarPeriodoManual(periodoManualForm.ini,periodoManualForm.fim); periodoManualAberto=false">Aplicar</button>
                   <button class="btn btn-ghost btn-sm" x-show="periodoManual" @click="limparPeriodoManual(); periodoManualAberto=false">Voltar ao automático</button>
                 </div>
-                <div class="text-3 fs-11" style="margin-top:6px">Ex.: 06/07 → 19/07. Agrupa todos os posts do ciclo num período só.</div>
+                <div class="text-3 fs-11" style="margin-top:6px">Junta todos os posts do ciclo (ex.: 06→19/07) num período só, sem rachar.</div>
               </div>
             </div>
             <span style="flex:1"></span>
@@ -4076,7 +4077,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=264"></script>
+<script src="js/app.js?v=265"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

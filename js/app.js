@@ -3221,6 +3221,28 @@ ${this._docFoot()}
       if (this.progForm) this.progForm.semanaIni = ini;
     },
     limparPeriodoManual() { this.periodoManual = null; this.layoutModal = false; this.layoutAtual = null; },
+    // Detecta o período do CICLO a partir dos próprios posts: pega o 1º post a partir
+    // de ~5 dias atrás e monta uma janela de 14 dias (a "quinzena" real do cliente).
+    // Se o cliente estiver filtrado (progFiltroCliente), usa só os posts dele.
+    sugerirPeriodoManual() {
+      const corte = new Date(Date.now() - 3 * 3600 * 1000 - 5 * 864e5).toISOString().slice(0, 10);
+      const fil = this.progFiltroCliente || '';
+      const datas = (this.projects || [])
+        .filter(p => p.isPost && !p.avulso && p.prazo && (!fil || p.cliente === fil))
+        .map(p => String(p.prazo).slice(0, 10))
+        .filter(d => d >= corte).sort();
+      const ini = datas[0] || this._hojeStr();
+      const fim = new Date(new Date(ini + 'T00:00:00').getTime() + 13 * 864e5).toISOString().slice(0, 10);
+      return { ini, fim };
+    },
+    // Abre o popover "Datas" já pré-preenchido: mantém o período manual atual se houver,
+    // senão sugere a quinzena real detectada dos posts.
+    abrirDatasManual() {
+      this.periodoManualForm = this.periodoManual
+        ? { ini: this.periodoManual.ini, fim: this.periodoManual.fim }
+        : this.sugerirPeriodoManual();
+      this.periodoManualAberto = !this.periodoManualAberto;
+    },
     semanaRotulo() {
       const o = this.semanaOffset || 0;
       const u = this.periodoTipo === 'Mensal' ? 'mês' : this.periodoTipo === 'Quinzenal' ? 'quinzena' : 'semana';
