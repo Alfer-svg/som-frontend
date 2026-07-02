@@ -1036,20 +1036,27 @@ document.addEventListener('alpine:init', () => {
     },
     // ── Fichário: checklists arquivados por dia (tudo que tem pelo menos 1 item feito) ──
     trafFichSel: '',
+    // Dias arquivados = dias com checklist preenchido OU otimização registrada.
     get trafFichDias() {
       const m = {};
-      for (const c of this.trafChecklists) { if (c.itens && c.itens.some(i => i.feito)) (m[c.data] = m[c.data] || []).push(c); }
-      return Object.keys(m).sort().reverse().map(d => ({
-        data: d, total: m[d].length,
-        completos: m[d].filter(x => x.itens.filter(i => i.feito).length >= TRAF_TAREFAS.length).length,
-      }));
+      for (const c of this.trafChecklists) { if (c.itens && c.itens.some(i => i.feito)) (m[c.data] = m[c.data] || new Set()).add(c.clienteId); }
+      for (const l of this.trafLog) { if (l.clienteId && l.data) (m[l.data] = m[l.data] || new Set()).add(l.clienteId); }
+      return Object.keys(m).sort().reverse().map(d => {
+        const docs = this.trafChecklists.filter(c => c.data === d && c.itens && c.itens.some(i => i.feito));
+        return { data: d, total: m[d].size, completos: docs.filter(x => x.itens.filter(i => i.feito).length >= TRAF_TAREFAS.length).length };
+      });
     },
     trafFichDo(dia) {
-      return this.trafChecklists
-        .filter(c => c.data === dia && c.itens && c.itens.some(i => i.feito))
-        .sort((a, b) => (a.cliente || '').localeCompare(b.cliente || '', 'pt-BR'));
+      const docs = this.trafChecklists.filter(c => c.data === dia && c.itens && c.itens.some(i => i.feito));
+      const comDoc = new Set(docs.map(d => d.clienteId));
+      // Cliente que SÓ teve otimização no dia entra com ficha própria (sem itens) pra guardar o log.
+      const soLog = [...new Set(this.trafLog.filter(l => l.data === dia && l.clienteId && !comDoc.has(l.clienteId)).map(l => l.clienteId))]
+        .map(cid => { const l = this.trafLog.find(x => x.data === dia && x.clienteId === cid); return { data: dia, clienteId: cid, cliente: (l && l.cliente) || '—', por: '', itens: [], soLog: true }; });
+      return [...docs, ...soLog].sort((a, b) => (a.cliente || '').localeCompare(b.cliente || '', 'pt-BR'));
     },
     trafAbrirFichario() { this.trafTab = 'fichario'; if (!this.trafFichSel && this.trafFichDias.length) this.trafFichSel = this.trafFichDias[0].data; },
+    // Otimizações de UM cliente num dia — liga o log ao checklist/ficha do cliente.
+    trafLogDe(dia, clienteId) { return this.trafLog.filter(l => l.data === dia && l.clienteId === clienteId); },
     trafTarefa(id) { return TRAF_TAREFAS.find(t => t.id === id) || { texto: id, dica: '' }; },
     async addTrafLog() {
       const f = this.trafLogForm;
