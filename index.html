@@ -1844,12 +1844,16 @@
             </div>
             <template x-for="t in trafCliSel ? TRAF_TAREFAS : []" :key="trafCliSel+t.id">
               <div style="padding:8px 0;border-bottom:1px solid var(--border)">
-                <label class="flex items-center gap-2" style="cursor:pointer">
-                  <input type="checkbox" x-model="trafItem(t.id).feito" @change="trafMarcou(t.id); salvarTrafego()">
-                  <span class="fw-700 fs-13" :style="trafItem(t.id).feito?'color:var(--text-3);text-decoration:line-through':''" x-text="t.texto"></span>
-                  <span class="badge fs-11" x-show="trafItem(t.id).feito && trafItem(t.id).hora" style="background:#dcfce7;color:#15803d;font-weight:700" x-text="trafItem(t.id).hora"></span>
-                </label>
-                <input class="form-input" style="margin-top:6px;font-size:12px" :placeholder="'Evidência: '+t.dica" x-model="trafItem(t.id).evidencia" @change="salvarTrafego()">
+                <div class="flex items-center gap-2">
+                  <label class="flex items-center gap-2" style="cursor:pointer;flex:1;min-width:0">
+                    <input type="checkbox" :disabled="trafItem(t.id).na" x-model="trafItem(t.id).feito" @change="trafMarcou(t.id); salvarTrafego()">
+                    <span class="fw-700 fs-13" :style="trafItem(t.id).na?'color:var(--text-3);font-style:italic':(trafItem(t.id).feito?'color:var(--text-3);text-decoration:line-through':'')" x-text="t.texto"></span>
+                    <span class="badge fs-11" x-show="trafItem(t.id).feito && trafItem(t.id).hora" style="background:#dcfce7;color:#15803d;font-weight:700" x-text="trafItem(t.id).hora"></span>
+                    <span class="badge fs-11" x-show="trafItem(t.id).na" style="background:#e5e7eb;color:#6b7280;font-weight:700">não se aplica</span>
+                  </label>
+                  <button type="button" class="btn btn-sm btn-ghost" @click="trafNA(t.id)" :style="trafItem(t.id).na?'color:#7c3aed;font-weight:800':'color:var(--text-3)'" title="Este item não se aplica a este cliente (conta como resolvido)">N/A</button>
+                </div>
+                <input class="form-input" x-show="!trafItem(t.id).na" style="margin-top:6px;font-size:12px" :placeholder="'Evidência: '+t.dica" x-model="trafItem(t.id).evidencia" @change="salvarTrafego()">
               </div>
             </template>
             <!-- Otimizações do dia registradas pra ESTE cliente (vindas do log) -->
@@ -2015,16 +2019,17 @@
                 <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:6px">
                   <div class="fw-800 fs-13"><i class="ph ph-buildings ic-ph"></i> <span x-text="c.cliente||'—'"></span></div>
                   <div class="flex items-center gap-2">
-                    <span class="badge fs-11 fw-800" :style="c.itens.filter(i=>i.feito).length>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="c.itens.filter(i=>i.feito).length+'/'+TRAF_TAREFAS.length"></span>
+                    <span class="badge fs-11 fw-800" :style="c.itens.filter(i=>i.feito||i.na).length>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="c.itens.filter(i=>i.feito||i.na).length+'/'+TRAF_TAREFAS.length"></span>
                     <span class="text-3 fs-11" x-show="c.por" x-text="'por '+c.por"></span>
                   </div>
                 </div>
                 <template x-for="i in c.itens" :key="c.clienteId+i.id">
                   <div class="flex items-start gap-2 fs-12" style="padding:5px 0;border-bottom:1px solid var(--border)">
-                    <span :style="i.feito?'color:#16a34a':'color:var(--text-3)'" x-text="i.feito?'✓':'○'"></span>
+                    <span :style="i.feito?'color:#16a34a':'color:var(--text-3)'" x-text="i.na?'–':(i.feito?'✓':'○')"></span>
                     <div style="flex:1;min-width:0">
-                      <span :style="i.feito?'':'color:var(--text-3)'" x-text="trafTarefa(i.id).texto"></span>
-                      <span class="text-3 fs-11" x-show="i.hora" x-text="' · '+i.hora"></span>
+                      <span :style="(i.feito||i.na)?(i.na?'color:var(--text-3);font-style:italic':''):'color:var(--text-3)'" x-text="trafTarefa(i.id).texto"></span>
+                      <span class="text-3 fs-11" x-show="i.na" style="font-style:italic"> · não se aplica</span>
+                      <span class="text-3 fs-11" x-show="i.hora && !i.na" x-text="' · '+i.hora"></span>
                       <div class="text-3 fs-11" x-show="i.evidencia" style="font-style:italic" x-text="'Evidência: '+i.evidencia"></div>
                     </div>
                   </div>
@@ -3836,7 +3841,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=237"></script>
+<script src="js/app.js?v=238"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

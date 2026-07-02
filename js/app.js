@@ -1011,11 +1011,21 @@ document.addEventListener('alpine:init', () => {
     // Ao marcar/desmarcar um item, crava (ou limpa) o horário de conclusão (Recife).
     trafMarcou(id) {
       const i = this.trafItem(id); if (!i) return;
-      if (i.feito) { if (!i.hora) i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+      if (i.feito) { i.na = false; if (!i.hora) i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
       else i.hora = '';
     },
+    // "Não se aplica": o item não vale pra este cliente — conta como resolvido no x/8.
+    trafNA(id) {
+      const i = this.trafItem(id); if (!i) return;
+      i.na = !i.na;
+      if (i.na) { i.feito = false; i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+      else i.hora = '';
+      this.salvarTrafego();
+    },
+    // Item resolvido = feito OU não se aplica.
+    _trafResolvidos(c) { return (c && c.itens ? c.itens.filter(i => i.feito || i.na).length : 0); },
     // Progresso de UM cliente no dia (x/8) — sem criar o doc à toa.
-    trafFeitosCli(cliId) { const c = this.trafChecklists.find(x => x.data === this.trafDia && x.clienteId === cliId); return c ? c.itens.filter(i => i.feito).length : 0; },
+    trafFeitosCli(cliId) { const c = this.trafChecklists.find(x => x.data === this.trafDia && x.clienteId === cliId); return this._trafResolvidos(c); },
     get trafFeitos() { return this.trafCliSel ? this.trafFeitosCli(this.trafCliSel) : 0; },
     // Progresso do DIA: quantos clientes da carteira já fecharam as 8 tarefas.
     get trafCliConcluidos() { return this.trafClientes.filter(c => this.trafFeitosCli(c.id) >= TRAF_TAREFAS.length).length; },
@@ -1028,7 +1038,7 @@ document.addEventListener('alpine:init', () => {
       try {
         await this.api('POST', '/colecoes/trafego.checklist', { itens: this.trafChecklists });
         if (manual) {
-          const n = c.itens.filter(i => i.feito).length;
+          const n = this._trafResolvidos(c);
           this.mostrarToast(n >= TRAF_TAREFAS.length ? 'Checklist completo — salvo no fichário do dia. 📁✅' : 'Checklist salvo (' + n + '/' + TRAF_TAREFAS.length + '). 📁');
           this.trafCliSel = ''; // recolhe o checklist — volta pro dropdown + histórico "Realizados hoje"
         }
@@ -1040,15 +1050,15 @@ document.addEventListener('alpine:init', () => {
     // Dias arquivados = dias com checklist preenchido OU otimização registrada.
     get trafFichDias() {
       const m = {};
-      for (const c of this.trafChecklists) { if (c.itens && c.itens.some(i => i.feito)) (m[c.data] = m[c.data] || new Set()).add(c.clienteId); }
+      for (const c of this.trafChecklists) { if (c.itens && c.itens.some(i => i.feito || i.na)) (m[c.data] = m[c.data] || new Set()).add(c.clienteId); }
       for (const l of this.trafLog) { if (l.clienteId && l.data) (m[l.data] = m[l.data] || new Set()).add(l.clienteId); }
       return Object.keys(m).sort().reverse().map(d => {
-        const docs = this.trafChecklists.filter(c => c.data === d && c.itens && c.itens.some(i => i.feito));
-        return { data: d, total: m[d].size, completos: docs.filter(x => x.itens.filter(i => i.feito).length >= TRAF_TAREFAS.length).length };
+        const docs = this.trafChecklists.filter(c => c.data === d && c.itens && c.itens.some(i => i.feito || i.na));
+        return { data: d, total: m[d].size, completos: docs.filter(x => this._trafResolvidos(x) >= TRAF_TAREFAS.length).length };
       });
     },
     trafFichDo(dia) {
-      const docs = this.trafChecklists.filter(c => c.data === dia && c.itens && c.itens.some(i => i.feito));
+      const docs = this.trafChecklists.filter(c => c.data === dia && c.itens && c.itens.some(i => i.feito || i.na));
       const comDoc = new Set(docs.map(d => d.clienteId));
       // Cliente que SÓ teve otimização no dia entra com ficha própria (sem itens) pra guardar o log.
       const soLog = [...new Set(this.trafLog.filter(l => l.data === dia && l.clienteId && !comDoc.has(l.clienteId)).map(l => l.clienteId))]
@@ -1061,7 +1071,7 @@ document.addEventListener('alpine:init', () => {
     // Checklists JÁ CONCLUÍDOS (8/8) no dia selecionado — histórico mostrado com o checklist fechado.
     get trafRealizadosDia() {
       return this.trafChecklists
-        .filter(c => c.data === this.trafDia && c.itens && c.itens.filter(i => i.feito).length >= TRAF_TAREFAS.length)
+        .filter(c => c.data === this.trafDia && c.itens && this._trafResolvidos(c) >= TRAF_TAREFAS.length)
         .map(c => ({ clienteId: c.clienteId, cliente: c.cliente || '—', por: c.por || '', hora: c.itens.map(i => i.hora).filter(Boolean).sort().slice(-1)[0] || '' }))
         .sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
     },
@@ -1117,10 +1127,10 @@ document.addEventListener('alpine:init', () => {
       const d30 = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
       const logHoje = this.trafLog.filter(l => l.data === hoje);
       const log30 = this.trafLog.filter(l => l.data >= d30);
-      const cks30 = this.trafChecklists.filter(c => c.data >= d30 && c.data <= hoje && c.itens.some(i => i.feito));
+      const cks30 = this.trafChecklists.filter(c => c.data >= d30 && c.data <= hoje && c.itens.some(i => i.feito || i.na));
       const cksHoje = cks30.filter(c => c.data === hoje);
-      const completos = cks30.filter(c => c.itens.filter(i => i.feito).length >= TRAF_TAREFAS.length).length;
-      const mediaItens = cks30.length ? Math.round(cks30.reduce((a, c) => a + c.itens.filter(i => i.feito).length, 0) / cks30.length * 10) / 10 : 0;
+      const completos = cks30.filter(c => this._trafResolvidos(c) >= TRAF_TAREFAS.length).length;
+      const mediaItens = cks30.length ? Math.round(cks30.reduce((a, c) => a + this._trafResolvidos(c), 0) / cks30.length * 10) / 10 : 0;
       return {
         contasHoje: new Set([...logHoje.map(l => l.clienteId), ...cksHoje.map(c => c.clienteId)].filter(Boolean)).size,
         otimHoje: logHoje.length,
