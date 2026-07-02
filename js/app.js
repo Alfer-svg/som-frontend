@@ -889,10 +889,25 @@ document.addEventListener('alpine:init', () => {
     get agProximos() { const h = this._hojeStr(); return this.agAgendados.filter(e => e.data >= h).sort((a, b) => this._agKey(a).localeCompare(this._agKey(b))).slice(0, 8); },
     novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '' }; this.eventoModal = true; },
     editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, hora: ev.hora || '', tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '', link: ev.link || '' }; this.eventoModal = true; },
-    // Reunião → gerar sala do Google Meet: abre meet.google.com/new (cria a sala na conta logada)
-    // e, quando o usuário voltar pra esta aba com o link copiado, cola sozinho no campo.
+    // Reunião → gerar sala do Google Meet. 1º tenta pelo backend (Calendar da
+    // agência: cria a sala E convida o cliente por e-mail num clique só); se não
+    // houver credencial/escopo, plano B: abre meet.google.com/new e captura o
+    // link do clipboard quando o usuário voltar pra aba.
     eventoEhReuniao(t) { return String(t || '').toLowerCase().startsWith('reuni'); },
-    gerarMeet() {
+    meetGerando: false,
+    async gerarMeet() {
+      const f = this.eventoForm;
+      if (!f.data) return alert('Escolha a data da reunião primeiro.');
+      this.meetGerando = true;
+      try {
+        const r = await this.api('POST', '/meet/gerar', { titulo: (f.titulo || '').trim(), data: f.data, hora: f.hora || '', clienteId: f.clienteId || '' });
+        if (r && r.link) {
+          f.link = r.link;
+          this.mostrarToast(r.convidado ? ('Sala criada e convite enviado pra ' + r.convidado + '. 🎥✉️') : 'Sala do Meet criada. 🎥');
+          return;
+        }
+      } catch (e) { /* sem credencial/escopo — segue pro plano B */ }
+      finally { this.meetGerando = false; }
       window.open('https://meet.google.com/new', '_blank');
       this.mostrarToast('Sala aberta em outra aba — copie o link do Meet e volte aqui. 🎥');
       const pegar = async () => {
@@ -904,6 +919,26 @@ document.addEventListener('alpine:init', () => {
         } catch (e) { /* sem permissão de clipboard — usuário cola manual */ }
       };
       window.addEventListener('focus', pegar);
+    },
+    // Convite por e-mail (Resend, via backend) — fluxo manual ou reenvio.
+    async conviteEmailMeet() {
+      const f = this.eventoForm;
+      if (!f.link) return alert('Gere ou cole o link do Meet primeiro.');
+      if (!f.clienteId) return alert('Escolha o cliente.');
+      try { const r = await this.api('POST', '/meet/convite', { clienteId: f.clienteId, link: f.link, titulo: f.titulo, data: f.data, hora: f.hora }); this.mostrarToast('Convite enviado pra ' + r.para + '. ✉️'); }
+      catch (e) { alert(e.message || e); }
+    },
+    // Convite por WhatsApp — abre o zap do cliente com a mensagem pronta.
+    conviteZapMeet() {
+      const f = this.eventoForm;
+      if (!f.link) return alert('Gere ou cole o link do Meet primeiro.');
+      const c = (this.clients || []).find(x => x.id === f.clienteId);
+      const tel = String((c && (c.whatsapp || c.telefone)) || '').replace(/\D/g, '');
+      if (!tel) return alert('Cliente sem WhatsApp/telefone no cadastro.');
+      const num = tel.length <= 11 ? '55' + tel : tel;
+      const quando = [f.data ? this.fmtDate(f.data) : '', f.hora ? 'às ' + f.hora : ''].filter(Boolean).join(' ');
+      const msg = 'Olá! Segue o link da nossa reunião' + (quando ? ' ' + quando : '') + ': ' + f.link + ' — Maracatu Digital';
+      window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
     },
     async salvarEvento() {
       const f = this.eventoForm;

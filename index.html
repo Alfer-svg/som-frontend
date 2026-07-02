@@ -3428,9 +3428,13 @@
         <label class="form-label">Link da reunião (Google Meet)</label>
         <div class="flex gap-2">
           <input class="form-input" style="flex:1" x-model="eventoForm.link" placeholder="https://meet.google.com/…">
-          <button type="button" class="btn btn-sm" @click="gerarMeet()" style="background:#7c3aed;color:#fff;border-color:#7c3aed;white-space:nowrap"><i class="ph ph-video-camera ic-ph"></i> Gerar link do Meet</button>
+          <button type="button" class="btn btn-sm" @click="gerarMeet()" :disabled="meetGerando" style="background:#7c3aed;color:#fff;border-color:#7c3aed;white-space:nowrap"><i class="ph ph-video-camera ic-ph"></i> <span x-text="meetGerando?'Gerando…':'Gerar link do Meet'"></span></button>
         </div>
-        <div class="text-3 fs-11" style="margin-top:4px">Abre o Meet numa aba nova criando a sala. Copie o link lá e volte — ele cola aqui sozinho.</div>
+        <div class="flex gap-2" style="margin-top:6px" x-show="eventoForm.link">
+          <button type="button" class="btn btn-sm" @click="conviteEmailMeet()" style="background:var(--surface-2)"><i class="ph ph-envelope-simple ic-ph"></i> Enviar por e-mail</button>
+          <button type="button" class="btn btn-sm" @click="conviteZapMeet()" style="background:var(--surface-2);color:#16a34a"><i class="ph ph-whatsapp-logo ic-ph"></i> Enviar por WhatsApp</button>
+        </div>
+        <div class="text-3 fs-11" style="margin-top:4px">Cria a sala e já convida o cliente por e-mail. Sem credencial Google, abre o Meet numa aba — copie o link e volte que ele cola sozinho.</div>
       </div>
       <div class="form-group"><label class="form-label">Observação</label><textarea class="form-input" rows="2" x-model="eventoForm.nota" placeholder="Detalhes (opcional)"></textarea></div>
     </div>
@@ -3597,7 +3601,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=213"></script>
+<script src="js/app.js?v=214"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
