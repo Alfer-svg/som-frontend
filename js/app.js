@@ -3194,7 +3194,8 @@ ${this._docFoot()}
         avulso: true, area: '🎯 Tráfego Pago', descricao: '',
         labels: [], membros: [], checklist: DEMANDAS.map(t => ({ id: MD.uid(), texto: t, feito: false })),
       };
-      try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.trafCardModal = false; this.abrirCard(novo); }
+      // Uma janela só: cria e pronto — o card já aparece completo no quadro (sem abrir o editor).
+      try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.trafCardModal = false; this.mostrarToast('Card criado no quadro 🎯 Tráfego.'); }
       catch (e) { alert(e.message || 'Falha ao criar a tarefa de tráfego.'); }
     },
     async salvarProjeto() {
