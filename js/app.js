@@ -493,7 +493,8 @@ document.addEventListener('alpine:init', () => {
     colaboradores: MD.get('som_colaboradores', []), // nomes da equipe (cresce sozinho ao salvar projeto)
     versiculo: null, // Salmo/Provérbio aleatório do topo do Operacional
     metas: { prospeccoes: 50, contatos: 25, propostas: 2 }, metasEdit: false, metasForm: {}, // metas semanais do comercial (editáveis pelo admin)
-    dashTab: 'geral', // aba do Dashboard: 'geral' (visão geral) | 'comercial' (painel + metas)
+    dashTab: 'geral', // aba do Dashboard: 'geral' (visão geral) | 'comercial' (painel + metas) | 'operacional' | 'trafego' (resumos executivos)
+    dashPeriodo: 30, // janela (dias) das abas Operacional/Tráfego do Dashboard
     comPerTipo: 'semana', comPerOff: 0, // período do painel comercial: 'dia'|'semana'|'mes' + deslocamento (0=atual)
     credenciais: [], credModal: false, credForm: {}, credItemModo: '', revelar: {}, // cofre de acessos (credItemModo: dropdown do tipo, '__outro__' = livre)
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
@@ -977,6 +978,117 @@ document.addEventListener('alpine:init', () => {
       if (!f.clienteId) return alert('Escolha o cliente.');
       try { const r = await this.api('POST', '/meet/convite', { clienteId: f.clienteId, link: f.link, titulo: f.titulo, data: f.data, hora: f.hora }); this.mostrarToast('Convite enviado pra ' + r.para + '. ✉️'); }
       catch (e) { alert(e.message || e); }
+    },
+    // ── Dashboard › abas Operacional e Tráfego (resumo executivo p/ decisão) ──
+    dashOpAbriu() { this.dashTab = 'operacional'; if (!(this.projects || []).length) this.carregarProjetos(); if (!(this.layouts || []).length) this.carregarLayouts(); },
+    dashTrafAbriu() { this.dashTab = 'trafego'; this.carregarTrafego(); },
+    _dashIni() { const d = new Date(); d.setDate(d.getDate() - this.dashPeriodo + 1); return this._iso(d); },
+    _dashNoPeriodo(iso) { if (!iso) return false; const s = String(iso).slice(0, 10); return s >= this._dashIni() && s <= this._hojeStr(); },
+    // — Operacional (dop*) —
+    get dopAtivos() { return (this.projects || []).filter(p => !p.arquivado); },
+    _dopFeitoNoPeriodo(p) { return p.status === 'Concluído' && this._dashNoPeriodo(p.isPost ? p.prazo : ((p.concluidoEm || '').slice(0, 10) || p.prazo)); },
+    get dopPostsPeriodo() { return this.dopAtivos.filter(p => p.isPost && this._dashNoPeriodo(p.prazo)); },
+    get dopPostsProntos() { return this.dopPostsPeriodo.filter(p => p.status === 'Concluído'); },
+    get dopProjConcluidos() { return this.dopAtivos.filter(p => !p.isPost && this._dopFeitoNoPeriodo(p)); },
+    get dopEmProducao() { return this.dopAtivos.filter(p => p.status !== 'Concluído'); },
+    get dopAtrasados() { const h = this._hojeStr(); return this.dopAtivos.filter(p => p.status !== 'Concluído' && p.prazo && p.prazo < h).sort((a, b) => a.prazo < b.prazo ? -1 : 1); },
+    get dopTempoPeriodo() { let s = 0; for (const p of this.dopAtivos) for (const x of (p.sessoes || [])) if (this._dashNoPeriodo(x.inicio)) s += x.segundos || 0; return s; },
+    get dopPorColab() {
+      const m = {}; const de = (nome) => (m[nome] = m[nome] || { nome, feitos: 0, tempo: 0 });
+      for (const p of this.dopAtivos) {
+        if (this._dopFeitoNoPeriodo(p)) de((Array.isArray(p.membros) && p.membros[0]) || p.responsavel || 'Sem responsável').feitos++;
+        for (const x of (p.sessoes || [])) if (x.autor && this._dashNoPeriodo(x.inicio)) de(x.autor).tempo += x.segundos || 0;
+      }
+      const out = Object.values(m).sort((a, b) => b.feitos - a.feitos || b.tempo - a.tempo);
+      const max = Math.max(1, ...out.map(x => x.feitos));
+      out.forEach(x => x.pct = Math.round(x.feitos / max * 100));
+      return out;
+    },
+    get dopPorCliente() {
+      const m = {};
+      for (const p of this.dopAtivos) if (this._dopFeitoNoPeriodo(p)) { const n = p.cliente || '—'; m[n] = (m[n] || 0) + 1; }
+      const out = Object.entries(m).map(([nome, n]) => ({ nome, n })).sort((a, b) => b.n - a.n).slice(0, 8);
+      const max = Math.max(1, ...out.map(x => x.n));
+      out.forEach(x => x.pct = Math.round(x.n / max * 100));
+      return out;
+    },
+    get dopPorTipo() {
+      const m = {};
+      for (const p of this.dopPostsProntos) { const t = p.tipoPost || 'Estático'; m[t] = (m[t] || 0) + 1; }
+      const tot = this.dopPostsProntos.length || 1;
+      return Object.entries(m).map(([tipo, n]) => ({ tipo, n, pct: Math.round(n / tot * 100) })).sort((a, b) => b.n - a.n);
+    },
+    get dopSemanas() { // ritmo: posts prontos por semana (8 semanas, pela data da postagem)
+      const out = []; const hoje = new Date(); const dow = (hoje.getDay() + 6) % 7;
+      const iniSem = new Date(hoje); iniSem.setDate(hoje.getDate() - dow);
+      for (let i = 7; i >= 0; i--) {
+        const a = new Date(iniSem); a.setDate(iniSem.getDate() - i * 7);
+        const b = new Date(a); b.setDate(a.getDate() + 6);
+        const ia = this._iso(a), ib = this._iso(b);
+        const n = (this.projects || []).filter(p => p.isPost && !p.arquivado && p.status === 'Concluído' && p.prazo >= ia && p.prazo <= ib).length;
+        out.push({ label: String(a.getDate()).padStart(2, '0') + '/' + String(a.getMonth() + 1).padStart(2, '0'), n });
+      }
+      const max = Math.max(1, ...out.map(x => x.n));
+      out.forEach(x => x.pct = Math.round(x.n / max * 100));
+      return out;
+    },
+    get dopAprovacoes() {
+      const ls = (this.layouts || []).filter(l => this._dashNoPeriodo(l.semanaIni));
+      const ap = ls.filter(l => l.status === 'APROVADO_CLIENTE').length, aj = ls.filter(l => l.status === 'AJUSTE').length, env = ls.filter(l => l.status === 'ENVIADO').length;
+      return { total: ls.length, aprovados: ap, ajustes: aj, enviados: env, taxa: (ap + aj) ? Math.round(ap / (ap + aj) * 100) : null };
+    },
+    // — Tráfego (dtf*) —
+    get dtfHoje() {
+      const h = this._hojeStr(); let ok = 0, parcial = 0;
+      for (const c of this.trafClientes) {
+        const ck = (this.trafChecklists || []).find(x => x.data === h && x.clienteId === c.id);
+        const n = this._trafResolvidos(ck);
+        if (n >= TRAF_TAREFAS.length) ok++; else if (n > 0) parcial++;
+      }
+      return { ok, parcial, total: this.trafClientes.length };
+    },
+    get dtfLogPeriodo() { return (this.trafLog || []).filter(l => this._dashNoPeriodo(l.data)); },
+    get dtfOtimPorCliente() {
+      const m = {};
+      for (const l of this.dtfLogPeriodo) { const n = l.cliente || '—'; m[n] = (m[n] || 0) + 1; }
+      const out = Object.entries(m).map(([nome, n]) => ({ nome, n })).sort((a, b) => b.n - a.n).slice(0, 8);
+      const max = Math.max(1, ...out.map(x => x.n));
+      out.forEach(x => x.pct = Math.round(x.n / max * 100));
+      return out;
+    },
+    get dtfOtimPorGestor() {
+      const m = {};
+      for (const l of this.dtfLogPeriodo) { const n = l.por || '—'; m[n] = (m[n] || 0) + 1; }
+      const out = Object.entries(m).map(([nome, n]) => ({ nome, n })).sort((a, b) => b.n - a.n);
+      const max = Math.max(1, ...out.map(x => x.n));
+      out.forEach(x => x.pct = Math.round(x.n / max * 100));
+      return out;
+    },
+    get dtfDisciplina() { // dias com checklist completo ÷ dias com registro, por cliente
+      const ini = this._dashIni(), fim = this._hojeStr();
+      return this.trafClientes.map(c => {
+        const cks = (this.trafChecklists || []).filter(x => x.clienteId === c.id && x.data >= ini && x.data <= fim);
+        const completos = cks.filter(x => this._trafResolvidos(x) >= TRAF_TAREFAS.length).length;
+        return { nome: c.nome, dias: cks.length, completos, pct: cks.length ? Math.round(completos / cks.length * 100) : 0 };
+      }).filter(r => r.dias > 0).sort((a, b) => b.completos - a.completos).slice(0, 10);
+    },
+    get dtfAds() { // consolidado do snapshot diário (adsAuto, ESTE MÊS) — sem chamada de API
+      const rows = []; let gasto = 0, leads = 0;
+      for (const c of (this.clients || [])) {
+        const a = c.adsAuto; if (!a) continue;
+        gasto += a.gasto || 0; leads += a.leads || 0;
+        rows.push({ nome: c.empresa || c.nome || '—', gasto: a.gasto || 0, leads: a.leads || 0, cpl: a.custoLead || 0, camp: a.campanhasAtivas || 0, saldo: (a.saldo ?? null), em: a.em || '' });
+      }
+      rows.sort((a, b) => b.gasto - a.gasto);
+      return { rows, gasto, leads, cpl: leads ? gasto / leads : 0, contas: rows.length };
+    },
+    get dtfSemRotinaHoje() { // campanha ativa e SEM rotina completa hoje — pra cobrar
+      const h = this._hojeStr();
+      return (this.clients || []).filter(c => {
+        const a = c.adsAuto; if (!a || !(a.campanhasAtivas > 0)) return false;
+        const ck = (this.trafChecklists || []).find(x => x.data === h && x.clienteId === c.id);
+        return this._trafResolvidos(ck) < TRAF_TAREFAS.length;
+      }).map(c => c.empresa || c.nome || '—');
     },
     // ── Gestão de Tráfego: checklist diário + log de otimizações + indicadores ──
     async carregarTrafego() {
@@ -3551,7 +3663,7 @@ ${this._docFoot()}
       this.modelosFav = this.modelosFav.includes(n) ? this.modelosFav.filter(x => x !== n) : [...this.modelosFav, n];
       MD.set('som_modelos_fav', this.modelosFav);
     },
-    async moverProjeto(p, status) { const antes = p.status; p.status = status; if (status === 'Concluído') p.progresso = 100; try { await this.salvarProjetoApi(p); } catch {} if (status === 'Concluído' && antes !== 'Concluído') this.registrarProducao('projeto', p.nome || ''); },
+    async moverProjeto(p, status) { const antes = p.status; p.status = status; if (status === 'Concluído') { p.progresso = 100; if (antes !== 'Concluído') p.concluidoEm = new Date().toISOString(); } try { await this.salvarProjetoApi(p); } catch {} if (status === 'Concluído' && antes !== 'Concluído') this.registrarProducao('projeto', p.nome || ''); },
     async excluirProjeto(p) { if (!confirm('Excluir o projeto ' + p.nome + '?')) return; try { await this.api('DELETE', '/projetos/' + p.id); this.projects = this.projects.filter(x => x.id !== p.id); this.modal = null; } catch (err) { alert(err.message); } },
 
     // ───────────────── COMERCIAL: orçamentos (propostas) ─────────────────

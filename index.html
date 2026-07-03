@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-07-03-c">
+  <meta name="build" content="2026-07-03-d">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -265,6 +265,8 @@
         <div class="tabs">
           <div class="tab" x-show="ehAdmin" :class="dashTab==='geral'?'active':''" @click="dashTab='geral'"><i class="ph ph-squares-four ic-ph"></i> Visão geral</div>
           <div class="tab" :class="dashTab==='comercial'?'active':''" @click="dashTab='comercial'"><i class="ph ph-chart-line-up ic-ph"></i> Comercial</div>
+          <div class="tab" x-show="ehAdmin" :class="dashTab==='operacional'?'active':''" @click="dashOpAbriu()"><i class="ph ph-kanban ic-ph"></i> Operacional</div>
+          <div class="tab" x-show="ehAdmin" :class="dashTab==='trafego'?'active':''" @click="dashTrafAbriu()"><i class="ph ph-megaphone ic-ph"></i> Tráfego</div>
         </div>
 
         <!-- ===== ABA: VISÃO GERAL ===== -->
@@ -479,6 +481,171 @@
           </div>
         </div>
       </div><!-- fim aba Comercial -->
+
+      <!-- ===== ABA: OPERACIONAL (resumo executivo) ===== -->
+      <div x-show="dashTab==='operacional'">
+        <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+          <span class="fs-12 text-3">Período:</span>
+          <template x-for="d in [7,30,90]" :key="'dop'+d">
+            <button class="btn btn-sm" :class="dashPeriodo===d?'':'btn-ghost'" :style="dashPeriodo===d?'background:#141210;color:#fff;border-color:#141210':''" @click="dashPeriodo=d" x-text="d+' dias'"></button>
+          </template>
+          <span class="fs-12 text-3" style="margin-left:auto">Posts contam pela data da postagem · projetos pela conclusão</span>
+        </div>
+        <div class="grid grid-4 mb-4">
+          <div class="card kpi"><div class="kpi-label">Posts prontos</div><div class="kpi-value fs-22" x-text="dopPostsProntos.length+' / '+dopPostsPeriodo.length"></div><div class="fs-12 text-3" x-text="dopPostsPeriodo.length?Math.round(dopPostsProntos.length/dopPostsPeriodo.length*100)+'% do programado':'nada programado'"></div></div>
+          <div class="card kpi"><div class="kpi-label">Projetos concluídos</div><div class="kpi-value fs-22" x-text="dopProjConcluidos.length"></div><div class="fs-12 text-3">trabalhos fora da programação</div></div>
+          <div class="card kpi"><div class="kpi-label">Em produção agora</div><div class="kpi-value fs-22" x-text="dopEmProducao.length"></div><div class="fs-12 text-3" :class="dopAtrasados.length?'text-red':''" x-text="dopAtrasados.length?dopAtrasados.length+' atrasado(s)':'nenhum atrasado'"></div></div>
+          <div class="card kpi"><div class="kpi-label">Tempo de produção</div><div class="kpi-value fs-22" x-text="fmtDur(dopTempoPeriodo)"></div><div class="fs-12 text-3">cronômetro dos cards</div></div>
+        </div>
+        <div class="grid grid-2 mb-4">
+          <div class="card">
+            <div class="card-title mb-3">Produtividade por colaborador</div>
+            <template x-if="!dopPorColab.length"><div class="empty">Nada concluído no período.</div></template>
+            <template x-for="r in dopPorColab" :key="'dpc'+r.nome">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="fs-12 truncate" style="width:110px" x-text="r.nome"></span>
+                <div style="flex:1;height:10px;background:#f1f5f9;border-radius:6px;overflow:hidden"><div :style="'width:'+r.pct+'%;height:100%;background:#a8c5ee'"></div></div>
+                <span class="fs-12 fw-700" style="width:26px;text-align:right" x-text="r.feitos"></span>
+                <span class="fs-12 text-3" style="width:64px;text-align:right" x-text="r.tempo?fmtDur(r.tempo):'—'"></span>
+              </div>
+            </template>
+            <div class="fs-12 text-3" style="margin-top:6px">barra = entregas · à direita, tempo cronometrado</div>
+          </div>
+          <div class="card">
+            <div class="card-title mb-3">Ritmo de entrega — posts por semana</div>
+            <div style="display:flex;align-items:flex-end;gap:8px;height:130px">
+              <template x-for="s in dopSemanas" :key="'dsw'+s.label">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%">
+                  <span class="fs-12 fw-700" x-text="s.n||''"></span>
+                  <div :style="'width:100%;max-width:34px;border-radius:6px 6px 0 0;background:#b7dcc6;height:'+Math.max(3,s.pct*0.72)+'%'"></div>
+                  <span class="fs-12 text-3" x-text="s.label"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-2 mb-4">
+          <div class="card">
+            <div class="card-title mb-3">Entregas por cliente</div>
+            <template x-if="!dopPorCliente.length"><div class="empty">Nada concluído no período.</div></template>
+            <template x-for="r in dopPorCliente" :key="'dcl'+r.nome">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="fs-12 truncate" style="width:150px" x-text="r.nome"></span>
+                <div style="flex:1;height:10px;background:#f1f5f9;border-radius:6px;overflow:hidden"><div :style="'width:'+r.pct+'%;height:100%;background:#ecd3a8'"></div></div>
+                <span class="fs-12 fw-700" style="width:26px;text-align:right" x-text="r.n"></span>
+              </div>
+            </template>
+          </div>
+          <div class="card">
+            <div class="card-title mb-2">Aprovação do cliente (layouts)</div>
+            <div class="flex items-center gap-3 mb-3" style="flex-wrap:wrap">
+              <span class="badge" style="background:#e8f5ee;color:#166534" x-text="dopAprovacoes.aprovados+' aprovado(s)'"></span>
+              <span class="badge" style="background:#fdecec;color:#b91c1c" x-text="dopAprovacoes.ajustes+' ajuste(s)'"></span>
+              <span class="badge" style="background:#fdf1dc;color:#92400e" x-text="dopAprovacoes.enviados+' aguardando'"></span>
+              <span class="fs-12 fw-700" x-show="dopAprovacoes.taxa!==null" x-text="'Taxa de aprovação: '+dopAprovacoes.taxa+'%'"></span>
+            </div>
+            <div class="card-title mb-2" style="margin-top:10px">Mix dos posts prontos</div>
+            <template x-for="r in dopPorTipo" :key="'dtp'+r.tipo">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="fs-12" style="width:80px" x-text="r.tipo"></span>
+                <div style="flex:1;height:10px;background:#f1f5f9;border-radius:6px;overflow:hidden"><div :style="'width:'+r.pct+'%;height:100%;background:#cdc0ea'"></div></div>
+                <span class="fs-12 fw-700" style="width:52px;text-align:right" x-text="r.n+' ('+r.pct+'%)'"></span>
+              </div>
+            </template>
+            <template x-if="!dopPorTipo.length"><div class="empty">Sem posts prontos no período.</div></template>
+          </div>
+        </div>
+        <div class="card mb-4" x-show="dopAtrasados.length" style="border-left:3px solid #ef4444">
+          <div class="card-title mb-2 text-red">Atrasados — precisa de decisão</div>
+          <template x-for="p in dopAtrasados.slice(0,6)" :key="'datr'+p.id">
+            <div class="flex items-center gap-2 mb-1" style="cursor:pointer" @click="go('operacional')">
+              <span class="badge" style="background:#fdecec;color:#b91c1c" x-text="fmtDate(p.prazo)"></span>
+              <span class="fs-13 fw-600 truncate" style="flex:1" x-text="p.tema||p.nome"></span>
+              <span class="fs-12 text-3 truncate" style="max-width:160px" x-text="p.cliente||''"></span>
+              <span class="fs-12 text-3" x-text="p.responsavel||''"></span>
+            </div>
+          </template>
+          <div class="fs-12 text-3" x-show="dopAtrasados.length>6" x-text="'+ '+(dopAtrasados.length-6)+' outro(s) — veja no Operacional'"></div>
+        </div>
+      </div><!-- fim aba Operacional -->
+
+      <!-- ===== ABA: TRÁFEGO (resumo executivo) ===== -->
+      <div x-show="dashTab==='trafego'">
+        <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+          <span class="fs-12 text-3">Período:</span>
+          <template x-for="d in [7,30,90]" :key="'dtf'+d">
+            <button class="btn btn-sm" :class="dashPeriodo===d?'':'btn-ghost'" :style="dashPeriodo===d?'background:#141210;color:#fff;border-color:#141210':''" @click="dashPeriodo=d" x-text="d+' dias'"></button>
+          </template>
+          <span class="fs-12 text-3" style="margin-left:auto">Google Ads = este mês (snapshot diário)</span>
+        </div>
+        <div class="card mb-4" x-show="dtfSemRotinaHoje.length" style="border-left:3px solid #f59e0b;background:linear-gradient(90deg,#fffbeb,#fff)">
+          <div class="fs-13 fw-600"><i class="ph ph-warning ic-ph" style="color:#d97706"></i> Campanha rodando e rotina de hoje incompleta: <span class="fw-800" x-text="dtfSemRotinaHoje.join(' · ')"></span></div>
+        </div>
+        <div class="grid grid-3 mb-4">
+          <div class="card kpi"><div class="kpi-label">Rotina de hoje</div><div class="kpi-value fs-22" x-text="dtfHoje.ok+' / '+dtfHoje.total"></div><div class="fs-12 text-3" x-text="dtfHoje.parcial?dtfHoje.parcial+' parcial(is)':'checklists completos'"></div></div>
+          <div class="card kpi"><div class="kpi-label">Otimizações no período</div><div class="kpi-value fs-22" x-text="dtfLogPeriodo.length"></div><div class="fs-12 text-3">registradas no log</div></div>
+          <div class="card kpi"><div class="kpi-label">Contas Google Ads</div><div class="kpi-value fs-22" x-text="dtfAds.contas"></div><div class="fs-12 text-3" x-text="dtfAds.rows.filter(r=>r.camp>0).length+' com campanha ativa'"></div></div>
+        </div>
+        <div class="grid grid-3 mb-4">
+          <div class="card kpi"><div class="kpi-label">Investimento (mês)</div><div class="kpi-value fs-22" x-text="mascCur(dtfAds.gasto)"></div></div>
+          <div class="card kpi"><div class="kpi-label">Leads (mês)</div><div class="kpi-value fs-22" x-text="dtfAds.leads"></div></div>
+          <div class="card kpi"><div class="kpi-label">Custo por lead (médio)</div><div class="kpi-value fs-22" x-text="dtfAds.leads?mascCur(dtfAds.cpl):'—'"></div></div>
+        </div>
+        <div class="grid grid-2 mb-4">
+          <div class="card">
+            <div class="card-title mb-3">Otimizações por cliente</div>
+            <template x-if="!dtfOtimPorCliente.length"><div class="empty">Nenhuma otimização registrada no período.</div></template>
+            <template x-for="r in dtfOtimPorCliente" :key="'toc'+r.nome">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="fs-12 truncate" style="width:150px" x-text="r.nome"></span>
+                <div style="flex:1;height:10px;background:#f1f5f9;border-radius:6px;overflow:hidden"><div :style="'width:'+r.pct+'%;height:100%;background:#a8c5ee'"></div></div>
+                <span class="fs-12 fw-700" style="width:26px;text-align:right" x-text="r.n"></span>
+              </div>
+            </template>
+          </div>
+          <div class="card">
+            <div class="card-title mb-3">Otimizações por gestor</div>
+            <template x-if="!dtfOtimPorGestor.length"><div class="empty">Nenhuma otimização registrada no período.</div></template>
+            <template x-for="r in dtfOtimPorGestor" :key="'tog'+r.nome">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="fs-12 truncate" style="width:110px" x-text="r.nome"></span>
+                <div style="flex:1;height:10px;background:#f1f5f9;border-radius:6px;overflow:hidden"><div :style="'width:'+r.pct+'%;height:100%;background:#b7dcc6'"></div></div>
+                <span class="fs-12 fw-700" style="width:26px;text-align:right" x-text="r.n"></span>
+              </div>
+            </template>
+            <div class="card-title mb-2" style="margin-top:14px">Disciplina do checklist</div>
+            <template x-if="!dtfDisciplina.length"><div class="empty fs-12">Sem checklists no período.</div></template>
+            <template x-for="r in dtfDisciplina" :key="'tds'+r.nome">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="fs-12 truncate" style="width:150px" x-text="r.nome"></span>
+                <div style="flex:1;height:8px;background:#f1f5f9;border-radius:6px;overflow:hidden"><div :style="'width:'+r.pct+'%;height:100%;background:'+(r.pct>=80?'#b7dcc6':r.pct>=50?'#ecd3a8':'#f0bcbc')"></div></div>
+                <span class="fs-12 text-3" style="width:70px;text-align:right" x-text="r.completos+'/'+r.dias+' dias'"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="card mb-4">
+          <div class="card-title mb-3">Google Ads por cliente — este mês</div>
+          <template x-if="!dtfAds.rows.length"><div class="empty">Nenhum cliente com Google Ads vinculado (o snapshot diário alimenta este painel).</div></template>
+          <div x-show="dtfAds.rows.length" style="overflow-x:auto">
+            <table class="table" style="width:100%">
+              <thead><tr class="fs-12 text-3" style="text-align:left"><th style="padding:6px 8px">Cliente</th><th style="padding:6px 8px;text-align:right">Campanhas</th><th style="padding:6px 8px;text-align:right">Investido</th><th style="padding:6px 8px;text-align:right">Leads</th><th style="padding:6px 8px;text-align:right">CPL</th><th style="padding:6px 8px;text-align:right">Saldo</th></tr></thead>
+              <tbody>
+                <template x-for="r in dtfAds.rows" :key="'tga'+r.nome">
+                  <tr class="fs-13" style="border-top:1px solid var(--border)">
+                    <td style="padding:7px 8px" class="fw-600" x-text="r.nome"></td>
+                    <td style="padding:7px 8px;text-align:right"><span class="badge" :style="r.camp>0?'background:#e8f5ee;color:#166534':'background:var(--surface-2);color:var(--text-3)'" x-text="r.camp"></span></td>
+                    <td style="padding:7px 8px;text-align:right" x-text="mascCur(r.gasto)"></td>
+                    <td style="padding:7px 8px;text-align:right" class="fw-700" x-text="r.leads"></td>
+                    <td style="padding:7px 8px;text-align:right" x-text="r.leads?mascCur(r.cpl):'—'"></td>
+                    <td style="padding:7px 8px;text-align:right" x-text="r.saldo!==null&&r.saldo!==undefined?mascCur(r.saldo):'—'"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- fim aba Tráfego -->
       </section><!-- fim Dashboard -->
 
       <!-- ========== CRM (kanban) ========== -->
@@ -4095,7 +4262,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=271"></script>
+<script src="js/app.js?v=272"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
