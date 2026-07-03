@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-06-25-n">
+  <meta name="build" content="2026-07-03-a">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -845,8 +845,8 @@
                 <div class="fin-acoes">
                   <button x-show="f.tipo==='receita' && f.cliente" @click="abrirFinanceCliente(f.cliente)" title="Ver a situação financeira do cliente — histórico de faturas, pagas e a receber"><i class="ph ph-chart-line-up ic-ph"></i> Situação do cliente</button>
                   <button x-show="f.tipo==='receita'" @click="gerarFatura(f)" title="Gerar a fatura em PDF pra imprimir ou enviar ao cliente"><i class="ph ph-file-text ic-ph"></i> PDF</button>
-                  <button x-show="f.tipo==='receita' && !f.boletoId && f.status!=='pago'" class="fin-btn-cora" @click="gerarBoleto(f)" :disabled="f._cobrando" title="Emitir um boleto bancário (com Pix) no Banco Inter pra esta cobrança"><i class="ph ph-barcode ic-ph"></i> Gerar boleto (Inter)</button>
-                  <button x-show="f.tipo==='receita'" @click="cobrarEmail(f)" :disabled="f._cobrando" title="Enviar a cobrança/boleto por e-mail pro cliente"><i class="ph ph-envelope ic-ph"></i> E-mail</button>
+                  <button x-show="f.tipo==='receita' && !f.boletoId && f.status!=='pago'" class="fin-btn-cora" @click="gerarBoleto(f)" :disabled="!!f._cobrando" title="Emitir um boleto bancário (com Pix) no Banco Inter pra esta cobrança"><i class="ph ph-barcode ic-ph"></i> Gerar boleto (Inter)</button>
+                  <button x-show="f.tipo==='receita'" @click="cobrarEmail(f)" :disabled="!!f._cobrando" title="Enviar a cobrança/boleto por e-mail pro cliente"><i class="ph ph-envelope ic-ph"></i> E-mail</button>
                   <button x-show="f.tipo==='receita'" @click="cobrarWhatsApp(f)" title="Abrir o WhatsApp com a mensagem de cobrança pronta pra enviar"><i class="ph ph-whatsapp-logo ic-ph"></i> WhatsApp</button>
                   <button x-show="f.status!=='pago'" class="fin-btn-receber" @click="receberPagar(f)" :title="f.tipo==='receita'?'Dar baixa: marcar como recebido (pede a data da quitação)':'Dar baixa: marcar como pago (pede a data)'"><i class="ph ph-check-circle ic-ph"></i> <span x-text="f.tipo==='receita'?'Receber':'Pagar'"></span></button>
                   <button x-show="f.status==='pago'" @click="togglePago(f)" title="Desfazer a baixa: volta o lançamento pra pendente (ex.: marcou errado ou o pagamento foi estornado)"><i class="ph ph-arrow-counter-clockwise ic-ph"></i> Reabrir</button>
@@ -1918,7 +1918,7 @@
               <div style="padding:8px 0;border-bottom:1px solid var(--border)">
                 <div class="flex items-center gap-2">
                   <label class="flex items-center gap-2" style="cursor:pointer;flex:1;min-width:0">
-                    <input type="checkbox" :disabled="trafItem(t.id).na" x-model="trafItem(t.id).feito" @change="trafMarcou(t.id); salvarTrafego()">
+                    <input type="checkbox" :disabled="!!trafItem(t.id).na" x-model="trafItem(t.id).feito" @change="trafMarcou(t.id); salvarTrafego()">
                     <span class="fw-700 fs-13" :style="trafItem(t.id).na?'color:var(--text-3);font-style:italic':(trafItem(t.id).feito?'color:var(--text-3);text-decoration:line-through':'')" x-text="t.texto"></span>
                     <span class="badge fs-11" x-show="trafItem(t.id).feito && trafItem(t.id).hora" style="background:#dcfce7;color:#15803d;font-weight:700" x-text="trafItem(t.id).hora"></span>
                     <span class="badge fs-11" x-show="trafItem(t.id).na" style="background:#e5e7eb;color:#6b7280;font-weight:700">não se aplica</span>
@@ -3345,12 +3345,12 @@
               <button type="button" class="btn btn-ghost btn-sm" @click="removePostProg(i)" title="Remover post">🗑</button>
             </div>
             <div style="margin-bottom:8px">
-              <div class="flex items-center justify-between" style="margin-bottom:3px"><span class="fs-12 text-3" style="font-weight:600">Descrição</span><button type="button" class="btn btn-ghost btn-sm" :disabled="po._iaLoad_descricao" @click="gerarIA(po,'descricao','descricao')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="po._iaLoad_descricao?'gerando…':'Gerar (IA)'"></span></button></div>
+              <div class="flex items-center justify-between" style="margin-bottom:3px"><span class="fs-12 text-3" style="font-weight:600">Descrição</span><button type="button" class="btn btn-ghost btn-sm" :disabled="!!po._iaLoad_descricao" @click="gerarIA(po,'descricao','descricao')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="po._iaLoad_descricao?'gerando…':'Gerar (IA)'"></span></button></div>
               <textarea class="form-textarea" x-model="po.descricao" placeholder="Descrição do post — rascunho; a IA elabora…" style="min-height:46px"></textarea>
               <template x-if="po._ia_descricao"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="po._ia_descricao"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(po,'descricao')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(po,'descricao')">Descartar</button></div></div></template>
             </div>
             <div style="margin-bottom:2px">
-              <div class="flex items-center justify-between" style="margin-bottom:3px"><span class="fs-12 text-3" style="font-weight:600">Legenda</span><button type="button" class="btn btn-ghost btn-sm" :disabled="po._iaLoad_legenda" @click="gerarIA(po,'legenda','legenda')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="po._iaLoad_legenda?'gerando…':'Gerar (IA)'"></span></button></div>
+              <div class="flex items-center justify-between" style="margin-bottom:3px"><span class="fs-12 text-3" style="font-weight:600">Legenda</span><button type="button" class="btn btn-ghost btn-sm" :disabled="!!po._iaLoad_legenda" @click="gerarIA(po,'legenda','legenda')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="po._iaLoad_legenda?'gerando…':'Gerar (IA)'"></span></button></div>
               <textarea class="form-textarea" x-model="po.legenda" placeholder="Legenda do post — rascunho; a IA elabora…" style="min-height:54px"></textarea>
               <template x-if="po._ia_legenda"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="po._ia_legenda"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(po,'legenda')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(po,'legenda')">Descartar</button></div></div></template>
             </div>
@@ -3592,12 +3592,12 @@
       <template x-if="cardRef&&cardRef.isPost">
         <div>
           <div class="tl-section">
-            <div class="tl-section-label" style="display:flex;justify-content:space-between;align-items:center">Descrição<button type="button" class="btn btn-ghost btn-sm" :disabled="cardRef._iaLoad_descricao" @click="gerarIA(cardRef,'descricao','descricao')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="cardRef._iaLoad_descricao?'gerando…':'Gerar (IA)'"></span></button></div>
+            <div class="tl-section-label" style="display:flex;justify-content:space-between;align-items:center">Descrição<button type="button" class="btn btn-ghost btn-sm" :disabled="!!cardRef._iaLoad_descricao" @click="gerarIA(cardRef,'descricao','descricao')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="cardRef._iaLoad_descricao?'gerando…':'Gerar (IA)'"></span></button></div>
             <textarea class="form-textarea" x-model="cardRef.descricao" @change="salvarCard()" placeholder="Descrição do post — rascunho; a IA elabora…" style="min-height:70px"></textarea>
             <template x-if="cardRef._ia_descricao"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="cardRef._ia_descricao"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(cardRef,'descricao')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(cardRef,'descricao')">Descartar</button></div></div></template>
           </div>
           <div class="tl-section" x-show="papel!=='colaborador2'">
-            <div class="tl-section-label" style="display:flex;justify-content:space-between;align-items:center">Legenda<button type="button" class="btn btn-ghost btn-sm" :disabled="cardRef._iaLoad_legenda" @click="gerarIA(cardRef,'legenda','legenda')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="cardRef._iaLoad_legenda?'gerando…':'Gerar (IA)'"></span></button></div>
+            <div class="tl-section-label" style="display:flex;justify-content:space-between;align-items:center">Legenda<button type="button" class="btn btn-ghost btn-sm" :disabled="!!cardRef._iaLoad_legenda" @click="gerarIA(cardRef,'legenda','legenda')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="cardRef._iaLoad_legenda?'gerando…':'Gerar (IA)'"></span></button></div>
             <textarea class="form-textarea" x-model="cardRef.legenda" @change="salvarCard()" placeholder="Legenda do post — rascunho; a IA elabora…" style="min-height:80px"></textarea>
             <template x-if="cardRef._ia_legenda"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="cardRef._ia_legenda"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(cardRef,'legenda')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(cardRef,'legenda')">Descartar</button></div></div></template>
           </div>
