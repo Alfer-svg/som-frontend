@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-07-03-b">
+  <meta name="build" content="2026-07-03-c">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -287,24 +287,30 @@
         </div>
         <!-- 📡 Radar — resumo das pendências (clique vai pro Monitoramento) -->
         <div class="card mb-4" x-show="clients.length" style="padding:0;overflow:hidden">
-          <div class="flex items-center justify-between" style="padding:12px 14px;border-bottom:1px solid var(--border)">
+          <div class="flex items-center justify-between" style="padding:12px 14px;cursor:pointer" :style="radarDashAberto?'border-bottom:1px solid var(--border)':''" @click="toggleRadarDash()" title="Clique pra abrir/recolher">
             <div class="flex items-center gap-2">
               <span style="font-size:18px"><i class="ph ph-broadcast ic-ph"></i></span>
               <span class="fw-800 fs-14">Radar — precisa de ação</span>
               <span x-show="radarUrgentes" class="badge" style="background:#fee2e2;color:#dc2626" x-text="radarUrgentes+' urgente(s)'"></span>
+              <span x-show="!radarDashAberto && radar.length" class="badge" style="background:var(--surface-2);color:var(--text-2)" x-text="radar.length+' pendência(s)'"></span>
             </div>
-            <button class="btn btn-ghost btn-sm" @click="go('monitoramento')" x-show="radar.length">Ver no Monitoramento →</button>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-ghost btn-sm" @click.stop="go('monitoramento')" x-show="radar.length && radarDashAberto">Ver no Monitoramento →</button>
+              <i class="ph ic-ph text-3" :class="radarDashAberto?'ph-caret-up':'ph-caret-down'"></i>
+            </div>
           </div>
-          <template x-if="radar.length===0"><div class="empty" style="padding:24px">Tudo em dia <i class="ph ph-check-circle ic-ph"></i> Nenhuma pendência nos clientes ativos.</div></template>
-          <template x-for="(p,i) in radar.slice(0,5)" :key="'dash-'+p.key">
-            <div class="flex items-center gap-2" style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer" @click="radarIr(p)">
-              <i class="ic-ph" style="font-size:20px" :class="phClass(p.icon)" :style="phCor(p.icon)?('color:'+phCor(p.icon)):''"></i>
-              <span class="badge" :style="p.nivel==='alta'?'background:#fee2e2;color:#dc2626':p.nivel==='media'?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'" x-text="p.nivel==='alta'?'urgente':p.nivel==='media'?'em breve':'quando der'"></span>
-              <span class="fs-13 fw-600 truncate" style="flex:1;min-width:0" x-text="p.txt"></span>
-              <span class="text-3 fs-12 truncate" style="max-width:200px" x-text="p.cliNome"></span>
-            </div>
-          </template>
-          <div x-show="radar.length>5" class="text-3 fs-12" style="padding:9px 14px" x-text="'+ '+(radar.length-5)+' outra(s) pendência(s)'"></div>
+          <div x-show="radarDashAberto">
+            <template x-if="radar.length===0"><div class="empty" style="padding:24px">Tudo em dia <i class="ph ph-check-circle ic-ph"></i> Nenhuma pendência nos clientes ativos.</div></template>
+            <template x-for="(p,i) in radar.slice(0,5)" :key="'dash-'+p.key">
+              <div class="flex items-center gap-2" style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer" @click="radarIr(p)">
+                <i class="ic-ph" style="font-size:20px" :class="phClass(p.icon)" :style="phCor(p.icon)?('color:'+phCor(p.icon)):''"></i>
+                <span class="badge" :style="p.nivel==='alta'?'background:#fee2e2;color:#dc2626':p.nivel==='media'?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'" x-text="p.nivel==='alta'?'urgente':p.nivel==='media'?'em breve':'quando der'"></span>
+                <span class="fs-13 fw-600 truncate" style="flex:1;min-width:0" x-text="p.txt"></span>
+                <span class="text-3 fs-12 truncate" style="max-width:200px" x-text="p.cliNome"></span>
+              </div>
+            </template>
+            <div x-show="radar.length>5" class="text-3 fs-12" style="padding:9px 14px" x-text="'+ '+(radar.length-5)+' outra(s) pendência(s)'"></div>
+          </div>
         </div>
         <div class="grid grid-2">
           <div class="card">
@@ -4089,7 +4095,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=270"></script>
+<script src="js/app.js?v=271"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

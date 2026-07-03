@@ -413,6 +413,7 @@ document.addEventListener('alpine:init', () => {
     adsLive: {},      // {clienteId: {configurado, leads, custoLead, gasto, ...}} — Google Ads (MCC) puxado ao vivo na ficha
     adsConfig: null,  // {configurado, mcc} — há credencial da agência? (carregado 1x)
     radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
+    radarDashAberto: MD.get('som_radar_dash', false), // card Radar do Dashboard: recolhido por padrão; preferência salva
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
     novaInter: { tipo: 'Ligação', texto: '', data: '' }, // form de nova interação na timeline (data: opcional, p/ reunião)
     novaTarefaForm: { titulo: '', responsavel: '', data: '', prioridade: 'Média' }, // form de nova tarefa na ficha
@@ -2385,6 +2386,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
     // Registra automaticamente a ação feita pelo Radar (parabéns, seguir…) no histórico do cliente
     toggleRadarAutolog() { this.radarAutolog = !this.radarAutolog; MD.set('som_radar_autolog', this.radarAutolog); },
+    toggleRadarDash() { this.radarDashAberto = !this.radarDashAberto; MD.set('som_radar_dash', this.radarDashAberto); },
     registrarAcaoRadar(p) {
       if (!this.radarAutolog) return; // auto-registro desligado pelo usuário
       const c = (this.clients || []).find(x => x.id === p.cliId); if (!c) return;
