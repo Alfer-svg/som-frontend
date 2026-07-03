@@ -3451,10 +3451,11 @@ ${this._docFoot()}
         const chave = (p.tema || p.nome || '') + '|' + (p.prazo || '');
         const dec = old.find(s => ((s.tema || '') + '|' + (s.prazo || '')) === chave) || {};
         const reabrir = /ajuste|reprov/i.test(String(dec.status || '')); // corrigidos → reavaliar do zero
+        const cria = this.criativosProg(p); // só os marcados pra programação (igual ao montarSnapshot)
         return {
           prazo: p.prazo, tipoPost: p.tipoPost || 'Estático', tema: p.tema || p.nome || '',
-          legenda: p.legenda || '', criativo: p.criativo || '', formato: p.formato || '',
-          criativos: Array.isArray(p.criativos) && p.criativos.length ? p.criativos : (p.criativo ? [p.criativo] : []),
+          legenda: p.legenda || '', criativo: cria[0] || p.criativo || '', formato: p.formato || '',
+          criativos: cria.length ? cria : (p.criativo ? [p.criativo] : []),
           status: reabrir ? '' : (dec.status || ''), ajuste: reabrir ? null : (dec.ajuste || null),
         };
       });
