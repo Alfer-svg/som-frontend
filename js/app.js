@@ -986,8 +986,10 @@ document.addEventListener('alpine:init', () => {
     _dashNoPeriodo(iso) { if (!iso) return false; const s = String(iso).slice(0, 10); return s >= this._dashIni() && s <= this._hojeStr(); },
     // — Operacional (dop*) —
     get dopAtivos() { return (this.projects || []).filter(p => !p.arquivado); },
-    _dopFeitoNoPeriodo(p) { return p.status === 'Concluído' && this._dashNoPeriodo(p.isPost ? p.prazo : ((p.concluidoEm || '').slice(0, 10) || p.prazo)); },
-    get dopPostsPeriodo() { return this.dopAtivos.filter(p => p.isPost && this._dashNoPeriodo(p.prazo)); },
+    // Posts: a equipe produz ANTECIPADO (data de postagem futura) — a janela deles vai do início do período até 2 semanas À FRENTE.
+    _dashNoPeriodoPost(iso) { if (!iso) return false; const s = String(iso).slice(0, 10); const f = new Date(); f.setDate(f.getDate() + 14); return s >= this._dashIni() && s <= this._iso(f); },
+    _dopFeitoNoPeriodo(p) { return p.status === 'Concluído' && (p.isPost ? this._dashNoPeriodoPost(p.prazo) : this._dashNoPeriodo((p.concluidoEm || '').slice(0, 10) || p.prazo)); },
+    get dopPostsPeriodo() { return this.dopAtivos.filter(p => p.isPost && this._dashNoPeriodoPost(p.prazo)); },
     get dopPostsProntos() { return this.dopPostsPeriodo.filter(p => p.status === 'Concluído'); },
     get dopProjConcluidos() { return this.dopAtivos.filter(p => !p.isPost && this._dopFeitoNoPeriodo(p)); },
     get dopEmProducao() { return this.dopAtivos.filter(p => p.status !== 'Concluído'); },
@@ -1018,10 +1020,10 @@ document.addEventListener('alpine:init', () => {
       const tot = this.dopPostsProntos.length || 1;
       return Object.entries(m).map(([tipo, n]) => ({ tipo, n, pct: Math.round(n / tot * 100) })).sort((a, b) => b.n - a.n);
     },
-    get dopSemanas() { // ritmo: posts prontos por semana (8 semanas, pela data da postagem)
+    get dopSemanas() { // ritmo: posts prontos por semana-alvo — 6 passadas (incl. atual) + 2 FUTURAS (produção antecipada)
       const out = []; const hoje = new Date(); const dow = (hoje.getDay() + 6) % 7;
       const iniSem = new Date(hoje); iniSem.setDate(hoje.getDate() - dow);
-      for (let i = 7; i >= 0; i--) {
+      for (let i = 5; i >= -2; i--) {
         const a = new Date(iniSem); a.setDate(iniSem.getDate() - i * 7);
         const b = new Date(a); b.setDate(a.getDate() + 6);
         const ia = this._iso(a), ib = this._iso(b);

@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-07-03-d">
+  <meta name="build" content="2026-07-03-e">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -489,7 +489,7 @@
           <template x-for="d in [7,30,90]" :key="'dop'+d">
             <button class="btn btn-sm" :class="dashPeriodo===d?'':'btn-ghost'" :style="dashPeriodo===d?'background:#141210;color:#fff;border-color:#141210':''" @click="dashPeriodo=d" x-text="d+' dias'"></button>
           </template>
-          <span class="fs-12 text-3" style="margin-left:auto">Posts contam pela data da postagem · projetos pela conclusão</span>
+          <span class="fs-12 text-3" style="margin-left:auto">Posts: programação do período + 2 semanas à frente (produção antecipada) · projetos pela conclusão</span>
         </div>
         <div class="grid grid-4 mb-4">
           <div class="card kpi"><div class="kpi-label">Posts prontos</div><div class="kpi-value fs-22" x-text="dopPostsProntos.length+' / '+dopPostsPeriodo.length"></div><div class="fs-12 text-3" x-text="dopPostsPeriodo.length?Math.round(dopPostsProntos.length/dopPostsPeriodo.length*100)+'% do programado':'nada programado'"></div></div>
@@ -512,7 +512,7 @@
             <div class="fs-12 text-3" style="margin-top:6px">barra = entregas · à direita, tempo cronometrado</div>
           </div>
           <div class="card">
-            <div class="card-title mb-3">Ritmo de entrega — posts por semana</div>
+            <div class="card-title mb-3">Ritmo de entrega — posts prontos por semana-alvo <span class="fs-12 text-3" style="font-weight:500">(2 últimas = semanas futuras)</span></div>
             <div style="display:flex;align-items:flex-end;gap:8px;height:130px">
               <template x-for="s in dopSemanas" :key="'dsw'+s.label">
                 <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%">
@@ -4262,7 +4262,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=272"></script>
+<script src="js/app.js?v=273"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
