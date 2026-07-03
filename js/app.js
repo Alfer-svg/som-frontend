@@ -463,6 +463,7 @@ document.addEventListener('alpine:init', () => {
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
+    criDrag: null, criAlvo: null, // arrastar criativos pra reordenar (galeria do post)
     crmStages: STAGES.map(s => ({ ...s })), crmEdit: false, dragLeadId: null, dropStage: null, dragStageId: '', // CRM: colunas editáveis + drag
     ACAO_TIPOS, novaAcao: { tipo: 'Ligar', data: '', descricao: '' }, mostrarAlertas: true, // CRM: ações/follow-ups do lead + alertas
     cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, membroDrop: false, novoItemCheck: '', // card-detalhe Trello
@@ -3176,6 +3177,18 @@ ${this._docFoot()}
       if (Array.isArray(obj.criativosOn)) obj.criativosOn = obj.criativosOn.filter(u => u !== url); // some da seleção também
       if (persistir) persistir();
     },
+    // ── Reordenar criativos arrastando (a ordem manda no carrossel; a 1ª vira a capa) ──
+    criDragStart(obj, idx) { this.criDrag = { obj, idx }; },
+    criDragOver(obj, idx) { const d = this.criDrag; this.criAlvo = (d && d.obj === obj && d.idx !== idx) ? { obj, idx } : null; },
+    criAlvoE(obj, idx) { const a = this.criAlvo; return !!(a && a.obj === obj && a.idx === idx); },
+    criDrop(obj, idx, persistir) {
+      const d = this.criDrag; this.criDragEnd();
+      if (!d || d.obj !== obj || d.idx === idx) return;
+      const arr = this.criativosDe(obj); const [u] = arr.splice(d.idx, 1); arr.splice(idx, 0, u);
+      obj.criativo = arr[0] || '';
+      if (persistir) persistir();
+    },
+    criDragEnd() { this.criDrag = null; this.criAlvo = null; },
     // ── Seleção de quais criativos entram na PROGRAMAÇÃO (checkbox por imagem) ──
     // Sem seleção (criativosOn indefinido) = TODAS exibidas (retrocompatível).
     criativoOn(obj, url) { const on = obj && obj.criativosOn; return !Array.isArray(on) ? true : on.includes(url); },

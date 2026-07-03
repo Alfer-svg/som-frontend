@@ -239,8 +239,9 @@ a { color: inherit; text-decoration: none; }
 .modal-title { font-weight: 800; font-size: 16px; }
 .modal-body { padding: 20px; max-height: calc(100vh - 170px); overflow-y: auto; }
 /* Miniatura de criativo — tamanho BLINDADO por classe (não depende de style inline nem de :style do Alpine) */
-.criativo-thumb { position: relative; width: 76px !important; height: 76px !important; flex: 0 0 76px; border-radius: 8px; overflow: hidden; background: var(--surface-2); }
+.criativo-thumb { position: relative; width: 76px !important; height: 76px !important; flex: 0 0 76px; border-radius: 8px; overflow: hidden; background: var(--surface-2); cursor: grab; }
 .criativo-thumb img { width: 100% !important; height: 100% !important; object-fit: cover; display: block; }
+.cri-alvo { outline: 2px dashed #16a34a; outline-offset: 2px; } /* alvo do arrastar-pra-reordenar */
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border); }
 
 /* ---------- Utils ---------- */
