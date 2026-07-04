@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=237">
+  <link rel="stylesheet" href="css/styles.css?v=238">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -272,20 +272,20 @@
         <!-- ===== ABA: VISÃO GERAL ===== -->
         <div x-show="dashTab==='geral'">
         <div class="mb-4">
-          <div style="font-size:23px;font-weight:800;letter-spacing:-.3px" x-text="saudacao + ' 👋'"></div>
-          <div class="text-3" style="font-size:13px;margin-top:3px">Bem-vindo de volta — aqui está o resumo da sua agência.</div>
+          <div style="font-size:24px;font-weight:500;letter-spacing:-.3px" x-text="saudacao + ' 👋'"></div>
+          <div class="text-3" style="font-size:13px;margin-top:4px">Bem-vindo de volta — aqui está o resumo da sua agência.</div>
         </div>
         <div class="grid grid-4 mb-4">
-          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:transparent"><i class="ph ph-handshake ic-ph"></i></span> Recorrentes ativos</div><div class="kpi-value" x-text="clientesAtivos"></div></div>
-          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:transparent"><i class="ph ph-wallet ic-ph"></i></span> Receita do mês</div><div class="kpi-value text-green" x-text="mascCur(receitaMes)"></div></div>
-          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:transparent"><i class="ph ph-target ic-ph"></i></span> Leads no funil</div><div class="kpi-value" x-text="leadsAbertos"></div></div>
-          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:transparent"><i class="ph ph-kanban ic-ph"></i></span> Projetos ativos</div><div class="kpi-value" x-text="projetosAndamento"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-handshake ic-ph"></i></span> Recorrentes ativos</div><div class="kpi-value" x-text="clientesAtivos"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-wallet ic-ph"></i></span> Receita do mês</div><div class="kpi-value" x-text="mascCur(receitaMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-target ic-ph"></i></span> Leads no funil</div><div class="kpi-value" x-text="leadsAbertos"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#F1F3F4;color:#5f6368"><i class="ph ph-kanban ic-ph"></i></span> Projetos ativos</div><div class="kpi-value" x-text="projetosAndamento"></div></div>
         </div>
         <div class="grid grid-4 mb-4">
-          <div class="card kpi"><div class="kpi-label">MRR (recorrente)</div><div class="kpi-value fs-22" x-text="mascCur(mrr)"></div></div>
-          <div class="card kpi"><div class="kpi-label">A receber</div><div class="kpi-value fs-22 text-green" x-text="mascCur(aReceber)"></div></div>
-          <div class="card kpi"><div class="kpi-label">A pagar</div><div class="kpi-value fs-22 text-red" x-text="mascCur(aPagar)"></div></div>
-          <div class="card kpi"><div class="kpi-label">Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="mascCur(saldoMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#F1F3F4;color:#5f6368"><i class="ph ph-arrows-clockwise ic-ph"></i></span> MRR (recorrente)</div><div class="kpi-value fs-22" x-text="mascCur(mrr)"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-arrow-down-left ic-ph"></i></span> A receber</div><div class="kpi-value fs-22" x-text="mascCur(aReceber)"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-arrow-up-right ic-ph"></i></span> A pagar</div><div class="kpi-value fs-22" x-text="mascCur(aPagar)"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#F1F3F4;color:#5f6368"><i class="ph ph-scales ic-ph"></i></span> Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="mascCur(saldoMes)"></div></div>
         </div>
         <!-- 📡 Radar — resumo das pendências (clique vai pro Monitoramento) -->
         <div class="card mb-4" x-show="clients.length" style="padding:0;overflow:hidden">
@@ -342,9 +342,9 @@
       <!-- ===== ABA: COMERCIAL (painel + metas) ===== -->
       <div x-show="dashTab==='comercial'">
         <!-- Alerta motivacional (passou do meio-dia e hoje ainda falta atividade) -->
-        <div x-show="motivacao" x-transition class="card" style="margin-bottom:16px;padding:16px 20px;background:linear-gradient(90deg,#fff7ed,#fffbeb);border:1.5px solid #fbbf24;display:flex;align-items:center;gap:14px;box-shadow:0 4px 14px rgba(251,191,36,.18)">
-          <i class="ph ph-rocket-launch ic-ph" style="color:#f59e0b;font-size:30px;flex-shrink:0"></i>
-          <div class="fw-800" style="color:#92400e;font-size:16px;line-height:1.35" x-text="motivacaoMsg"></div>
+        <div x-show="motivacao" x-transition class="card" style="margin-bottom:16px;padding:15px 18px;background:#FEF7E0;border:1px solid #FCE8B2;box-shadow:none;display:flex;align-items:center;gap:13px">
+          <i class="ph ph-rocket-launch ic-ph" style="color:#B06000;font-size:26px;flex-shrink:0"></i>
+          <div style="color:#7A4E00;font-size:15px;font-weight:500;line-height:1.35" x-text="motivacaoMsg"></div>
         </div>
         <!-- Metas do período — destaque com gráfico de rosca + navegação dia/semana/mês -->
         <div class="card" style="padding:18px 18px 20px;margin-bottom:18px">
