@@ -113,30 +113,30 @@
     <nav class="nav">
       <!-- Dashboard -->
       <div class="nav-item" x-show="podeVer('dashboard')" :class="page==='dashboard'?'active':''" @click="go('dashboard')" title="Visão geral: KPIs de clientes, receita, funil de vendas e projetos.">
-        <span class="nav-icon"><i class="ph ph-chart-bar ic-ph"></i></span><span>Dashboard</span>
+        <span class="nav-icon">📊</span><span>Dashboard</span>
       </div>
 
       <!-- Comercial (grupo: CRM + Orçamentos + Contratos) -->
       <template x-if="podeVer('crm')||podeVer('orcamentos')||podeVer('servicos')||podeVer('contratos')">
         <div>
           <div class="nav-item" :class="(page==='crm'||page==='orcamentos'||page==='servicos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM), orçamentos e contratos.">
-            <span class="nav-icon"><i class="ph ph-briefcase ic-ph"></i></span>
+            <span class="nav-icon">💼</span>
             <span>Comercial</span>
             <span class="nav-caret" x-text="comOpen?'▾':'▸'"></span>
           </div>
           <div class="nav-sub" x-show="comOpen">
             <div class="nav-item nav-subitem" x-show="podeVer('crm')" :class="page==='crm'?'active':''" @click="go('crm')" title="Funil de vendas — gerencie os leads do primeiro contato ao fechamento.">
-              <span class="nav-icon"><i class="ph ph-target ic-ph"></i></span><span>CRM</span>
+              <span class="nav-icon">🎯</span><span>CRM</span>
               <span x-show="alertasAcoes.length" class="badge" style="background:#dc2626;color:#fff;margin-left:auto;min-width:18px;justify-content:center" :title="alertasAcoes.length+' ação(ões) pra hoje/atrasada(s)'" x-text="alertasAcoes.length"></span>
             </div>
             <div class="nav-item nav-subitem" x-show="podeVer('orcamentos')" :class="page==='orcamentos'?'active':''" @click="go('orcamentos')" title="Orçamentos e propostas comerciais enviadas aos clientes.">
-              <span class="nav-icon"><i class="ph ph-file-text ic-ph"></i></span><span>Orçamentos</span>
+              <span class="nav-icon">📄</span><span>Orçamentos</span>
             </div>
             <div class="nav-item nav-subitem" x-show="podeVer('servicos')" :class="page==='servicos'?'active':''" @click="go('servicos')" title="Catálogo de serviços reutilizáveis nos orçamentos.">
-              <span class="nav-icon"><i class="ph ph-puzzle-piece ic-ph"></i></span><span>Serviços</span>
+              <span class="nav-icon">🧩</span><span>Serviços</span>
             </div>
             <div class="nav-item nav-subitem" x-show="podeVer('contratos')" :class="page==='contratos'?'active':''" @click="go('contratos')" title="Contratos ativos e encerrados, com vigência e valor.">
-              <span class="nav-icon"><i class="ph ph-scroll ic-ph"></i></span><span>Contratos</span>
+              <span class="nav-icon">📝</span><span>Contratos</span>
             </div>
           </div>
         </div>
@@ -144,7 +144,7 @@
 
       <!-- Clientes (top-level) — inclui a aba de Onboardings -->
       <div class="nav-item" x-show="podeVer('comercial')" :class="page==='comercial'?'active':''" @click="go('comercial')" title="Clientes (CNPJ + CEP automáticos) e onboardings recebidos do site.">
-        <span class="nav-icon"><i class="ph ph-users ic-ph"></i></span><span>Clientes</span>
+        <span class="nav-icon">👥</span><span>Clientes</span>
         <span x-show="podeVer('onboarding') && onbPendentes.length" class="badge" style="margin-left:auto;background:var(--accent);color:#fff;min-width:20px;justify-content:center" x-text="onbPendentes.length" title="Onboardings aguardando revisão"></span>
       </div>
 
@@ -152,16 +152,16 @@
       <template x-if="podeVer('financeiro')">
         <div>
           <div class="nav-item" :class="page==='financeiro'&&!finOpen?'active':''" @click="finOpen=!finOpen" title="Financeiro — receitas, despesas e fornecedores.">
-            <span class="nav-icon"><i class="ph ph-wallet ic-ph"></i></span>
+            <span class="nav-icon">💰</span>
             <span>Financeiro</span>
             <span class="nav-caret" x-text="finOpen?'▾':'▸'"></span>
           </div>
           <div class="nav-sub" x-show="finOpen">
             <div class="nav-item nav-subitem" :class="page==='financeiro'&&finTab==='lancamentos'?'active':''" @click="go('financeiro'); finTab='lancamentos'" title="Receitas e despesas, contas a receber e a pagar.">
-              <span class="nav-icon"><i class="ph ph-receipt ic-ph"></i></span><span>Lançamentos</span>
+              <span class="nav-icon">🧾</span><span>Lançamentos</span>
             </div>
             <div class="nav-item nav-subitem" :class="page==='financeiro'&&finTab==='fornecedores'?'active':''" @click="go('financeiro'); finTab='fornecedores'" title="Cadastro de fornecedores (quem você paga).">
-              <span class="nav-icon"><i class="ph ph-buildings ic-ph"></i></span><span>Fornecedores</span>
+              <span class="nav-icon">🏢</span><span>Fornecedores</span>
               <span x-show="fornecedores.length" class="badge" style="margin-left:auto;background:var(--surface-2);color:var(--text);min-width:20px;justify-content:center" x-text="fornecedores.length"></span>
             </div>
           </div>
@@ -173,7 +173,7 @@
         {id:'operacional',ico:'🚀',label:'Operacional',desc:'Projetos e entregas da agência, em kanban por status.'},
         {id:'monitoramento',ico:'🩺',label:'Monitoramento',desc:'Saúde de cada cliente: serviços, redes sociais e condição (sinais 🟢🟡🔴).'}]" :key="item.id">
         <div class="nav-item" x-show="podeVer(item.id)" :class="page===item.id?'active':''" @click="go(item.id)" :title="item.desc" :style="item.id==='operacional' ? 'background:#FCE8E6;color:#C5221F' : ''">
-          <span class="nav-icon"><i class="ic-ph" :class="phClass(item.ico)" :style="item.id==='operacional' ? 'color:#C5221F' : (phCor(item.ico)?('color:'+phCor(item.ico)):'')"></i></span>
+          <span class="nav-icon" x-text="item.ico"></span>
           <span x-text="item.label"></span>
           <span x-show="item.id==='onboarding' && onbPendentes.length" class="badge" style="margin-left:auto;background:var(--accent);color:#fff;min-width:20px;justify-content:center" x-text="onbPendentes.length"></span>
           <span x-show="item.id==='monitoramento' && radarUrgentes" class="badge" style="margin-left:auto;background:#dc2626;color:#fff;min-width:20px;justify-content:center" x-text="radarUrgentes" title="Pendências urgentes no Radar"></span>
@@ -182,27 +182,27 @@
 
       <!-- Agenda / Calendário de eventos (admin + Gestor de Tráfego) -->
       <div class="nav-item" x-show="podeVer('agenda')" :class="page==='agenda'?'active':''" @click="go('agenda')" title="Calendário de eventos, contatos e histórico dos clientes.">
-        <span class="nav-icon"><i class="ph ph-calendar-dots ic-ph" style="color:#ea580c"></i></span><span>Agenda</span>
+        <span class="nav-icon">📅</span><span>Agenda</span>
       </div>
 
       <!-- Gestão de Tráfego (admin + gestor de tráfego) -->
       <div class="nav-item" x-show="podeVer('trafego')" :class="page==='trafego'?'active':''" @click="go('trafego')" title="Rotina diária do gestor de tráfego: checklist com evidências, log de otimizações e indicadores.">
-        <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph" style="color:#ea580c"></i></span><span>Tráfego</span>
+        <span class="nav-icon">📈</span><span>Tráfego</span>
       </div>
 
       <!-- Relatórios (só admin) -->
       <div class="nav-item" x-show="ehAdmin" :class="page==='relatorios'?'active':''" @click="go('relatorios')" title="Ponto e produção da equipe.">
-        <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph"></i></span><span>Relatórios</span>
+        <span class="nav-icon">📈</span><span>Relatórios</span>
       </div>
 
       <!-- Pessoal — cada um vê a própria ficha; admin vê toda a equipe -->
       <div class="nav-item" x-show="podeVer('pessoal')" :class="page==='pessoal'?'active':''" @click="go('pessoal')" title="Sua ficha de registro (RH).">
-        <span class="nav-icon"><i class="ph ph-identification-badge ic-ph"></i></span><span>Pessoal</span>
+        <span class="nav-icon">🪪</span><span>Pessoal</span>
       </div>
 
       <!-- Configurações (só admin) -->
       <div class="nav-item" x-show="ehAdmin" :class="page==='configuracoes'?'active':''" @click="go('configuracoes')" title="Usuários e acessos, armazenamento e ajustes do sistema.">
-        <span class="nav-icon"><i class="ph ph-gear ic-ph"></i></span><span>Configurações</span>
+        <span class="nav-icon">⚙️</span><span>Configurações</span>
       </div>
     </nav>
     <div class="sidebar-foot" x-data="{fo:false}" @mouseenter="fo=true" @mouseleave="fo=false">
@@ -263,10 +263,10 @@
       <section x-show="page==='dashboard'">
         <!-- Abas do Dashboard -->
         <div class="tabs">
-          <div class="tab" x-show="ehAdmin" :class="dashTab==='geral'?'active':''" @click="dashTab='geral'"><i class="ph ph-squares-four ic-ph"></i> Visão geral</div>
-          <div class="tab" :class="dashTab==='comercial'?'active':''" @click="dashTab='comercial'"><i class="ph ph-chart-line-up ic-ph"></i> Comercial</div>
-          <div class="tab" x-show="ehAdmin" :class="dashTab==='operacional'?'active':''" @click="dashOpAbriu()"><i class="ph ph-kanban ic-ph"></i> Operacional</div>
-          <div class="tab" x-show="ehAdmin" :class="dashTab==='trafego'?'active':''" @click="dashTrafAbriu()"><i class="ph ph-megaphone ic-ph"></i> Tráfego</div>
+          <div class="tab" x-show="ehAdmin" :class="dashTab==='geral'?'active':''" @click="dashTab='geral'">🏠 Visão geral</div>
+          <div class="tab" :class="dashTab==='comercial'?'active':''" @click="dashTab='comercial'">📈 Comercial</div>
+          <div class="tab" x-show="ehAdmin" :class="dashTab==='operacional'?'active':''" @click="dashOpAbriu()">📋 Operacional</div>
+          <div class="tab" x-show="ehAdmin" :class="dashTab==='trafego'?'active':''" @click="dashTrafAbriu()">📣 Tráfego</div>
         </div>
 
         <!-- ===== ABA: VISÃO GERAL ===== -->
@@ -276,16 +276,16 @@
           <div class="text-3" style="font-size:13px;margin-top:4px">Bem-vindo de volta — aqui está o resumo da sua agência.</div>
         </div>
         <div class="grid grid-4 mb-4">
-          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-handshake ic-ph"></i></span> Recorrentes ativos</div><div class="kpi-value" x-text="clientesAtivos"></div></div>
-          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-wallet ic-ph"></i></span> Receita do mês</div><div class="kpi-value" x-text="mascCur(receitaMes)"></div></div>
-          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-target ic-ph"></i></span> Leads no funil</div><div class="kpi-value" x-text="leadsAbertos"></div></div>
-          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-kanban ic-ph"></i></span> Projetos ativos</div><div class="kpi-value" x-text="projetosAndamento"></div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4">🤝</span> Recorrentes ativos</div><div class="kpi-value" x-text="clientesAtivos"></div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853">💰</span> Receita do mês</div><div class="kpi-value" x-text="mascCur(receitaMes)"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825">🎯</span> Leads no funil</div><div class="kpi-value" x-text="leadsAbertos"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335">📋</span> Projetos ativos</div><div class="kpi-value" x-text="projetosAndamento"></div></div>
         </div>
         <div class="grid grid-4 mb-4">
-          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-arrows-clockwise ic-ph"></i></span> MRR (recorrente)</div><div class="kpi-value fs-22" x-text="mascCur(mrr)"></div></div>
-          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-arrow-down-left ic-ph"></i></span> A receber</div><div class="kpi-value fs-22" x-text="mascCur(aReceber)"></div></div>
-          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-arrow-up-right ic-ph"></i></span> A pagar</div><div class="kpi-value fs-22" x-text="mascCur(aPagar)"></div></div>
-          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-scales ic-ph"></i></span> Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="mascCur(saldoMes)"></div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4">🔄</span> MRR (recorrente)</div><div class="kpi-value fs-22" x-text="mascCur(mrr)"></div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853">📥</span> A receber</div><div class="kpi-value fs-22" x-text="mascCur(aReceber)"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335">📤</span> A pagar</div><div class="kpi-value fs-22" x-text="mascCur(aPagar)"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825">⚖️</span> Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="mascCur(saldoMes)"></div></div>
         </div>
         <!-- 📡 Radar — resumo das pendências (clique vai pro Monitoramento) -->
         <div class="card mb-4" x-show="clients.length" :class="radar.length ? 'radar-pulse' : ''" style="padding:0;overflow:hidden;background:#E9F5EE;border-color:#CEEAD6">
@@ -385,7 +385,7 @@
         <!-- Metas do período — destaque com gráfico de rosca + navegação dia/semana/mês -->
         <div class="card" style="padding:18px 18px 20px;margin-bottom:18px">
           <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:10px">
-            <div class="fw-800 fs-18"><i class="ph ph-target ic-ph" style="color:#4285F4"></i> <span x-text="periodoTituloMeta"></span></div>
+            <div class="fw-800 fs-18">🎯 <span x-text="periodoTituloMeta"></span></div>
             <div class="flex items-center gap-2" style="flex-wrap:wrap">
               <div class="flex" style="background:#f1f2f5;border-radius:9px;padding:3px;gap:2px">
                 <template x-for="t in [['dia','Dia'],['semana','Semana'],['mes','Mês']]" :key="t[0]">
@@ -425,16 +425,16 @@
 
         <!-- KPIs do funil -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px">
-          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-funnel ic-ph"></i></span> Pipeline aberto</div><div class="kpi-value fs-22" x-text="mascCur(pipelineValor)"></div><div class="text-3 fs-12" x-text="leadsAbertosArr.length+' leads em aberto'"></div></div>
-          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-trophy ic-ph"></i></span> Ganhos</div><div class="kpi-value fs-22" x-text="mascCur(ganhosValor)"></div><div class="text-3 fs-12" x-text="ganhosCount+' fechados'"></div></div>
-          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-percent ic-ph"></i></span> Taxa de conversão</div><div class="kpi-value fs-22" x-text="winRate+'%'"></div><div class="text-3 fs-12" x-text="ganhosCount+' ganhos · '+perdidosCount+' perdidos'"></div></div>
-          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-tag ic-ph"></i></span> Ticket médio</div><div class="kpi-value fs-22" x-text="mascCur(ticketMedio)"></div><div class="text-3 fs-12">por negócio ganho</div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4">🎯</span> Pipeline aberto</div><div class="kpi-value fs-22" x-text="mascCur(pipelineValor)"></div><div class="text-3 fs-12" x-text="leadsAbertosArr.length+' leads em aberto'"></div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853">🏆</span> Ganhos</div><div class="kpi-value fs-22" x-text="mascCur(ganhosValor)"></div><div class="text-3 fs-12" x-text="ganhosCount+' fechados'"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825">💯</span> Taxa de conversão</div><div class="kpi-value fs-22" x-text="winRate+'%'"></div><div class="text-3 fs-12" x-text="ganhosCount+' ganhos · '+perdidosCount+' perdidos'"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335">🏷️</span> Ticket médio</div><div class="kpi-value fs-22" x-text="mascCur(ticketMedio)"></div><div class="text-3 fs-12">por negócio ganho</div></div>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px">
           <!-- Funil -->
           <div class="card" style="padding:16px">
-            <div class="fw-700 fs-14 mb-2"><i class="ph ph-funnel ic-ph"></i> Funil de vendas</div>
+            <div class="fw-700 fs-14 mb-2">🎯 Funil de vendas</div>
             <template x-for="f in funilResumo" :key="f.id">
               <div class="flex items-center gap-2" style="margin:7px 0">
                 <span class="fs-13 fw-600" style="width:96px" x-text="f.id"></span>
@@ -446,7 +446,7 @@
           </div>
           <!-- Origens -->
           <div class="card" style="padding:16px">
-            <div class="fw-700 fs-14 mb-2"><i class="ph ph-map-pin ic-ph"></i> Origem dos leads <span class="hq" data-tip="Quantos leads vieram de cada origem e quantos % viraram cliente (Ganho)." style="color:#9ca3af;cursor:help">?</span></div>
+            <div class="fw-700 fs-14 mb-2">📍 Origem dos leads <span class="hq" data-tip="Quantos leads vieram de cada origem e quantos % viraram cliente (Ganho)." style="color:#9ca3af;cursor:help">?</span></div>
             <template x-for="o in origemResumo" :key="o.origem">
               <div class="flex items-center gap-2" style="margin:7px 0">
                 <span class="fs-13 fw-600" style="width:96px" x-text="o.origem"></span>
@@ -460,11 +460,11 @@
         </div>
 
         <!-- Alertas que turbinam -->
-        <div class="fw-800 fs-16" style="margin:20px 0 8px"><i class="ph ph-lightning ic-ph" style="color:#f59e0b"></i> Pra turbinar — precisa de ação</div>
+        <div class="fw-800 fs-16" style="margin:20px 0 8px">⚡ Pra turbinar — precisa de ação</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">
           <!-- Follow-ups atrasados -->
           <div class="card" style="padding:16px">
-            <div class="flex items-center gap-2 mb-1"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i><span class="fw-700 fs-14">Follow-ups atrasados</span><span class="badge" style="background:#dc2626;color:#fff;margin-left:auto;min-width:18px;justify-content:center" x-text="followupsVencidos.length"></span></div>
+            <div class="flex items-center gap-2 mb-1">⚠️<span class="fw-700 fs-14">Follow-ups atrasados</span><span class="badge" style="background:#dc2626;color:#fff;margin-left:auto;min-width:18px;justify-content:center" x-text="followupsVencidos.length"></span></div>
             <div class="text-3 fs-12 mb-2">Ações pendentes já vencidas. Resolva ou reagende.</div>
             <template x-for="a in followupsVencidos.slice(0,6)" :key="a.id">
               <div class="flex items-center gap-2 fs-13" style="padding:6px 0;border-top:1px solid var(--border);cursor:pointer" @click="irLeadCrm(a._lead)" title="Abrir o lead">
@@ -477,7 +477,7 @@
           </div>
           <!-- Leads sem ação -->
           <div class="card" style="padding:16px">
-            <div class="flex items-center gap-2 mb-1"><i class="ph ph-bell-slash ic-ph" style="color:#f59e0b"></i><span class="fw-700 fs-14">Leads sem próxima ação</span><span class="badge" style="background:#f59e0b;color:#fff;margin-left:auto;min-width:18px;justify-content:center" x-text="leadsSemAcao.length"></span></div>
+            <div class="flex items-center gap-2 mb-1">🔕<span class="fw-700 fs-14">Leads sem próxima ação</span><span class="badge" style="background:#f59e0b;color:#fff;margin-left:auto;min-width:18px;justify-content:center" x-text="leadsSemAcao.length"></span></div>
             <div class="text-3 fs-12 mb-2">Abertos sem follow-up agendado — risco de esfriar.</div>
             <template x-for="l in leadsSemAcao.slice(0,6)" :key="l.id">
               <div class="flex items-center gap-2 fs-13" style="padding:6px 0;border-top:1px solid var(--border);cursor:pointer" @click="irLeadCrm(l)" title="Abrir o lead">
@@ -489,7 +489,7 @@
           </div>
           <!-- Leads parados -->
           <div class="card" style="padding:16px">
-            <div class="flex items-center gap-2 mb-1"><i class="ph ph-snowflake ic-ph" style="color:#0ea5e9"></i><span class="fw-700 fs-14">Leads parados (+14 dias)</span><span class="badge" style="background:#0ea5e9;color:#fff;margin-left:auto;min-width:18px;justify-content:center" x-text="leadsParados.length"></span></div>
+            <div class="flex items-center gap-2 mb-1">❄️<span class="fw-700 fs-14">Leads parados (+14 dias)</span><span class="badge" style="background:#0ea5e9;color:#fff;margin-left:auto;min-width:18px;justify-content:center" x-text="leadsParados.length"></span></div>
             <div class="text-3 fs-12 mb-2">Criados há +14 dias, em Novo/Contatado e sem ação.</div>
             <template x-for="l in leadsParados.slice(0,6)" :key="l.id">
               <div class="flex items-center gap-2 fs-13" style="padding:6px 0;border-top:1px solid var(--border);cursor:pointer" @click="irLeadCrm(l)" title="Abrir o lead">
@@ -528,10 +528,10 @@
           <span class="fs-12 text-3" style="margin-left:auto">Posts: programação do período + 2 semanas à frente (produção antecipada) · projetos pela conclusão</span>
         </div>
         <div class="grid grid-4 mb-4">
-          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-images ic-ph"></i></span> Posts prontos</div><div class="kpi-value fs-22" x-text="dopPostsProntos.length+' / '+dopPostsPeriodo.length"></div><div class="fs-12 text-3" x-text="dopPostsPeriodo.length?Math.round(dopPostsProntos.length/dopPostsPeriodo.length*100)+'% do programado':'nada programado'"></div></div>
-          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle ic-ph"></i></span> Projetos concluídos</div><div class="kpi-value fs-22" x-text="dopProjConcluidos.length"></div><div class="fs-12 text-3">trabalhos fora da programação</div></div>
-          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-hammer ic-ph"></i></span> Em produção agora</div><div class="kpi-value fs-22" x-text="dopEmProducao.length"></div><div class="fs-12 text-3" :class="dopAtrasados.length?'text-red':''" x-text="dopAtrasados.length?dopAtrasados.length+' atrasado(s)':'nenhum atrasado'"></div></div>
-          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-timer ic-ph"></i></span> Tempo de produção</div><div class="kpi-value fs-22" x-text="fmtDur(dopTempoPeriodo)"></div><div class="fs-12 text-3">cronômetro dos cards</div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4">🖼️</span> Posts prontos</div><div class="kpi-value fs-22" x-text="dopPostsProntos.length+' / '+dopPostsPeriodo.length"></div><div class="fs-12 text-3" x-text="dopPostsPeriodo.length?Math.round(dopPostsProntos.length/dopPostsPeriodo.length*100)+'% do programado':'nada programado'"></div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853">✅</span> Projetos concluídos</div><div class="kpi-value fs-22" x-text="dopProjConcluidos.length"></div><div class="fs-12 text-3">trabalhos fora da programação</div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825">🔨</span> Em produção agora</div><div class="kpi-value fs-22" x-text="dopEmProducao.length"></div><div class="fs-12 text-3" :class="dopAtrasados.length?'text-red':''" x-text="dopAtrasados.length?dopAtrasados.length+' atrasado(s)':'nenhum atrasado'"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335">⏱️</span> Tempo de produção</div><div class="kpi-value fs-22" x-text="fmtDur(dopTempoPeriodo)"></div><div class="fs-12 text-3">cronômetro dos cards</div></div>
         </div>
         <div class="grid grid-2 mb-4">
           <div class="card">
@@ -615,17 +615,17 @@
           <span class="fs-12 text-3" style="margin-left:auto">Google Ads = este mês (snapshot diário)</span>
         </div>
         <div class="card mb-4" x-show="dtfSemRotinaHoje.length" style="background:#FEF7E0;border:1px solid #FCE8B2;box-shadow:none">
-          <div class="fs-13 fw-600"><i class="ph ph-warning ic-ph" style="color:#d97706"></i> Campanha rodando e rotina de hoje incompleta: <span class="fw-800" x-text="dtfSemRotinaHoje.join(' · ')"></span></div>
+          <div class="fs-13 fw-600">⚠️ Campanha rodando e rotina de hoje incompleta: <span class="fw-800" x-text="dtfSemRotinaHoje.join(' · ')"></span></div>
         </div>
         <div class="grid grid-3 mb-4">
-          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-square ic-ph"></i></span> Rotina de hoje</div><div class="kpi-value fs-22" x-text="dtfHoje.ok+' / '+dtfHoje.total"></div><div class="fs-12 text-3" x-text="dtfHoje.parcial?dtfHoje.parcial+' parcial(is)':'checklists completos'"></div></div>
-          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-list-plus ic-ph"></i></span> Otimizações no período</div><div class="kpi-value fs-22" x-text="dtfLogPeriodo.length"></div><div class="fs-12 text-3">registradas no log</div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853">✅</span> Rotina de hoje</div><div class="kpi-value fs-22" x-text="dtfHoje.ok+' / '+dtfHoje.total"></div><div class="fs-12 text-3" x-text="dtfHoje.parcial?dtfHoje.parcial+' parcial(is)':'checklists completos'"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825">📝</span> Otimizações no período</div><div class="kpi-value fs-22" x-text="dtfLogPeriodo.length"></div><div class="fs-12 text-3">registradas no log</div></div>
           <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-google-logo ic-ph"></i></span> Contas Google Ads</div><div class="kpi-value fs-22" x-text="dtfAds.contas"></div><div class="fs-12 text-3" x-text="dtfAds.rows.filter(r=>r.camp>0).length+' com campanha ativa'"></div></div>
         </div>
         <div class="grid grid-3 mb-4">
-          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-currency-circle-dollar ic-ph"></i></span> Investimento (mês)</div><div class="kpi-value fs-22" x-text="mascCur(dtfAds.gasto)"></div></div>
-          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-target ic-ph"></i></span> Leads (mês)</div><div class="kpi-value fs-22" x-text="Math.round(dtfAds.leads)"></div></div>
-          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-calculator ic-ph"></i></span> Custo por lead (médio)</div><div class="kpi-value fs-22" x-text="dtfAds.leads?mascCur(dtfAds.cpl):'—'"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335">💸</span> Investimento (mês)</div><div class="kpi-value fs-22" x-text="mascCur(dtfAds.gasto)"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825">🎯</span> Leads (mês)</div><div class="kpi-value fs-22" x-text="Math.round(dtfAds.leads)"></div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4">🧮</span> Custo por lead (médio)</div><div class="kpi-value fs-22" x-text="dtfAds.leads?mascCur(dtfAds.cpl):'—'"></div></div>
         </div>
         <div class="grid grid-2 mb-4">
           <div class="card">
@@ -687,8 +687,8 @@
       <!-- ========== CRM (kanban) ========== -->
       <section x-show="page==='crm'">
         <div class="fichario" style="margin-bottom:14px">
-          <div class="fichario-tab" :class="crmTab!=='lista'?'active':''" @click="crmTab='funil'"><i class="ph ph-kanban ic-ph"></i> Funil</div>
-          <div class="fichario-tab" :class="crmTab==='lista'?'active':''" @click="crmTab='lista'"><i class="ph ph-list-bullets ic-ph"></i> Leads (<span x-text="leads.length"></span>)</div>
+          <div class="fichario-tab" :class="crmTab!=='lista'?'active':''" @click="crmTab='funil'">📋 Funil</div>
+          <div class="fichario-tab" :class="crmTab==='lista'?'active':''" @click="crmTab='lista'">📃 Leads (<span x-text="leads.length"></span>)</div>
         </div>
         <!-- Alertas de ações vencendo hoje / atrasadas -->
         <div x-show="alertasAcoes.length" class="card" style="margin-bottom:12px;border-left:3px solid #d97706;background:#fffbeb;padding:11px 14px">
@@ -773,8 +773,8 @@
       <section x-show="page==='comercial'">
         <!-- abas: Clientes | Onboardings -->
         <div class="fichario" x-show="podeVer('onboarding')" style="margin-bottom:14px">
-          <div class="fichario-tab" :class="comTab==='lista'?'active':''" @click="comTab='lista'"><i class="ph ph-users ic-ph"></i> Clientes</div>
-          <div class="fichario-tab" :class="comTab==='onboarding'?'active':''" @click="comTab='onboarding'; carregarOnboardings()"><i class="ph ph-tray ic-ph"></i> Onboardings <span x-show="onbPendentes.length" class="badge" style="background:var(--accent);color:#fff;margin-left:6px;min-width:18px;justify-content:center" x-text="onbPendentes.length"></span></div>
+          <div class="fichario-tab" :class="comTab==='lista'?'active':''" @click="comTab='lista'">👥 Clientes</div>
+          <div class="fichario-tab" :class="comTab==='onboarding'?'active':''" @click="comTab='onboarding'; carregarOnboardings()">📥 Onboardings <span x-show="onbPendentes.length" class="badge" style="background:var(--accent);color:#fff;margin-left:6px;min-width:18px;justify-content:center" x-text="onbPendentes.length"></span></div>
         </div>
 
         <!-- ABA: lista de clientes -->
@@ -970,14 +970,14 @@
       <section x-show="page==='financeiro'">
         <div class="grid mb-4" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
           <div class="card kpi" @click="finSoAFaturar=!finSoAFaturar" :style="'cursor:pointer;'+(finSoAFaturar?'border:2px solid #0891B2;background:#EBF7FA':'border-left:4px solid #0891B2')" :title="finSoAFaturar?'Clique pra limpar o filtro':'Receitas pendentes SEM cobrança emitida — clique pra ver só elas'">
-            <div class="kpi-label" style="color:#0891B2"><span class="kpi-ico" style="background:#DFF3F8;color:#0891B2"><i class="ph ph-receipt ic-ph"></i></span> A faturar<span x-show="finSoAFaturar"> ✓</span></div>
+            <div class="kpi-label" style="color:#0891B2"><span class="kpi-ico" style="background:#DFF3F8;color:#0891B2">🧾</span> A faturar<span x-show="finSoAFaturar"> ✓</span></div>
             <div class="kpi-value fs-22" style="color:#0891B2" x-text="fmtCur(finAFaturarTotal)"></div>
             <div class="text-3 fs-11" x-text="finAFaturar.length + (finAFaturar.length===1 ? ' lançamento sem cobrança' : ' lançamentos sem cobrança')"></div>
           </div>
-          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-wallet ic-ph"></i></span> Receita · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" x-text="fmtCur(receitaMes)"></div></div>
-          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-arrow-up-right ic-ph"></i></span> Despesa · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" x-text="fmtCur(despesaMes)"></div></div>
-          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-scales ic-ph"></i></span> Saldo · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
-          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-swap ic-ph"></i></span> A receber / A pagar (mês)</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853">💰</span> Receita · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" x-text="fmtCur(receitaMes)"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335">📤</span> Despesa · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" x-text="fmtCur(despesaMes)"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825">⚖️</span> Saldo · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4">🔁</span> A receber / A pagar (mês)</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
         </div>
 
         <!-- previsão de caixa: 7 / 15 / 30 dias -->
@@ -1458,23 +1458,23 @@
               <!-- ===== BARRA DE ALERTAS IMPORTANTES ===== -->
               <div class="card" x-show="saudeAlertas(monitorCliente).length" style="padding:11px 14px;margin-bottom:12px;border-left:3px solid #dc2626;background:#fef2f2">
                 <div class="flex items-center gap-2" style="flex-wrap:wrap">
-                  <span class="fw-800 fs-13" style="color:#b91c1c"><i class="ph ph-warning ic-ph"></i> Alertas importantes</span>
+                  <span class="fw-800 fs-13" style="color:#b91c1c">⚠️ Alertas importantes</span>
                   <template x-for="al in saudeAlertas(monitorCliente)" :key="al"><span class="badge" style="background:#fff;border:1px solid #fecaca;color:#991b1b" x-text="al"></span></template>
                 </div>
               </div>
 
               <!-- ===== ABAS DA FICHA ===== -->
               <div class="fichario" style="margin-bottom:12px">
-                <div class="fichario-tab" :class="fichaTab==='geral'?'active':''" @click="fichaTab='geral'"><i class="ph ph-squares-four ic-ph"></i> Visão geral</div>
-                <div class="fichario-tab" :class="fichaTab==='acoes'?'active':''" @click="fichaTab='acoes'"><i class="ph ph-target ic-ph"></i> Próximas ações <span x-show="tarefasPendentes(monitorCliente).length+pendenciasCliente(monitorCliente).length" class="badge" style="background:#fee2e2;color:#dc2626;margin-left:4px;min-width:18px;justify-content:center" x-text="tarefasPendentes(monitorCliente).length+pendenciasCliente(monitorCliente).length"></span></div>
-                <div class="fichario-tab" :class="fichaTab==='historico'?'active':''" @click="fichaTab='historico'"><i class="ph ph-clock-counter-clockwise ic-ph"></i> Histórico</div>
-                <div class="fichario-tab" :class="fichaTab==='documentos'?'active':''" @click="fichaTab='documentos'"><i class="ph ph-paperclip ic-ph"></i> Documentos</div>
-                <div class="fichario-tab" :class="fichaTab==='acessos'?'active':''" @click="fichaTab='acessos'"><i class="ph ph-lock-key ic-ph"></i> Acessos</div>
+                <div class="fichario-tab" :class="fichaTab==='geral'?'active':''" @click="fichaTab='geral'">🏠 Visão geral</div>
+                <div class="fichario-tab" :class="fichaTab==='acoes'?'active':''" @click="fichaTab='acoes'">🎯 Próximas ações <span x-show="tarefasPendentes(monitorCliente).length+pendenciasCliente(monitorCliente).length" class="badge" style="background:#fee2e2;color:#dc2626;margin-left:4px;min-width:18px;justify-content:center" x-text="tarefasPendentes(monitorCliente).length+pendenciasCliente(monitorCliente).length"></span></div>
+                <div class="fichario-tab" :class="fichaTab==='historico'?'active':''" @click="fichaTab='historico'">🕘 Histórico</div>
+                <div class="fichario-tab" :class="fichaTab==='documentos'?'active':''" @click="fichaTab='documentos'">📎 Documentos</div>
+                <div class="fichario-tab" :class="fichaTab==='acessos'?'active':''" @click="fichaTab='acessos'">🔐 Acessos</div>
               </div>
               <div x-show="fichaTab==='geral'">
               <!-- ===== PERFORMANCE (Meta real + placeholders honestos) ===== -->
               <div class="card" style="box-shadow:none;border:1px solid var(--border);padding:12px;margin-bottom:10px">
-                <div class="fw-800 fs-12 mb-2" style="text-transform:uppercase;letter-spacing:.5px"><i class="ph ph-chart-line-up ic-ph"></i> Performance <span class="text-3" style="font-weight:400;text-transform:none">· últimos 28 dias</span></div>
+                <div class="fw-800 fs-12 mb-2" style="text-transform:uppercase;letter-spacing:.5px">📈 Performance <span class="text-3" style="font-weight:400;text-transform:none">· últimos 28 dias</span></div>
                 <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
                   <div class="card" style="box-shadow:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 12px">
                     <div class="fs-12" style="color:#4d7c5a">Alcance (Instagram)</div>
@@ -1900,7 +1900,7 @@
       <section x-show="page==='agenda'">
         <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:10px">
           <div>
-            <div style="font-size:22px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-calendar-dots ic-ph" style="color:#F9A825"></i> Agenda de Eventos</div>
+            <div style="font-size:22px;font-weight:500;letter-spacing:-.3px">📅 Agenda de Eventos</div>
             <div class="text-3" style="font-size:13px;margin-top:4px">Agende reuniões, contatos e eventos dos clientes — e acompanhe o histórico.</div>
           </div>
           <div class="flex items-center gap-2" style="flex-wrap:wrap">
@@ -1966,7 +1966,7 @@
 
           <!-- Resumo dos últimos 3 -->
           <div class="card" style="padding:12px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-clock-counter-clockwise ic-ph" style="color:#4285F4"></i> Últimos 3 eventos</div>
+            <div class="fw-800 fs-13 mb-2">🕘 Últimos 3 eventos</div>
             <template x-for="ev in agUltimos3" :key="ev.id">
               <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
                 <span style="font-size:16px" x-text="agTipoIcon(ev.tipo)"></span>
@@ -1984,7 +1984,7 @@
         <!-- ===== Lista linear: todos os eventos agendados (passados e futuros) ===== -->
         <div class="card" style="padding:0;overflow:hidden">
           <div class="flex items-center justify-between" style="padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px">
-            <div class="fw-800 fs-14"><i class="ph ph-list-bullets ic-ph"></i> Todos os eventos agendados</div>
+            <div class="fw-800 fs-14">📃 Todos os eventos agendados</div>
             <div class="fichario" style="margin:0">
               <div class="fichario-tab" :class="agendaTempo==='futuros'?'active':''" @click="agendaTempo='futuros'">Futuros</div>
               <div class="fichario-tab" :class="agendaTempo==='passados'?'active':''" @click="agendaTempo='passados'">Passados</div>
@@ -2037,7 +2037,7 @@
       <section x-show="page==='trafego'">
         <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
           <div>
-            <div style="font-size:22px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-chart-line-up ic-ph" style="color:#F9A825"></i> Gestão de Tráfego</div>
+            <div style="font-size:22px;font-weight:500;letter-spacing:-.3px">📈 Gestão de Tráfego</div>
             <div class="text-3" style="font-size:13px;margin-top:4px">Rotina diária com evidências — o que foi feito, onde e por quê.</div>
           </div>
           <div class="flex items-center gap-2">
@@ -2060,13 +2060,13 @@
         </div>
 
         <div class="tabs">
-          <div class="tab" :class="trafTab==='rotina'?'active':''" @click="trafTab='rotina'"><i class="ph ph-check-square ic-ph"></i> Rotina do dia</div>
+          <div class="tab" :class="trafTab==='rotina'?'active':''" @click="trafTab='rotina'">✅ Rotina do dia</div>
           <div class="tab" :class="trafTab==='contas'?'active':''" @click="trafTab='contas'">
             <i class="ph ph-wallet ic-ph"></i> Contas &amp; Campanhas
             <span x-show="trafSaldoAlertas.sem.length" class="badge fs-11 fw-800" style="background:#fee2e2;color:#dc2626;margin-left:4px" x-text="trafSaldoAlertas.sem.length"></span>
           </div>
-          <div class="tab" :class="trafTab==='fichario'?'active':''" @click="trafAbrirFichario()"><i class="ph ph-folders ic-ph"></i> Fichário</div>
-          <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
+          <div class="tab" :class="trafTab==='fichario'?'active':''" @click="trafAbrirFichario()">🗂️ Fichário</div>
+          <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'">🎛️ Indicadores</div>
         </div>
 
         <!-- Banner "Seu dia": blocos de estatística (número grande + rótulo + linha rotativa) -->
@@ -2109,7 +2109,7 @@
           <div class="traf-rotina-lateral">
           <!-- Checklist por cliente -->
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
+            <div class="fw-800 fs-13 mb-2">✅ Checklist do dia — por cliente
               <span class="text-3 fs-11 fw-400" x-show="trafCliSel && trafCheckDia().por" x-text="'· por '+trafCheckDia().por"></span>
             </div>
             <!-- Dropdown só de ativos — ✓ = já fechou as 8 do dia -->
@@ -2125,7 +2125,7 @@
             <div x-show="!trafCliSel" class="text-3 fs-12" style="padding:16px 0;text-align:center">Escolha um cliente pra abrir o checklist dele.</div>
             <!-- Histórico do dia: checklists já concluídos (visível com o checklist fechado) -->
             <div x-show="!trafCliSel && trafRealizadosDia.length" style="margin-top:4px">
-              <div class="fw-800 fs-12 mb-1" style="color:#15803d"><i class="ph ph-check-circle ic-ph"></i> Realizados hoje (<span x-text="trafRealizadosDia.length"></span>)</div>
+              <div class="fw-800 fs-12 mb-1" style="color:#15803d">✅ Realizados hoje (<span x-text="trafRealizadosDia.length"></span>)</div>
               <template x-for="r in trafRealizadosDia" :key="'rd'+r.clienteId">
                 <div class="flex items-center gap-2 fs-12" style="padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="trafCliSel=r.clienteId" title="Abrir o checklist deste cliente">
                   <span style="color:#16a34a">✅</span>
@@ -2151,7 +2151,7 @@
             </template>
             <!-- Otimizações do dia registradas pra ESTE cliente (vindas do log) -->
             <div x-show="trafCliSel && trafLogDe(trafDia, trafCliSel).length" style="margin-top:10px;background:#FEF7E0;border-radius:8px;padding:10px">
-              <div class="fw-800 fs-12 mb-1" style="color:#ea580c"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia neste cliente (<span x-text="trafLogDe(trafDia, trafCliSel).length"></span>)</div>
+              <div class="fw-800 fs-12 mb-1" style="color:#ea580c">📝 Otimizações do dia neste cliente (<span x-text="trafLogDe(trafDia, trafCliSel).length"></span>)</div>
               <template x-for="l in trafLogDe(trafDia, trafCliSel)" :key="'clog'+l.id">
                 <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span></div>
               </template>
@@ -2160,7 +2160,7 @@
           </div>
           <!-- Log de otimizações -->
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-list-plus ic-ph" style="color:#ea580c"></i> Log de otimizações</div>
+            <div class="fw-800 fs-13 mb-2">📝 Log de otimizações</div>
             <div class="text-3 fs-11 mb-2">Só mudanças relevantes: pausou, escalou, novo público, verba…</div>
             <div class="form-group" style="margin-bottom:8px">
               <select class="form-select" x-model="trafLogForm.clienteId">
@@ -2209,7 +2209,7 @@
                 <text x="60" y="76" text-anchor="middle" style="font-size:11px;font-weight:700" fill="#8a8ba3" x-text="trafProgressoDia.falta===0?'cumprido':'faltam'"></text>
               </svg>
               <div style="min-width:0">
-                <div class="fw-800 fs-13"><i class="ph ph-target ic-ph" style="color:#ea580c"></i> Demanda do dia</div>
+                <div class="fw-800 fs-13">🎯 Demanda do dia</div>
                 <div class="fs-12" style="margin-top:4px" x-show="trafProgressoDia.falta>0"><b x-text="trafProgressoDia.itensFaltam"></b> itens restantes de <span x-text="trafProgressoDia.total"></span> (<span x-text="trafClientes.length"></span> clientes × <span x-text="TRAF_TAREFAS.length"></span> tarefas)</div>
                 <div class="fs-12 fw-700" style="margin-top:4px;color:#16a34a" x-show="trafProgressoDia.falta===0">Rotina do dia 100% cumprida! 🎉</div>
                 <div class="text-3 fs-11" style="margin-top:2px" x-text="trafCliConcluidos+'/'+trafClientes.length+' clientes concluídos · '+trafProgressoDia.pct+'% feito'"></div>
@@ -2217,7 +2217,7 @@
             </div>
             <!-- Tarefas do quadro Tráfego, por prioridade -->
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#ea580c"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· urgentes primeiro</span></div>
+            <div class="fw-800 fs-13 mb-2">📋 Tarefas do quadro <span class="text-3 fs-11 fw-400">· urgentes primeiro</span></div>
             <div style="max-height:420px;overflow-y:auto">
               <template x-for="p in trafCardsPrioridade" :key="'tcp'+p.id">
                 <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="abrirCardTrafego(p)" :title="'Abrir card no quadro Tráfego'">
@@ -2235,7 +2235,7 @@
             <!-- Insights da IA: análise das contas → o que fazer hoje -->
             <div class="card" style="padding:14px">
               <div class="flex items-center justify-between mb-2" style="gap:8px">
-                <div class="fw-800 fs-13"><i class="ph ph-sparkle ic-ph" style="color:#d97706"></i> Insights da IA</div>
+                <div class="fw-800 fs-13">✨ Insights da IA</div>
                 <button class="btn btn-sm" @click="gerarTrafInsights()" :disabled="trafInsightsGerando" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap">
                   <i class="ph ph-magic-wand ic-ph"></i> <span x-text="trafInsightsGerando?'Analisando…':'Analisar contas'"></span>
                 </button>
@@ -2268,11 +2268,11 @@
         <div x-show="trafTab==='contas'">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
             <div class="card kpi" style="background:#FEF6F4">
-              <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-battery-empty ic-ph"></i></span> Contas sem saldo</div>
+              <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335">🪫</span> Contas sem saldo</div>
               <div class="kpi-value" :style="trafSaldoAlertas.sem.length?'color:#EA4335':''" x-text="trafSaldoAlertas.sem.length"></div>
             </div>
             <div class="card kpi" style="background:#FDE8A9">
-              <div class="kpi-label"><span class="kpi-ico" style="background:#FCDB7E;color:#B06000"><i class="ph ph-battery-low ic-ph"></i></span> Contas com saldo baixo</div>
+              <div class="kpi-label"><span class="kpi-ico" style="background:#FCDB7E;color:#B06000">⚠️</span> Contas com saldo baixo</div>
               <div class="kpi-value" :style="trafSaldoAlertas.baixo.length?'color:#B06000':''" x-text="trafSaldoAlertas.baixo.length"></div>
             </div>
             <div class="card kpi" style="background:#F4F8FE">
@@ -2286,7 +2286,7 @@
           </div>
 
           <div class="card" style="padding:14px;margin-bottom:14px" x-show="trafSaldoAlertas.sem.length || trafSaldoAlertas.baixo.length || trafSaldoAlertas.semInfo.length">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i> Contas precisando de atenção</div>
+            <div class="fw-800 fs-13 mb-2">⚠️ Contas precisando de atenção</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
               <div x-show="trafSaldoAlertas.semInfo.length">
                 <div class="fs-12 fw-700 mb-1" style="color:#6b7280">Campanha rodando, saldo não informado</div>
@@ -2371,7 +2371,7 @@
         <div x-show="trafTab==='fichario'" style="display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start">
           <!-- Gaveta de dias -->
           <div class="card" style="padding:10px">
-            <div class="fw-800 fs-13 mb-2" style="padding:4px 4px 0"><i class="ph ph-folders ic-ph" style="color:#d97706"></i> Dias arquivados</div>
+            <div class="fw-800 fs-13 mb-2" style="padding:4px 4px 0">🗂️ Dias arquivados</div>
             <template x-for="d in trafFichDias" :key="'fd'+d.data">
               <button type="button" class="btn btn-sm"
                 :style="'width:100%;justify-content:space-between;margin-bottom:6px;'+(trafFichSel===d.data ? 'background:#d97706;color:#fff;border-color:#d97706' : 'background:var(--surface-2);color:var(--text-2)')"
@@ -2387,7 +2387,7 @@
             <template x-for="c in trafFichDo(trafFichSel)" :key="'fich'+c.data+c.clienteId">
               <div class="card" style="padding:12px;margin-bottom:10px">
                 <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:6px">
-                  <div class="fw-800 fs-13"><i class="ph ph-buildings ic-ph"></i> <span x-text="c.cliente||'—'"></span></div>
+                  <div class="fw-800 fs-13">🏢 <span x-text="c.cliente||'—'"></span></div>
                   <div class="flex items-center gap-2">
                     <span class="badge fs-11 fw-800" :style="c.itens.filter(i=>i.feito||i.na).length>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="c.itens.filter(i=>i.feito||i.na).length+'/'+TRAF_TAREFAS.length"></span>
                     <span class="text-3 fs-11" x-show="c.por" x-text="'por '+c.por"></span>
@@ -2406,7 +2406,7 @@
                 </template>
                 <!-- Otimizações do dia deste cliente (do log) — arquivadas junto na ficha -->
                 <div x-show="trafLogDe(c.data, c.clienteId).length" style="margin-top:8px;background:#FEF7E0;border-radius:8px;padding:9px">
-                  <div class="fw-800 fs-12 mb-1" style="color:#ea580c"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia (<span x-text="trafLogDe(c.data, c.clienteId).length"></span>)</div>
+                  <div class="fw-800 fs-12 mb-1" style="color:#ea580c">📝 Otimizações do dia (<span x-text="trafLogDe(c.data, c.clienteId).length"></span>)</div>
                   <template x-for="l in trafLogDe(c.data, c.clienteId)" :key="'flog'+l.id">
                     <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span><span class="text-3 fs-11" x-show="l.por" x-text="' · '+l.por"></span></div>
                   </template>
@@ -2420,7 +2420,7 @@
         <!-- ─────── Aba: Indicadores do gestor (só admin) ─────── -->
         <div x-show="trafTab==='indicadores' && ehAdmin">
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-gauge ic-ph" style="color:#ea580c"></i> Indicadores do gestor <span class="text-3 fs-11 fw-400">· últimos 30 dias, medidos por evidência</span></div>
+            <div class="fw-800 fs-13 mb-2">🎛️ Indicadores do gestor <span class="text-3 fs-11 fw-400">· últimos 30 dias, medidos por evidência</span></div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
               <div class="card" style="padding:12px;background:#F4F8FE;border-color:#E8F0FE"><div class="text-3 fs-11">Contas revisadas hoje</div><div style="font-size:22px;font-weight:500" x-text="trafInd.contasHoje"></div></div>
               <div class="card" style="padding:12px;background:#F3FAF6;border-color:#E6F4EA"><div class="text-3 fs-11">Otimizações hoje</div><div style="font-size:22px;font-weight:500" x-text="trafInd.otimHoje"></div></div>
@@ -2589,7 +2589,7 @@
       <section x-show="page==='configuracoes'">
         <!-- Usuários & Acessos -->
         <div class="flex items-center justify-between mb-2">
-          <div class="fw-800 fs-14"><i class="ph ph-users-three ic-ph"></i> Usuários & Acessos</div>
+          <div class="fw-800 fs-14">👥 Usuários & Acessos</div>
           <button class="btn btn-primary btn-sm" @click="novoColaborador()">+ Usuário</button>
         </div>
         <div class="text-3 fs-12 mb-3">Quem entra no sistema e o que cada perfil enxerga.</div>
@@ -2626,7 +2626,7 @@
         <template x-if="ehAdmin">
           <div class="card mb-4" style="padding:0;overflow:hidden">
             <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
-              <div class="fw-800 fs-14"><i class="ph ph-lock-key ic-ph"></i> O que cada perfil acessa</div>
+              <div class="fw-800 fs-14">🔐 O que cada perfil acessa</div>
               <div class="text-3 fs-12" style="margin-top:2px">Marque/desmarque as áreas do sistema que cada perfil pode abrir. <b>Admin</b> tem acesso total (não editável). A <b>própria ficha</b> (Pessoal) é sempre liberada.</div>
             </div>
             <div style="overflow-x:auto">
@@ -2793,7 +2793,7 @@
       <!-- Tipo de cliente — sempre à vista, editável a qualquer momento -->
       <div class="card" style="padding:10px 12px;margin-bottom:12px;background:rgba(0,0,0,.02)">
         <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
-          <div class="fw-700 fs-13"><i class="ph ph-tag ic-ph"></i> Tipo de cliente</div>
+          <div class="fw-700 fs-13">🏷️ Tipo de cliente</div>
           <div class="flex items-center gap-2">
             <button type="button" class="btn btn-sm" :class="(editing.tipoCliente||'recorrente')==='recorrente'?'btn-primary':'btn-ghost'" @click="editing.tipoCliente='recorrente'"><i class="ph ph-arrows-clockwise ic-ph"></i> Recorrente</button>
             <button type="button" class="btn btn-sm" :class="(editing.tipoCliente||'recorrente')==='avulso'?'btn-primary':'btn-ghost'" @click="editing.tipoCliente='avulso'"><i class="ph ph-lightning ic-ph"></i> Avulso</button>
@@ -2803,7 +2803,7 @@
       </div>
       <!-- Equipe responsável por papel -->
       <div class="card" style="padding:10px 12px;margin-bottom:12px;background:rgba(0,0,0,.02)">
-        <div class="fw-700 fs-13 mb-2"><i class="ph ph-users-three ic-ph"></i> Equipe responsável</div>
+        <div class="fw-700 fs-13 mb-2">👥 Equipe responsável</div>
         <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
           <div class="form-group" style="margin:0"><label class="form-label">Atendimento</label><select class="form-select" x-model="editing.time.atendimento"><option value="">—</option><template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template></select></div>
           <div class="form-group" style="margin:0"><label class="form-label">Tráfego</label><select class="form-select" x-model="editing.time.trafego"><option value="">—</option><template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template></select></div>
@@ -3310,7 +3310,7 @@
 
       <!-- ===== VALORES E PAGAMENTO (modelo Operand) ===== -->
       <div class="card" style="padding:14px 16px;margin-top:12px;background:rgba(0,0,0,.02)">
-        <div class="fw-800 fs-14 mb-2"><i class="ph ph-calculator ic-ph"></i> Valores e pagamento</div>
+        <div class="fw-800 fs-14 mb-2">🧮 Valores e pagamento</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
           <div class="form-group"><label class="form-label">Desconto (R$)</label><input class="form-input" type="number" min="0" step="0.01" x-model.number="editing.desconto"></div>
           <div class="form-group"><label class="form-label">Honorários (R$) <span class="hq" data-tip="Acréscimo de honorários da agência.">?</span></label><input class="form-input" type="number" min="0" step="0.01" x-model.number="editing.honorarios"></div>
@@ -3353,7 +3353,7 @@
         </div>
 
         <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
-          <div class="flex items-center justify-between mb-1"><div class="fw-700 fs-13"><i class="ph ph-receipt ic-ph"></i> Custos externos <span class="hq" data-tip="Custos da entrega (terceiros, mídia, fornecedores) — uso interno, não aparece pro cliente.">?</span></div><div class="fs-12 text-3">Total: <b x-text="fmtCur(orcCustosExternos(editing))"></b></div></div>
+          <div class="flex items-center justify-between mb-1"><div class="fw-700 fs-13">🧾 Custos externos <span class="hq" data-tip="Custos da entrega (terceiros, mídia, fornecedores) — uso interno, não aparece pro cliente.">?</span></div><div class="fs-12 text-3">Total: <b x-text="fmtCur(orcCustosExternos(editing))"></b></div></div>
           <template x-for="(c,i) in (editing.custosExternos||[])" :key="c.id">
             <div class="flex items-center gap-2" style="margin-bottom:6px">
               <input class="form-input" style="flex:1;padding:5px 8px" x-model="c.descricao" placeholder="Descrição do custo">
