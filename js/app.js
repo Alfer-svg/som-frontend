@@ -882,6 +882,17 @@ document.addEventListener('alpine:init', () => {
     _agKey(e) { return e.data + 'T' + (e.hora || '00:00'); },
     // SÓ eventos AGENDADOS (fonte 'agenda') p/ a lista linear e o resumo — não polui com interações antigas.
     get agAgendados() { return this.agEventos.filter(e => e.fonte === 'agenda'); },
+    // Dash Visão Geral: próximos eventos agendados de TODOS os clientes (ignora o filtro da Agenda)
+    get dashAgenda() {
+      const h = this._hojeStr(); const out = [];
+      for (const c of (this.clients || [])) {
+        const nome = c.empresa || c.nome || '—';
+        for (const e of (c.agenda || [])) if (e && e.data && String(e.data).slice(0, 10) >= h)
+          out.push({ data: String(e.data).slice(0, 10), hora: e.hora || '', tipo: e.tipo || 'Evento', titulo: e.titulo || e.tipo || 'Evento', cliente: nome, clienteId: c.id });
+      }
+      out.sort((a, b) => (a.data + 'T' + (a.hora || '00:00')).localeCompare(b.data + 'T' + (b.hora || '00:00')));
+      return out.slice(0, 8);
+    },
     // Lista linear conforme o filtro de tempo (todos/futuros/passados), ordenada.
     get agLineares() {
       const h = this._hojeStr();

@@ -327,7 +327,27 @@
             <div x-show="radar.length>5" class="text-3" style="padding:14px 26px 2px;font-size:13px" x-text="'+ '+(radar.length-5)+' outra(s) pendência(s)'"></div>
           </div>
         </div>
-        <div class="grid grid-2">
+        <div class="grid grid-3">
+          <!-- 📅 Acompanhamento do calendário: próximos eventos da Agenda -->
+          <div class="card">
+            <div class="flex items-center justify-between mb-3">
+              <div class="card-title">Agenda — próximos eventos</div>
+              <button class="btn btn-ghost btn-sm" @click="go('agenda')" style="padding:4px 8px">Abrir →</button>
+            </div>
+            <template x-if="!dashAgenda.length"><div class="empty">Nada agendado <i class="ph ph-calendar-check ic-ph"></i> Marque eventos na Agenda.</div></template>
+            <template x-for="(e,i) in dashAgenda" :key="'dag'+i+e.data+(e.id||'')">
+              <div class="flex items-center mb-2" style="gap:10px;cursor:pointer" @click="go('agenda'); agendaRef={ano:+e.data.slice(0,4), mes:+e.data.slice(5,7)-1}; agendaDiaSel=e.data" :title="'Ver este dia na Agenda'">
+                <div style="min-width:42px;text-align:center;border-radius:10px;padding:5px 4px" :style="e.data===_hojeStr()?'background:#E6F4EA':'background:#F4F8FE'">
+                  <div style="font-size:15px;font-weight:600;line-height:1.1" :style="e.data===_hojeStr()?'color:#188038':''" x-text="+e.data.slice(8,10)"></div>
+                  <div class="fs-11" :style="e.data===_hojeStr()?'color:#188038;font-weight:600':'color:var(--text-3)'" x-text="e.data===_hojeStr()?'hoje':['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][+e.data.slice(5,7)-1]"></div>
+                </div>
+                <div style="min-width:0;flex:1">
+                  <div class="fw-700 fs-12 truncate"><span x-text="agTipoIcon(e.tipo)"></span> <span x-text="e.titulo"></span></div>
+                  <div class="text-3 fs-12 truncate" x-text="[e.hora, e.cliente].filter(Boolean).join(' · ')"></div>
+                </div>
+              </div>
+            </template>
+          </div>
           <div class="card">
             <div class="card-title mb-3">Funil — leads por estágio</div>
             <template x-for="s in crmStages" :key="s.id">
@@ -4278,7 +4298,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=274"></script>
+<script src="js/app.js?v=275"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
