@@ -404,11 +404,11 @@
         </div>
 
         <!-- KPIs do funil -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px">
-          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Pipeline aberto</div><div class="fw-800 fs-18" x-text="mascCur(pipelineValor)"></div><div class="text-3 fs-12" x-text="leadsAbertosArr.length+' leads em aberto'"></div></div>
-          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Ganhos</div><div class="fw-800 fs-18" style="color:#16a34a" x-text="mascCur(ganhosValor)"></div><div class="text-3 fs-12" x-text="ganhosCount+' fechados'"></div></div>
-          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Taxa de conversão</div><div class="fw-800 fs-18" x-text="winRate+'%'"></div><div class="text-3 fs-12" x-text="ganhosCount+' ganhos · '+perdidosCount+' perdidos'"></div></div>
-          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Ticket médio</div><div class="fw-800 fs-18" x-text="mascCur(ticketMedio)"></div><div class="text-3 fs-12">por negócio ganho</div></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px">
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-funnel ic-ph"></i></span> Pipeline aberto</div><div class="kpi-value fs-22" x-text="mascCur(pipelineValor)"></div><div class="text-3 fs-12" x-text="leadsAbertosArr.length+' leads em aberto'"></div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-trophy ic-ph"></i></span> Ganhos</div><div class="kpi-value fs-22" x-text="mascCur(ganhosValor)"></div><div class="text-3 fs-12" x-text="ganhosCount+' fechados'"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-percent ic-ph"></i></span> Taxa de conversão</div><div class="kpi-value fs-22" x-text="winRate+'%'"></div><div class="text-3 fs-12" x-text="ganhosCount+' ganhos · '+perdidosCount+' perdidos'"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-tag ic-ph"></i></span> Ticket médio</div><div class="kpi-value fs-22" x-text="mascCur(ticketMedio)"></div><div class="text-3 fs-12">por negócio ganho</div></div>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px">
@@ -508,10 +508,10 @@
           <span class="fs-12 text-3" style="margin-left:auto">Posts: programação do período + 2 semanas à frente (produção antecipada) · projetos pela conclusão</span>
         </div>
         <div class="grid grid-4 mb-4">
-          <div class="card kpi"><div class="kpi-label">Posts prontos</div><div class="kpi-value fs-22" x-text="dopPostsProntos.length+' / '+dopPostsPeriodo.length"></div><div class="fs-12 text-3" x-text="dopPostsPeriodo.length?Math.round(dopPostsProntos.length/dopPostsPeriodo.length*100)+'% do programado':'nada programado'"></div></div>
-          <div class="card kpi"><div class="kpi-label">Projetos concluídos</div><div class="kpi-value fs-22" x-text="dopProjConcluidos.length"></div><div class="fs-12 text-3">trabalhos fora da programação</div></div>
-          <div class="card kpi"><div class="kpi-label">Em produção agora</div><div class="kpi-value fs-22" x-text="dopEmProducao.length"></div><div class="fs-12 text-3" :class="dopAtrasados.length?'text-red':''" x-text="dopAtrasados.length?dopAtrasados.length+' atrasado(s)':'nenhum atrasado'"></div></div>
-          <div class="card kpi"><div class="kpi-label">Tempo de produção</div><div class="kpi-value fs-22" x-text="fmtDur(dopTempoPeriodo)"></div><div class="fs-12 text-3">cronômetro dos cards</div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-images ic-ph"></i></span> Posts prontos</div><div class="kpi-value fs-22" x-text="dopPostsProntos.length+' / '+dopPostsPeriodo.length"></div><div class="fs-12 text-3" x-text="dopPostsPeriodo.length?Math.round(dopPostsProntos.length/dopPostsPeriodo.length*100)+'% do programado':'nada programado'"></div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle ic-ph"></i></span> Projetos concluídos</div><div class="kpi-value fs-22" x-text="dopProjConcluidos.length"></div><div class="fs-12 text-3">trabalhos fora da programação</div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-hammer ic-ph"></i></span> Em produção agora</div><div class="kpi-value fs-22" x-text="dopEmProducao.length"></div><div class="fs-12 text-3" :class="dopAtrasados.length?'text-red':''" x-text="dopAtrasados.length?dopAtrasados.length+' atrasado(s)':'nenhum atrasado'"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-timer ic-ph"></i></span> Tempo de produção</div><div class="kpi-value fs-22" x-text="fmtDur(dopTempoPeriodo)"></div><div class="fs-12 text-3">cronômetro dos cards</div></div>
         </div>
         <div class="grid grid-2 mb-4">
           <div class="card">
@@ -594,18 +594,18 @@
           </template>
           <span class="fs-12 text-3" style="margin-left:auto">Google Ads = este mês (snapshot diário)</span>
         </div>
-        <div class="card mb-4" x-show="dtfSemRotinaHoje.length" style="border-left:3px solid #f59e0b;background:linear-gradient(90deg,#fffbeb,#fff)">
+        <div class="card mb-4" x-show="dtfSemRotinaHoje.length" style="background:#FEF7E0;border:1px solid #FCE8B2;box-shadow:none">
           <div class="fs-13 fw-600"><i class="ph ph-warning ic-ph" style="color:#d97706"></i> Campanha rodando e rotina de hoje incompleta: <span class="fw-800" x-text="dtfSemRotinaHoje.join(' · ')"></span></div>
         </div>
         <div class="grid grid-3 mb-4">
-          <div class="card kpi"><div class="kpi-label">Rotina de hoje</div><div class="kpi-value fs-22" x-text="dtfHoje.ok+' / '+dtfHoje.total"></div><div class="fs-12 text-3" x-text="dtfHoje.parcial?dtfHoje.parcial+' parcial(is)':'checklists completos'"></div></div>
-          <div class="card kpi"><div class="kpi-label">Otimizações no período</div><div class="kpi-value fs-22" x-text="dtfLogPeriodo.length"></div><div class="fs-12 text-3">registradas no log</div></div>
-          <div class="card kpi"><div class="kpi-label">Contas Google Ads</div><div class="kpi-value fs-22" x-text="dtfAds.contas"></div><div class="fs-12 text-3" x-text="dtfAds.rows.filter(r=>r.camp>0).length+' com campanha ativa'"></div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-square ic-ph"></i></span> Rotina de hoje</div><div class="kpi-value fs-22" x-text="dtfHoje.ok+' / '+dtfHoje.total"></div><div class="fs-12 text-3" x-text="dtfHoje.parcial?dtfHoje.parcial+' parcial(is)':'checklists completos'"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-list-plus ic-ph"></i></span> Otimizações no período</div><div class="kpi-value fs-22" x-text="dtfLogPeriodo.length"></div><div class="fs-12 text-3">registradas no log</div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-google-logo ic-ph"></i></span> Contas Google Ads</div><div class="kpi-value fs-22" x-text="dtfAds.contas"></div><div class="fs-12 text-3" x-text="dtfAds.rows.filter(r=>r.camp>0).length+' com campanha ativa'"></div></div>
         </div>
         <div class="grid grid-3 mb-4">
-          <div class="card kpi"><div class="kpi-label">Investimento (mês)</div><div class="kpi-value fs-22" x-text="mascCur(dtfAds.gasto)"></div></div>
-          <div class="card kpi"><div class="kpi-label">Leads (mês)</div><div class="kpi-value fs-22" x-text="Math.round(dtfAds.leads)"></div></div>
-          <div class="card kpi"><div class="kpi-label">Custo por lead (médio)</div><div class="kpi-value fs-22" x-text="dtfAds.leads?mascCur(dtfAds.cpl):'—'"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-currency-circle-dollar ic-ph"></i></span> Investimento (mês)</div><div class="kpi-value fs-22" x-text="mascCur(dtfAds.gasto)"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-target ic-ph"></i></span> Leads (mês)</div><div class="kpi-value fs-22" x-text="Math.round(dtfAds.leads)"></div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-calculator ic-ph"></i></span> Custo por lead (médio)</div><div class="kpi-value fs-22" x-text="dtfAds.leads?mascCur(dtfAds.cpl):'—'"></div></div>
         </div>
         <div class="grid grid-2 mb-4">
           <div class="card">
@@ -950,14 +950,14 @@
       <section x-show="page==='financeiro'">
         <div class="grid mb-4" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
           <div class="card kpi" @click="finSoAFaturar=!finSoAFaturar" :style="'cursor:pointer;'+(finSoAFaturar?'border:2px solid #7E22CE;background:#FAF5FF':'border-left:4px solid #7E22CE')" :title="finSoAFaturar?'Clique pra limpar o filtro':'Receitas pendentes SEM cobrança emitida — clique pra ver só elas'">
-            <div class="kpi-label" style="color:#7E22CE">A faturar<span x-show="finSoAFaturar"> ✓</span></div>
+            <div class="kpi-label" style="color:#7E22CE"><span class="kpi-ico" style="background:#F3E8FF;color:#7E22CE"><i class="ph ph-receipt ic-ph"></i></span> A faturar<span x-show="finSoAFaturar"> ✓</span></div>
             <div class="kpi-value fs-22" style="color:#7E22CE" x-text="fmtCur(finAFaturarTotal)"></div>
             <div class="text-3 fs-11" x-text="finAFaturar.length + (finAFaturar.length===1 ? ' lançamento sem cobrança' : ' lançamentos sem cobrança')"></div>
           </div>
-          <div class="card kpi"><div class="kpi-label">Receita · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22 text-green" x-text="fmtCur(receitaMes)"></div></div>
-          <div class="card kpi"><div class="kpi-label">Despesa · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22 text-red" x-text="fmtCur(despesaMes)"></div></div>
-          <div class="card kpi"><div class="kpi-label">Saldo · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
-          <div class="card kpi"><div class="kpi-label">A receber / A pagar (mês)</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
+          <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-wallet ic-ph"></i></span> Receita · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" x-text="fmtCur(receitaMes)"></div></div>
+          <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-arrow-up-right ic-ph"></i></span> Despesa · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" x-text="fmtCur(despesaMes)"></div></div>
+          <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-scales ic-ph"></i></span> Saldo · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
+          <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-swap ic-ph"></i></span> A receber / A pagar (mês)</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
         </div>
 
         <!-- previsão de caixa: 7 / 15 / 30 dias -->
@@ -1868,8 +1868,8 @@
       <section x-show="page==='agenda'">
         <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:10px">
           <div>
-            <div class="fw-800 fs-18"><i class="ph ph-calendar-dots ic-ph" style="color:#ea580c"></i> Agenda de Eventos</div>
-            <div class="text-3 fs-12">Agende reuniões, contatos e eventos dos clientes — e acompanhe o histórico.</div>
+            <div style="font-size:22px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-calendar-dots ic-ph" style="color:#F9A825"></i> Agenda de Eventos</div>
+            <div class="text-3" style="font-size:13px;margin-top:4px">Agende reuniões, contatos e eventos dos clientes — e acompanhe o histórico.</div>
           </div>
           <div class="flex items-center gap-2" style="flex-wrap:wrap">
             <select class="form-select fs-13" style="max-width:220px" x-model="agendaFiltro">
@@ -3070,14 +3070,14 @@
             <div>
               <!-- KPIs de parcelas -->
               <div class="grid grid-3" style="gap:10px;margin-bottom:14px">
-                <div class="card kpi"><div class="kpi-label">Parcelas pagas</div><div class="kpi-value fs-22 text-green" x-text="finClienteResumo.qtdPagas+' / '+finClienteResumo.total"></div></div>
-                <div class="card kpi"><div class="kpi-label">Faltam pagar</div><div class="kpi-value fs-22" x-text="finClienteResumo.qtdPendentes"></div></div>
-                <div class="card kpi"><div class="kpi-label">Pagas em atraso</div><div class="kpi-value fs-22" :class="finClienteResumo.qtdPagasAtraso?'text-red':''" x-text="finClienteResumo.qtdPagasAtraso"></div></div>
+                <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label">Parcelas pagas</div><div class="kpi-value fs-22 text-green" x-text="finClienteResumo.qtdPagas+' / '+finClienteResumo.total"></div></div>
+                <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label">Faltam pagar</div><div class="kpi-value fs-22" x-text="finClienteResumo.qtdPendentes"></div></div>
+                <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label">Pagas em atraso</div><div class="kpi-value fs-22" :class="finClienteResumo.qtdPagasAtraso?'text-red':''" x-text="finClienteResumo.qtdPagasAtraso"></div></div>
               </div>
               <div class="grid grid-3" style="gap:10px;margin-bottom:16px">
-                <div class="card kpi"><div class="kpi-label">Já recebido</div><div class="kpi-value fs-18 text-green" x-text="fmtCur(finClienteResumo.totalPago)"></div></div>
-                <div class="card kpi"><div class="kpi-label">A receber</div><div class="kpi-value fs-18" x-text="fmtCur(finClienteResumo.totalAReceber)"></div></div>
-                <div class="card kpi"><div class="kpi-label">Vencido</div><div class="kpi-value fs-18" :class="finClienteResumo.totalVencido?'text-red':''" x-text="fmtCur(finClienteResumo.totalVencido)"></div></div>
+                <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label">Já recebido</div><div class="kpi-value fs-18 text-green" x-text="fmtCur(finClienteResumo.totalPago)"></div></div>
+                <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label">A receber</div><div class="kpi-value fs-18" x-text="fmtCur(finClienteResumo.totalAReceber)"></div></div>
+                <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label">Vencido</div><div class="kpi-value fs-18" :class="finClienteResumo.totalVencido?'text-red':''" x-text="fmtCur(finClienteResumo.totalVencido)"></div></div>
               </div>
 
               <!-- Destaques: parcela atual + última + pontualidade -->
