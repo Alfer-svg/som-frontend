@@ -414,6 +414,7 @@ document.addEventListener('alpine:init', () => {
     adsLive: {},      // {clienteId: {configurado, leads, custoLead, gasto, ...}} — Google Ads (MCC) puxado ao vivo na ficha
     adsConfig: null,  // {configurado, mcc} — há credencial da agência? (carregado 1x)
     radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
+    radarCliAberto: true, // radar do cliente na ficha em tela cheia: começa aberto, pode recolher
     radarDashAberto: MD.get('som_radar_dash', false), // card Radar do Dashboard: recolhido por padrão; preferência salva
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
     novaInter: { tipo: 'Ligação', texto: '', data: '' }, // form de nova interação na timeline (data: opcional, p/ reunião)

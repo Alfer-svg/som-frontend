@@ -1420,18 +1420,19 @@
               </div>
               <!-- RADAR do cliente (só as pendências dele) — no topo da tela cheia -->
               <div class="card" :class="radarCliente.length?'radar-pulse':''" style="margin-bottom:16px;padding:0;overflow:hidden;background:#E9F5EE;border-color:#CEEAD6">
-                <div class="flex items-center" style="padding:14px 20px;gap:14px;flex-wrap:wrap">
+                <div class="flex items-center" :style="'padding:14px 20px;gap:14px;flex-wrap:wrap;'+(radarCliente.length?'cursor:pointer':'')" @click="radarCliente.length && (radarCliAberto=!radarCliAberto)" :title="radarCliente.length?'Clique pra recolher/abrir':''">
                   <span style="width:44px;height:44px;border-radius:12px;background:#34A853;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0"><i class="ph ph-broadcast ic-ph"></i></span>
                   <div style="min-width:0;flex:1">
                     <div style="font-size:16px;font-weight:600;letter-spacing:-.2px">Radar do cliente</div>
-                    <div class="text-3 fs-12" x-text="radarCliente.length ? radarCliente.length+' pendência(s) deste cliente' : 'Tudo em dia com este cliente ✅'"></div>
+                    <div class="text-3 fs-12" x-text="radarCliente.length ? radarCliente.length+' pendência(s) deste cliente'+(radarCliAberto?'':' — clique pra abrir') : 'Tudo em dia com este cliente ✅'"></div>
                   </div>
                   <div x-show="radarCliente.length" class="flex items-center" style="gap:8px;flex-wrap:wrap">
                     <div style="background:#fff;border:1px solid #CEEAD6;border-radius:10px;padding:6px 12px;display:flex;align-items:center;gap:7px"><span style="font-weight:600;line-height:1" x-text="radarCliente.filter(p=>p.nivel==='alta').length"></span><span class="fs-12" style="color:var(--text-2)">urgentes</span></div>
                     <div style="background:#fff;border:1px solid #CEEAD6;border-radius:10px;padding:6px 12px;display:flex;align-items:center;gap:7px"><span style="font-weight:600;line-height:1" x-text="radarCliente.filter(p=>p.nivel==='media').length"></span><span class="fs-12" style="color:var(--text-2)">em breve</span></div>
                   </div>
+                  <i x-show="radarCliente.length" class="ph ic-ph text-3" style="font-size:20px;flex-shrink:0" :class="radarCliAberto?'ph-caret-up':'ph-caret-down'"></i>
                 </div>
-                <div x-show="radarCliente.length" style="background:#fff;border-top:1px solid #CEEAD6;max-height:240px;overflow:auto">
+                <div x-show="radarCliente.length && radarCliAberto" style="background:#fff;border-top:1px solid #CEEAD6;max-height:240px;overflow:auto">
                   <template x-for="(p,i) in radarCliente" :key="p.cliId+'-fc-'+i">
                     <div class="flex items-center" style="gap:12px;padding:11px 20px;border-bottom:1px solid #CEEAD6">
                       <i class="ic-ph" style="font-size:20px" :class="phClass(p.icon)" :style="phCor(p.icon)?('color:'+phCor(p.icon)):''"></i>
@@ -4372,7 +4373,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=280"></script>
+<script src="js/app.js?v=281"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
