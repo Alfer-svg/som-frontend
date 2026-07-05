@@ -407,6 +407,7 @@ document.addEventListener('alpine:init', () => {
     STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, FORN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, CONDICOES_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
+    monitorFull: false, // ficha do cliente em tela cheia (abre ao selecionar; radar do cliente no topo)
     metaStatus: {},   // {clienteId: {conectado, igUsername, pageName, ...}} — conexão Meta por cliente
     metaMetricas: {}, // {clienteId: {instagram, facebook, posts}} — métricas reais puxadas da Meta
     metaBusy: false,
@@ -2545,7 +2546,10 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     idadeDe(nasc) { if (!nasc) return null; const d = new Date(nasc + 'T00:00:00'); if (isNaN(d.getTime())) return null; const h = new Date(); let a = h.getFullYear() - d.getFullYear(); const m = h.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && h.getDate() < d.getDate())) a--; return a; },
     mediaRedes(c) { const rs = this.redesDoCliente(c).filter(r => r.id !== 'gmn'); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; }, // GMN é nota 0–5, não % — fica fora da média
     get monitorCliente() { const list = this.clientesFiltrados; if (!list.length) return null; return list.find(c => c.id === this.monitorSel) || list[0]; },
-    async abrirMonitor(id) { this.monitorSel = id; await this.carregarCredenciais(id); this.carregarMetaStatus(id); this.carregarAdsAuto(id); },
+    async abrirMonitor(id) { this.monitorSel = id; this.monitorFull = true; await this.carregarCredenciais(id); this.carregarMetaStatus(id); this.carregarAdsAuto(id); },
+    fecharMonitor() { this.monitorFull = false; },
+    // Radar filtrado só com as pendências do cliente aberto na ficha (tela cheia).
+    get radarCliente() { const c = this.monitorCliente; if (!c) return []; return this.radar.filter(p => p.cliId === c.id); },
     // ── Google Ads (Gerenciador/MCC da Maracatu) — Leads/Custo automáticos ──
     // Puxa o resumo do mês do cliente. Só substitui o lançamento manual quando
     // há credencial da agência E o cliente tem Customer ID no cadastro.

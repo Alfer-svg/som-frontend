@@ -1400,8 +1400,40 @@
             </template>
           </div>
           <!-- FICHA do cliente selecionado -->
-          <template x-if="monitorCliente">
-            <div class="ficha">
+          <template x-if="monitorCliente && monitorFull">
+            <div class="ficha" :style="monitorFull ? 'position:fixed;inset:0;z-index:120;overflow-y:auto;border-radius:0;margin:0;padding:20px 26px 44px' : ''">
+              <!-- Barra de tela cheia: voltar / fechar -->
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                <button class="btn btn-ghost btn-sm" @click="fecharMonitor()" title="Voltar pra lista de clientes"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button>
+                <div class="text-3 fs-12">Ficha em tela cheia</div>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="fecharMonitor()" style="margin-left:auto" aria-label="Fechar tela cheia" title="Fechar"><i class="ph ph-x ic-ph"></i></button>
+              </div>
+              <!-- RADAR do cliente (só as pendências dele) — no topo da tela cheia -->
+              <div class="card" :class="radarCliente.length?'radar-pulse':''" style="margin-bottom:16px;padding:0;overflow:hidden;background:#E9F5EE;border-color:#CEEAD6">
+                <div class="flex items-center" style="padding:14px 20px;gap:14px;flex-wrap:wrap">
+                  <span style="width:44px;height:44px;border-radius:12px;background:#34A853;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0"><i class="ph ph-broadcast ic-ph"></i></span>
+                  <div style="min-width:0;flex:1">
+                    <div style="font-size:16px;font-weight:600;letter-spacing:-.2px">Radar do cliente</div>
+                    <div class="text-3 fs-12" x-text="radarCliente.length ? radarCliente.length+' pendência(s) deste cliente' : 'Tudo em dia com este cliente ✅'"></div>
+                  </div>
+                  <div x-show="radarCliente.length" class="flex items-center" style="gap:8px;flex-wrap:wrap">
+                    <div style="background:#fff;border:1px solid #CEEAD6;border-radius:10px;padding:6px 12px;display:flex;align-items:center;gap:7px"><span style="font-weight:600;line-height:1" x-text="radarCliente.filter(p=>p.nivel==='alta').length"></span><span class="fs-12" style="color:var(--text-2)">urgentes</span></div>
+                    <div style="background:#fff;border:1px solid #CEEAD6;border-radius:10px;padding:6px 12px;display:flex;align-items:center;gap:7px"><span style="font-weight:600;line-height:1" x-text="radarCliente.filter(p=>p.nivel==='media').length"></span><span class="fs-12" style="color:var(--text-2)">em breve</span></div>
+                  </div>
+                </div>
+                <div x-show="radarCliente.length" style="background:#fff;border-top:1px solid #CEEAD6;max-height:240px;overflow:auto">
+                  <template x-for="(p,i) in radarCliente" :key="p.cliId+'-fc-'+i">
+                    <div class="flex items-center" style="gap:12px;padding:11px 20px;border-bottom:1px solid #CEEAD6">
+                      <i class="ic-ph" style="font-size:20px" :class="phClass(p.icon)" :style="phCor(p.icon)?('color:'+phCor(p.icon)):''"></i>
+                      <span class="badge" :style="p.nivel==='alta'?'background:#fee2e2;color:#dc2626':p.nivel==='media'?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'" x-text="p.nivel==='alta'?'urgente':p.nivel==='media'?'em breve':'quando der'"></span>
+                      <div style="flex:1;min-width:0"><div class="fs-13 fw-600 truncate" x-text="p.txt"></div></div>
+                      <a x-show="p.acaoHref" :href="p.acaoHref" target="_blank" rel="noopener" @click="registrarAcaoRadar(p)" class="btn btn-sm" style="background:var(--accent);color:#fff;border:none" x-text="p.acaoLabel"></a>
+                      <button class="btn btn-ghost btn-sm" @click="resolverPendencia(p,30)" title="Marcar como resolvido (some por 30 dias)">✓ feito</button>
+                      <button class="btn btn-ghost btn-sm" @click="resolverPendencia(p,7)" title="Adiar 7 dias" style="padding:6px 9px"><i class="ph ph-moon ic-ph"></i></button>
+                    </div>
+                  </template>
+                </div>
+              </div>
               <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
                 <div>
                   <div class="fs-18 fw-800" x-text="monitorCliente.empresa"></div>
@@ -4320,7 +4352,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=278"></script>
+<script src="js/app.js?v=279"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
