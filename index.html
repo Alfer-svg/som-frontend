@@ -182,12 +182,12 @@
 
       <!-- Agenda / Calendário de eventos (admin + Gestor de Tráfego) -->
       <div class="nav-item" x-show="podeVer('agenda')" :class="page==='agenda'?'active':''" @click="go('agenda')" title="Calendário de eventos, contatos e histórico dos clientes.">
-        <span class="nav-icon"><i class="ph ph-calendar-dots ic-ph" style="color:#ea580c"></i></span><span>Agenda</span>
+        <span class="nav-icon"><i class="ph ph-calendar-dots ic-ph" style="color:#F9A825"></i></span><span>Agenda</span>
       </div>
 
       <!-- Gestão de Tráfego (admin + gestor de tráfego) -->
       <div class="nav-item" x-show="podeVer('trafego')" :class="page==='trafego'?'active':''" @click="go('trafego')" title="Rotina diária do gestor de tráfego: checklist com evidências, log de otimizações e indicadores.">
-        <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph" style="color:#ea580c"></i></span><span>Tráfego</span>
+        <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph" style="color:#F9A825"></i></span><span>Tráfego</span>
       </div>
 
       <!-- Relatórios (só admin) -->
@@ -2055,7 +2055,7 @@
             </div>
             <input class="form-input" type="date" x-model="trafDia" style="width:auto">
             <span class="badge fs-12 fw-700" :style="trafCliConcluidos>=trafClientes.length&&trafClientes.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="trafCliConcluidos+'/'+trafClientes.length+' clientes concluídos'"></span>
-            <button class="btn btn-sm" @click="abrirTrafRel()" style="background:#ea580c;color:#fff;border-color:#ea580c;white-space:nowrap" title="Relatório do que foi feito por cliente — diário, semanal, mensal ou período"><i class="ph ph-file-text ic-ph"></i> Relatório</button>
+            <button class="btn btn-sm" @click="abrirTrafRel()" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap" title="Relatório do que foi feito por cliente — diário, semanal, mensal ou período"><i class="ph ph-file-text ic-ph"></i> Relatório</button>
           </div>
         </div>
 
@@ -2069,36 +2069,36 @@
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
 
-        <!-- Banner "Seu dia": blocos de estatística (número grande + rótulo + linha rotativa) -->
-        <div x-show="trafTab==='rotina'" class="card" style="margin-bottom:14px;padding:14px 18px;background:#FDE59E;border:1px solid #FCDB7E;box-shadow:none">
+        <!-- "Seu dia": KPIs no padrão Google (multicolor — igual ao dashboard) -->
+        <div x-show="trafTab==='rotina'" style="margin-bottom:14px">
           <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">
-            <div style="font-weight:500;font-size:14px;color:#7A4E00">☀️ Seu dia</div>
-            <span class="fs-12" style="color:#B06000" x-text="fmtDate(trafDia||_hojeStr())"></span>
+            <div style="font-weight:500;font-size:14px;color:var(--text-2)">☀️ Seu dia</div>
+            <span class="fs-12 text-3" x-text="fmtDate(trafDia||_hojeStr())"></span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px">
-            <!-- Eventos da agenda (clique abre a Agenda) -->
-            <div style="background:#fff;border:1px solid #FCDB7E;border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;cursor:pointer" @click="go('agenda')" title="Abrir a Agenda">
-              <div style="font-size:28px;font-weight:500;line-height:1;color:var(--text)" x-text="trafEventosHoje.length"></div>
-              <div style="min-width:0;flex:1">
-                <div class="fs-12" style="display:flex;align-items:center;gap:5px;font-weight:500;color:var(--text-2)"><i class="ph ph-calendar-dots" style="color:#F9A825"></i> eventos na agenda <i class="ph ph-arrow-square-out" style="opacity:.6"></i></div>
-                <div class="fs-11 text-3" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafEventoDaVez || 'nenhum evento hoje'"></div>
-              </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+            <!-- Clientes concluídos (verde positivo) -->
+            <div class="card kpi" style="background:#F3FAF6">
+              <div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle ic-ph"></i></span> Clientes concluídos</div>
+              <div class="kpi-value fs-22" x-text="trafCliConcluidos+' / '+trafClientes.length"></div>
+              <div class="fs-12 text-3 truncate" x-text="trafClientes.length&&trafCliConcluidos>=trafClientes.length?'rotina do dia completa 🎉':'em andamento'"></div>
             </div>
-            <!-- Insights pendentes -->
-            <div style="background:#fff;border:1px solid #FCDB7E;border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center">
-              <div style="font-size:28px;font-weight:500;line-height:1;color:var(--text)" x-text="trafInsightsPendentes.length"></div>
-              <div style="min-width:0;flex:1">
-                <div class="fs-12" style="display:flex;align-items:center;gap:5px;font-weight:500;color:var(--text-2)"><i class="ph ph-sparkle" style="color:#F9A825"></i> insights pendentes · <span x-text="trafInsightsClientes"></span> cliente(s)</div>
-                <div class="fs-11 text-3" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafInsClienteDaVez || 'nada pendente — analise as contas'"></div>
-              </div>
+            <!-- Eventos na agenda (azul info) — abre a Agenda -->
+            <div class="card kpi" style="background:#F4F8FE;cursor:pointer" @click="go('agenda')" title="Abrir a Agenda">
+              <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-calendar-dots ic-ph"></i></span> Eventos na agenda <i class="ph ph-arrow-square-out ic-ph fs-12" style="opacity:.5;margin-left:auto"></i></div>
+              <div class="kpi-value fs-22" x-text="trafEventosHoje.length"></div>
+              <div class="fs-12 text-3 truncate" x-text="trafEventoDaVez || 'nenhum evento hoje'"></div>
             </div>
-            <!-- Tarefas do quadro (clique abre o quadro Tráfego) -->
-            <div style="background:#fff;border:1px solid #FCDB7E;border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;cursor:pointer" @click="go('operacional'); opTab='quadro'; selecionarBoard('trafego')" title="Abrir o quadro Tráfego">
-              <div style="font-size:28px;font-weight:500;line-height:1;color:var(--text)" x-text="trafCardsPrioridade.length"></div>
-              <div style="min-width:0;flex:1">
-                <div class="fs-12" style="display:flex;align-items:center;gap:5px;font-weight:500;color:var(--text-2)"><i class="ph ph-kanban" style="color:#F9A825"></i> tarefas do quadro <i class="ph ph-arrow-square-out" style="opacity:.6"></i></div>
-                <div class="fs-11 text-3" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafTarefaDaVez || 'nenhum card aberto'"></div>
-              </div>
+            <!-- Insights pendentes (amarelo atenção) -->
+            <div class="card kpi" style="background:#FEFBEF">
+              <div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-sparkle ic-ph"></i></span> Insights pendentes</div>
+              <div class="kpi-value fs-22" x-text="trafInsightsPendentes.length"></div>
+              <div class="fs-12 text-3 truncate" x-text="trafInsClienteDaVez || 'nada pendente — analise as contas'"></div>
+            </div>
+            <!-- Tarefas do quadro (vermelho) — abre o quadro Tráfego -->
+            <div class="card kpi" style="background:#FEF6F4;cursor:pointer" @click="go('operacional'); opTab='quadro'; selecionarBoard('trafego')" title="Abrir o quadro Tráfego">
+              <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-kanban ic-ph"></i></span> Tarefas do quadro <i class="ph ph-arrow-square-out ic-ph fs-12" style="opacity:.5;margin-left:auto"></i></div>
+              <div class="kpi-value fs-22" x-text="trafCardsPrioridade.length"></div>
+              <div class="fs-12 text-3 truncate" x-text="trafTarefaDaVez || 'nenhum card aberto'"></div>
             </div>
           </div>
         </div>
@@ -2109,7 +2109,7 @@
           <div class="traf-rotina-lateral">
           <!-- Checklist por cliente -->
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
+            <div class="fw-600 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
               <span class="text-3 fs-11 fw-400" x-show="trafCliSel && trafCheckDia().por" x-text="'· por '+trafCheckDia().por"></span>
             </div>
             <!-- Dropdown só de ativos — ✓ = já fechou as 8 do dia -->
@@ -2144,14 +2144,14 @@
                     <span class="badge fs-11" x-show="trafItem(t.id).feito && trafItem(t.id).hora" style="background:#dcfce7;color:#15803d;font-weight:700" x-text="trafItem(t.id).hora"></span>
                     <span class="badge fs-11" x-show="trafItem(t.id).na" style="background:#e5e7eb;color:#6b7280;font-weight:700">não se aplica</span>
                   </label>
-                  <button type="button" class="btn btn-sm btn-ghost" @click="trafNA(t.id)" :style="trafItem(t.id).na?'color:#ea580c;font-weight:800':'color:var(--text-3)'" title="Este item não se aplica a este cliente (conta como resolvido)">N/A</button>
+                  <button type="button" class="btn btn-sm btn-ghost" @click="trafNA(t.id)" :style="trafItem(t.id).na?'color:#F9A825;font-weight:800':'color:var(--text-3)'" title="Este item não se aplica a este cliente (conta como resolvido)">N/A</button>
                 </div>
                 <input class="form-input" x-show="!trafItem(t.id).na" style="margin-top:6px;font-size:12px" :placeholder="'Evidência: '+t.dica" x-model="trafItem(t.id).evidencia" @change="salvarTrafego()">
               </div>
             </template>
             <!-- Otimizações do dia registradas pra ESTE cliente (vindas do log) -->
             <div x-show="trafCliSel && trafLogDe(trafDia, trafCliSel).length" style="margin-top:10px;background:#FEF7E0;border-radius:8px;padding:10px">
-              <div class="fw-800 fs-12 mb-1" style="color:#ea580c"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia neste cliente (<span x-text="trafLogDe(trafDia, trafCliSel).length"></span>)</div>
+              <div class="fw-800 fs-12 mb-1" style="color:#F9A825"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia neste cliente (<span x-text="trafLogDe(trafDia, trafCliSel).length"></span>)</div>
               <template x-for="l in trafLogDe(trafDia, trafCliSel)" :key="'clog'+l.id">
                 <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span></div>
               </template>
@@ -2160,7 +2160,7 @@
           </div>
           <!-- Log de otimizações -->
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-list-plus ic-ph" style="color:#ea580c"></i> Log de otimizações</div>
+            <div class="fw-600 fs-13 mb-2"><i class="ph ph-list-plus ic-ph" style="color:#F9A825"></i> Log de otimizações</div>
             <div class="text-3 fs-11 mb-2">Só mudanças relevantes: pausou, escalou, novo público, verba…</div>
             <div class="form-group" style="margin-bottom:8px">
               <select class="form-select" x-model="trafLogForm.clienteId">
@@ -2171,7 +2171,7 @@
             <div class="form-group" style="margin-bottom:8px"><input class="form-input" x-model="trafLogForm.alteracao" placeholder="Alteração — ex.: pausado anúncio X, verba R$50→R$80"></div>
             <div class="flex gap-2" style="margin-bottom:12px">
               <input class="form-input" style="flex:1" x-model="trafLogForm.motivo" placeholder="Motivo — ex.: CPA alto, ROAS acima da meta" @keydown.enter="addTrafLog()">
-              <button class="btn btn-sm" @click="addTrafLog()" style="background:#ea580c;color:#fff;border-color:#ea580c;white-space:nowrap">Registrar</button>
+              <button class="btn btn-sm" @click="addTrafLog()" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap">Registrar</button>
             </div>
             <div class="flex items-center justify-between mb-2">
               <span class="text-3 fs-12" x-text="trafLogVisivel.length+' registro(s)'"></span>
@@ -2184,7 +2184,7 @@
               <template x-for="l in trafLogVisivel" :key="l.id">
                 <div class="flex items-start gap-2" style="padding:7px 0;border-bottom:1px solid var(--border)">
                   <div style="min-width:44px;text-align:center">
-                    <div class="fw-800 fs-12" style="color:#ea580c" x-text="fmtDate(l.data).slice(0,5)"></div>
+                    <div class="fw-800 fs-12" style="color:#F9A825" x-text="fmtDate(l.data).slice(0,5)"></div>
                     <div class="text-3" style="font-size:10px" x-text="l.hora||''"></div>
                   </div>
                   <div style="flex:1;min-width:0">
@@ -2203,13 +2203,13 @@
             <div class="card" style="padding:14px;display:flex;align-items:center;gap:14px">
               <svg viewBox="0 0 120 120" width="110" height="110" style="flex-shrink:0">
                 <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#dcfce7':'#ECECE6'" stroke-width="13"/>
-                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#16a34a':'#ea580c'" stroke-width="13" stroke-linecap="round"
+                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#16a34a':'#F9A825'" stroke-width="13" stroke-linecap="round"
                   :stroke-dasharray="(trafProgressoDia.pct*3.1416)+' 999'" transform="rotate(-90 60 60)" style="transition:stroke-dasharray .4s"/>
-                <text x="60" y="57" text-anchor="middle" style="font-size:24px;font-weight:800" :fill="trafProgressoDia.falta===0?'#16a34a':'#ea580c'" x-text="trafProgressoDia.falta===0?'100%':trafProgressoDia.falta+'%'"></text>
+                <text x="60" y="57" text-anchor="middle" style="font-size:24px;font-weight:800" :fill="trafProgressoDia.falta===0?'#16a34a':'#F9A825'" x-text="trafProgressoDia.falta===0?'100%':trafProgressoDia.falta+'%'"></text>
                 <text x="60" y="76" text-anchor="middle" style="font-size:11px;font-weight:700" fill="#8a8ba3" x-text="trafProgressoDia.falta===0?'cumprido':'faltam'"></text>
               </svg>
               <div style="min-width:0">
-                <div class="fw-800 fs-13"><i class="ph ph-target ic-ph" style="color:#ea580c"></i> Demanda do dia</div>
+                <div class="fw-600 fs-13"><i class="ph ph-target ic-ph" style="color:#4285F4"></i> Demanda do dia</div>
                 <div class="fs-12" style="margin-top:4px" x-show="trafProgressoDia.falta>0"><b x-text="trafProgressoDia.itensFaltam"></b> itens restantes de <span x-text="trafProgressoDia.total"></span> (<span x-text="trafClientes.length"></span> clientes × <span x-text="TRAF_TAREFAS.length"></span> tarefas)</div>
                 <div class="fs-12 fw-700" style="margin-top:4px;color:#16a34a" x-show="trafProgressoDia.falta===0">Rotina do dia 100% cumprida! 🎉</div>
                 <div class="text-3 fs-11" style="margin-top:2px" x-text="trafCliConcluidos+'/'+trafClientes.length+' clientes concluídos · '+trafProgressoDia.pct+'% feito'"></div>
@@ -2217,7 +2217,7 @@
             </div>
             <!-- Tarefas do quadro Tráfego, por prioridade -->
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#ea580c"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· urgentes primeiro</span></div>
+            <div class="fw-600 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#EA4335"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· urgentes primeiro</span></div>
             <div style="max-height:420px;overflow-y:auto">
               <template x-for="p in trafCardsPrioridade" :key="'tcp'+p.id">
                 <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="abrirCardTrafego(p)" :title="'Abrir card no quadro Tráfego'">
@@ -2235,7 +2235,7 @@
             <!-- Insights da IA: análise das contas → o que fazer hoje -->
             <div class="card" style="padding:14px">
               <div class="flex items-center justify-between mb-2" style="gap:8px">
-                <div class="fw-800 fs-13"><i class="ph ph-sparkle ic-ph" style="color:#d97706"></i> Insights da IA</div>
+                <div class="fw-600 fs-13"><i class="ph ph-sparkle ic-ph" style="color:#F9A825"></i> Insights da IA</div>
                 <button class="btn btn-sm" @click="gerarTrafInsights()" :disabled="trafInsightsGerando" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap">
                   <i class="ph ph-magic-wand ic-ph"></i> <span x-text="trafInsightsGerando?'Analisando…':'Analisar contas'"></span>
                 </button>
@@ -2286,7 +2286,7 @@
           </div>
 
           <div class="card" style="padding:14px;margin-bottom:14px" x-show="trafSaldoAlertas.sem.length || trafSaldoAlertas.baixo.length || trafSaldoAlertas.semInfo.length">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i> Contas precisando de atenção</div>
+            <div class="fw-600 fs-13 mb-2"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i> Contas precisando de atenção</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
               <div x-show="trafSaldoAlertas.semInfo.length">
                 <div class="fs-12 fw-700 mb-1" style="color:#6b7280">Campanha rodando, saldo não informado</div>
@@ -2307,11 +2307,11 @@
                 </template>
               </div>
               <div x-show="trafSaldoAlertas.baixo.length">
-                <div class="fs-12 fw-700 mb-1" style="color:#d97706">Saldo baixo — abaixo de R$ 200</div>
+                <div class="fs-12 fw-700 mb-1" style="color:#F9A825">Saldo baixo — abaixo de R$ 200</div>
                 <template x-for="a in trafSaldoAlertas.baixo" :key="'sb'+a.canal+a.id">
                   <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
                     <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
-                    <span class="fw-700" style="color:#d97706;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
+                    <span class="fw-700" style="color:#F9A825;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
                   </div>
                 </template>
               </div>
@@ -2319,7 +2319,7 @@
           </div>
 
           <div class="card" style="padding:0;overflow:hidden">
-            <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-800 fs-13"><i class="ph ph-google-logo ic-ph" style="color:#2563eb"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Google Ads, mês corrente (snapshot automático)</span></div>
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-600 fs-13"><i class="ph ph-google-logo ic-ph" style="color:#2563eb"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Google Ads, mês corrente (snapshot automático)</span></div>
             <div style="overflow-x:auto">
               <table class="table">
                 <thead><tr><th>Cliente</th><th>Leads</th><th>Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas ativas</th></tr></thead>
@@ -2342,7 +2342,7 @@
 
           <!-- Resultados Meta Ads — tela pronta; números FICTÍCIOS até a integração real -->
           <div class="card" style="padding:0;margin-top:14px;overflow:hidden" x-show="trafResultadosMeta.length">
-            <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-800 fs-13 flex items-center" >
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-600 fs-13 flex items-center" >
               <span><i class="ph ph-meta-logo ic-ph" style="color:#0866FF"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Meta Ads, mês corrente</span></span>
               <span class="badge fs-11 fw-800" x-show="trafMetaEhDemo" style="background:#fef3c7;color:#92400e;margin-left:8px" title="A integração do Meta Ads ainda não foi ligada — estes números são de exemplo, só pra visualizar a tela.">⚠️ DEMO — números fictícios</span>
             </div>
@@ -2371,13 +2371,13 @@
         <div x-show="trafTab==='fichario'" style="display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start">
           <!-- Gaveta de dias -->
           <div class="card" style="padding:10px">
-            <div class="fw-800 fs-13 mb-2" style="padding:4px 4px 0"><i class="ph ph-folders ic-ph" style="color:#d97706"></i> Dias arquivados</div>
+            <div class="fw-600 fs-13 mb-2" style="padding:4px 4px 0"><i class="ph ph-folders ic-ph" style="color:#F9A825"></i> Dias arquivados</div>
             <template x-for="d in trafFichDias" :key="'fd'+d.data">
               <button type="button" class="btn btn-sm"
-                :style="'width:100%;justify-content:space-between;margin-bottom:6px;'+(trafFichSel===d.data ? 'background:#d97706;color:#fff;border-color:#d97706' : 'background:var(--surface-2);color:var(--text-2)')"
+                :style="'width:100%;justify-content:space-between;margin-bottom:6px;'+(trafFichSel===d.data ? 'background:#F9A825;color:#fff;border-color:#F9A825' : 'background:var(--surface-2);color:var(--text-2)')"
                 @click="trafFichSel=d.data">
                 <span x-text="fmtDate(d.data)"></span>
-                <span class="badge fs-11 fw-800" :style="d.completos>=d.total?'background:#dcfce7;color:#15803d':'background:#fff7ed;color:#d97706'" x-text="d.completos+'/'+d.total+' ✓'"></span>
+                <span class="badge fs-11 fw-800" :style="d.completos>=d.total?'background:#dcfce7;color:#15803d':'background:#fff7ed;color:#F9A825'" x-text="d.completos+'/'+d.total+' ✓'"></span>
               </button>
             </template>
             <div x-show="!trafFichDias.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum checklist arquivado ainda — preencha e salve na aba Rotina.</div>
@@ -2387,7 +2387,7 @@
             <template x-for="c in trafFichDo(trafFichSel)" :key="'fich'+c.data+c.clienteId">
               <div class="card" style="padding:12px;margin-bottom:10px">
                 <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:6px">
-                  <div class="fw-800 fs-13"><i class="ph ph-buildings ic-ph"></i> <span x-text="c.cliente||'—'"></span></div>
+                  <div class="fw-600 fs-13"><i class="ph ph-buildings ic-ph"></i> <span x-text="c.cliente||'—'"></span></div>
                   <div class="flex items-center gap-2">
                     <span class="badge fs-11 fw-800" :style="c.itens.filter(i=>i.feito||i.na).length>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="c.itens.filter(i=>i.feito||i.na).length+'/'+TRAF_TAREFAS.length"></span>
                     <span class="text-3 fs-11" x-show="c.por" x-text="'por '+c.por"></span>
@@ -2406,7 +2406,7 @@
                 </template>
                 <!-- Otimizações do dia deste cliente (do log) — arquivadas junto na ficha -->
                 <div x-show="trafLogDe(c.data, c.clienteId).length" style="margin-top:8px;background:#FEF7E0;border-radius:8px;padding:9px">
-                  <div class="fw-800 fs-12 mb-1" style="color:#ea580c"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia (<span x-text="trafLogDe(c.data, c.clienteId).length"></span>)</div>
+                  <div class="fw-800 fs-12 mb-1" style="color:#F9A825"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia (<span x-text="trafLogDe(c.data, c.clienteId).length"></span>)</div>
                   <template x-for="l in trafLogDe(c.data, c.clienteId)" :key="'flog'+l.id">
                     <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span><span class="text-3 fs-11" x-show="l.por" x-text="' · '+l.por"></span></div>
                   </template>
@@ -2420,7 +2420,7 @@
         <!-- ─────── Aba: Indicadores do gestor (só admin) ─────── -->
         <div x-show="trafTab==='indicadores' && ehAdmin">
           <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-gauge ic-ph" style="color:#ea580c"></i> Indicadores do gestor <span class="text-3 fs-11 fw-400">· últimos 30 dias, medidos por evidência</span></div>
+            <div class="fw-600 fs-13 mb-2"><i class="ph ph-gauge ic-ph" style="color:#4285F4"></i> Indicadores do gestor <span class="text-3 fs-11 fw-400">· últimos 30 dias, medidos por evidência</span></div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
               <div class="card" style="padding:12px;background:#F4F8FE;border-color:#E8F0FE"><div class="text-3 fs-11">Contas revisadas hoje</div><div style="font-size:22px;font-weight:500" x-text="trafInd.contasHoje"></div></div>
               <div class="card" style="padding:12px;background:#F3FAF6;border-color:#E6F4EA"><div class="text-3 fs-11">Otimizações hoje</div><div style="font-size:22px;font-weight:500" x-text="trafInd.otimHoje"></div></div>
@@ -2437,12 +2437,12 @@
       <!-- Relatório de Tráfego (modal): diário / semanal / mensal / período, por cliente -->
       <div class="modal-backdrop" x-show="trafRelModal" x-cloak @click.self="trafRelModal=false">
         <div class="modal" style="max-width:640px">
-          <div class="modal-head"><div class="modal-title"><i class="ph ph-file-text ic-ph" style="color:#ea580c"></i> Relatório de Tráfego</div><button class="btn btn-icon btn-ghost" @click="trafRelModal=false">✕</button></div>
+          <div class="modal-head"><div class="modal-title"><i class="ph ph-file-text ic-ph" style="color:#4285F4"></i> Relatório de Tráfego</div><button class="btn btn-icon btn-ghost" @click="trafRelModal=false">✕</button></div>
           <div class="modal-body">
             <div class="flex" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
               <template x-for="op in [['hoje','Diário (hoje)'],['7d','Semanal (7 dias)'],['mes','Mensal (mês atual)'],['custom','Período…']]" :key="op[0]">
                 <button type="button" class="btn btn-sm" @click="trafRelForm.periodo=op[0]"
-                  :style="trafRelForm.periodo===op[0]?'background:#ea580c;color:#fff;border-color:#ea580c':'background:var(--surface-2);color:var(--text-2)'" x-text="op[1]"></button>
+                  :style="trafRelForm.periodo===op[0]?'background:#141210;color:#fff;border-color:#141210':'background:var(--surface-2);color:var(--text-2)'" x-text="op[1]"></button>
               </template>
             </div>
             <div class="flex items-center gap-2 mb-2" x-show="trafRelForm.periodo==='custom'">
@@ -2454,15 +2454,15 @@
                 <option value="">Todos os clientes</option>
                 <template x-for="c in trafClientes" :key="'rl'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
               </select>
-              <button class="btn" @click="gerarTrafRel()" style="background:#ea580c;color:#fff;border-color:#ea580c;white-space:nowrap"><i class="ph ph-play ic-ph"></i> Gerar</button>
+              <button class="btn" @click="gerarTrafRel()" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap"><i class="ph ph-play ic-ph"></i> Gerar</button>
             </div>
 
             <!-- Prévia do relatório -->
             <div x-show="trafRelDados && trafRelDados.clientes.length" style="max-height:46vh;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:12px">
               <div class="text-3 fs-11 mb-2" x-text="trafRelDados ? ('Período: '+fmtDate(trafRelDados.de)+(trafRelDados.de===trafRelDados.ate?'':' a '+fmtDate(trafRelDados.ate))+' · '+trafRelDados.clientes.length+' cliente(s)') : ''"></div>
               <template x-for="c in (trafRelDados&&trafRelDados.clientes)||[]" :key="'rc'+c.clienteId">
-                <div style="margin-bottom:12px;border-top:2px solid #ea580c;padding-top:6px">
-                  <div class="fw-800 fs-13" x-text="c.cliente"></div>
+                <div style="margin-bottom:12px;border-top:2px solid #F9A825;padding-top:6px">
+                  <div class="fw-600 fs-13" x-text="c.cliente"></div>
                   <div class="fs-11" style="background:#FEF7E0;border-radius:6px;padding:5px 8px;margin:4px 0">
                     <span x-text="c.dias.length+' dia(s) · '+c.dias100+' checklist(s) 100% · '+c.otimizacoes.length+' otimização(ões)'"></span>
                     <span x-show="c.ads" x-text="c.ads ? (' | Ads: '+c.ads.leads+' leads · '+mascCur(c.ads.gasto)+(c.ads.custoLead!=null?' · '+mascCur(c.ads.custoLead)+'/lead':'')) : ''"></span>
