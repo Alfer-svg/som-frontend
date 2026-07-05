@@ -50,9 +50,9 @@ function fmtCNPJ(raw) { return (raw || '').replace(/\D/g, '').replace(/^(\d{2})(
 
 /* ---------- CRM: pipeline padrão de agência (8 estágios) ---------- */
 const STAGES = [
-  { id: 'Novo',        ico: '🎯', color: '#6366f1', desc: 'Lead recém-capturado, ainda sem nenhum contato.' },
+  { id: 'Novo',        ico: '🎯', color: '#4285F4', desc: 'Lead recém-capturado, ainda sem nenhum contato.' },
   { id: 'Contatado',   ico: '📞', color: '#f59e0b', desc: 'Primeiro contato já feito (mensagem, ligação ou e-mail).' },
-  { id: 'Qualificado', ico: '⭐', color: '#8b5cf6', desc: 'Tem fit: necessidade, orçamento e quem decide confirmados.' },
+  { id: 'Qualificado', ico: '⭐', color: '#0d9488', desc: 'Tem fit: necessidade, orçamento e quem decide confirmados.' },
   { id: 'Reunião',     ico: '🤝', color: '#0ea5e9', desc: 'Reunião ou diagnóstico agendado / realizado.' },
   { id: 'Proposta',    ico: '📄', color: '#f97316', desc: 'Proposta comercial enviada, aguardando retorno.' },
   { id: 'Negociação',  ico: '💬', color: '#db2777', desc: 'Ajustes finais de escopo, preço e condições.' },
@@ -311,7 +311,7 @@ const AVATAR_CORES = ['#E11D48', '#F97316', '#0EA5E9', '#16A34A', '#7C3AED', '#D
 
 /* ---------- Pessoal: perfis de acesso (papéis) e o que cada um enxerga ---------- */
 const PAPEIS_INFO = [
-  { id: 'admin', nome: 'Admin', desc: 'Acesso total + gerencia a equipe', cor: '#7c3aed', bg: '#ede9fe' },
+  { id: 'admin', nome: 'Admin', desc: 'Acesso total + gerencia a equipe', cor: '#1967D2', bg: '#E8F0FE' },
   { id: 'gestor', nome: 'Gestor', desc: 'Tudo, menos gerenciar a equipe', cor: '#2563eb', bg: '#dbeafe' },
   { id: 'comercial', nome: 'Comercial', desc: 'Vendas: CRM, clientes, orçamentos e contratos (sem Financeiro nem Operacional)', cor: '#0d9488', bg: '#ccfbf1' },
   { id: 'colaborador', nome: 'Colaborador', desc: 'Operacional e Monitoramento (sem CRM, Financeiro nem senhas)', cor: '#16a34a', bg: '#dcfce7' },
@@ -859,7 +859,7 @@ document.addEventListener('alpine:init', () => {
     agNavMes(delta) { let { ano, mes } = this.agRef; mes += delta; if (mes < 0) { mes = 11; ano--; } if (mes > 11) { mes = 0; ano++; } this.agendaRef = { ano, mes }; this.agendaDiaSel = ''; },
     agHoje() { const d = new Date(); this.agendaRef = { ano: d.getFullYear(), mes: d.getMonth() }; this.agendaDiaSel = this._hojeStr(); },
     agMesLabel() { const m = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']; return m[this.agRef.mes] + ' ' + this.agRef.ano; },
-    agTipoCor(t) { const m = { 'Reunião': '#7c3aed', 'Ligação': '#2563eb', 'WhatsApp': '#16a34a', 'E-mail': '#0891b2', 'Visita': '#db2777', 'Nota': '#6b7280', 'Tarefa': '#d97706', 'Evento': '#ea580c', 'Campanha': '#ea580c', 'Entrega': '#0d9488' }; return m[t] || '#ea580c'; },
+    agTipoCor(t) { const m = { 'Reunião': '#4285F4', 'Ligação': '#1967D2', 'WhatsApp': '#16a34a', 'E-mail': '#0891b2', 'Visita': '#db2777', 'Nota': '#6b7280', 'Tarefa': '#d97706', 'Evento': '#ea580c', 'Campanha': '#ea580c', 'Entrega': '#0d9488' }; return m[t] || '#ea580c'; },
     agTipoIcon(t) { const m = { 'Reunião': '🤝', 'Ligação': '📞', 'WhatsApp': '💬', 'E-mail': '✉️', 'Visita': '📍', 'Nota': '📝', 'Tarefa': '✅', 'Evento': '📅', 'Campanha': '🚀', 'Entrega': '📦' }; return m[t] || '📅'; },
     clienteNome(id) { const c = (this.clients || []).find(x => x.id === id); return c ? (c.empresa || c.nome || '—') : '—'; },
     histCliente(id) { const c = (this.clients || []).find(x => x.id === id); return c ? (c.timeline || []).slice(0, 25) : []; },
@@ -2888,7 +2888,7 @@ ${this._docFoot()}
       if (f.vencimento && f.vencimento < MD.today()) return { label: 'Vencido', style: 'background:#fee2e2;color:#b91c1c' };
       return { label: f.tipo === 'receita' ? 'A receber' : 'A pagar', style: 'background:#fef3c7;color:#a16207' };
     },
-    finDotCor(f) { return f.status === 'pago' ? '#16a34a' : (f.vencimento && f.vencimento < MD.today()) ? '#dc2626' : '#C9A24B'; },
+    finDotCor(f) { return f.status === 'pago' ? '#16a34a' : (f.vencimento && f.vencimento < MD.today()) ? '#dc2626' : '#F9A825'; },
     // Fundo do card: recebido/pago = verde clarinho · atrasado = vermelho clarinho · pendente no prazo = padrão.
     finCardBg(f) {
       if (f.status === 'pago') return '#f0fdf4';
@@ -3628,7 +3628,7 @@ ${this._docFoot()}
       if (!this._boardsOk) return alert('Não consegui carregar os quadros — confira a conexão e tente de novo.');
       let board = this.boards.find(b => b.id === 'trafego' || /tr[áa]fego/i.test(b.nome || ''));
       if (!board) {
-        board = { id: 'trafego', nome: '🎯 Tráfego', colunas: [{ nome: 'A Fazer', cor: '#a78bfa' }, { nome: 'Em Andamento', cor: '#7c3aed' }, { nome: 'Concluído', cor: '#16a34a' }] };
+        board = { id: 'trafego', nome: '🎯 Tráfego', colunas: [{ nome: 'A Fazer', cor: '#8AB4F8' }, { nome: 'Em Andamento', cor: '#4285F4' }, { nome: 'Concluído', cor: '#16a34a' }] };
         this.boards.push(board); this.salvarBoards();
       }
       this.selecionarBoard(board.id); // o card aparece na hora no quadro certo
@@ -3867,7 +3867,7 @@ ${this._docFoot()}
     editarDoc() { const t = this.docTipo, o = this.docObj; this.modal = null; if (t === 'contrato') this.editarContrato(o); else this.editarOrcamento(o); },
     // ── Assinatura eletrônica (ZapSign) ──
     assinaturaLabel(s) { return ({ pending: 'Aguardando assinatura', signed: 'Assinado ✔', refused: 'Recusado', 'new': 'Aguardando assinatura' }[s] || s || '—'); },
-    assinaturaCor(s) { return s === 'signed' ? '#16a34a' : s === 'refused' ? '#dc2626' : '#C9A24B'; },
+    assinaturaCor(s) { return s === 'signed' ? '#16a34a' : s === 'refused' ? '#dc2626' : '#F9A825'; },
     // Renderiza o HTML do documento num iframe oculto e gera um PDF A4 (base64) via html2canvas+jsPDF.
     async _gerarPdfBase64(html) {
       const ifr = document.createElement('iframe');

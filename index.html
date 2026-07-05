@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=241">
+  <link rel="stylesheet" href="css/styles.css?v=242">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -53,14 +53,14 @@
 .lg-logo{position:absolute;left:20px;bottom:14px;z-index:2;height:42px;width:auto;max-width:72%;object-fit:contain;background:#fff;border-radius:9px;padding:8px 15px;box-shadow:0 8px 22px rgba(0,0,0,.45)}
 .lg-body{padding:26px 26px 24px}
 .lg-title{font-size:20px;font-weight:800;color:#1b1b1b;letter-spacing:-.2px}
-.lg-sub{font-size:11.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#C9A24B;margin-top:3px}
-.lg-tip{background:#fbf7ec;border:1px solid #ecdfb8;border-left:3px solid #C9A24B;border-radius:10px;padding:12px 14px;margin:18px 0 18px}
+.lg-sub{font-size:11.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#4285F4;margin-top:3px}
+.lg-tip{background:#F4F8FE;border:1px solid #D6E4FC;border-left:3px solid #4285F4;border-radius:10px;padding:12px 14px;margin:18px 0 18px}
 .lg-tip span.lg-tip-txt{font-size:13px;color:#5f5a50;line-height:1.5}
 .lg-field{margin-bottom:12px}
 .lg-row{display:flex;align-items:center;justify-content:space-between;margin:2px 0 16px;font-size:12.5px}
 .lg-check{display:flex;align-items:center;gap:7px;cursor:pointer;color:#555}
 .lg-check input{width:15px;height:15px;accent-color:#141414;cursor:pointer}
-.lg-link{color:#C9A24B;font-weight:700;text-decoration:none;cursor:pointer}.lg-link:hover{text-decoration:underline}
+.lg-link{color:#4285F4;font-weight:700;text-decoration:none;cursor:pointer}.lg-link:hover{text-decoration:underline}
 .lg-btn{width:100%;justify-content:center;padding:12px;font-size:14px;background:#141414;color:#fff;border:none;border-radius:11px;font-weight:800;cursor:pointer;letter-spacing:.3px}
 .lg-btn:disabled{opacity:.6;cursor:default}
 .lg-err{color:#dc2626;font-size:12px;margin-top:11px;text-align:center}
@@ -385,7 +385,7 @@
         <!-- Metas do período — destaque com gráfico de rosca + navegação dia/semana/mês -->
         <div class="card" style="padding:18px 18px 20px;margin-bottom:18px">
           <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:10px">
-            <div class="fw-800 fs-18"><i class="ph ph-target ic-ph" style="color:#818cf8"></i> <span x-text="periodoTituloMeta"></span></div>
+            <div class="fw-800 fs-18"><i class="ph ph-target ic-ph" style="color:#4285F4"></i> <span x-text="periodoTituloMeta"></span></div>
             <div class="flex items-center gap-2" style="flex-wrap:wrap">
               <div class="flex" style="background:#f1f2f5;border-radius:9px;padding:3px;gap:2px">
                 <template x-for="t in [['dia','Dia'],['semana','Semana'],['mes','Mês']]" :key="t[0]">
@@ -450,7 +450,7 @@
             <template x-for="o in origemResumo" :key="o.origem">
               <div class="flex items-center gap-2" style="margin:7px 0">
                 <span class="fs-13 fw-600" style="width:96px" x-text="o.origem"></span>
-                <div class="progress" style="flex:1;height:14px"><div :style="'width:'+(o.total/origemMax*100)+'%;background:#6366f1'"></div></div>
+                <div class="progress" style="flex:1;height:14px"><div :style="'width:'+(o.total/origemMax*100)+'%;background:#4285F4'"></div></div>
                 <span class="fs-13 fw-700" style="width:26px;text-align:right" x-text="o.total"></span>
                 <span class="fs-12 fw-700" style="width:62px;text-align:right" :style="o.conv>0?'color:#16a34a':'color:#9ca3af'" x-text="o.conv+'% ✓'"></span>
               </div>
@@ -969,9 +969,9 @@
       <!-- ========== FINANCEIRO ========== -->
       <section x-show="page==='financeiro'">
         <div class="grid mb-4" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
-          <div class="card kpi" @click="finSoAFaturar=!finSoAFaturar" :style="'cursor:pointer;'+(finSoAFaturar?'border:2px solid #7E22CE;background:#FAF5FF':'border-left:4px solid #7E22CE')" :title="finSoAFaturar?'Clique pra limpar o filtro':'Receitas pendentes SEM cobrança emitida — clique pra ver só elas'">
-            <div class="kpi-label" style="color:#7E22CE"><span class="kpi-ico" style="background:#F3E8FF;color:#7E22CE"><i class="ph ph-receipt ic-ph"></i></span> A faturar<span x-show="finSoAFaturar"> ✓</span></div>
-            <div class="kpi-value fs-22" style="color:#7E22CE" x-text="fmtCur(finAFaturarTotal)"></div>
+          <div class="card kpi" @click="finSoAFaturar=!finSoAFaturar" :style="'cursor:pointer;'+(finSoAFaturar?'border:2px solid #0891B2;background:#EBF7FA':'border-left:4px solid #0891B2')" :title="finSoAFaturar?'Clique pra limpar o filtro':'Receitas pendentes SEM cobrança emitida — clique pra ver só elas'">
+            <div class="kpi-label" style="color:#0891B2"><span class="kpi-ico" style="background:#DFF3F8;color:#0891B2"><i class="ph ph-receipt ic-ph"></i></span> A faturar<span x-show="finSoAFaturar"> ✓</span></div>
+            <div class="kpi-value fs-22" style="color:#0891B2" x-text="fmtCur(finAFaturarTotal)"></div>
             <div class="text-3 fs-11" x-text="finAFaturar.length + (finAFaturar.length===1 ? ' lançamento sem cobrança' : ' lançamentos sem cobrança')"></div>
           </div>
           <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-wallet ic-ph"></i></span> Receita · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" x-text="fmtCur(receitaMes)"></div></div>
@@ -1428,8 +1428,8 @@
                   <div class="fs-12 fw-600" style="color:#5b7aa5"><i class="ph ph-target ic-ph" style="color:#2563eb"></i> Próxima ação</div>
                   <div class="fw-700 fs-13" style="margin-top:3px" x-text="proxTarefa(monitorCliente) ? proxTarefa(monitorCliente).titulo : (pendenciasCliente(monitorCliente).length ? pendenciasCliente(monitorCliente)[0].txt : 'Nenhuma pendente ✅')"></div>
                 </div>
-                <div class="card" style="padding:12px 14px;border-left:3px solid #8b5cf6;background:#f5f3ff">
-                  <div class="fs-12 fw-600" style="color:#6f6597"><i class="ph ph-calendar-check ic-ph" style="color:#7c3aed"></i> Último contato</div>
+                <div class="card" style="padding:12px 14px;border-left:3px solid #4285F4;background:#F4F8FE">
+                  <div class="fs-12 fw-600" style="color:#5f6368"><i class="ph ph-calendar-check ic-ph" style="color:#4285F4"></i> Último contato</div>
                   <template x-if="ultimoContato(monitorCliente)">
                     <div><div class="fw-800 fs-15" style="margin-top:3px" x-text="fmtDate(ultimoContato(monitorCliente).em)"></div>
                     <div class="text-3 fs-12" x-text="(diasDesde(ultimoContato(monitorCliente).em)===0?'hoje':('há '+diasDesde(ultimoContato(monitorCliente).em)+' dia(s)'))+(ultimoContato(monitorCliente).tipo?' · '+ultimoContato(monitorCliente).tipo:'')"></div></div>
@@ -1478,10 +1478,10 @@
                     <div class="fs-11" style="margin-top:1px" x-show="metaTrend(monitorCliente,'engaj')!=null" :style="metaTrend(monitorCliente,'engaj')>=0?'color:#16a34a':'color:#dc2626'" x-text="(metaTrend(monitorCliente,'engaj')>=0?'↑ ':'↓ ')+Math.abs(metaTrend(monitorCliente,'engaj'))+'%'"></div>
                     <div class="text-3 fs-11" x-text="(metaStatus[monitorCliente.id]&&metaStatus[monitorCliente.id].conectado)?'via Meta':'conecte o Instagram'"></div>
                   </div>
-                  <div class="card" style="box-shadow:none;background:#f5f3ff;border:1px solid #ddd6fe;padding:10px 12px">
+                  <div class="card" style="box-shadow:none;background:#F4F8FE;border:1px solid #D6E4FC;padding:10px 12px">
                     <div class="fs-12" style="color:#6f6597">Seguidores IG</div>
                     <div class="fw-800 fs-18" x-text="fmtNum(metaVal(monitorCliente,'instagram','seguidores'))"></div>
-                    <template x-if="metaSerie(monitorCliente,'seguidores').length>1"><svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none" style="margin-top:3px;display:block"><path :d="sparkPath(metaSerie(monitorCliente,'seguidores'),100,20)" fill="none" stroke="#8b5cf6" stroke-width="1.5"/></svg></template>
+                    <template x-if="metaSerie(monitorCliente,'seguidores').length>1"><svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none" style="margin-top:3px;display:block"><path :d="sparkPath(metaSerie(monitorCliente,'seguidores'),100,20)" fill="none" stroke="#4285F4" stroke-width="1.5"/></svg></template>
                     <div class="fs-11" style="margin-top:1px" x-show="metaTrend(monitorCliente,'seguidores')!=null" :style="metaTrend(monitorCliente,'seguidores')>=0?'color:#16a34a':'color:#dc2626'" x-text="(metaTrend(monitorCliente,'seguidores')>=0?'↑ ':'↓ ')+Math.abs(metaTrend(monitorCliente,'seguidores'))+'%'"></div>
                     <div class="text-3 fs-11" x-text="(metaStatus[monitorCliente.id]&&metaStatus[monitorCliente.id].conectado)?'via Meta':'conecte o Instagram'"></div>
                   </div>
@@ -1666,7 +1666,7 @@
                 </div>
               </template>
               <div x-show="!(monitorCliente.responsaveis||[]).length" class="text-3" style="padding:4px 0">Nenhum responsável cadastrado. Use "Editar ficha do cliente".</div>
-              <div class="mt-2" x-show="respComRede(monitorCliente).length"><span class="badge" style="background:#ede9fe;color:#6d28d9"><i class="ph ph-user-plus ic-ph"></i> <span x-text="respComRede(monitorCliente).length+' responsável(is) com redes pra seguir · '+respComRede(monitorCliente).filter(r=>r.seguindo).length+' já seguidos'"></span></span></div>
+              <div class="mt-2" x-show="respComRede(monitorCliente).length"><span class="badge" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-user-plus ic-ph"></i> <span x-text="respComRede(monitorCliente).length+' responsável(is) com redes pra seguir · '+respComRede(monitorCliente).filter(r=>r.seguindo).length+' já seguidos'"></span></span></div>
 
               <div class="ficha-sec-title"><i class="ph ph-briefcase ic-ph"></i> Serviços contratados</div>
               <div class="flex" style="flex-wrap:wrap;gap:8px">
@@ -1828,7 +1828,7 @@
               </div>
               <template x-for="cr in credenciais" :key="cr.id">
                 <div class="flex items-center gap-2" style="padding:9px 0;border-bottom:1px solid var(--border)">
-                  <span class="badge" style="background:#ede9fe;color:#6d28d9;min-width:96px;justify-content:center" x-text="cr.item"></span>
+                  <span class="badge" style="background:#E8F0FE;color:#1967D2;min-width:96px;justify-content:center" x-text="cr.item"></span>
                   <div style="flex:1;min-width:0">
                     <div class="fs-12 fw-700" x-text="cr.login||'—'"></div>
                     <div class="fs-12 text-3" style="font-family:monospace" x-text="!cofreDesbloqueado ? 'bloqueado' : (revelar[cr.id] ? (senhaCred(cr)||'(vazio)') : '••••••••')"></div>
@@ -1944,7 +1944,7 @@
                   <span style="display:inline-flex" x-show="(ev.membros||[]).length">
                     <template x-for="m in (ev.membros||[])" :key="ev.id+m"><span class="tl-avatar" :style="'width:20px;height:20px;margin-left:-5px;border:2px solid #fff;font-size:9px;'+(fotoDe(m)?('background-image:url('+fotoDe(m)+');background-size:cover'):('background:'+avatarBg(m)+';color:'+avatarFg(m)))" :title="m" x-text="fotoDe(m)?'':iniciais(m)"></span></template>
                   </span>
-                  <a x-show="ev.link" :href="ev.link" target="_blank" class="btn btn-icon btn-ghost btn-sm" title="Entrar na reunião (Meet)" style="color:#7c3aed"><i class="ph ph-video-camera ic-ph"></i></a>
+                  <a x-show="ev.link" :href="ev.link" target="_blank" class="btn btn-icon btn-ghost btn-sm" title="Entrar na reunião (Meet)" style="color:#00832d"><i class="ph ph-video-camera ic-ph"></i></a>
                   <button class="btn btn-icon btn-ghost btn-sm" @click="editarEvento(ev)" title="Editar"><i class="ph ph-pencil-simple ic-ph"></i></button>
                 </div>
               </template>
@@ -1954,7 +1954,7 @@
 
           <!-- Resumo dos últimos 3 -->
           <div class="card" style="padding:12px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-clock-counter-clockwise ic-ph" style="color:#7c3aed"></i> Últimos 3 eventos</div>
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-clock-counter-clockwise ic-ph" style="color:#4285F4"></i> Últimos 3 eventos</div>
             <template x-for="ev in agUltimos3" :key="ev.id">
               <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
                 <span style="font-size:16px" x-text="agTipoIcon(ev.tipo)"></span>
@@ -1993,7 +1993,7 @@
               <span style="display:inline-flex" x-show="(ev.membros||[]).length">
                 <template x-for="m in (ev.membros||[])" :key="'lin'+ev.id+m"><span class="tl-avatar" :style="'width:22px;height:22px;margin-left:-5px;border:2px solid #fff;font-size:10px;'+(fotoDe(m)?('background-image:url('+fotoDe(m)+');background-size:cover'):('background:'+avatarBg(m)+';color:'+avatarFg(m)))" :title="m" x-text="fotoDe(m)?'':iniciais(m)"></span></template>
               </span>
-              <a x-show="ev.link" :href="ev.link" target="_blank" class="btn btn-sm" title="Entrar na reunião (Meet)" style="background:#7c3aed;color:#fff;border-color:#7c3aed;white-space:nowrap"><i class="ph ph-video-camera ic-ph"></i> Meet</a>
+              <a x-show="ev.link" :href="ev.link" target="_blank" class="btn btn-sm" title="Entrar na reunião (Meet)" style="background:#00832d;color:#fff;border-color:#00832d;white-space:nowrap"><i class="ph ph-video-camera ic-ph"></i> Meet</a>
               <button class="btn btn-icon btn-ghost btn-sm" @click="editarEvento(ev)" title="Editar"><i class="ph ph-pencil-simple ic-ph"></i></button>
               <button class="btn btn-icon btn-ghost btn-sm" @click="removerEventoAg(ev)" title="Excluir" style="color:var(--red)"><i class="ph ph-trash ic-ph"></i></button>
             </div>
@@ -2138,7 +2138,7 @@
               </div>
             </template>
             <!-- Otimizações do dia registradas pra ESTE cliente (vindas do log) -->
-            <div x-show="trafCliSel && trafLogDe(trafDia, trafCliSel).length" style="margin-top:10px;background:#F4F0FE;border-radius:8px;padding:10px">
+            <div x-show="trafCliSel && trafLogDe(trafDia, trafCliSel).length" style="margin-top:10px;background:#FEF7E0;border-radius:8px;padding:10px">
               <div class="fw-800 fs-12 mb-1" style="color:#ea580c"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia neste cliente (<span x-text="trafLogDe(trafDia, trafCliSel).length"></span>)</div>
               <template x-for="l in trafLogDe(trafDia, trafCliSel)" :key="'clog'+l.id">
                 <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span></div>
@@ -2190,7 +2190,7 @@
             <!-- Rosca: quanto falta pra cumprir a demanda do dia (clientes × 8 tarefas) -->
             <div class="card" style="padding:14px;display:flex;align-items:center;gap:14px">
               <svg viewBox="0 0 120 120" width="110" height="110" style="flex-shrink:0">
-                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#dcfce7':'#EDE9FE'" stroke-width="13"/>
+                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#dcfce7':'#ECECE6'" stroke-width="13"/>
                 <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#16a34a':'#ea580c'" stroke-width="13" stroke-linecap="round"
                   :stroke-dasharray="(trafProgressoDia.pct*3.1416)+' 999'" transform="rotate(-90 60 60)" style="transition:stroke-dasharray .4s"/>
                 <text x="60" y="57" text-anchor="middle" style="font-size:24px;font-weight:800" :fill="trafProgressoDia.falta===0?'#16a34a':'#ea580c'" x-text="trafProgressoDia.falta===0?'100%':trafProgressoDia.falta+'%'"></text>
@@ -2239,7 +2239,7 @@
                       <span class="badge fs-11 fw-800" x-show="i.status==='descartado'" style="background:#e5e7eb;color:#6b7280">✖ Descartado</span>
                     </div>
                     <div class="fs-12" style="line-height:1.55;color:var(--text-2)" x-text="i.insight"></div>
-                    <div class="fs-12 fw-700" style="margin-top:8px;background:#F4F0FE;border-radius:8px;padding:8px 10px;color:#9a3412;line-height:1.5">→ <span x-text="i.acao"></span></div>
+                    <div class="fs-12 fw-700" style="margin-top:8px;background:#FEF7E0;border-radius:8px;padding:8px 10px;color:#9a3412;line-height:1.5">→ <span x-text="i.acao"></span></div>
                     <div class="flex gap-2 justify-end" style="margin-top:10px" x-show="!i.status">
                       <button type="button" class="btn btn-sm btn-ghost" @click="resolverInsight(i,'descartado')" style="color:var(--text-3)"><i class="ph ph-x ic-ph"></i> Descartar</button>
                       <button type="button" class="btn btn-sm" @click="resolverInsight(i,'feito')" style="background:#16a34a;color:#fff;border-color:#16a34a"><i class="ph ph-check ic-ph"></i> Feito</button>
@@ -2393,7 +2393,7 @@
                   </div>
                 </template>
                 <!-- Otimizações do dia deste cliente (do log) — arquivadas junto na ficha -->
-                <div x-show="trafLogDe(c.data, c.clienteId).length" style="margin-top:8px;background:#F4F0FE;border-radius:8px;padding:9px">
+                <div x-show="trafLogDe(c.data, c.clienteId).length" style="margin-top:8px;background:#FEF7E0;border-radius:8px;padding:9px">
                   <div class="fw-800 fs-12 mb-1" style="color:#ea580c"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia (<span x-text="trafLogDe(c.data, c.clienteId).length"></span>)</div>
                   <template x-for="l in trafLogDe(c.data, c.clienteId)" :key="'flog'+l.id">
                     <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span><span class="text-3 fs-11" x-show="l.por" x-text="' · '+l.por"></span></div>
@@ -2451,7 +2451,7 @@
               <template x-for="c in (trafRelDados&&trafRelDados.clientes)||[]" :key="'rc'+c.clienteId">
                 <div style="margin-bottom:12px;border-top:2px solid #ea580c;padding-top:6px">
                   <div class="fw-800 fs-13" x-text="c.cliente"></div>
-                  <div class="fs-11" style="background:#F4F0FE;border-radius:6px;padding:5px 8px;margin:4px 0">
+                  <div class="fs-11" style="background:#FEF7E0;border-radius:6px;padding:5px 8px;margin:4px 0">
                     <span x-text="c.dias.length+' dia(s) · '+c.dias100+' checklist(s) 100% · '+c.otimizacoes.length+' otimização(ões)'"></span>
                     <span x-show="c.ads" x-text="c.ads ? (' | Ads: '+c.ads.leads+' leads · '+mascCur(c.ads.gasto)+(c.ads.custoLead!=null?' · '+mascCur(c.ads.custoLead)+'/lead':'')) : ''"></span>
                   </div>
@@ -4083,7 +4083,7 @@
         </select>
         <div class="flex" style="flex-wrap:wrap;gap:6px;margin-top:6px" x-show="eventoForm.membros.length">
           <template x-for="m in eventoForm.membros" :key="'evc'+m">
-            <span class="badge fs-12 fw-700" style="background:#F4F0FE;color:#5b21b6;display:inline-flex;align-items:center;gap:5px">
+            <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2;display:inline-flex;align-items:center;gap:5px">
               <span class="tl-avatar" :style="'width:18px;height:18px;font-size:9px;'+(fotoDe(m)?('background-image:url('+fotoDe(m)+');background-size:cover'):('background:'+avatarBg(m)+';color:'+avatarFg(m)))" x-text="fotoDe(m)?'':iniciais(m)"></span>
               <span x-text="m"></span>
               <span style="cursor:pointer;font-weight:800" @click="removerMembroEvento(m)" title="Remover">✕</span>
@@ -4097,7 +4097,7 @@
         <label class="form-label">Link da reunião (Google Meet)</label>
         <div class="flex gap-2">
           <input class="form-input" style="flex:1" x-model="eventoForm.link" placeholder="https://meet.google.com/…">
-          <button type="button" class="btn btn-sm" @click="gerarMeet()" :disabled="meetGerando" style="background:#7c3aed;color:#fff;border-color:#7c3aed;white-space:nowrap"><i class="ph ph-video-camera ic-ph"></i> <span x-text="meetGerando?'Gerando…':'Gerar link do Meet'"></span></button>
+          <button type="button" class="btn btn-sm" @click="gerarMeet()" :disabled="meetGerando" style="background:#00832d;color:#fff;border-color:#00832d;white-space:nowrap"><i class="ph ph-video-camera ic-ph"></i> <span x-text="meetGerando?'Gerando…':'Gerar link do Meet'"></span></button>
         </div>
         <div class="flex gap-2" style="margin-top:6px" x-show="eventoForm.link">
           <button type="button" class="btn btn-sm" @click="conviteEmailMeet()" style="background:var(--surface-2)"><i class="ph ph-envelope-simple ic-ph"></i> Enviar por e-mail</button>
@@ -4298,7 +4298,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=275"></script>
+<script src="js/app.js?v=276"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
