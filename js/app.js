@@ -1188,6 +1188,8 @@ document.addEventListener('alpine:init', () => {
     },
     // ── Fichário: checklists arquivados por dia (tudo que tem pelo menos 1 item feito) ──
     trafFichSel: '',
+    trafFichMes: '',       // mês selecionado no fichário ('YYYY-MM') — navega meses/anos
+    trafFichCliFiltro: '', // filtro por cliente no fichário (id ou '' = todos)
     // Dias arquivados = dias com checklist preenchido OU otimização registrada.
     get trafFichDias() {
       const m = {};
@@ -1204,9 +1206,28 @@ document.addEventListener('alpine:init', () => {
       // Cliente que SÓ teve otimização no dia entra com ficha própria (sem itens) pra guardar o log.
       const soLog = [...new Set(this.trafLog.filter(l => l.data === dia && l.clienteId && !comDoc.has(l.clienteId)).map(l => l.clienteId))]
         .map(cid => { const l = this.trafLog.find(x => x.data === dia && x.clienteId === cid); return { data: dia, clienteId: cid, cliente: (l && l.cliente) || '—', por: '', itens: [], soLog: true }; });
-      return [...docs, ...soLog].sort((a, b) => (a.cliente || '').localeCompare(b.cliente || '', 'pt-BR'));
+      let out = [...docs, ...soLog].sort((a, b) => (a.cliente || '').localeCompare(b.cliente || '', 'pt-BR'));
+      if (this.trafFichCliFiltro) out = out.filter(c => c.clienteId === this.trafFichCliFiltro);
+      return out;
     },
-    trafAbrirFichario() { this.trafTab = 'fichario'; if (!this.trafFichSel && this.trafFichDias.length) this.trafFichSel = this.trafFichDias[0].data; },
+    // Meses que têm ficha arquivada (mais recente primeiro) — abas de navegação do fichário.
+    get trafFichMeses() {
+      const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+      const m = {};
+      for (const d of this.trafFichDias) { const mes = d.data.slice(0, 7); m[mes] = (m[mes] || 0) + 1; }
+      return Object.keys(m).sort().reverse().map(mes => { const [y, mm] = mes.split('-'); return { mes, label: MES[parseInt(mm, 10) - 1] + '/' + y.slice(2), dias: m[mes] }; });
+    },
+    // Dias arquivados só do mês selecionado (default: mês mais recente).
+    get trafFichDiasMes() {
+      const mes = this.trafFichMes || (this.trafFichMeses[0] && this.trafFichMeses[0].mes) || '';
+      return this.trafFichDias.filter(d => d.data.slice(0, 7) === mes);
+    },
+    trafSelMes(mes) { this.trafFichMes = mes; const dm = this.trafFichDiasMes; this.trafFichSel = dm.length ? dm[0].data : ''; },
+    trafAbrirFichario() {
+      this.trafTab = 'fichario';
+      if (!this.trafFichMes && this.trafFichMeses.length) this.trafFichMes = this.trafFichMeses[0].mes;
+      if ((!this.trafFichSel || !this.trafFichDiasMes.some(d => d.data === this.trafFichSel)) && this.trafFichDiasMes.length) this.trafFichSel = this.trafFichDiasMes[0].data;
+    },
     // Otimizações de UM cliente num dia — liga o log ao checklist/ficha do cliente.
     trafLogDe(dia, clienteId) { return this.trafLog.filter(l => l.data === dia && l.clienteId === clienteId); },
     // Quem está ONLINE agora e TEM ACESSO ao módulo Tráfego (admin ou perfil com a página liberada).

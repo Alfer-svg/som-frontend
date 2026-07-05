@@ -2410,11 +2410,29 @@
         </div>
 
         <!-- ─────── Aba: Fichário (checklists arquivados por dia) ─────── -->
-        <div x-show="trafTab==='fichario'" style="display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start">
-          <!-- Gaveta de dias -->
+        <div x-show="trafTab==='fichario'">
+          <!-- Barra: meses (navegação p/ escalar meses/anos) + filtro por cliente -->
+          <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:10px">
+            <div class="flex items-center gap-2" style="flex-wrap:wrap;min-width:0">
+              <span class="text-3 fs-12" style="margin-right:2px">Mês:</span>
+              <template x-for="m in trafFichMeses" :key="'fm'+m.mes">
+                <button type="button" class="btn btn-sm" :style="(trafFichMes||(trafFichMeses[0]&&trafFichMeses[0].mes))===m.mes ? 'background:#141210;color:#fff;border-color:#141210' : ''" @click="trafSelMes(m.mes)">
+                  <span x-text="m.label"></span>
+                  <span class="badge fs-11 fw-700" :style="'margin-left:5px;'+((trafFichMes||(trafFichMeses[0]&&trafFichMeses[0].mes))===m.mes ? 'background:rgba(255,255,255,.22);color:#fff' : 'background:var(--surface-2);color:var(--text-3)')" x-text="m.dias"></span>
+                </button>
+              </template>
+              <span x-show="!trafFichMeses.length" class="text-3 fs-12">Nenhum mês arquivado ainda.</span>
+            </div>
+            <select class="form-select" style="width:auto;min-width:180px;flex-shrink:0" x-model="trafFichCliFiltro" title="Filtrar as fichas por cliente">
+              <option value="">Todos os clientes</option>
+              <template x-for="c in trafClientes" :key="'ffc'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start">
+          <!-- Gaveta de dias (do mês selecionado) -->
           <div class="card" style="padding:10px">
             <div class="fw-600 fs-13 mb-2" style="padding:4px 4px 0"><i class="ph ph-folders ic-ph" style="color:#F9A825"></i> Dias arquivados</div>
-            <template x-for="d in trafFichDias" :key="'fd'+d.data">
+            <template x-for="d in trafFichDiasMes" :key="'fd'+d.data">
               <button type="button" class="btn btn-sm"
                 :style="'width:100%;justify-content:space-between;margin-bottom:6px;'+(trafFichSel===d.data ? 'background:#F9A825;color:#fff;border-color:#F9A825' : 'background:var(--surface-2);color:var(--text-2)')"
                 @click="trafFichSel=d.data">
@@ -2422,7 +2440,8 @@
                 <span class="badge fs-11 fw-800" :style="d.completos>=d.total?'background:#dcfce7;color:#15803d':'background:#fff7ed;color:#F9A825'" x-text="d.completos+'/'+d.total+' ✓'"></span>
               </button>
             </template>
-            <div x-show="!trafFichDias.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum checklist arquivado ainda — preencha e salve na aba Rotina.</div>
+            <div x-show="trafFichMeses.length && !trafFichDiasMes.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum dia neste mês.</div>
+            <div x-show="!trafFichMeses.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum checklist arquivado ainda — preencha e salve na aba Rotina.</div>
           </div>
           <!-- Fichas do dia -->
           <div>
@@ -2455,7 +2474,8 @@
                 </div>
               </div>
             </template>
-            <div x-show="!trafFichSel || !trafFichDo(trafFichSel).length" class="card text-3 fs-12" style="padding:20px;text-align:center">Escolha um dia na gaveta ao lado.</div>
+            <div x-show="!trafFichSel || !trafFichDo(trafFichSel).length" class="card text-3 fs-12" style="padding:20px;text-align:center"><span x-show="!trafFichSel">Escolha um dia na gaveta ao lado.</span><span x-show="trafFichSel && trafFichCliFiltro">Nenhuma ficha desse cliente neste dia.</span><span x-show="trafFichSel && !trafFichCliFiltro">Nenhuma ficha neste dia.</span></div>
+          </div>
           </div>
         </div>
 
@@ -4352,7 +4372,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=279"></script>
+<script src="js/app.js?v=280"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
