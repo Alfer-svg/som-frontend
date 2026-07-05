@@ -291,14 +291,7 @@
         <div class="card mb-4" x-show="clients.length" style="padding:0;overflow:hidden;background:#EEF4FE;border-color:#D6E4FC">
           <div class="flex items-center justify-between" style="padding:20px 26px;cursor:pointer;gap:16px;flex-wrap:wrap" :style="radarDashAberto?'border-bottom:1px solid #D6E4FC':''" @click="toggleRadarDash()" title="Clique pra abrir/recolher">
             <div class="flex items-center" style="gap:18px;min-width:0">
-              <!-- Ícone estilo app Buscar (Find My) da Apple: squircle verde + anéis de radar -->
-              <svg width="56" height="56" viewBox="0 0 56 56" style="flex-shrink:0;display:block">
-                <defs><linearGradient id="radarFindMy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5CD65C"/><stop offset="1" stop-color="#1FAD3E"/></linearGradient></defs>
-                <rect width="56" height="56" rx="14" fill="url(#radarFindMy)"/>
-                <circle cx="28" cy="28" r="4.5" fill="#fff"/>
-                <circle cx="28" cy="28" r="12" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="26 11.7" transform="rotate(40 28 28)"/>
-                <circle cx="28" cy="28" r="20" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="31 10.9" transform="rotate(-15 28 28)"/>
-              </svg>
+              <span style="width:56px;height:56px;border-radius:14px;background:#4285F4;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;box-shadow:0 2px 6px rgba(66,133,244,.35)"><i class="ph ph-broadcast ic-ph"></i></span>
               <div style="min-width:0">
                 <div style="font-size:19px;font-weight:600;letter-spacing:-.2px">Radar — precisa de ação</div>
                 <div class="text-3" style="margin-top:5px;font-size:13.5px" x-text="radar.length ? radar.length+' pendência(s) nos clientes ativos'+(radarDashAberto?' — as 5 principais abaixo':' — clique pra abrir') : 'Tudo em dia nos clientes ativos'"></div>
