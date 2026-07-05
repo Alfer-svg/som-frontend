@@ -210,7 +210,7 @@ a { color: inherit; text-decoration: none; }
 /* ---------- Tabs / segments ---------- */
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
 .tab { padding: 10px 14px; font-weight: 500; font-size: 13.5px; color: var(--text-3); cursor: pointer; border-bottom: 2px solid transparent; }
-.tab.active { color: var(--text); border-bottom-color: var(--gold); }
+.tab.active { color: var(--text); border-bottom-color: var(--red); }
 
 /* ---------- Modal ---------- */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(20,18,31,.45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 50; overflow-y: auto; }

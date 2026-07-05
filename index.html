@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=238">
+  <link rel="stylesheet" href="css/styles.css?v=239">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -288,25 +288,25 @@
           <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-scales ic-ph"></i></span> Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="mascCur(saldoMes)"></div></div>
         </div>
         <!-- 📡 Radar — resumo das pendências (clique vai pro Monitoramento) -->
-        <div class="card mb-4" x-show="clients.length" style="padding:0;overflow:hidden;background:#EEF4FE;border-color:#D6E4FC">
-          <div class="flex items-center justify-between" style="padding:20px 26px;cursor:pointer;gap:16px;flex-wrap:wrap" :style="radarDashAberto?'border-bottom:1px solid #D6E4FC':''" @click="toggleRadarDash()" title="Clique pra abrir/recolher">
+        <div class="card mb-4" x-show="clients.length" style="padding:0;overflow:hidden;background:#E9F5EE;border-color:#CEEAD6">
+          <div class="flex items-center justify-between" style="padding:20px 26px;cursor:pointer;gap:16px;flex-wrap:wrap" :style="radarDashAberto?'border-bottom:1px solid #CEEAD6':''" @click="toggleRadarDash()" title="Clique pra abrir/recolher">
             <div class="flex items-center" style="gap:18px;min-width:0">
-              <span style="width:56px;height:56px;border-radius:14px;background:#4285F4;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;box-shadow:0 2px 6px rgba(66,133,244,.35)"><i class="ph ph-broadcast ic-ph"></i></span>
+              <span style="width:56px;height:56px;border-radius:14px;background:#34A853;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;box-shadow:0 2px 6px rgba(52,168,83,.35)"><i class="ph ph-broadcast ic-ph"></i></span>
               <div style="min-width:0">
                 <div style="font-size:19px;font-weight:600;letter-spacing:-.2px">Radar — precisa de ação</div>
                 <div class="text-3" style="margin-top:5px;font-size:13.5px" x-text="radar.length ? radar.length+' pendência(s) nos clientes ativos'+(radarDashAberto?' — as 5 principais abaixo':' — clique pra abrir') : 'Tudo em dia nos clientes ativos'"></div>
               </div>
             </div>
             <div class="flex items-center" style="gap:10px;flex-wrap:wrap;flex-shrink:0">
-              <div style="background:#fff;border:1px solid #D6E4FC;border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
+              <div style="background:#fff;border:1px solid #CEEAD6;border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
                 <span style="font-size:17px;font-weight:600;line-height:1;color:var(--text)" x-text="radar.filter(p=>p.nivel==='alta').length"></span>
                 <span class="fs-12" style="font-weight:500;color:var(--text-2)">urgentes</span>
               </div>
-              <div style="background:#fff;border:1px solid #D6E4FC;border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
+              <div style="background:#fff;border:1px solid #CEEAD6;border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
                 <span style="font-size:17px;font-weight:600;line-height:1;color:var(--text)" x-text="radar.filter(p=>p.nivel==='media').length"></span>
                 <span class="fs-12" style="font-weight:500;color:var(--text-2)">em breve</span>
               </div>
-              <div style="background:#fff;border:1px solid #D6E4FC;border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
+              <div style="background:#fff;border:1px solid #CEEAD6;border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
                 <span style="font-size:17px;font-weight:600;line-height:1;color:var(--text)" x-text="radar.filter(p=>p.nivel!=='alta'&&p.nivel!=='media').length"></span>
                 <span class="fs-12" style="font-weight:500;color:var(--text-2)">quando der</span>
               </div>
@@ -317,7 +317,7 @@
           <div x-show="radarDashAberto" style="padding:6px 0 14px;background:#fff">
             <template x-if="radar.length===0"><div class="empty" style="padding:28px">Tudo em dia <i class="ph ph-check-circle ic-ph"></i> Nenhuma pendência nos clientes ativos.</div></template>
             <template x-for="(p,i) in radar.slice(0,5)" :key="'dash-'+p.key">
-              <div class="flex items-center" style="gap:14px;padding:17px 26px;border-bottom:1px solid #D6E4FC;cursor:pointer" @click="radarIr(p)">
+              <div class="flex items-center" style="gap:14px;padding:17px 26px;border-bottom:1px solid #CEEAD6;cursor:pointer" @click="radarIr(p)">
                 <i class="ic-ph" style="font-size:22px" :class="phClass(p.icon)" :style="phCor(p.icon)?('color:'+phCor(p.icon)):''"></i>
                 <span class="badge" style="padding:5px 10px" :style="p.nivel==='alta'?'background:#fee2e2;color:#dc2626':p.nivel==='media'?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'" x-text="p.nivel==='alta'?'urgente':p.nivel==='media'?'em breve':'quando der'"></span>
                 <span class="fw-600 truncate" style="flex:1;min-width:0;font-size:14px" x-text="p.txt"></span>
