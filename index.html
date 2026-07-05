@@ -1402,11 +1402,21 @@
           <!-- FICHA do cliente selecionado -->
           <template x-if="monitorCliente && monitorFull">
             <div class="ficha" :style="monitorFull ? 'position:fixed;inset:0;z-index:120;overflow-y:auto;border-radius:0;margin:0;padding:20px 26px 44px' : ''">
-              <!-- Barra de tela cheia: voltar / fechar -->
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-                <button class="btn btn-ghost btn-sm" @click="fecharMonitor()" title="Voltar pra lista de clientes"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button>
-                <div class="text-3 fs-12">Ficha em tela cheia</div>
-                <button class="btn btn-icon btn-ghost btn-sm" @click="fecharMonitor()" style="margin-left:auto" aria-label="Fechar tela cheia" title="Fechar"><i class="ph ph-x ic-ph"></i></button>
+              <!-- Cabeçalho da tela cheia: voltar + nome do cliente + ações (acima do radar) -->
+              <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
+                <div class="flex items-center gap-3" style="min-width:0">
+                  <button class="btn btn-ghost btn-sm" @click="fecharMonitor()" title="Voltar pra lista de clientes" style="flex-shrink:0"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button>
+                  <div style="min-width:0">
+                    <div class="fs-18 fw-800" x-text="monitorCliente.empresa"></div>
+                    <div class="text-3 fs-12" x-text="[clienteServicos(monitorCliente).join(' · '), ([monitorCliente.cidade, monitorCliente.uf].filter(Boolean).join('/')), (monitorCliente.desde?('Desde '+fmtDate(monitorCliente.desde)):'')].filter(Boolean).join('  ·  ') || '—'"></div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                  <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Ligação'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-phone ic-ph"></i> Registrar contato</button>
+                  <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Reunião'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-calendar-plus ic-ph"></i> Registrar reunião</button>
+                  <button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><i class="ph ph-pencil-simple ic-ph"></i> Editar cliente</button>
+                  <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
+                </div>
               </div>
               <!-- RADAR do cliente (só as pendências dele) — no topo da tela cheia -->
               <div class="card" :class="radarCliente.length?'radar-pulse':''" style="margin-bottom:16px;padding:0;overflow:hidden;background:#E9F5EE;border-color:#CEEAD6">
@@ -1434,19 +1444,6 @@
                   </template>
                 </div>
               </div>
-              <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
-                <div>
-                  <div class="fs-18 fw-800" x-text="monitorCliente.empresa"></div>
-                  <div class="text-3 fs-12" x-text="[clienteServicos(monitorCliente).join(' · '), ([monitorCliente.cidade, monitorCliente.uf].filter(Boolean).join('/')), (monitorCliente.desde?('Desde '+fmtDate(monitorCliente.desde)):'')].filter(Boolean).join('  ·  ') || '—'"></div>
-                </div>
-                <div class="flex items-center gap-2" style="flex-wrap:wrap">
-                  <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Ligação'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-phone ic-ph"></i> Registrar contato</button>
-                  <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Reunião'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-calendar-plus ic-ph"></i> Registrar reunião</button>
-                  <button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><i class="ph ph-pencil-simple ic-ph"></i> Editar cliente</button>
-                  <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
-                </div>
-              </div>
-
               <!-- ===== EQUIPE RESPONSÁVEL ===== -->
               <div class="flex items-center gap-4 mb-3" style="flex-wrap:wrap" x-show="monitorCliente.time && (monitorCliente.time.atendimento||monitorCliente.time.trafego||monitorCliente.time.social)">
                 <template x-for="papel in [['Atendimento','atendimento'],['Tráfego','trafego'],['Social Media','social']]" :key="papel[1]">
