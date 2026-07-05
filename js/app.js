@@ -928,6 +928,7 @@ document.addEventListener('alpine:init', () => {
     get contasMeta() { return this._contasCanal('meta'); },
     saldoSem(lista) { return (lista || []).filter(x => !x.posPago && (x.saldo ?? 0) <= 0); },
     saldoBaixo(lista) { return (lista || []).filter(x => !x.posPago && x.saldo > 0 && x.saldo < 200); },
+    saldoOk(lista) { return (lista || []).filter(x => !x.posPago && x.saldo >= 200); },
     get agContagemPorDia() { const m = {}; for (const e of this.agEventos) m[e.data] = (m[e.data] || 0) + 1; return m; },
     // Grade do mês: 42 células (6 semanas), domingo→sábado.
     get agGrade() {
@@ -1444,7 +1445,7 @@ document.addEventListener('alpine:init', () => {
           && (c.adsAuto.saldo === undefined || c.adsAuto.saldo === null) && c.adsAuto.saldoTipo !== 'POS'
           && !(c.ads && c.ads.google && c.ads.google.ativo))
         .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', canal: 'Google' }));
-      return { sem: this.saldoSem(tudo), baixo: this.saldoBaixo(tudo), semInfo };
+      return { sem: this.saldoSem(tudo), baixo: this.saldoBaixo(tudo), ok: this.saldoOk(tudo), semInfo };
     },
     // Indicadores do gestor (admin): rotina medida por EVIDÊNCIA, não por "mexeu na campanha".
     // Checklist é POR CLIENTE — "conta revisada" = cliente com item marcado no checklist OU entrada no log.

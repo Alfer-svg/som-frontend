@@ -2268,13 +2268,22 @@
         <!-- ─────── Aba: Contas & Campanhas (saldos + resultados) ─────── -->
         <div x-show="trafTab==='contas'">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
-            <div class="card kpi" style="background:#FEF6F4">
-              <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-battery-empty ic-ph"></i></span> Contas sem saldo</div>
-              <div class="kpi-value" :style="trafSaldoAlertas.sem.length?'color:#EA4335':''" x-text="trafSaldoAlertas.sem.length"></div>
-            </div>
-            <div class="card kpi" style="background:#FEFBEF">
-              <div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-battery-low ic-ph"></i></span> Contas com saldo baixo</div>
-              <div class="kpi-value" :style="trafSaldoAlertas.baixo.length?'color:#B06000':''" x-text="trafSaldoAlertas.baixo.length"></div>
+            <div class="card kpi" style="background:#F8F7F3">
+              <div class="kpi-label"><span class="kpi-ico" style="background:#ECEBE4;color:#5F5E5A"><i class="ph ph-car-battery ic-ph"></i></span> Saldo das contas</div>
+              <div style="display:flex;align-items:center;gap:18px;margin-top:2px;flex-wrap:wrap">
+                <div style="display:flex;align-items:center;gap:6px" title="Sem saldo (R$ 0 ou menos)">
+                  <i class="ph ph-battery-empty ic-ph" style="color:#EA4335;font-size:24px"></i>
+                  <span style="font-size:24px;font-weight:500;letter-spacing:-.5px" :style="trafSaldoAlertas.sem.length?'color:#EA4335':'color:var(--text)'" x-text="trafSaldoAlertas.sem.length"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px" title="Saldo baixo (menos de R$ 200)">
+                  <i class="ph ph-battery-low ic-ph" style="color:#F9A825;font-size:24px"></i>
+                  <span style="font-size:24px;font-weight:500;letter-spacing:-.5px" :style="trafSaldoAlertas.baixo.length?'color:#B06000':'color:var(--text)'" x-text="trafSaldoAlertas.baixo.length"></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px" title="Saldo normal (R$ 200 ou mais)">
+                  <i class="ph ph-battery-full ic-ph" style="color:#34A853;font-size:24px"></i>
+                  <span style="font-size:24px;font-weight:500;letter-spacing:-.5px" :style="trafSaldoAlertas.ok.length?'color:#15803d':'color:var(--text)'" x-text="trafSaldoAlertas.ok.length"></span>
+                </div>
+              </div>
             </div>
             <div class="card kpi" style="background:#F4F8FE">
               <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-google-logo ic-ph"></i></span> Campanhas ativas <span style="font-size:10px">(Google Ads)</span></div>
@@ -4311,7 +4320,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=277"></script>
+<script src="js/app.js?v=278"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
