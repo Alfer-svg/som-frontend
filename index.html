@@ -2121,6 +2121,7 @@
                 </template>
               </select>
               <template x-if="trafCliSel"><span class="badge fs-11 fw-700" :style="trafFeitos>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="trafFeitos+'/'+TRAF_TAREFAS.length"></span></template>
+              <button class="btn btn-icon btn-ghost btn-sm" x-show="trafCliSel" @click="trafCliSel=''" title="Fechar checklist deste cliente" aria-label="Fechar checklist"><i class="ph ph-x ic-ph"></i></button>
             </div>
             <div x-show="!trafCliSel" class="text-3 fs-12" style="padding:16px 0;text-align:center">Escolha um cliente pra abrir o checklist dele.</div>
             <!-- Histórico do dia: checklists já concluídos (visível com o checklist fechado) -->
