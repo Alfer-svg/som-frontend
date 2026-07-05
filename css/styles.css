@@ -357,8 +357,8 @@ i.ic-ph{font-size:1.25em;line-height:1;vertical-align:-0.18em;display:inline-fle
 
 /* Radar do dashboard: pulso de sonar no chip quando há pendências */
 @keyframes radar-pulse {
-  0%   { box-shadow: 0 2px 6px rgba(52,168,83,.35), 0 0 0 0 rgba(52,168,83,.45); }
-  70%  { box-shadow: 0 2px 6px rgba(52,168,83,.35), 0 0 0 12px rgba(52,168,83,0); }
-  100% { box-shadow: 0 2px 6px rgba(52,168,83,.35), 0 0 0 0 rgba(52,168,83,0); }
+  0%   { box-shadow: var(--shadow), 0 0 0 0 rgba(52,168,83,.35); }
+  70%  { box-shadow: var(--shadow), 0 0 0 10px rgba(52,168,83,0); }
+  100% { box-shadow: var(--shadow), 0 0 0 0 rgba(52,168,83,0); }
 }
 .radar-pulse { animation: radar-pulse 2.2s ease-out infinite; }
