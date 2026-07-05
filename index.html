@@ -691,17 +691,17 @@
           <div class="fichario-tab" :class="crmTab==='lista'?'active':''" @click="crmTab='lista'"><i class="ph ph-list-bullets ic-ph"></i> Leads (<span x-text="leads.length"></span>)</div>
         </div>
         <!-- Alertas de ações vencendo hoje / atrasadas -->
-        <div x-show="alertasAcoes.length" class="card" style="margin-bottom:12px;border-left:3px solid #d97706;background:#fffbeb;padding:11px 14px">
+        <div x-show="alertasAcoes.length" class="card" style="margin-bottom:12px;background:#FEF7E0;border:1px solid #FCE8B2;box-shadow:none;padding:11px 14px">
           <div class="flex items-center gap-2" style="flex-wrap:wrap">
-            <i class="ph ph-bell-ringing" style="color:#d97706;font-size:18px"></i>
+            <i class="ph ph-bell-ringing" style="color:#B06000;font-size:18px"></i>
             <span class="fw-700 fs-13"><span x-text="alertasAcoes.length"></span> ação(ões) pra hoje ou atrasada(s)</span>
             <span style="flex:1"></span>
             <button class="btn btn-ghost btn-sm" @click="mostrarAlertas=!mostrarAlertas" x-text="mostrarAlertas?'ocultar':'ver'"></button>
           </div>
           <div x-show="mostrarAlertas" style="margin-top:6px">
             <template x-for="al in alertasAcoes" :key="al.acao.id">
-              <div class="flex items-center gap-2 fs-13" style="padding:6px 0;border-top:1px solid #fde68a;cursor:pointer" @click="editarLead(al.lead)" title="Abrir o lead">
-                <i class="ph ic-ph" :class="acaoTipoIco(al.acao.tipo)" :style="'color:'+(al.atrasada?'#dc2626':'#d97706')"></i>
+              <div class="flex items-center gap-2 fs-13" style="padding:6px 0;border-top:1px solid #FCE8B2;cursor:pointer" @click="editarLead(al.lead)" title="Abrir o lead">
+                <i class="ph ic-ph" :class="acaoTipoIco(al.acao.tipo)" :style="'color:'+(al.atrasada?'#EA4335':'#B06000')"></i>
                 <b x-text="al.lead.empresa"></b>
                 <span class="text-3" x-text="'— '+al.acao.tipo+' · '+fmtDate(al.acao.data)+(al.atrasada?' (atrasada)':' (hoje)')"></span>
               </div>
@@ -4310,7 +4310,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=276"></script>
+<script src="js/app.js?v=277"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

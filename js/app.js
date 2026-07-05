@@ -51,13 +51,13 @@ function fmtCNPJ(raw) { return (raw || '').replace(/\D/g, '').replace(/^(\d{2})(
 /* ---------- CRM: pipeline padrão de agência (8 estágios) ---------- */
 const STAGES = [
   { id: 'Novo',        ico: '🎯', color: '#4285F4', desc: 'Lead recém-capturado, ainda sem nenhum contato.' },
-  { id: 'Contatado',   ico: '📞', color: '#f59e0b', desc: 'Primeiro contato já feito (mensagem, ligação ou e-mail).' },
+  { id: 'Contatado',   ico: '📞', color: '#F9A825', desc: 'Primeiro contato já feito (mensagem, ligação ou e-mail).' },
   { id: 'Qualificado', ico: '⭐', color: '#0d9488', desc: 'Tem fit: necessidade, orçamento e quem decide confirmados.' },
-  { id: 'Reunião',     ico: '🤝', color: '#0ea5e9', desc: 'Reunião ou diagnóstico agendado / realizado.' },
-  { id: 'Proposta',    ico: '📄', color: '#f97316', desc: 'Proposta comercial enviada, aguardando retorno.' },
-  { id: 'Negociação',  ico: '💬', color: '#db2777', desc: 'Ajustes finais de escopo, preço e condições.' },
-  { id: 'Ganho',       ico: '🏆', color: '#16a34a', desc: 'Fechou! O lead vira cliente.' },
-  { id: 'Perdido',     ico: '✕',  color: '#dc2626', desc: 'Não avançou — registre o motivo pra aprender e melhorar.' },
+  { id: 'Reunião',     ico: '🤝', color: '#1967D2', desc: 'Reunião ou diagnóstico agendado / realizado.' },
+  { id: 'Proposta',    ico: '📄', color: '#FA7B17', desc: 'Proposta comercial enviada, aguardando retorno.' },
+  { id: 'Negociação',  ico: '💬', color: '#D81B60', desc: 'Ajustes finais de escopo, preço e condições.' },
+  { id: 'Ganho',       ico: '🏆', color: '#34A853', desc: 'Fechou! O lead vira cliente.' },
+  { id: 'Perdido',     ico: '✕',  color: '#EA4335', desc: 'Não avançou — registre o motivo pra aprender e melhorar.' },
 ];
 const SERVICOS = ['Gestão de Redes Sociais', 'Criação de Conteúdo', 'ADS / Tráfego Pago', 'Audiovisual', 'Sites & Apps', 'Branding', 'SEO / Growth', 'Marketing Político', 'Consultoria'];
 // Tipos de ação/follow-up do lead no CRM (cada uma agendada com data + feedback).
