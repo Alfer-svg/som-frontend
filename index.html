@@ -299,22 +299,22 @@
             </div>
             <div class="flex items-center" style="gap:10px;flex-wrap:wrap;flex-shrink:0">
               <div style="background:#fff;border:1px solid #D6E4FC;border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
-                <span style="font-size:24px;font-weight:500;line-height:1;color:#dc2626" x-text="radar.filter(p=>p.nivel==='alta').length"></span>
+                <span style="font-size:17px;font-weight:600;line-height:1;color:var(--text)" x-text="radar.filter(p=>p.nivel==='alta').length"></span>
                 <span class="fs-12" style="font-weight:500;color:var(--text-2)">urgentes</span>
               </div>
               <div style="background:#fff;border:1px solid #D6E4FC;border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
-                <span style="font-size:24px;font-weight:500;line-height:1;color:#B06000" x-text="radar.filter(p=>p.nivel==='media').length"></span>
+                <span style="font-size:17px;font-weight:600;line-height:1;color:var(--text)" x-text="radar.filter(p=>p.nivel==='media').length"></span>
                 <span class="fs-12" style="font-weight:500;color:var(--text-2)">em breve</span>
               </div>
               <div style="background:#fff;border:1px solid #D6E4FC;border-radius:12px;padding:10px 16px;display:flex;align-items:center;gap:10px">
-                <span style="font-size:24px;font-weight:500;line-height:1;color:#5f6368" x-text="radar.filter(p=>p.nivel!=='alta'&&p.nivel!=='media').length"></span>
+                <span style="font-size:17px;font-weight:600;line-height:1;color:var(--text)" x-text="radar.filter(p=>p.nivel!=='alta'&&p.nivel!=='media').length"></span>
                 <span class="fs-12" style="font-weight:500;color:var(--text-2)">quando der</span>
               </div>
               <button class="btn btn-ghost btn-sm" @click.stop="go('monitoramento')" x-show="radar.length && radarDashAberto" style="margin-left:6px">Ver no Monitoramento →</button>
               <i class="ph ic-ph text-3" style="font-size:20px;margin-left:4px" :class="radarDashAberto?'ph-caret-up':'ph-caret-down'"></i>
             </div>
           </div>
-          <div x-show="radarDashAberto" style="padding:6px 0 14px">
+          <div x-show="radarDashAberto" style="padding:6px 0 14px;background:#fff">
             <template x-if="radar.length===0"><div class="empty" style="padding:28px">Tudo em dia <i class="ph ph-check-circle ic-ph"></i> Nenhuma pendência nos clientes ativos.</div></template>
             <template x-for="(p,i) in radar.slice(0,5)" :key="'dash-'+p.key">
               <div class="flex items-center" style="gap:14px;padding:17px 26px;border-bottom:1px solid #D6E4FC;cursor:pointer" @click="radarIr(p)">
