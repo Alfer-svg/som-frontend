@@ -1992,8 +1992,8 @@
       <section x-show="page==='trafego'">
         <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
           <div>
-            <div class="fw-800" style="font-size:18px"><i class="ph ph-chart-line-up ic-ph" style="color:#ea580c"></i> Gestão de Tráfego</div>
-            <div class="text-3 fs-12">Rotina diária com evidências — o que foi feito, onde e por quê.</div>
+            <div style="font-size:22px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-chart-line-up ic-ph" style="color:#F9A825"></i> Gestão de Tráfego</div>
+            <div class="text-3" style="font-size:13px;margin-top:4px">Rotina diária com evidências — o que foi feito, onde e por quê.</div>
           </div>
           <div class="flex items-center gap-2">
             <!-- Online agora com acesso a este módulo (bolinha verde) -->
@@ -2025,34 +2025,34 @@
         </div>
 
         <!-- Banner "Seu dia": blocos de estatística (número grande + rótulo + linha rotativa) -->
-        <div x-show="trafTab==='rotina'" class="card" style="margin-bottom:14px;padding:14px 18px;background:linear-gradient(100deg,#ea580c,#9a3412);color:#fff">
+        <div x-show="trafTab==='rotina'" class="card" style="margin-bottom:14px;padding:14px 18px;background:#FEF7E0;border:1px solid #FCE8B2;box-shadow:none">
           <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px;margin-bottom:10px">
-            <div class="fw-800 fs-14">☀️ Seu dia</div>
-            <span class="fs-12" style="opacity:.75" x-text="fmtDate(trafDia||_hojeStr())"></span>
+            <div style="font-weight:500;font-size:14px;color:#7A4E00">☀️ Seu dia</div>
+            <span class="fs-12" style="color:#B06000" x-text="fmtDate(trafDia||_hojeStr())"></span>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px">
             <!-- Eventos da agenda (clique abre a Agenda) -->
-            <div style="background:rgba(255,255,255,.13);border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;cursor:pointer" @click="go('agenda')" title="Abrir a Agenda">
-              <div class="fw-800" style="font-size:28px;line-height:1" x-text="trafEventosHoje.length"></div>
+            <div style="background:#fff;border:1px solid #FCE8B2;border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;cursor:pointer" @click="go('agenda')" title="Abrir a Agenda">
+              <div style="font-size:28px;font-weight:500;line-height:1;color:var(--text)" x-text="trafEventosHoje.length"></div>
               <div style="min-width:0;flex:1">
-                <div class="fw-700 fs-12" style="display:flex;align-items:center;gap:5px"><i class="ph ph-calendar-dots"></i> eventos na agenda <i class="ph ph-arrow-square-out" style="opacity:.7"></i></div>
-                <div class="fs-11" style="opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafEventoDaVez || 'nenhum evento hoje'"></div>
+                <div class="fs-12" style="display:flex;align-items:center;gap:5px;font-weight:500;color:var(--text-2)"><i class="ph ph-calendar-dots" style="color:#F9A825"></i> eventos na agenda <i class="ph ph-arrow-square-out" style="opacity:.6"></i></div>
+                <div class="fs-11 text-3" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafEventoDaVez || 'nenhum evento hoje'"></div>
               </div>
             </div>
             <!-- Insights pendentes -->
-            <div style="background:rgba(255,255,255,.13);border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center">
-              <div class="fw-800" style="font-size:28px;line-height:1" x-text="trafInsightsPendentes.length"></div>
+            <div style="background:#fff;border:1px solid #FCE8B2;border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center">
+              <div style="font-size:28px;font-weight:500;line-height:1;color:var(--text)" x-text="trafInsightsPendentes.length"></div>
               <div style="min-width:0;flex:1">
-                <div class="fw-700 fs-12" style="display:flex;align-items:center;gap:5px"><i class="ph ph-sparkle"></i> insights pendentes · <span x-text="trafInsightsClientes"></span> cliente(s)</div>
-                <div class="fs-11" style="opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafInsClienteDaVez || 'nada pendente — analise as contas'"></div>
+                <div class="fs-12" style="display:flex;align-items:center;gap:5px;font-weight:500;color:var(--text-2)"><i class="ph ph-sparkle" style="color:#F9A825"></i> insights pendentes · <span x-text="trafInsightsClientes"></span> cliente(s)</div>
+                <div class="fs-11 text-3" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafInsClienteDaVez || 'nada pendente — analise as contas'"></div>
               </div>
             </div>
             <!-- Tarefas do quadro (clique abre o quadro Tráfego) -->
-            <div style="background:rgba(255,255,255,.13);border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;cursor:pointer" @click="go('operacional'); opTab='quadro'; selecionarBoard('trafego')" title="Abrir o quadro Tráfego">
-              <div class="fw-800" style="font-size:28px;line-height:1" x-text="trafCardsPrioridade.length"></div>
+            <div style="background:#fff;border:1px solid #FCE8B2;border-radius:12px;padding:10px 14px;display:flex;gap:14px;align-items:center;cursor:pointer" @click="go('operacional'); opTab='quadro'; selecionarBoard('trafego')" title="Abrir o quadro Tráfego">
+              <div style="font-size:28px;font-weight:500;line-height:1;color:var(--text)" x-text="trafCardsPrioridade.length"></div>
               <div style="min-width:0;flex:1">
-                <div class="fw-700 fs-12" style="display:flex;align-items:center;gap:5px"><i class="ph ph-kanban"></i> tarefas do quadro <i class="ph ph-arrow-square-out" style="opacity:.7"></i></div>
-                <div class="fs-11" style="opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafTarefaDaVez || 'nenhum card aberto'"></div>
+                <div class="fs-12" style="display:flex;align-items:center;gap:5px;font-weight:500;color:var(--text-2)"><i class="ph ph-kanban" style="color:#F9A825"></i> tarefas do quadro <i class="ph ph-arrow-square-out" style="opacity:.6"></i></div>
+                <div class="fs-11 text-3" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" x-text="trafTarefaDaVez || 'nenhum card aberto'"></div>
               </div>
             </div>
           </div>
@@ -2221,22 +2221,22 @@
 
         <!-- ─────── Aba: Contas & Campanhas (saldos + resultados) ─────── -->
         <div x-show="trafTab==='contas'">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px">
-            <div class="card" style="padding:12px;border-left:4px solid #dc2626">
-              <div class="text-3 fs-11">Contas sem saldo</div>
-              <div class="fw-800" style="font-size:24px;color:#dc2626" x-text="trafSaldoAlertas.sem.length"></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
+            <div class="card kpi" style="background:#FEF6F4">
+              <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-battery-empty ic-ph"></i></span> Contas sem saldo</div>
+              <div class="kpi-value" :style="trafSaldoAlertas.sem.length?'color:#EA4335':''" x-text="trafSaldoAlertas.sem.length"></div>
             </div>
-            <div class="card" style="padding:12px;border-left:4px solid #d97706">
-              <div class="text-3 fs-11">Contas com saldo baixo</div>
-              <div class="fw-800" style="font-size:24px;color:#d97706" x-text="trafSaldoAlertas.baixo.length"></div>
+            <div class="card kpi" style="background:#FEFBEF">
+              <div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-battery-low ic-ph"></i></span> Contas com saldo baixo</div>
+              <div class="kpi-value" :style="trafSaldoAlertas.baixo.length?'color:#B06000':''" x-text="trafSaldoAlertas.baixo.length"></div>
             </div>
-            <div class="card" style="padding:12px;border-left:4px solid #2563eb">
-              <div class="text-3 fs-11">Campanhas ativas agora <span style="font-size:9px">(Google Ads)</span></div>
-              <div class="fw-800" style="font-size:24px;color:#2563eb" x-text="trafCampanhasAtivas"></div>
+            <div class="card kpi" style="background:#F4F8FE">
+              <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-google-logo ic-ph"></i></span> Campanhas ativas <span style="font-size:10px">(Google Ads)</span></div>
+              <div class="kpi-value" x-text="trafCampanhasAtivas"></div>
             </div>
-            <div class="card" style="padding:12px;border-left:4px solid #0866FF" x-show="trafResultadosMeta.length">
-              <div class="text-3 fs-11">Campanhas ativas <span style="font-size:9px">(Meta Ads)</span> <span class="badge fs-11 fw-800" x-show="trafMetaEhDemo" style="background:#fef3c7;color:#92400e;margin-left:2px">DEMO</span></div>
-              <div class="fw-800" style="font-size:24px;color:#0866FF" x-text="trafCampanhasMeta"></div>
+            <div class="card kpi" style="background:#F4F8FE" x-show="trafResultadosMeta.length">
+              <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#0866FF"><i class="ph ph-meta-logo ic-ph"></i></span> Campanhas ativas <span style="font-size:10px">(Meta Ads)</span> <span class="badge fs-11 fw-800" x-show="trafMetaEhDemo" style="background:#fef3c7;color:#92400e;margin-left:2px">DEMO</span></div>
+              <div class="kpi-value" x-text="trafCampanhasMeta"></div>
             </div>
           </div>
 
@@ -2377,13 +2377,13 @@
           <div class="card" style="padding:14px">
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-gauge ic-ph" style="color:#ea580c"></i> Indicadores do gestor <span class="text-3 fs-11 fw-400">· últimos 30 dias, medidos por evidência</span></div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
-              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Contas revisadas hoje</div><div class="fw-800" style="font-size:20px" x-text="trafInd.contasHoje"></div></div>
-              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Otimizações hoje</div><div class="fw-800" style="font-size:20px" x-text="trafInd.otimHoje"></div></div>
-              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Checklists 100%</div><div class="fw-800" style="font-size:20px" x-text="trafInd.pctCompleto+'%'"></div></div>
-              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Média de itens/checklist</div><div class="fw-800" style="font-size:20px" x-text="trafInd.mediaItens+'/'+TRAF_TAREFAS.length"></div></div>
-              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Otimizações (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.otim30"></div></div>
-              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Contas distintas (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.contas30"></div></div>
-              <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Dias com rotina (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.diasAtivos30"></div></div>
+              <div class="card" style="padding:12px;background:#F4F8FE;border-color:#E8F0FE"><div class="text-3 fs-11">Contas revisadas hoje</div><div style="font-size:22px;font-weight:500" x-text="trafInd.contasHoje"></div></div>
+              <div class="card" style="padding:12px;background:#F3FAF6;border-color:#E6F4EA"><div class="text-3 fs-11">Otimizações hoje</div><div style="font-size:22px;font-weight:500" x-text="trafInd.otimHoje"></div></div>
+              <div class="card" style="padding:12px;background:#FEFBEF;border-color:#FEF7E0"><div class="text-3 fs-11">Checklists 100%</div><div style="font-size:22px;font-weight:500" x-text="trafInd.pctCompleto+'%'"></div></div>
+              <div class="card" style="padding:12px;background:#FEF6F4;border-color:#FCE8E6"><div class="text-3 fs-11">Média de itens/checklist</div><div style="font-size:22px;font-weight:500" x-text="trafInd.mediaItens+'/'+TRAF_TAREFAS.length"></div></div>
+              <div class="card" style="padding:12px;background:#F4F8FE;border-color:#E8F0FE"><div class="text-3 fs-11">Otimizações (30d)</div><div style="font-size:22px;font-weight:500" x-text="trafInd.otim30"></div></div>
+              <div class="card" style="padding:12px;background:#F3FAF6;border-color:#E6F4EA"><div class="text-3 fs-11">Contas distintas (30d)</div><div style="font-size:22px;font-weight:500" x-text="trafInd.contas30"></div></div>
+              <div class="card" style="padding:12px;background:#FEFBEF;border-color:#FEF7E0"><div class="text-3 fs-11">Dias com rotina (30d)</div><div style="font-size:22px;font-weight:500" x-text="trafInd.diasAtivos30"></div></div>
             </div>
           </div>
         </div>
