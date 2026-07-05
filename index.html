@@ -1399,6 +1399,12 @@
               </div>
             </template>
           </div>
+          <!-- Sem ficha aberta: dica pra escolher um cliente -->
+          <div x-show="!monitorFull" class="card" style="padding:36px 20px;text-align:center;background:#F8F7F3">
+            <span style="width:56px;height:56px;border-radius:14px;background:#E8F0FE;color:#4285F4;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:10px"><i class="ph ph-arrow-fat-up ic-ph"></i></span>
+            <div class="fw-600 fs-15">Escolha um cliente acima</div>
+            <div class="text-3 fs-13" style="margin-top:4px">Clique numa aba pra abrir a ficha completa em tela cheia, com o radar de pendências do cliente.</div>
+          </div>
           <!-- FICHA do cliente selecionado -->
           <template x-if="monitorCliente && monitorFull">
             <div class="ficha" :style="monitorFull ? 'position:fixed;inset:0;z-index:120;overflow-y:auto;border-radius:0;margin:0;padding:20px 26px 44px' : ''">
@@ -1449,9 +1455,9 @@
               <div class="flex items-center gap-4 mb-3" style="flex-wrap:wrap" x-show="monitorCliente.time && (monitorCliente.time.atendimento||monitorCliente.time.trafego||monitorCliente.time.social)">
                 <template x-for="papel in [['Atendimento','atendimento'],['Tráfego','trafego'],['Social Media','social']]" :key="papel[1]">
                   <div class="flex items-center gap-2" style="background:var(--surface-2);border-radius:999px;padding:5px 14px 5px 5px" x-show="monitorCliente.time && monitorCliente.time[papel[1]]">
-                    <div style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;overflow:hidden;position:relative" :style="'background:'+avatarBg(monitorCliente.time[papel[1]])+';color:'+avatarFg(monitorCliente.time[papel[1]])">
+                    <div :style="'width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;overflow:hidden;position:relative;background:'+avatarBg(monitorCliente.time[papel[1]])+';color:'+avatarFg(monitorCliente.time[papel[1]])">
                       <span x-text="(monitorCliente.time[papel[1]]||'?').trim().charAt(0).toUpperCase()"></span>
-                      <template x-if="fotoDe(monitorCliente.time[papel[1]])"><img :src="fotoDe(monitorCliente.time[papel[1]])" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></template>
+                      <template x-if="fotoDe(monitorCliente.time[papel[1]])"><img :src="fotoDe(monitorCliente.time[papel[1]])" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%"></template>
                     </div>
                     <div style="min-width:0"><div class="text-3 fs-11" x-text="papel[0]"></div><div class="fw-700 fs-13" x-text="monitorCliente.time[papel[1]]"></div></div>
                   </div>
