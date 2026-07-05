@@ -366,7 +366,7 @@
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2" style="min-width:0">
                   <span style="font-size:15px;flex-shrink:0">💵</span>
-                  <div style="min-width:0"><div class="fw-700 fs-12 truncate" x-text="f.descricao"></div><div class="text-3 fs-12" x-text="(f.tipo==='receita'?'Receber · ':'Pagar · ')+fmtDate(f.vencimento)"></div></div>
+                  <div style="min-width:0"><div class="fw-700 fs-12 truncate" :title="f.descricao" x-text="(f.descricao||'').replace(/^Contrato\s+\S+\s+—\s*/,'')"></div><div class="text-3 fs-12" x-text="(f.tipo==='receita'?'Receber · ':'Pagar · ')+fmtDate(f.vencimento)"></div></div>
                 </div>
                 <div class="fw-700 fs-12" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="mascCur(f.valor)"></div>
               </div>
