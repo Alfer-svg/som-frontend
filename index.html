@@ -170,7 +170,7 @@
 
       <!-- Demais módulos -->
       <template x-for="item in [
-        {id:'operacional',ico:'🚀',label:'Operacional',desc:'Projetos e entregas da agência, em kanban por status.'},
+        {id:'operacional',ico:'🚀',label:'Produção',desc:'Projetos e entregas da agência, em kanban por status.'},
         {id:'monitoramento',ico:'🩺',label:'Monitoramento',desc:'Saúde de cada cliente: serviços, redes sociais e condição (sinais 🟢🟡🔴).'}]" :key="item.id">
         <div class="nav-item" x-show="podeVer(item.id)" :class="page===item.id?'active':''" @click="go(item.id)" :title="item.desc" :style="item.id==='operacional' ? 'background:#FCE8E6;color:#C5221F' : ''">
           <span class="nav-icon"><i class="ic-ph" :class="phClass(item.ico)" :style="item.id==='operacional' ? 'color:#C5221F' : (phCor(item.ico)?('color:'+phCor(item.ico)):'')"></i></span>
@@ -235,7 +235,7 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <div class="page-title" x-text="{dashboard:'Dashboard',painelComercial:'Painel Comercial',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos',pessoal:'Pessoal — Fichas de Registro',configuracoes:'Configurações',relatorios:'Relatórios — Ponto e Produção'}[page]"></div>
+        <div class="page-title" x-text="{dashboard:'Dashboard',painelComercial:'Painel Comercial',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Produção — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos',pessoal:'Pessoal — Fichas de Registro',configuracoes:'Configurações',relatorios:'Relatórios — Ponto e Produção'}[page]"></div>
       </div>
       <div class="spacer"></div>
       <div class="search" x-show="page!=='dashboard'">
