@@ -2261,7 +2261,7 @@
                   </div>
                   <template x-for="p in g.posts" :key="'opp'+p.id">
                     <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
-                      <input type="checkbox" :checked="!!p.publicado" @click.stop="operTogglePost(p)" style="cursor:pointer;width:18px;height:18px;flex-shrink:0" :title="p.publicado?'Desmarcar publicação':'Marcar como publicado'">
+                      <input type="checkbox" :checked="!!p.publicado" @click.stop="operTogglePost(p)" style="cursor:pointer;width:18px;height:18px;flex-shrink:0;accent-color:#34A853" :title="p.publicado?'Desmarcar publicação':'Marcar como publicado'">
                       <div class="flex items-center gap-2" style="flex:1;min-width:0;cursor:pointer" @click="operAbrirPost(p)" title="Abrir no quadro de Produção">
                         <span class="badge fs-11 fw-700" style="background:#F4F8FE;color:#1967D2;flex-shrink:0" x-text="p.tipoPost||'Post'"></span>
                         <span class="badge fs-11 fw-700" x-show="p.avulso" style="background:#CCFBF1;color:#0d9488;flex-shrink:0" title="Demanda interna importada">Interna</span>
@@ -2295,7 +2295,7 @@
                     <template x-for="t in grp.itens" :key="'oit'+t.id">
                       <div class="flex items-start gap-2" style="padding:9px 6px 9px 4px;border-bottom:1px solid var(--border)">
                         <label class="flex items-start gap-2" style="cursor:pointer;flex:1;min-width:0">
-                          <input type="checkbox" :disabled="!!operChkItem('matheus',t.id).na" x-model="operChkItem('matheus',t.id).feito" @change="operChkMarcou('matheus',t.id)" style="cursor:pointer;width:17px;height:17px;margin-top:1px;flex-shrink:0">
+                          <input type="checkbox" :disabled="!!operChkItem('matheus',t.id).na" x-model="operChkItem('matheus',t.id).feito" @change="operChkMarcou('matheus',t.id)" style="cursor:pointer;width:17px;height:17px;margin-top:1px;flex-shrink:0;accent-color:#34A853">
                           <span class="fs-13" style="flex:1" :style="operChkItem('matheus',t.id).na?'color:var(--text-3);font-style:italic':(operChkItem('matheus',t.id).feito?'color:var(--text-3);text-decoration:line-through':'')" x-text="t.texto"></span>
                           <span class="badge fs-11 fw-700" x-show="operChkItem('matheus',t.id).feito && operChkItem('matheus',t.id).hora" style="background:#E6F4EA;color:#15803d;flex-shrink:0" x-text="operChkItem('matheus',t.id).hora"></span>
                           <span class="badge fs-11 fw-700" x-show="operChkItem('matheus',t.id).na" style="background:#E5E7EB;color:#6b7280;flex-shrink:0">não se aplica</span>
