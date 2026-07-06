@@ -498,6 +498,7 @@ document.addEventListener('alpine:init', () => {
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     operTab: 'matheus', // módulo Operacional (novo): aba por colaborador — matheus | laryssa | samara
     operChkData: '', // dia do checklist/postagens do Operacional (default hoje)
+    operChkAberto: true, // rotina do dia expandida (recolhível, como no Tráfego)
     operChecklists: [], // coleção operacoes.checklist — um doc por pessoa+dia
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
@@ -1299,12 +1300,29 @@ document.addEventListener('alpine:init', () => {
     operChkItem(pessoa, id) { return this.operChkDoc(pessoa).itens.find(i => i.id === id); },
     operChkMarcou(pessoa, id) {
       const i = this.operChkItem(pessoa, id); if (!i) return;
-      if (i.feito) { if (!i.hora) i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); }
+      if (i.feito) { i.na = false; if (!i.hora) i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); }
       else i.hora = '';
       this.salvarOperChk(pessoa);
     },
-    operChkFeitos(pessoa) { const c = this.operChecklists.find(x => x.pessoa === pessoa && x.data === (this.operChkData || this._hojeStr())); return c ? c.itens.filter(i => i.feito).length : 0; },
-    operChkFeitosGrupo(pessoa, grupoId) { const g = SOCIAL_ROTINA.find(x => x.id === grupoId); if (!g) return 0; const c = this.operChkDoc(pessoa); return g.itens.filter(t => { const i = c.itens.find(x => x.id === t.id); return i && i.feito; }).length; },
+    // "Não se aplica": item não vale hoje — conta como resolvido no x/19.
+    operChkNA(pessoa, id) {
+      const i = this.operChkItem(pessoa, id); if (!i) return;
+      i.na = !i.na;
+      if (i.na) { i.feito = false; i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); }
+      else i.hora = '';
+      this.salvarOperChk(pessoa);
+    },
+    // Resolvido = feito OU não se aplica.
+    operChkFeitos(pessoa) { const c = this.operChecklists.find(x => x.pessoa === pessoa && x.data === (this.operChkData || this._hojeStr())); return c ? c.itens.filter(i => i.feito || i.na).length : 0; },
+    operChkFeitosGrupo(pessoa, grupoId) { const g = SOCIAL_ROTINA.find(x => x.id === grupoId); if (!g) return 0; const c = this.operChkDoc(pessoa); return g.itens.filter(t => { const i = c.itens.find(x => x.id === t.id); return i && (i.feito || i.na); }).length; },
+    // Marca/desmarca um post como publicado (feito) — reflete no status/coluna do quadro.
+    async operTogglePost(p) {
+      const eraFeito = p.status === 'Concluído';
+      if (eraFeito) { p.status = p._statusAnt || 'A Fazer'; }
+      else { p._statusAnt = p.status; p.status = 'Concluído'; p.concluidoEm = new Date().toISOString(); }
+      try { await this.salvarProjetoApi(p); this.mostrarToast(eraFeito ? 'Post reaberto.' : 'Post marcado como publicado. ✅'); }
+      catch (e) { p.status = eraFeito ? 'Concluído' : (p._statusAnt || 'A Fazer'); this.mostrarToast('Não salvou — confira a conexão. ⚠️'); }
+    },
     async salvarOperChk(pessoa) {
       const c = this.operChkDoc(pessoa);
       c.por = (this.usuario && this.usuario.nome) || c.por;
