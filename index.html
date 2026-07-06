@@ -2296,9 +2296,13 @@
 
             <!-- Rotina diária do Social Media (recolhível, com N/A por item) -->
             <div class="card" style="padding:16px">
-              <div class="flex items-center justify-between" style="gap:8px;cursor:pointer" @click="operChkAberto=!operChkAberto" title="Clique pra recolher/abrir">
+              <div class="flex items-center justify-between" style="gap:8px;cursor:pointer;flex-wrap:wrap" @click="operChkAberto=!operChkAberto" title="Clique pra recolher/abrir">
                 <div class="fw-600 fs-15"><i class="ph ph-list-checks ic-ph" style="color:#34A853"></i> Rotina do dia</div>
                 <div class="flex items-center gap-2">
+                  <select class="form-select" style="max-width:190px;font-size:12px;padding:4px 8px" x-model="operInspClienteId" @click.stop @change="operInspTroca()" title="Cliente em foco — dispara a busca de concorrentes no card abaixo">
+                    <option value="">Cliente…</option>
+                    <template x-for="c in operInspClientes" :key="'oicr'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
+                  </select>
                   <span class="badge fs-12 fw-700" :style="operChkFeitos('matheus')>=SOCIAL_ROTINA_N?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="operChkFeitos('matheus')+'/'+SOCIAL_ROTINA_N"></span>
                   <i class="ph ic-ph text-3" style="font-size:19px" :class="operChkAberto?'ph-caret-up':'ph-caret-down'"></i>
                 </div>
@@ -2340,8 +2344,9 @@
             </div>
             <div x-show="!operInspClienteId" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente no menu acima pra espiar os concorrentes dele.</div></div>
             <div x-show="operInspClienteId">
-              <!-- @s dos concorrentes do cliente (chips + adicionar) -->
+              <!-- @s dos concorrentes (a IA descobre ao selecionar o cliente; dá pra ajustar à mão) -->
               <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+                <span class="badge fs-11 fw-700" x-show="operInspIA" style="background:#EDE9FE;color:#6D28D9" title="Concorrentes descobertos automaticamente pela IA a partir do perfil do cliente"><i class="ph ph-sparkle"></i> achados pela IA</span>
                 <template x-for="h in operInspConc" :key="'oih'+h">
                   <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D;display:inline-flex;align-items:center;gap:4px">@<span x-text="h"></span>
                     <i class="ph ph-x" style="cursor:pointer" @click="operInspRmConc(h)" title="Remover concorrente"></i></span>
@@ -2350,9 +2355,8 @@
                 <button class="btn btn-ghost btn-sm" @click="operInspAddConc()" title="Adicionar concorrente deste cliente"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
                 <button class="btn btn-icon btn-ghost btn-sm" x-show="operInspConc.length" @click="operInspCarrega(true)" title="Buscar de novo agora"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
               </div>
-              <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Espiando os concorrentes…</div></div>
+              <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px" x-text="operInspConc.length ? 'Buscando os melhores posts dos concorrentes…' : 'A IA está descobrindo os concorrentes deste cliente…'"></div></div>
               <div x-show="!operInspLoading && operInspErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF7E0;color:#B06000" x-text="operInspErro"></div>
-              <div x-show="!operInspLoading && !operInspErro && !operInspConc.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Adicione os @ dos concorrentes deste cliente pra eu buscar os posts que estão bombando.</div>
               <div x-show="!operInspLoading && !operInspErro && operInspConc.length && !operInspPosts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Nenhum post encontrado dos concorrentes.</div>
               <div x-show="!operInspLoading && operInspPosts.length" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
                 <template x-for="p in operInspPosts" :key="'oip'+p.link">
@@ -4676,7 +4680,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=292"></script>
+<script src="js/app.js?v=293"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
