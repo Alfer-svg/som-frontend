@@ -2088,7 +2088,79 @@
             <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]"><span x-text="m[1]"></span></div>
           </template>
         </div>
-        <template x-for="m in [['matheus','Matheus'],['laryssa','Laryssa'],['samara','Samara']]" :key="'oc'+m[0]">
+
+        <!-- ════════ MATHEUS — Social Media: postagens do dia + rotina ════════ -->
+        <div x-show="operTab==='matheus'">
+          <!-- Navegador de dia + resumo do quadro (o que precisa ser feito) -->
+          <div class="card" style="padding:14px;margin-bottom:14px">
+            <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
+              <div class="flex items-center gap-2">
+                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                <div style="min-width:190px;text-align:center">
+                  <div class="fw-600 fs-14" style="text-transform:capitalize" x-text="operChkLabel"></div>
+                </div>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
+                <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()" style="margin-left:2px">Hoje</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="badge fs-12 fw-700" :style="operResumoTrelo.atrasados?'background:#FCE8E6;color:#C5221F':'background:#E6F4EA;color:#15803d'" :title="operResumoTrelo.atrasados+' post(s) atrasado(s) no quadro'"><i class="ph ph-warning-circle"></i> <span x-text="operResumoTrelo.atrasados"></span> atrasados</span>
+                <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2" :title="operResumoTrelo.semana+' post(s) pendentes até o fim da semana'"><i class="ph ph-calendar-dots"></i> <span x-text="operResumoTrelo.semana"></span> na semana</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Postagens do dia (derivam da programação de cada cliente) -->
+          <div class="card" style="padding:16px;margin-bottom:14px">
+            <div class="flex items-center justify-between mb-2" style="gap:8px">
+              <div class="fw-600 fs-15"><i class="ph ph-megaphone ic-ph" style="color:#4285F4"></i> Postagens do dia</div>
+              <span class="badge fs-12 fw-700" :style="operPostsTotal && operPostsFeitos>=operPostsTotal?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-show="operPostsTotal" x-text="operPostsFeitos+'/'+operPostsTotal+' publicados'"></span>
+            </div>
+            <div x-show="!operPostsDia.length" class="text-3 fs-13" style="padding:22px 0;text-align:center"><i class="ph ph-coffee" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Nenhuma postagem programada para este dia.</div></div>
+            <template x-for="g in operPostsDia" :key="'opg'+g.cliente">
+              <div style="margin-bottom:12px">
+                <div class="flex items-center gap-2 mb-1">
+                  <span :style="'width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;overflow:hidden;flex-shrink:0;background:'+avatarBg(g.cliente)+';color:'+avatarFg(g.cliente)" x-text="g.cliente.charAt(0).toUpperCase()"></span>
+                  <span class="fw-700 fs-13" x-text="g.cliente"></span>
+                  <span class="text-3 fs-11" x-text="'· '+g.posts.length+' post'+(g.posts.length>1?'s':'')"></span>
+                </div>
+                <template x-for="p in g.posts" :key="'opp'+p.id">
+                  <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer" @click="operAbrirPost(p)" :title="'Abrir no quadro de Produção'">
+                    <span class="badge fs-11 fw-700" style="background:#F4F8FE;color:#1967D2;flex-shrink:0" x-text="p.tipoPost||'Post'"></span>
+                    <span class="fs-13 fw-600" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="p.status==='Concluído'?'text-decoration:line-through;color:var(--text-3)':''" x-text="p.tema||p.nome||'Sem título'"></span>
+                    <span class="badge fs-11 fw-700" :style="'background:'+operStatusCor(p.status).bg+';color:'+operStatusCor(p.status).cor" x-text="p.status||'A Fazer'"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+
+          <!-- Rotina diária do Social Media (checklist por momentos do dia) -->
+          <div class="card" style="padding:16px">
+            <div class="flex items-center justify-between mb-2" style="gap:8px">
+              <div class="fw-600 fs-15"><i class="ph ph-list-checks ic-ph" style="color:#34A853"></i> Rotina do dia</div>
+              <span class="badge fs-12 fw-700" :style="operChkFeitos('matheus')>=SOCIAL_ROTINA_N?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="operChkFeitos('matheus')+'/'+SOCIAL_ROTINA_N"></span>
+            </div>
+            <template x-for="grp in SOCIAL_ROTINA" :key="'ogr'+grp.id">
+              <div style="margin-top:12px">
+                <div class="flex items-center gap-2" style="padding:7px 10px;border-radius:8px" :style="'background:'+grp.bg">
+                  <span x-text="grp.ico"></span>
+                  <span class="fw-700 fs-13" :style="'color:'+grp.cor" x-text="grp.label"></span>
+                  <span class="text-3 fs-11" style="margin-left:auto" x-text="operChkFeitosGrupo('matheus',grp.id)+'/'+grp.itens.length"></span>
+                </div>
+                <template x-for="t in grp.itens" :key="'oit'+t.id">
+                  <label class="flex items-start gap-2" style="padding:9px 6px 9px 4px;border-bottom:1px solid var(--border);cursor:pointer">
+                    <input type="checkbox" x-model="operChkItem('matheus',t.id).feito" @change="operChkMarcou('matheus',t.id)" style="cursor:pointer;width:17px;height:17px;margin-top:1px;flex-shrink:0">
+                    <span class="fs-13" style="flex:1" :style="operChkItem('matheus',t.id).feito?'color:var(--text-3);text-decoration:line-through':''" x-text="t.texto"></span>
+                    <span class="badge fs-11 fw-700" x-show="operChkItem('matheus',t.id).feito && operChkItem('matheus',t.id).hora" style="background:#E6F4EA;color:#15803d;flex-shrink:0" x-text="operChkItem('matheus',t.id).hora"></span>
+                  </label>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Laryssa / Samara — estrutura por enquanto -->
+        <template x-for="m in [['laryssa','Laryssa'],['samara','Samara']]" :key="'oc'+m[0]">
           <div x-show="operTab===m[0]" class="card" style="padding:40px 20px;text-align:center">
             <span style="width:52px;height:52px;border-radius:14px;background:#E8F0FE;color:#4285F4;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin-bottom:10px" x-text="m[1].charAt(0)"></span>
             <div class="fw-600 fs-15" x-text="m[1]"></div>
@@ -4404,7 +4476,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=282"></script>
+<script src="js/app.js?v=283"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

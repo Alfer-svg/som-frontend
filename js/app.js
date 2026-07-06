@@ -323,9 +323,9 @@ const PAPEIS_INFO = [
 const PERMISSOES = {
   admin: '*',
   // Dashboard: SÓ admin e "Master" (= perfil id 'comercial', renomeado p/ Master em ui.papeis). Admin vê as 2 abas; comercial/Master vê só a aba Comercial (ehAdmin gateia a Visão geral). 'pessoal' liberado a todos.
-  gestor: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
+  gestor: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'operacoes', 'monitoramento', 'onboarding', 'pessoal'],
   comercial: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding', 'pessoal'],
-  colaborador: ['comercial', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
+  colaborador: ['comercial', 'operacional', 'operacoes', 'monitoramento', 'onboarding', 'pessoal'],
   colaborador2: ['operacional', 'pessoal'], // Operacional (só os trabalhos em que está) + a própria ficha
   financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'pessoal'],
   gestortrafego: ['agenda', 'trafego', 'monitoramento', 'pessoal'], // painel exclusivo de agenda/tráfego + monitoramento
@@ -341,7 +341,8 @@ const PAGINAS_SISTEMA = [
   { id: 'servicos', nome: 'Serviços' },
   { id: 'contratos', nome: 'Contratos' },
   { id: 'financeiro', nome: 'Financeiro' },
-  { id: 'operacional', nome: 'Operacional' },
+  { id: 'operacional', nome: 'Produção' },
+  { id: 'operacoes', nome: 'Operacional (equipe)' },
   { id: 'monitoramento', nome: 'Monitoramento' },
   { id: 'relatorios', nome: 'Relatórios' },
   { id: 'agenda', nome: 'Agenda' },
@@ -360,6 +361,37 @@ const TRAF_TAREFAS = [
   { id: 'pixel', texto: 'Verificou pixel/eventos', dica: 'OK ou problema encontrado' },
   { id: 'relatorio', texto: 'Atualizou relatório', dica: 'Link ou horário' },
 ];
+
+/* ---------- Operacional (equipe): rotina diária do Social Media (Matheus) ---------- */
+// Checklist da rotina, dividido em 3 momentos do dia. Salvo por pessoa+dia em operacoes.checklist.
+const SOCIAL_ROTINA = [
+  { id: 'manha', label: 'Início do dia', ico: '🌅', cor: '#4285F4', bg: '#F4F8FE', itens: [
+    { id: 'notif', texto: 'Verificar notificações, comentários e mensagens diretas em todas as plataformas' },
+    { id: 'dms', texto: 'Responder DMs e comentários pendentes da noite anterior' },
+    { id: 'mencoes', texto: 'Checar menções à marca (@) e marcações' },
+    { id: 'calendario', texto: 'Revisar o calendário editorial e confirmar o(s) post(s) do dia' },
+    { id: 'agendadas', texto: 'Conferir se as publicações agendadas foram/serão publicadas corretamente' },
+    { id: 'tendencias', texto: 'Dar uma olhada nas tendências e assuntos do momento (trending topics)' },
+    { id: 'noticias', texto: 'Verificar notícias do setor e dos concorrentes' },
+  ] },
+  { id: 'dia', label: 'Durante o dia', ico: '☀️', cor: '#F9A825', bg: '#FEFBEF', itens: [
+    { id: 'publicar', texto: 'Publicar o conteúdo do dia (feed, stories, reels, etc.)' },
+    { id: 'interagir', texto: 'Interagir com seguidores: curtir, comentar e responder em tempo real' },
+    { id: 'engajar', texto: 'Engajar com contas parceiras, influenciadores e comunidade' },
+    { id: 'desempenho', texto: 'Monitorar o desempenho dos posts recentes (alcance, engajamento)' },
+    { id: 'stories', texto: 'Postar nos stories (bastidores, enquetes, novidades)' },
+    { id: 'rtm', texto: 'Reagir a oportunidades de "real time marketing" quando surgirem' },
+    { id: 'ideias', texto: 'Capturar/salvar ideias e referências de conteúdo' },
+  ] },
+  { id: 'noite', label: 'Fim do dia (tarde/noite)', ico: '🌙', cor: '#7C3AED', bg: '#F7F5FE', itens: [
+    { id: 'pendentes', texto: 'Responder comentários e mensagens que ficaram pendentes' },
+    { id: 'agendar', texto: 'Agendar as publicações do dia seguinte' },
+    { id: 'metricas', texto: 'Registrar métricas principais do dia (crescimento, engajamento, cliques)' },
+    { id: 'retro', texto: 'Anotar o que funcionou e o que não funcionou' },
+    { id: 'semana', texto: 'Revisar o planejamento da semana e ajustar o que for preciso' },
+  ] },
+];
+const SOCIAL_ROTINA_N = SOCIAL_ROTINA.reduce((s, g) => s + g.itens.length, 0);
 
 /* ---------- Operacional: modelos de projeto comuns de agência ---------- */
 const AREAS_PROJETO = ['📱 Redes Sociais', '🎯 Tráfego Pago', '🌐 Sites & Apps', '🎬 Audiovisual', '🎨 Branding', '🗳️ Marketing Político', '🤝 Recorrente'];
@@ -465,6 +497,9 @@ document.addEventListener('alpine:init', () => {
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     operTab: 'matheus', // módulo Operacional (novo): aba por colaborador — matheus | laryssa | samara
+    operChkData: '', // dia do checklist/postagens do Operacional (default hoje)
+    operChecklists: [], // coleção operacoes.checklist — um doc por pessoa+dia
+    SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
     criDrag: null, criAlvo: null, // arrastar criativos pra reordenar (galeria do post)
@@ -744,7 +779,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') this.carregarOperacoes(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -1186,6 +1221,79 @@ document.addEventListener('alpine:init', () => {
           this.trafCliSel = ''; // recolhe o checklist — volta pro dropdown + histórico "Realizados hoje"
         }
       }
+      catch (e) { this.mostrarToast('Não salvou o checklist — confira a conexão. ⚠️'); }
+    },
+
+    /* ══════════ Operacional (equipe): postagens do dia + rotina do Social Media ══════════ */
+    async carregarOperacoes() {
+      if (!this.operChkData) this.operChkData = this._hojeStr();
+      if (!(this.projects || []).length) this.carregarProjetos(); // pras postagens (derivam da programação/quadro)
+      if (!(this.clients || []).length) this.carregarClientes && this.carregarClientes();
+      this.carregarPresenca();
+      try {
+        const cks = await this.api('GET', '/colecoes/operacoes.checklist');
+        this.operChecklists = (Array.isArray(cks) ? cks : []).filter(x => x && x.pessoa && x.data);
+      } catch (e) { /* sem rede: segue com o que tem em memória */ }
+    },
+    // Navegação de dia (‹ hoje ›) das postagens/checklist.
+    operMudaDia(delta) { const d = new Date(this.operChkData + 'T12:00:00'); d.setDate(d.getDate() + delta); this.operChkData = this._iso(d); },
+    operHoje() { this.operChkData = this._hojeStr(); },
+    get operChkLabel() {
+      const d = this.operChkData || this._hojeStr();
+      const dt = new Date(d + 'T12:00:00');
+      const txt = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+      return d === this._hojeStr() ? 'Hoje · ' + txt : txt;
+    },
+    // Postagens do dia (derivam da programação/quadro), agrupadas por cliente.
+    get operPostsDia() {
+      const d = this.operChkData || this._hojeStr();
+      const posts = (this.projects || []).filter(p => p.isPost && !p.avulso && !p.arquivado && String(p.prazo || '').slice(0, 10) === d);
+      const map = {};
+      for (const p of posts) { const k = p.cliente || '— sem cliente'; (map[k] = map[k] || []).push(p); }
+      return Object.keys(map).sort((a, b) => a.localeCompare(b, 'pt-BR')).map(cli => ({
+        cliente: cli,
+        posts: map[cli].slice().sort((a, b) => ((a.tema || a.nome || '')).localeCompare(b.tema || b.nome || '', 'pt-BR')),
+        feitos: map[cli].filter(p => p.status === 'Concluído').length,
+      }));
+    },
+    get operPostsTotal() { return this.operPostsDia.reduce((s, g) => s + g.posts.length, 0); },
+    get operPostsFeitos() { return this.operPostsDia.reduce((s, g) => s + g.feitos, 0); },
+    // Resumo do quadro (Trello): o que precisa ser feito — atrasados e pendentes desta semana.
+    get operResumoTrelo() {
+      const h = this._hojeStr();
+      const all = (this.projects || []).filter(p => p.isPost && !p.avulso && !p.arquivado);
+      const f = new Date(); f.setDate(f.getDate() + (7 - (f.getDay() || 7))); const fimSemana = this._iso(f);
+      const atrasados = all.filter(p => p.status !== 'Concluído' && String(p.prazo || '').slice(0, 10) < h && p.prazo);
+      const semana = all.filter(p => p.status !== 'Concluído' && String(p.prazo || '').slice(0, 10) >= h && String(p.prazo || '').slice(0, 10) <= fimSemana);
+      return { atrasados: atrasados.length, semana: semana.length };
+    },
+    // Cor do status do post (badge).
+    operStatusCor(s) { return s === 'Concluído' ? { bg: '#E6F4EA', cor: '#15803d' } : (s === 'Em Andamento' || s === 'Em andamento' ? { bg: '#E8F0FE', cor: '#1967D2' } : { bg: '#F1F0EC', cor: '#6b6b6b' }); },
+    // Abre o card do post no quadro (Produção).
+    operAbrirPost(p) { this.go('operacional'); this.opTab = 'quadro'; this.$nextTick(() => this.abrirCard(p)); },
+
+    // ── Checklist da rotina (por pessoa + dia) ──
+    operChkDoc(pessoa) {
+      const d = this.operChkData || this._hojeStr();
+      let c = this.operChecklists.find(x => x.pessoa === pessoa && x.data === d);
+      if (!c) { c = { pessoa, data: d, itens: [], por: '', em: '' }; this.operChecklists.push(c); }
+      for (const g of SOCIAL_ROTINA) for (const t of g.itens) if (!c.itens.some(i => i.id === t.id)) c.itens.push({ id: t.id, feito: false, hora: '' });
+      return c;
+    },
+    operChkItem(pessoa, id) { return this.operChkDoc(pessoa).itens.find(i => i.id === id); },
+    operChkMarcou(pessoa, id) {
+      const i = this.operChkItem(pessoa, id); if (!i) return;
+      if (i.feito) { if (!i.hora) i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); }
+      else i.hora = '';
+      this.salvarOperChk(pessoa);
+    },
+    operChkFeitos(pessoa) { const c = this.operChecklists.find(x => x.pessoa === pessoa && x.data === (this.operChkData || this._hojeStr())); return c ? c.itens.filter(i => i.feito).length : 0; },
+    operChkFeitosGrupo(pessoa, grupoId) { const g = SOCIAL_ROTINA.find(x => x.id === grupoId); if (!g) return 0; const c = this.operChkDoc(pessoa); return g.itens.filter(t => { const i = c.itens.find(x => x.id === t.id); return i && i.feito; }).length; },
+    async salvarOperChk(pessoa) {
+      const c = this.operChkDoc(pessoa);
+      c.por = (this.usuario && this.usuario.nome) || c.por;
+      c.em = new Date().toISOString();
+      try { await this.api('POST', '/colecoes/operacoes.checklist', { itens: this.operChecklists }); }
       catch (e) { this.mostrarToast('Não salvou o checklist — confira a conexão. ⚠️'); }
     },
     // ── Fichário: checklists arquivados por dia (tudo que tem pelo menos 1 item feito) ──
