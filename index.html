@@ -2281,7 +2281,10 @@
                 <button class="btn btn-icon btn-ghost btn-sm" x-show="operInspConc.length" @click="operInspCarrega(true)" title="Buscar de novo agora"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
               </div>
               <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px" x-text="operInspConc.length ? 'Buscando os melhores posts dos concorrentes…' : 'A IA está descobrindo os concorrentes deste cliente…'"></div></div>
-              <div x-show="!operInspLoading && operInspErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF7E0;color:#B06000" x-text="operInspErro"></div>
+              <div x-show="!operInspLoading && operInspErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF7E0;color:#B06000">
+                <span x-text="operInspErro"></span>
+                <button x-show="operInspSemMeta" class="btn btn-sm" style="margin-left:8px;background:#1877F2;color:#fff" @click="conectarMeta('maracatu')" title="Login/consentimento na Meta com a conta que administra a página da Maracatu"><i class="ph ph-instagram-logo ic-ph"></i> Conectar Instagram da Maracatu</button>
+              </div>
               <div x-show="!operInspLoading && !operInspErro && operInspConc.length && !operInspPosts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Nenhum post encontrado dos concorrentes.</div>
               <div x-show="!operInspLoading && operInspPosts.length" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
                 <template x-for="p in operInspPosts" :key="'oip'+p.link">
@@ -4680,7 +4683,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=294"></script>
+<script src="js/app.js?v=295"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

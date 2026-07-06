@@ -504,7 +504,7 @@ document.addEventListener('alpine:init', () => {
     operLog: [], // coleção operacoes.log — otimizações/ajustes registrados pelo Matheus
     operLogForm: { clienteId: '', alteracao: '', motivo: '' },
     // Concorrentes no Instagram (aba do Matheus): cliente do menu drop + @s (IA descobre) + top posts
-    operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '', operInspIA: false,
+    operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '', operInspIA: false, operInspSemMeta: false,
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -602,7 +602,7 @@ document.addEventListener('alpine:init', () => {
         this.mostrarToast(_ok ? '✅ Conta Meta conectada!' : ('❌ Falha ao conectar a conta Meta' + (_motivo ? ' (' + _motivo + ')' : '')));
         localStorage.removeItem('som_meta_cli');
         history.replaceState({}, '', location.pathname);
-        if (_ok && _cli && this.token) { this.page = 'monitoramento'; this.$nextTick(() => this.abrirMonitor(_cli)); }
+        if (_ok && _cli && _cli !== 'maracatu' && this.token) { this.page = 'monitoramento'; this.$nextTick(() => this.abrirMonitor(_cli)); }
       }
       // áudio e permissão de notificação precisam de um gesto do usuário
       document.addEventListener('click', () => { this.initAudio(); this.pedirNotif(); }, { once: true });
@@ -1373,7 +1373,7 @@ document.addEventListener('alpine:init', () => {
     async operInspCarrega(force) {
       const id = this.operInspClienteId;
       if (!id) return;
-      this.operInspLoading = true; this.operInspErro = ''; this.operInspPosts = [];
+      this.operInspLoading = true; this.operInspErro = ''; this.operInspPosts = []; this.operInspSemMeta = false;
       try {
         const r = await this.api('GET', '/monitoramento/meta/concorrentes/' + id + (force ? '?force=1' : ''));
         this.operInspConc = r.concorrentes && r.concorrentes.length ? r.concorrentes : this.operInspConc;
@@ -1381,7 +1381,7 @@ document.addEventListener('alpine:init', () => {
         if (r.ia) { const c = (this.clients || []).find(x => x.id === id); if (c) c.concorrentes = this.operInspConc.slice(); }
         this.operInspPosts = r.posts || [];
         if (r.aviso === 'sem_concorrentes') this.operInspErro = 'A IA não achou concorrentes confiáveis pra este cliente — adicione os @ manualmente aqui embaixo.';
-        else if (r.aviso === 'sem_conta_meta') this.operInspErro = 'Nenhum cliente com Instagram conectado no Monitoramento — conecte uma conta Meta lá pra eu conseguir puxar os posts dos concorrentes.';
+        else if (r.aviso === 'sem_conta_meta') { this.operInspSemMeta = true; this.operInspErro = 'Falta conectar o Instagram da Maracatu — é ele que abre a porta da Meta pra eu puxar os posts dos concorrentes.'; }
         else if (!this.operInspPosts.length && (r.falhas || []).length) this.operInspErro = 'Não achei: @' + r.falhas.join(', @') + ' — confira se o @ está certo e se é conta COMERCIAL (business) do Instagram.';
       } catch (e) { this.operInspErro = e.message || 'Falha ao buscar os concorrentes.'; }
       this.operInspLoading = false;
