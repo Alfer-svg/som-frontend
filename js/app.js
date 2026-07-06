@@ -383,7 +383,7 @@ const SOCIAL_ROTINA = [
     { id: 'rtm', texto: 'Reagir a oportunidades de "real time marketing" quando surgirem' },
     { id: 'ideias', texto: 'Capturar/salvar ideias e referências de conteúdo' },
   ] },
-  { id: 'noite', label: 'Fim do dia (tarde/noite)', ico: '🌙', cor: '#7C3AED', bg: '#F7F5FE', itens: [
+  { id: 'noite', label: 'Fim do dia (tarde/noite)', ico: '🌙', cor: '#0891B2', bg: '#ECFEFF', itens: [
     { id: 'pendentes', texto: 'Responder comentários e mensagens que ficaram pendentes' },
     { id: 'agendar', texto: 'Agendar as publicações do dia seguinte' },
     { id: 'metricas', texto: 'Registrar métricas principais do dia (crescimento, engajamento, cliques)' },
@@ -1244,12 +1244,13 @@ document.addEventListener('alpine:init', () => {
       const txt = dt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
       return d === this._hojeStr() ? 'Hoje · ' + txt : txt;
     },
-    // Postagens do dia (derivam da programação/quadro), agrupadas por cliente.
+    // Postagens do dia — programação de cada cliente + demandas internas (avulsas) importadas
+    // pro dia — agrupadas por cliente. `interna:true` marca o que veio de demanda avulsa.
     get operPostsDia() {
       const d = this.operChkData || this._hojeStr();
-      const posts = (this.projects || []).filter(p => p.isPost && !p.avulso && !p.arquivado && String(p.prazo || '').slice(0, 10) === d);
+      const posts = (this.projects || []).filter(p => p.isPost && !p.arquivado && String(p.prazo || '').slice(0, 10) === d);
       const map = {};
-      for (const p of posts) { const k = p.cliente || '— sem cliente'; (map[k] = map[k] || []).push(p); }
+      for (const p of posts) { const k = p.cliente || '— Interno'; (map[k] = map[k] || []).push(p); }
       return Object.keys(map).sort((a, b) => a.localeCompare(b, 'pt-BR')).map(cli => ({
         cliente: cli,
         posts: map[cli].slice().sort((a, b) => ((a.tema || a.nome || '')).localeCompare(b.tema || b.nome || '', 'pt-BR')),
@@ -1261,7 +1262,7 @@ document.addEventListener('alpine:init', () => {
     // Resumo do quadro (Trello): o que precisa ser feito — atrasados e pendentes desta semana.
     get operResumoTrelo() {
       const h = this._hojeStr();
-      const all = (this.projects || []).filter(p => p.isPost && !p.avulso && !p.arquivado);
+      const all = (this.projects || []).filter(p => p.isPost && !p.arquivado);
       const f = new Date(); f.setDate(f.getDate() + (7 - (f.getDay() || 7))); const fimSemana = this._iso(f);
       const atrasados = all.filter(p => p.status !== 'Concluído' && String(p.prazo || '').slice(0, 10) < h && p.prazo);
       const semana = all.filter(p => p.status !== 'Concluído' && String(p.prazo || '').slice(0, 10) >= h && String(p.prazo || '').slice(0, 10) <= fimSemana);
@@ -1271,6 +1272,21 @@ document.addEventListener('alpine:init', () => {
     operStatusCor(s) { return s === 'Concluído' ? { bg: '#E6F4EA', cor: '#15803d' } : (s === 'Em Andamento' || s === 'Em andamento' ? { bg: '#E8F0FE', cor: '#1967D2' } : { bg: '#F1F0EC', cor: '#6b6b6b' }); },
     // Abre o card do post no quadro (Produção).
     operAbrirPost(p) { this.go('operacional'); this.opTab = 'quadro'; this.$nextTick(() => this.abrirCard(p)); },
+
+    // ── Importar demandas internas (posts avulsos do quadro) pro dia ──
+    operImportModal: false,
+    // Candidatos: posts avulsos (demanda interna) não concluídos que ainda não estão neste dia.
+    get operImportaveis() {
+      const d = this.operChkData || this._hojeStr();
+      return (this.projects || [])
+        .filter(p => p.isPost && p.avulso && !p.arquivado && p.status !== 'Concluído' && String(p.prazo || '').slice(0, 10) !== d)
+        .sort((a, b) => (a.cliente || 'zzz').localeCompare(b.cliente || 'zzz', 'pt-BR') || (a.tema || a.nome || '').localeCompare(b.tema || b.nome || '', 'pt-BR'));
+    },
+    async operImportar(p) {
+      p.prazo = this.operChkData || this._hojeStr();
+      try { await this.salvarProjetoApi(p); this.mostrarToast('Demanda importada pra ' + (this.operChkData === this._hojeStr() ? 'hoje' : 'o dia') + '. 📥'); }
+      catch (e) { p.prazo = ''; this.mostrarToast('Não consegui importar — confira a conexão. ⚠️'); }
+    },
 
     // ── Checklist da rotina (por pessoa + dia) ──
     operChkDoc(pessoa) {

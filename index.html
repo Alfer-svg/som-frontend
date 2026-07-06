@@ -2111,9 +2111,12 @@
 
           <!-- Postagens do dia (derivam da programação de cada cliente) -->
           <div class="card" style="padding:16px;margin-bottom:14px">
-            <div class="flex items-center justify-between mb-2" style="gap:8px">
+            <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
               <div class="fw-600 fs-15"><i class="ph ph-megaphone ic-ph" style="color:#4285F4"></i> Postagens do dia</div>
-              <span class="badge fs-12 fw-700" :style="operPostsTotal && operPostsFeitos>=operPostsTotal?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-show="operPostsTotal" x-text="operPostsFeitos+'/'+operPostsTotal+' publicados'"></span>
+              <div class="flex items-center gap-2">
+                <span class="badge fs-12 fw-700" :style="operPostsTotal && operPostsFeitos>=operPostsTotal?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-show="operPostsTotal" x-text="operPostsFeitos+'/'+operPostsTotal+' publicados'"></span>
+                <button class="btn btn-ghost btn-sm" @click="operImportModal=true" title="Importar uma demanda interna (post avulso do quadro) para este dia"><i class="ph ph-download-simple ic-ph"></i> Importar</button>
+              </div>
             </div>
             <div x-show="!operPostsDia.length" class="text-3 fs-13" style="padding:22px 0;text-align:center"><i class="ph ph-coffee" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Nenhuma postagem programada para este dia.</div></div>
             <template x-for="g in operPostsDia" :key="'opg'+g.cliente">
@@ -2126,6 +2129,7 @@
                 <template x-for="p in g.posts" :key="'opp'+p.id">
                   <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer" @click="operAbrirPost(p)" :title="'Abrir no quadro de Produção'">
                     <span class="badge fs-11 fw-700" style="background:#F4F8FE;color:#1967D2;flex-shrink:0" x-text="p.tipoPost||'Post'"></span>
+                    <span class="badge fs-11 fw-700" x-show="p.avulso" style="background:#CCFBF1;color:#0d9488;flex-shrink:0" title="Demanda interna importada">Interna</span>
                     <span class="fs-13 fw-600" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="p.status==='Concluído'?'text-decoration:line-through;color:var(--text-3)':''" x-text="p.tema||p.nome||'Sem título'"></span>
                     <span class="badge fs-11 fw-700" :style="'background:'+operStatusCor(p.status).bg+';color:'+operStatusCor(p.status).cor" x-text="p.status||'A Fazer'"></span>
                   </div>
@@ -2653,6 +2657,27 @@
           <div class="modal-foot">
             <button class="btn btn-ghost" @click="trafRelModal=false">Fechar</button>
             <button class="btn" x-show="trafRelDados && trafRelDados.clientes.length" @click="imprimirTrafRel()" style="background:#141210;color:#fff;border-color:#141210"><i class="ph ph-printer ic-ph"></i> Imprimir / PDF</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Importar demanda interna (Operacional › Matheus) ========== -->
+      <div class="modal-backdrop" x-show="operImportModal" x-cloak @click.self="operImportModal=false">
+        <div class="modal" style="max-width:520px">
+          <div class="modal-head"><div class="modal-title"><i class="ph ph-download-simple ic-ph" style="color:#0d9488"></i> Importar demanda interna</div><button class="btn btn-icon btn-ghost" @click="operImportModal=false">✕</button></div>
+          <div class="modal-body" style="max-height:62vh;overflow-y:auto">
+            <div class="text-3 fs-12 mb-2">Posts avulsos do quadro (fora da programação) — escolha para lançar em <b x-text="operChkLabel"></b>.</div>
+            <div x-show="!operImportaveis.length" class="text-3 fs-13" style="padding:24px 0;text-align:center"><i class="ph ph-tray" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Nenhuma demanda interna pendente pra importar.</div></div>
+            <template x-for="p in operImportaveis" :key="'imp'+p.id">
+              <div class="flex items-center gap-2" style="padding:9px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:7px">
+                <span class="badge fs-11 fw-700" style="background:#F4F8FE;color:#1967D2;flex-shrink:0" x-text="p.tipoPost||'Post'"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.tema||p.nome||'Sem título'"></div>
+                  <div class="text-3 fs-11" x-text="(p.cliente||'Interno')+(p.prazo?' · agendado '+p.prazo:' · sem data')"></div>
+                </div>
+                <button class="btn btn-sm" @click="operImportar(p)" style="background:#0d9488;color:#fff;border-color:#0d9488;flex-shrink:0"><i class="ph ph-plus ic-ph"></i> Importar</button>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -4476,7 +4501,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=283"></script>
+<script src="js/app.js?v=284"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
