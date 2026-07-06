@@ -1243,6 +1243,21 @@ document.addEventListener('alpine:init', () => {
         this.operLog = Array.isArray(log) ? log : [];
       } catch (e) { /* sem rede: segue com o que tem em memória */ }
     },
+    // ── Agenda do Matheus: eventos (cliente.agenda) em que ele está como colaborador ──
+    get operNomeMatheus() { const m = (this.equipe || []).find(x => /matheus/i.test(x.nome || '')); return m ? m.nome : 'Matheus'; },
+    get operEventosMatheus() { // próximos eventos (de hoje em diante), todos os clientes
+      const h = this._hojeStr(), out = [];
+      for (const c of (this.clients || []))
+        for (const e of (c.agenda || []))
+          if (e && e.data && String(e.data).slice(0, 10) >= h && (e.membros || []).some(m => /matheus/i.test(m)))
+            out.push({ ...e, data: String(e.data).slice(0, 10), clienteId: c.id, cliente: c.empresa || c.nome || '—', fonte: 'agenda' });
+      out.sort((a, b) => (a.data + (a.hora || '')).localeCompare(b.data + (b.hora || '')));
+      return out;
+    },
+    operNovoEvento() { // Matheus agenda evento SEM a trava de papel do novoEvento() — já entra como colaborador
+      this.eventoForm = { id: '', clienteId: '', data: this.operChkData || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '', membros: [this.operNomeMatheus], desenvolvimento: '', solucao: '', satisfacao: 0, satisfacaoJust: '' };
+      this.eventoModal = true;
+    },
     // Log de otimizações/ajustes do Matheus (mesma ideia do Tráfego) — arquiva no Fichário.
     async addOperLog() {
       const f = this.operLogForm;

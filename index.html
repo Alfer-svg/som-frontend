@@ -2307,6 +2307,25 @@
                 </template>
               </div>
             </div>
+
+            <!-- Agenda do Matheus (eventos da Agenda em que ele é colaborador) -->
+            <div class="card" style="padding:16px">
+              <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
+                <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
+                <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar um novo evento — o Matheus já entra como colaborador"><i class="ph ph-plus ic-ph"></i> Evento</button>
+              </div>
+              <div x-show="!operEventosMatheus.length" class="text-3 fs-13" style="padding:22px 0;text-align:center"><i class="ph ph-calendar-check" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Nenhum evento futuro com o Matheus na Agenda.</div></div>
+              <template x-for="ev in operEventosMatheus" :key="'oem'+ev.id">
+                <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer" @click="editarEvento(ev)" title="Abrir/editar o evento">
+                  <span class="badge fs-11 fw-700" style="background:#FEF7E0;color:#B06000;flex-shrink:0;white-space:nowrap"><span x-text="ev.data.slice(8,10)+'/'+ev.data.slice(5,7)"></span><span x-show="ev.hora" x-text="' · '+ev.hora"></span></span>
+                  <span class="badge fs-11 fw-700" :style="'background:'+agTipoCor(ev.tipo)+'22;color:'+agTipoCor(ev.tipo)+';flex-shrink:0'"><span x-text="agTipoIcon(ev.tipo)"></span> <span x-text="ev.tipo"></span></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.titulo"></div>
+                    <div class="text-3 fs-11" x-text="ev.cliente"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
           </div>
 
           <!-- Log de otimizações/ajustes do dia (arquiva no Fichário) -->
@@ -4606,7 +4625,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=288"></script>
+<script src="js/app.js?v=289"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
