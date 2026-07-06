@@ -2329,6 +2329,56 @@
 
           </div>
 
+          <!-- Concorrentes no Instagram: menu drop de cliente + top 3 posts de melhor desempenho -->
+          <div class="card" style="padding:16px;margin-top:14px">
+            <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
+              <div class="fw-600 fs-15"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Concorrentes no Instagram</div>
+              <select class="form-select" style="max-width:280px" x-model="operInspClienteId" @change="operInspTroca()" title="Escolha o cliente pra ver o que os concorrentes dele estão postando de melhor">
+                <option value="">Selecione o cliente…</option>
+                <template x-for="c in operInspClientes" :key="'oic'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
+              </select>
+            </div>
+            <div x-show="!operInspClienteId" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente no menu acima pra espiar os concorrentes dele.</div></div>
+            <div x-show="operInspClienteId">
+              <!-- @s dos concorrentes do cliente (chips + adicionar) -->
+              <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+                <template x-for="h in operInspConc" :key="'oih'+h">
+                  <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D;display:inline-flex;align-items:center;gap:4px">@<span x-text="h"></span>
+                    <i class="ph ph-x" style="cursor:pointer" @click="operInspRmConc(h)" title="Remover concorrente"></i></span>
+                </template>
+                <input class="form-input" style="max-width:190px" placeholder="@concorrente" x-model="operInspNovo" @keydown.enter.prevent="operInspAddConc()">
+                <button class="btn btn-ghost btn-sm" @click="operInspAddConc()" title="Adicionar concorrente deste cliente"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
+                <button class="btn btn-icon btn-ghost btn-sm" x-show="operInspConc.length" @click="operInspCarrega(true)" title="Buscar de novo agora"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
+              </div>
+              <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Espiando os concorrentes…</div></div>
+              <div x-show="!operInspLoading && operInspErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF7E0;color:#B06000" x-text="operInspErro"></div>
+              <div x-show="!operInspLoading && !operInspErro && !operInspConc.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Adicione os @ dos concorrentes deste cliente pra eu buscar os posts que estão bombando.</div>
+              <div x-show="!operInspLoading && !operInspErro && operInspConc.length && !operInspPosts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Nenhum post encontrado dos concorrentes.</div>
+              <div x-show="!operInspLoading && operInspPosts.length" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+                <template x-for="p in operInspPosts" :key="'oip'+p.link">
+                  <a :href="p.link" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;overflow:hidden;display:block" :title="'Abrir o post de @'+p.concorrente+' no Instagram'">
+                    <div style="height:150px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;overflow:hidden">
+                      <img x-show="p.img" :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null">
+                      <i x-show="!p.img" class="ph ph-instagram-logo" style="font-size:34px;opacity:.35"></i>
+                    </div>
+                    <div style="padding:10px">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="fw-700 fs-12" x-text="'@'+p.concorrente"></span>
+                        <span class="text-3 fs-11" style="margin-left:auto" x-text="p.data ? p.data.slice(8,10)+'/'+p.data.slice(5,7) : ''"></span>
+                      </div>
+                      <div class="fs-12 text-2" style="min-height:32px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" x-text="p.texto || '(sem legenda)'"></div>
+                      <div class="flex items-center gap-2" style="margin-top:8px">
+                        <span class="badge fs-11 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
+                        <span class="badge fs-11 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
+                        <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="p.tipo==='VIDEO'?'Reel':'Post'"></span>
+                      </div>
+                    </div>
+                  </a>
+                </template>
+              </div>
+            </div>
+          </div>
+
           <!-- Log de otimizações/ajustes do dia (arquiva no Fichário) -->
           <div class="card" style="padding:16px;margin-top:14px">
             <div class="fw-600 fs-15 mb-1"><i class="ph ph-list-plus ic-ph" style="color:#0891B2"></i> Otimizações & ajustes do dia</div>
@@ -4626,7 +4676,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=291"></script>
+<script src="js/app.js?v=292"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

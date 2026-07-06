@@ -503,6 +503,8 @@ document.addEventListener('alpine:init', () => {
     operChecklists: [], // coleção operacoes.checklist — um doc por pessoa+dia
     operLog: [], // coleção operacoes.log — otimizações/ajustes registrados pelo Matheus
     operLogForm: { clienteId: '', alteracao: '', motivo: '' },
+    // Concorrentes no Instagram (aba do Matheus): cliente do menu drop + @s + top posts
+    operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '',
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -1360,6 +1362,48 @@ document.addEventListener('alpine:init', () => {
     // Resolvido = feito OU não se aplica.
     operChkFeitos(pessoa) { const c = this.operChecklists.find(x => x.pessoa === pessoa && x.data === (this.operChkData || this._hojeStr())); return c ? c.itens.filter(i => i.feito || i.na).length : 0; },
     operChkFeitosGrupo(pessoa, grupoId) { const g = SOCIAL_ROTINA.find(x => x.id === grupoId); if (!g) return 0; const c = this.operChkDoc(pessoa); return g.itens.filter(t => { const i = c.itens.find(x => x.id === t.id); return i && (i.feito || i.na); }).length; },
+    // ── Concorrentes no Instagram: menu drop de cliente + top 3 posts (business_discovery) ──
+    get operInspClientes() { return (this.clients || []).filter(c => (c.status || 'Ativo') === 'Ativo').slice().sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '', 'pt-BR')); },
+    operInspTroca() { // trocou o cliente no menu drop: carrega os @s dele e busca os posts
+      const c = (this.clients || []).find(x => x.id === this.operInspClienteId);
+      this.operInspConc = (c && Array.isArray(c.concorrentes)) ? c.concorrentes.slice() : [];
+      this.operInspPosts = []; this.operInspErro = '';
+      if (this.operInspConc.length) this.operInspCarrega();
+    },
+    async operInspCarrega(force) {
+      const id = this.operInspClienteId;
+      if (!id || !this.operInspConc.length) return;
+      this.operInspLoading = true; this.operInspErro = ''; this.operInspPosts = [];
+      try {
+        const r = await this.api('GET', '/monitoramento/meta/concorrentes/' + id + (force ? '?force=1' : ''));
+        this.operInspConc = r.concorrentes && r.concorrentes.length ? r.concorrentes : this.operInspConc;
+        this.operInspPosts = r.posts || [];
+        if (r.aviso === 'sem_conta_meta') this.operInspErro = 'Nenhum cliente com Instagram conectado no Monitoramento — conecte uma conta Meta lá pra eu conseguir espiar os concorrentes.';
+        else if (!this.operInspPosts.length && (r.falhas || []).length) this.operInspErro = 'Não achei: @' + r.falhas.join(', @') + ' — confira se o @ está certo e se é conta COMERCIAL (business) do Instagram.';
+      } catch (e) { this.operInspErro = e.message || 'Falha ao buscar os concorrentes.'; }
+      this.operInspLoading = false;
+    },
+    async operInspAddConc() {
+      let h = (this.operInspNovo || '').trim().replace(/^@/, '');
+      if (h.includes('instagram.com')) h = (h.split('instagram.com/')[1] || '').split(/[/?#]/)[0];
+      h = h.toLowerCase();
+      if (!h || !this.operInspClienteId) return;
+      if (!this.operInspConc.includes(h)) this.operInspConc.push(h);
+      this.operInspNovo = '';
+      await this.operInspSalvaConc();
+    },
+    async operInspRmConc(h) { this.operInspConc = this.operInspConc.filter(x => x !== h); await this.operInspSalvaConc(); },
+    async operInspSalvaConc() {
+      const id = this.operInspClienteId; if (!id) return;
+      try {
+        const r = await this.api('POST', '/monitoramento/meta/concorrentes/' + id, { concorrentes: this.operInspConc });
+        this.operInspConc = r.concorrentes || this.operInspConc;
+        const c = (this.clients || []).find(x => x.id === id); if (c) c.concorrentes = this.operInspConc.slice();
+        if (this.operInspConc.length) this.operInspCarrega(true); else { this.operInspPosts = []; this.operInspErro = ''; }
+      } catch (e) { alert(e.message || e); }
+    },
+    operInspN(n) { n = +n || 0; return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.', ',') + ' mil' : String(n); },
+
     // Marca/desmarca um post como PUBLICADO na rede — marca do social media, independente
     // do status do quadro (Concluído no quadro = criativo pronto, não que já foi ao ar).
     async operTogglePost(p) {
