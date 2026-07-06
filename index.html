@@ -1977,44 +1977,96 @@
                 :style="'width:100%;justify-content:space-between;margin-bottom:6px;'+(trafFichSel===d.data ? 'background:#F9A825;color:#fff;border-color:#F9A825' : 'background:var(--surface-2);color:var(--text-2)')"
                 @click="trafFichSel=d.data">
                 <span x-text="fmtDate(d.data)"></span>
-                <span class="badge fs-11 fw-800" :style="d.completos>=d.total?'background:#dcfce7;color:#15803d':'background:#fff7ed;color:#F9A825'" x-text="d.completos+'/'+d.total+' ✓'"></span>
+                <span class="badge fs-11 fw-800" :style="trafFichSel===d.data?'background:rgba(255,255,255,.22);color:#fff':'background:var(--surface-2);color:var(--text-3)'" x-text="d.total+' cli'"></span>
               </button>
             </template>
             <div x-show="trafFichMeses.length && !trafFichDiasMes.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum dia neste mês.</div>
             <div x-show="!trafFichMeses.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum checklist arquivado ainda — preencha e salve na aba Rotina do Tráfego.</div>
           </div>
-          <!-- Fichas do dia -->
+          <!-- Compilado do dia: tudo que foi feito, por cliente -->
           <div>
-            <template x-for="c in trafFichDo(trafFichSel)" :key="'fich'+c.data+c.clienteId">
-              <div class="card" style="padding:12px;margin-bottom:10px">
+            <!-- Card GERAL do dia: rotina do Social Media (Matheus) — não é de um cliente -->
+            <template x-if="!trafFichCliFiltro && fichRotina(trafFichSel)">
+              <div class="card" style="padding:12px;margin-bottom:10px;background:#F3FAF6;border-color:#E6F4EA">
                 <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:6px">
-                  <div class="fw-600 fs-13"><i class="ph ph-buildings ic-ph"></i> <span x-text="c.cliente||'—'"></span></div>
+                  <div class="fw-600 fs-13"><i class="ph ph-list-checks ic-ph" style="color:#34A853"></i> Rotina do Social Media</div>
                   <div class="flex items-center gap-2">
-                    <span class="badge fs-11 fw-800" :style="c.itens.filter(i=>i.feito||i.na).length>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="c.itens.filter(i=>i.feito||i.na).length+'/'+TRAF_TAREFAS.length"></span>
-                    <span class="text-3 fs-11" x-show="c.por" x-text="'por '+c.por"></span>
+                    <span class="badge fs-11 fw-800" :style="fichRotina(trafFichSel).itens.filter(i=>i.feito||i.na).length>=SOCIAL_ROTINA_N?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="fichRotina(trafFichSel).itens.filter(i=>i.feito||i.na).length+'/'+SOCIAL_ROTINA_N"></span>
+                    <span class="text-3 fs-11" x-show="fichRotina(trafFichSel).por" x-text="'por '+fichRotina(trafFichSel).por"></span>
                   </div>
                 </div>
-                <template x-for="i in c.itens" :key="c.clienteId+i.id">
+                <template x-for="i in fichRotina(trafFichSel).itens.filter(i=>i.feito||i.na)" :key="'rot'+i.id">
                   <div class="flex items-start gap-2 fs-12" style="padding:5px 0;border-bottom:1px solid var(--border)">
-                    <span :style="i.feito?'color:#16a34a':'color:var(--text-3)'" x-text="i.na?'–':(i.feito?'✓':'○')"></span>
+                    <span :style="i.feito?'color:#16a34a':'color:var(--text-3)'" x-text="i.na?'–':'✓'"></span>
                     <div style="flex:1;min-width:0">
-                      <span :style="(i.feito||i.na)?(i.na?'color:var(--text-3);font-style:italic':''):'color:var(--text-3)'" x-text="trafTarefa(i.id).texto"></span>
+                      <span :style="i.na?'color:var(--text-3);font-style:italic':''" x-text="socialTarefa(i.id).texto"></span>
                       <span class="text-3 fs-11" x-show="i.na" style="font-style:italic"> · não se aplica</span>
                       <span class="text-3 fs-11" x-show="i.hora && !i.na" x-text="' · '+i.hora"></span>
-                      <div class="text-3 fs-11" x-show="i.evidencia" style="font-style:italic" x-text="'Evidência: '+i.evidencia"></div>
                     </div>
                   </div>
                 </template>
-                <!-- Otimizações do dia deste cliente (do log) — arquivadas junto na ficha -->
-                <div x-show="trafLogDe(c.data, c.clienteId).length" style="margin-top:8px;background:#FEF7E0;border-radius:8px;padding:9px">
-                  <div class="fw-800 fs-12 mb-1" style="color:#F9A825"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia (<span x-text="trafLogDe(c.data, c.clienteId).length"></span>)</div>
-                  <template x-for="l in trafLogDe(c.data, c.clienteId)" :key="'flog'+l.id">
+              </div>
+            </template>
+
+            <!-- Um card por cliente, com tudo que foi feito no dia -->
+            <template x-for="c in trafFichDo(trafFichSel)" :key="'fich'+trafFichSel+c.cliente">
+              <div class="card" style="padding:12px;margin-bottom:10px">
+                <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:6px">
+                  <div class="fw-600 fs-13"><i class="ph ph-buildings ic-ph"></i> <span x-text="c.cliente||'—'"></span></div>
+                  <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                    <span class="badge fs-11 fw-700" x-show="c.posts.length" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-megaphone"></i> <span x-text="c.posts.length"></span> post<span x-show="c.posts.length>1">s</span></span>
+                    <span class="badge fs-11 fw-800" x-show="c.trafDoc" :style="_fichTrafResolv(c.trafDoc)>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'"><i class="ph ph-chart-line-up"></i> <span x-text="_fichTrafResolv(c.trafDoc)+'/'+TRAF_TAREFAS.length"></span></span>
+                  </div>
+                </div>
+
+                <!-- Posts publicados (Matheus) -->
+                <template x-if="c.posts.length">
+                  <div style="margin-bottom:8px">
+                    <div class="fw-700 fs-12 mb-1" style="color:#1967D2"><i class="ph ph-megaphone ic-ph"></i> Posts publicados</div>
+                    <template x-for="p in c.posts" :key="'fp'+p.id">
+                      <div class="flex items-center gap-2 fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
+                        <span class="badge fs-11 fw-700" style="background:#F4F8FE;color:#1967D2;flex-shrink:0" x-text="p.tipoPost||'Post'"></span>
+                        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.tema||p.nome||'Sem título'"></span>
+                        <span class="text-3 fs-11" x-show="p.publicadoEm" x-text="fmtHora(p.publicadoEm)"></span>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <!-- Checklist do Tráfego -->
+                <template x-if="c.trafDoc">
+                  <div style="margin-bottom:8px">
+                    <div class="fw-700 fs-12 mb-1" style="color:#F9A825"><i class="ph ph-chart-line-up ic-ph"></i> Rotina de Tráfego<span class="text-3 fw-400" x-show="c.trafDoc.por" x-text="' · por '+c.trafDoc.por"></span></div>
+                    <template x-for="i in c.trafDoc.itens" :key="'ft'+c.cliente+i.id">
+                      <div class="flex items-start gap-2 fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
+                        <span :style="i.feito?'color:#16a34a':'color:var(--text-3)'" x-text="i.na?'–':(i.feito?'✓':'○')"></span>
+                        <div style="flex:1;min-width:0">
+                          <span :style="(i.feito||i.na)?(i.na?'color:var(--text-3);font-style:italic':''):'color:var(--text-3)'" x-text="trafTarefa(i.id).texto"></span>
+                          <span class="text-3 fs-11" x-show="i.na" style="font-style:italic"> · não se aplica</span>
+                          <span class="text-3 fs-11" x-show="i.hora && !i.na" x-text="' · '+i.hora"></span>
+                          <div class="text-3 fs-11" x-show="i.evidencia" style="font-style:italic" x-text="'Evidência: '+i.evidencia"></div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <!-- Otimizações do dia: Tráfego (amarelo) + Matheus (teal) -->
+                <div x-show="c.trafLog.length" style="margin-top:6px;background:#FEF7E0;border-radius:8px;padding:9px">
+                  <div class="fw-800 fs-12 mb-1" style="color:#F9A825"><i class="ph ph-list-plus ic-ph"></i> Otimizações de Tráfego (<span x-text="c.trafLog.length"></span>)</div>
+                  <template x-for="l in c.trafLog" :key="'flog'+l.id">
+                    <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span><span class="text-3 fs-11" x-show="l.por" x-text="' · '+l.por"></span></div>
+                  </template>
+                </div>
+                <div x-show="c.operLog.length" style="margin-top:6px;background:#ECFEFF;border-radius:8px;padding:9px">
+                  <div class="fw-800 fs-12 mb-1" style="color:#0891B2"><i class="ph ph-list-plus ic-ph"></i> Otimizações do Social Media (<span x-text="c.operLog.length"></span>)</div>
+                  <template x-for="l in c.operLog" :key="'folog'+l.id">
                     <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span><span class="text-3 fs-11" x-show="l.por" x-text="' · '+l.por"></span></div>
                   </template>
                 </div>
               </div>
             </template>
-            <div x-show="!trafFichSel || !trafFichDo(trafFichSel).length" class="card text-3 fs-12" style="padding:20px;text-align:center"><span x-show="!trafFichSel">Escolha um dia na gaveta ao lado.</span><span x-show="trafFichSel && trafFichCliFiltro">Nenhuma ficha desse cliente neste dia.</span><span x-show="trafFichSel && !trafFichCliFiltro">Nenhuma ficha neste dia.</span></div>
+            <div x-show="!trafFichSel || (!trafFichDo(trafFichSel).length && !(!trafFichCliFiltro && fichRotina(trafFichSel)))" class="card text-3 fs-12" style="padding:20px;text-align:center"><span x-show="!trafFichSel">Escolha um dia na gaveta ao lado.</span><span x-show="trafFichSel && trafFichCliFiltro">Nenhum registro desse cliente neste dia.</span><span x-show="trafFichSel && !trafFichCliFiltro">Nenhum registro neste dia.</span></div>
           </div>
           </div>
         </div>
@@ -2255,6 +2307,35 @@
                 </template>
               </div>
             </div>
+          </div>
+
+          <!-- Log de otimizações/ajustes do dia (arquiva no Fichário) -->
+          <div class="card" style="padding:16px;margin-top:14px">
+            <div class="fw-600 fs-15 mb-1"><i class="ph ph-list-plus ic-ph" style="color:#0891B2"></i> Otimizações & ajustes do dia</div>
+            <div class="text-3 fs-12 mb-3">O que foi ajustado hoje — repostagem, mudança de estratégia, ajuste de conteúdo. Fica registrado no Fichário.</div>
+            <div style="display:grid;grid-template-columns:200px 1fr auto;gap:8px;align-items:start;margin-bottom:12px">
+              <select class="form-select" x-model="operLogForm.clienteId" title="Cliente (opcional)">
+                <option value="">Geral (sem cliente)</option>
+                <template x-for="c in trafClientes" :key="'olc'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+              </select>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <input class="form-input" x-model="operLogForm.alteracao" placeholder="O que foi feito? (ex.: repostei o carrossel com nova capa)" @keydown.enter="addOperLog()">
+                <input class="form-input" x-model="operLogForm.motivo" placeholder="Por quê? (opcional)" @keydown.enter="addOperLog()">
+              </div>
+              <button class="btn btn-sm" @click="addOperLog()" style="background:#0d9488;color:#fff;border-color:#0d9488;white-space:nowrap;align-self:stretch"><i class="ph ph-plus ic-ph"></i> Registrar</button>
+            </div>
+            <div x-show="!operLogDia(operChkData).length" class="text-3 fs-12" style="padding:8px 0;text-align:center">Nenhuma otimização registrada neste dia ainda.</div>
+            <template x-for="l in operLogDia(operChkData)" :key="'ol'+l.id">
+              <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+                <span class="text-3 fs-11" style="flex-shrink:0;margin-top:2px" x-text="l.hora"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="fs-13"><span x-show="l.cliente" class="fw-700" x-text="l.cliente+' · '"></span><span x-text="l.alteracao"></span></div>
+                  <div class="text-3 fs-11" x-show="l.motivo" x-text="'Motivo: '+l.motivo"></div>
+                  <div class="text-3 fs-11" x-show="l.por" x-text="'por '+l.por"></div>
+                </div>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="removerOperLog(l.id)" title="Excluir" style="color:var(--red);flex-shrink:0"><i class="ph ph-trash ic-ph"></i></button>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -4525,7 +4606,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=287"></script>
+<script src="js/app.js?v=288"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

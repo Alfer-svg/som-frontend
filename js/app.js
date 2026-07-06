@@ -501,6 +501,8 @@ document.addEventListener('alpine:init', () => {
     operChkData: '', // dia do checklist/postagens do Operacional (default hoje)
     operChkAberto: true, // rotina do dia expandida (recolhível, como no Tráfego)
     operChecklists: [], // coleção operacoes.checklist — um doc por pessoa+dia
+    operLog: [], // coleção operacoes.log — otimizações/ajustes registrados pelo Matheus
+    operLogForm: { clienteId: '', alteracao: '', motivo: '' },
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -1233,10 +1235,37 @@ document.addEventListener('alpine:init', () => {
       if (!(this.clients || []).length) this.carregarClientes && this.carregarClientes();
       this.carregarPresenca();
       try {
-        const cks = await this.api('GET', '/colecoes/operacoes.checklist');
+        const [cks, log] = await Promise.all([
+          this.api('GET', '/colecoes/operacoes.checklist'),
+          this.api('GET', '/colecoes/operacoes.log'),
+        ]);
         this.operChecklists = (Array.isArray(cks) ? cks : []).filter(x => x && x.pessoa && x.data);
+        this.operLog = Array.isArray(log) ? log : [];
       } catch (e) { /* sem rede: segue com o que tem em memória */ }
     },
+    // Log de otimizações/ajustes do Matheus (mesma ideia do Tráfego) — arquiva no Fichário.
+    async addOperLog() {
+      const f = this.operLogForm;
+      if (!(f.alteracao || '').trim()) return alert('Descreva o ajuste/otimização feito.');
+      const c = (this.clients || []).find(x => x.id === f.clienteId);
+      this.operLog.unshift({
+        id: MD.uid(), data: this.operChkData || this._hojeStr(), hora: new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }),
+        clienteId: f.clienteId || '', cliente: (c && (c.empresa || c.nome)) || '',
+        alteracao: f.alteracao.trim(), motivo: (f.motivo || '').trim(),
+        por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString(),
+      });
+      this.operLogForm = { clienteId: '', alteracao: '', motivo: '' };
+      try { await this.api('POST', '/colecoes/operacoes.log', { itens: this.operLog }); this.mostrarToast('Otimização registrada. 📝'); }
+      catch (e) { alert(e.message || e); }
+    },
+    async removerOperLog(id) {
+      if (!confirm('Excluir este registro do log?')) return;
+      this.operLog = this.operLog.filter(x => x.id !== id);
+      try { await this.api('POST', '/colecoes/operacoes.log', { itens: this.operLog }); } catch (e) { }
+    },
+    // Otimizações do Matheus num dia (opcionalmente de um cliente) — pro card do dia e pro Fichário.
+    operLogDia(dia) { return (this.operLog || []).filter(l => l.data === dia); },
+    operLogDe(dia, clienteId) { return (this.operLog || []).filter(l => l.data === dia && (l.clienteId || '') === (clienteId || '')); },
     // Navegação de dia (‹ hoje ›) das postagens/checklist.
     operMudaDia(delta) { const d = new Date(this.operChkData + 'T12:00:00'); d.setDate(d.getDate() + delta); this.operChkData = this._iso(d); },
     operHoje() { this.operChkData = this._hojeStr(); },
@@ -1336,26 +1365,44 @@ document.addEventListener('alpine:init', () => {
     trafFichSel: '',
     trafFichMes: '',       // mês selecionado no fichário ('YYYY-MM') — navega meses/anos
     trafFichCliFiltro: '', // filtro por cliente no fichário (id ou '' = todos)
-    // Dias arquivados = dias com checklist preenchido OU otimização registrada.
+    // Chave de agrupamento por cliente no Fichário: pelo NOME (posts do Matheus só têm nome).
+    _fichKey(nome) { return (nome || '—').trim(); },
+    // Dias arquivados = qualquer atividade registrada no dia (Tráfego + Matheus).
     get trafFichDias() {
-      const m = {};
-      for (const c of this.trafChecklists) { if (c.itens && c.itens.some(i => i.feito || i.na)) (m[c.data] = m[c.data] || new Set()).add(c.clienteId); }
-      for (const l of this.trafLog) { if (l.clienteId && l.data) (m[l.data] = m[l.data] || new Set()).add(l.clienteId); }
-      return Object.keys(m).sort().reverse().map(d => {
-        const docs = this.trafChecklists.filter(c => c.data === d && c.itens && c.itens.some(i => i.feito || i.na));
-        return { data: d, total: m[d].size, completos: docs.filter(x => this._trafResolvidos(x) >= TRAF_TAREFAS.length).length };
-      });
+      const m = {}; // data -> Set(cliente)
+      const add = (data, nome) => { if (!data) return; (m[data] = m[data] || new Set()).add(this._fichKey(nome)); };
+      for (const c of this.trafChecklists) if ((c.itens || []).some(i => i.feito || i.na)) add(c.data, c.cliente);
+      for (const l of this.trafLog) if (l.clienteId) add(l.data, l.cliente);
+      for (const p of (this.projects || [])) if (p.isPost && p.publicado) add(String(p.publicadoEm || p.prazo || '').slice(0, 10), p.cliente || '— Interno');
+      for (const l of (this.operLog || [])) add(l.data, l.cliente || '— Interno');
+      const rot = {}; for (const c of (this.operChecklists || [])) if (c.pessoa === 'matheus' && (c.itens || []).some(i => i.feito || i.na)) rot[c.data] = true;
+      for (const d of Object.keys(rot)) if (!m[d]) m[d] = new Set();
+      return Object.keys(m).sort().reverse().map(d => ({ data: d, total: m[d].size, rotina: !!rot[d] }));
     },
+    // Compilado do dia por cliente: checklist + otimizações do Tráfego + posts publicados
+    // + otimizações do Matheus. Cada cliente vira um card só, com tudo que foi feito.
     trafFichDo(dia) {
-      const docs = this.trafChecklists.filter(c => c.data === dia && c.itens && c.itens.some(i => i.feito || i.na));
-      const comDoc = new Set(docs.map(d => d.clienteId));
-      // Cliente que SÓ teve otimização no dia entra com ficha própria (sem itens) pra guardar o log.
-      const soLog = [...new Set(this.trafLog.filter(l => l.data === dia && l.clienteId && !comDoc.has(l.clienteId)).map(l => l.clienteId))]
-        .map(cid => { const l = this.trafLog.find(x => x.data === dia && x.clienteId === cid); return { data: dia, clienteId: cid, cliente: (l && l.cliente) || '—', por: '', itens: [], soLog: true }; });
-      let out = [...docs, ...soLog].sort((a, b) => (a.cliente || '').localeCompare(b.cliente || '', 'pt-BR'));
-      if (this.trafFichCliFiltro) out = out.filter(c => c.clienteId === this.trafFichCliFiltro);
+      const groups = {};
+      const g = (nome, clienteId) => {
+        const k = this._fichKey(nome);
+        if (!groups[k]) groups[k] = { cliente: k, clienteId: clienteId || '', trafDoc: null, trafLog: [], posts: [], operLog: [] };
+        if (clienteId && !groups[k].clienteId) groups[k].clienteId = clienteId;
+        return groups[k];
+      };
+      for (const c of this.trafChecklists) if (c.data === dia && (c.itens || []).some(i => i.feito || i.na)) g(c.cliente, c.clienteId).trafDoc = c;
+      for (const l of this.trafLog) if (l.data === dia && l.clienteId) g(l.cliente, l.clienteId).trafLog.push(l);
+      for (const p of (this.projects || [])) if (p.isPost && p.publicado && String(p.publicadoEm || p.prazo || '').slice(0, 10) === dia) g(p.cliente || '— Interno').posts.push(p);
+      for (const l of (this.operLog || [])) if (l.data === dia) g(l.cliente || '— Interno', l.clienteId).operLog.push(l);
+      let out = Object.values(groups).sort((a, b) => a.cliente.localeCompare(b.cliente, 'pt-BR'));
+      if (this.trafFichCliFiltro) { const nome = (this.trafClientes.find(c => c.id === this.trafFichCliFiltro) || {}).nome; out = out.filter(c => c.clienteId === this.trafFichCliFiltro || (nome && c.cliente === nome)); }
       return out;
     },
+    // Resolvidos do doc de checklist do Tráfego (feito ou N/A).
+    _fichTrafResolv(doc) { return doc && doc.itens ? doc.itens.filter(i => i.feito || i.na).length : 0; },
+    // Rotina do Social Media (Matheus) no dia — card geral do dia (não é de um cliente).
+    fichRotina(dia) { const c = (this.operChecklists || []).find(x => x.pessoa === 'matheus' && x.data === dia); return (c && (c.itens || []).some(i => i.feito || i.na)) ? c : null; },
+    // Texto/grupo de um item da rotina do Social Media (pro card do Fichário).
+    socialTarefa(id) { for (const g of SOCIAL_ROTINA) { const t = g.itens.find(x => x.id === id); if (t) return { texto: t.texto, grupo: g.label, ico: g.ico }; } return { texto: id, grupo: '', ico: '' }; },
     // Meses que têm ficha arquivada (mais recente primeiro) — abas de navegação do fichário.
     get trafFichMeses() {
       const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -1374,10 +1421,13 @@ document.addEventListener('alpine:init', () => {
       if (!this.trafFichMes && this.trafFichMeses.length) this.trafFichMes = this.trafFichMeses[0].mes;
       if ((!this.trafFichSel || !this.trafFichDiasMes.some(d => d.data === this.trafFichSel)) && this.trafFichDiasMes.length) this.trafFichSel = this.trafFichDiasMes[0].data;
     },
-    // Fichário agora vive no Monitoramento (aba). Garante os checklists carregados e prepara a vista.
+    // Fichário agora vive no Monitoramento (aba). Compila Tráfego + Matheus — carrega ambos.
     async monAbrirFichario() {
       this.monTab = 'fichario';
-      if (!this.trafChecklists.length) await this.carregarTrafego();
+      await Promise.all([
+        this.trafChecklists.length ? null : this.carregarTrafego(),
+        this.carregarOperacoes(), // posts, checklist e log do Matheus
+      ]);
       if (!this.trafFichMes && this.trafFichMeses.length) this.trafFichMes = this.trafFichMeses[0].mes;
       if ((!this.trafFichSel || !this.trafFichDiasMes.some(d => d.data === this.trafFichSel)) && this.trafFichDiasMes.length) this.trafFichSel = this.trafFichDiasMes[0].data;
     },
@@ -2651,6 +2701,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     // ── Timeline de relacionamento (vive em Cliente.dados.timeline) ──
     interIcon(t) { const m = TIPOS_INTER.find(x => x[0] === t); return m ? m[1] : '📝'; },
     fmtDataHora(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Recife', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return iso; } },
+    fmtHora(iso) { if (!iso) return ''; try { return new Date(iso).toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } },
     async persistirCliente(c) {
       const { id, ...dados } = c;
       try { await this.api('POST', '/clientes', { id, empresa: c.empresa, dados }); await this.carregarClientes(); }
