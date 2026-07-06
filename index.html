@@ -2960,6 +2960,29 @@
 
       <!-- ========== CONFIGURAÇÕES ========== -->
       <section x-show="page==='configuracoes'">
+        <!-- Integrações: Instagram da Maracatu (conta-casa) — vale pro sistema inteiro -->
+        <div class="fw-800 fs-14 mb-2"><i class="ph ph-plugs-connected ic-ph"></i> Integrações</div>
+        <div class="card mb-4" style="padding:16px">
+          <div class="flex items-center justify-between" style="gap:10px;flex-wrap:wrap">
+            <div style="min-width:260px">
+              <div class="fw-600 fs-14"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Instagram da Maracatu (conta-casa)</div>
+              <div class="text-3 fs-12" style="margin-top:4px">Porta de entrada do SOM na Meta — usada pra puxar os posts dos concorrentes em todo o sistema. Conecta uma vez e fica valendo.</div>
+              <div class="fs-12" style="margin-top:6px" x-show="metaStatus.maracatu && metaStatus.maracatu.conectado">
+                <span class="badge fs-12 fw-700" style="background:#E6F4EA;color:#15803d"><i class="ph ph-check-circle"></i> Conectado</span>
+                <span class="text-2 fs-12" style="margin-left:6px" x-text="'@'+(metaStatus.maracatu.igUsername||metaStatus.maracatu.pageName||'—') + (metaStatus.maracatu.vinculadoEm ? ' · desde '+metaStatus.maracatu.vinculadoEm.slice(8,10)+'/'+metaStatus.maracatu.vinculadoEm.slice(5,7)+'/'+metaStatus.maracatu.vinculadoEm.slice(0,4) : '')"></span>
+              </div>
+              <div class="fs-12" style="margin-top:6px" x-show="!metaStatus.maracatu || !metaStatus.maracatu.conectado">
+                <span class="badge fs-12 fw-700" style="background:#FCE8E6;color:#C5221F"><i class="ph ph-plugs"></i> Não conectado</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-sm" style="background:#1877F2;color:#fff" x-show="!metaStatus.maracatu || !metaStatus.maracatu.conectado" @click="conectarMeta('maracatu')" title="Login/consentimento na Meta com a conta que administra a página da Maracatu"><i class="ph ph-instagram-logo ic-ph"></i> Conectar</button>
+              <button class="btn btn-ghost btn-sm" x-show="metaStatus.maracatu && metaStatus.maracatu.conectado" @click="conectarMeta('maracatu')" title="Refazer o login (troca de conta/permissões)"><i class="ph ph-arrows-clockwise ic-ph"></i> Reconectar</button>
+              <button class="btn btn-ghost btn-sm" x-show="metaStatus.maracatu && metaStatus.maracatu.conectado" style="color:var(--red)" @click="desconectarMeta('maracatu')"><i class="ph ph-plugs ic-ph"></i> Desconectar</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Usuários & Acessos -->
         <div class="flex items-center justify-between mb-2">
           <div class="fw-800 fs-14"><i class="ph ph-users-three ic-ph"></i> Usuários & Acessos</div>
@@ -4683,7 +4706,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=295"></script>
+<script src="js/app.js?v=296"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

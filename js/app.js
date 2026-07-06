@@ -785,7 +785,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') this.carregarOperacoes(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') this.carregarOperacoes(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -2871,7 +2871,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       if (!clienteId) return;
       try { this.metaStatus = { ...this.metaStatus, [clienteId]: await this.api('GET', '/monitoramento/meta/status/' + clienteId) }; }
       catch { this.metaStatus = { ...this.metaStatus, [clienteId]: { conectado: false } }; }
-      if (this.metaStatus[clienteId] && this.metaStatus[clienteId].conectado) this.carregarMetaMetricas(clienteId);
+      if (clienteId !== 'maracatu' && this.metaStatus[clienteId] && this.metaStatus[clienteId].conectado) this.carregarMetaMetricas(clienteId); // 'maracatu' é conta-casa, não tem métricas de cliente
     },
     async carregarMetaMetricas(clienteId) {
       if (!clienteId) return;
@@ -2881,7 +2881,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       finally { this.metaBusy = false; }
     },
     async desconectarMeta(clienteId) {
-      if (!confirm('Desconectar a conta Meta deste cliente?')) return;
+      if (!confirm(clienteId === 'maracatu' ? 'Desconectar o Instagram da Maracatu (conta-casa)? Os posts de concorrentes param de carregar.' : 'Desconectar a conta Meta deste cliente?')) return;
       try {
         await this.api('POST', '/monitoramento/meta/desconectar/' + clienteId);
         this.metaStatus = { ...this.metaStatus, [clienteId]: { conectado: false } };
