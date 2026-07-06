@@ -464,6 +464,7 @@ document.addEventListener('alpine:init', () => {
     orcFiltro: 'ativos', // filtro da lista de Orçamentos: 'ativos' | 'rascunhos' | 'arquivados'
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
+    operTab: 'matheus', // módulo Operacional (novo): aba por colaborador — matheus | laryssa | samara
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
     criDrag: null, criAlvo: null, // arrastar criativos pra reordenar (galeria do post)

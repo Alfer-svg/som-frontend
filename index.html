@@ -180,6 +180,11 @@
         </div>
       </template>
 
+      <!-- Operacional — painel por colaborador (admin) -->
+      <div class="nav-item" x-show="podeVer('operacoes')" :class="page==='operacoes'?'active':''" @click="go('operacoes')" title="Acompanhamento operacional por colaborador.">
+        <span class="nav-icon"><i class="ph ph-list-checks ic-ph" style="color:#4285F4"></i></span><span>Operacional</span>
+      </div>
+
       <!-- Agenda / Calendário de eventos (admin + Gestor de Tráfego) -->
       <div class="nav-item" x-show="podeVer('agenda')" :class="page==='agenda'?'active':''" @click="go('agenda')" title="Calendário de eventos, contatos e histórico dos clientes.">
         <span class="nav-icon"><i class="ph ph-calendar-dots ic-ph" style="color:#F9A825"></i></span><span>Agenda</span>
@@ -2071,6 +2076,24 @@
           </div>
         </div>
       </div>
+
+      <!-- ========== OPERACIONAL (painel por colaborador) ========== -->
+      <section x-show="page==='operacoes'">
+        <div style="font-size:22px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-list-checks ic-ph" style="color:#4285F4"></i> Operacional</div>
+        <div class="text-3" style="font-size:13px;margin-top:4px;margin-bottom:14px">Acompanhamento operacional por colaborador.</div>
+        <div class="tabs">
+          <template x-for="m in [['matheus','Matheus'],['laryssa','Laryssa'],['samara','Samara']]" :key="'ot'+m[0]">
+            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]"><span x-text="m[1]"></span></div>
+          </template>
+        </div>
+        <template x-for="m in [['matheus','Matheus'],['laryssa','Laryssa'],['samara','Samara']]" :key="'oc'+m[0]">
+          <div x-show="operTab===m[0]" class="card" style="padding:40px 20px;text-align:center">
+            <span style="width:52px;height:52px;border-radius:14px;background:#E8F0FE;color:#4285F4;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin-bottom:10px" x-text="m[1].charAt(0)"></span>
+            <div class="fw-600 fs-15" x-text="m[1]"></div>
+            <div class="text-3 fs-13" style="margin-top:4px">Painel operacional de <span x-text="m[1]"></span> — conteúdo a definir.</div>
+          </div>
+        </template>
+      </section>
 
       <!-- ========== GESTÃO DE TRÁFEGO (rotina por cliente + contas + indicadores) ========== -->
       <section x-show="page==='trafego'">
@@ -4379,7 +4402,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=281"></script>
+<script src="js/app.js?v=282"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
