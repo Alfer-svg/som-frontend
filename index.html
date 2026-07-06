@@ -2962,18 +2962,45 @@
       <section x-show="page==='configuracoes'">
         <!-- Integrações: Instagram da Maracatu (conta-casa) — vale pro sistema inteiro -->
         <div class="fw-800 fs-14 mb-2"><i class="ph ph-plugs-connected ic-ph"></i> Integrações</div>
-        <div class="card mb-4" style="padding:16px">
-          <div class="flex items-center justify-between" style="gap:10px;flex-wrap:wrap">
+        <div class="card mb-4" style="padding:16px" x-init="carregarMetaApp()">
+          <div class="fw-600 fs-14 mb-1"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Instagram da Maracatu (conta-casa)</div>
+          <div class="text-3 fs-12 mb-3">Porta de entrada do SOM na Meta — usada pra puxar os posts dos concorrentes em todo o sistema. É da <b>Maracatu</b> (app próprio, nada da Alfer). Configura uma vez e fica valendo.</div>
+
+          <!-- PASSO 1: cadastrar o app da Maracatu na Meta (só na 1ª vez) -->
+          <div x-show="!metaApp.configurado" style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+            <div class="fw-700 fs-13 mb-2" style="color:#1877F2">Passo 1 — Criar o app da Maracatu na Meta (uma vez)</div>
+            <ol class="fs-12 text-2" style="margin:0 0 10px 18px;line-height:1.8">
+              <li>Logado no Facebook <b>da Maracatu</b>, abra o painel de desenvolvedor e crie um app do tipo <b>"Empresa"</b>:
+                <a href="https://developers.facebook.com/apps/create/" target="_blank" rel="noopener" class="btn btn-sm" style="background:#1877F2;color:#fff;margin-left:6px;padding:2px 10px"><i class="ph ph-arrow-square-out ic-ph"></i> Abrir criador de app</a>
+              </li>
+              <li>No app, adicione o produto <b>"Login do Facebook"</b> e, em <b>Instagram</b>, adicione <b>"Instagram Graph API"</b>.</li>
+              <li>Em <b>Login do Facebook › Configurações</b>, no campo <b>"URIs de redirecionamento OAuth válidos"</b>, cole exatamente esta URL de retorno:
+                <div class="flex items-center gap-2" style="margin-top:6px">
+                  <input class="form-input fs-12" style="font-family:monospace" :value="metaApp.redirectUri" readonly onclick="this.select()">
+                  <button class="btn btn-ghost btn-sm" @click="copiar(metaApp.redirectUri)" title="Copiar"><i class="ph ph-copy ic-ph"></i></button>
+                </div>
+              </li>
+              <li>Em <b>Configurações › Básico</b>, copie o <b>ID do aplicativo</b> e a <b>Chave secreta</b> e cole aqui embaixo.</li>
+            </ol>
+            <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px">
+              <div><label class="form-label fs-12">App ID (ID do aplicativo)</label><input class="form-input" x-model="metaAppForm.appId" placeholder="ex.: 123456789012345" inputmode="numeric"></div>
+              <div><label class="form-label fs-12">App Secret (chave secreta)</label><input class="form-input" type="password" x-model="metaAppForm.appSecret" placeholder="cole a chave secreta" autocomplete="off"></div>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:10px" @click="salvarMetaApp()" :disabled="!metaAppForm.appId.trim() || !metaAppForm.appSecret.trim()"><i class="ph ph-check ic-ph"></i> Salvar credenciais do app</button>
+          </div>
+
+          <!-- PASSO 2: conectar a conta (login), aparece depois que o app está configurado -->
+          <div x-show="metaApp.configurado" class="flex items-center justify-between" style="gap:10px;flex-wrap:wrap">
             <div style="min-width:260px">
-              <div class="fw-600 fs-14"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Instagram da Maracatu (conta-casa)</div>
-              <div class="text-3 fs-12" style="margin-top:4px">Porta de entrada do SOM na Meta — usada pra puxar os posts dos concorrentes em todo o sistema. Conecta uma vez e fica valendo.</div>
-              <div class="fs-12" style="margin-top:6px" x-show="metaStatus.maracatu && metaStatus.maracatu.conectado">
+              <div class="fs-12" x-show="metaStatus.maracatu && metaStatus.maracatu.conectado">
                 <span class="badge fs-12 fw-700" style="background:#E6F4EA;color:#15803d"><i class="ph ph-check-circle"></i> Conectado</span>
                 <span class="text-2 fs-12" style="margin-left:6px" x-text="'@'+(metaStatus.maracatu.igUsername||metaStatus.maracatu.pageName||'—') + (metaStatus.maracatu.vinculadoEm ? ' · desde '+metaStatus.maracatu.vinculadoEm.slice(8,10)+'/'+metaStatus.maracatu.vinculadoEm.slice(5,7)+'/'+metaStatus.maracatu.vinculadoEm.slice(0,4) : '')"></span>
               </div>
-              <div class="fs-12" style="margin-top:6px" x-show="!metaStatus.maracatu || !metaStatus.maracatu.conectado">
-                <span class="badge fs-12 fw-700" style="background:#FCE8E6;color:#C5221F"><i class="ph ph-plugs"></i> Não conectado</span>
+              <div class="fs-12" x-show="!metaStatus.maracatu || !metaStatus.maracatu.conectado">
+                <span class="badge fs-12 fw-700" style="background:#FEF7E0;color:#B06000"><i class="ph ph-plugs"></i> App pronto — falta o login</span>
+                <div class="text-3 fs-12" style="margin-top:4px">Passo 2 — clique em <b>Conectar</b> e faça o login do Facebook da Maracatu (com o Instagram business vinculado à página).</div>
               </div>
+              <div class="text-3 fs-11" style="margin-top:6px">App ID configurado: <span style="font-family:monospace" x-text="metaApp.appId"></span> · <a href="#" @click.prevent="metaApp.configurado=false" style="color:#1877F2">trocar app</a></div>
             </div>
             <div class="flex items-center gap-2">
               <button class="btn btn-sm" style="background:#1877F2;color:#fff" x-show="!metaStatus.maracatu || !metaStatus.maracatu.conectado" @click="conectarMeta('maracatu')" title="Login/consentimento na Meta com a conta que administra a página da Maracatu"><i class="ph ph-instagram-logo ic-ph"></i> Conectar</button>
@@ -4706,7 +4733,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=296"></script>
+<script src="js/app.js?v=297"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

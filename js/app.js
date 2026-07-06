@@ -785,7 +785,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') this.carregarOperacoes(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') this.carregarOperacoes(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -2880,6 +2880,24 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       catch (e) { this.metaMetricas = { ...this.metaMetricas, [clienteId]: { erro: e.message } }; }
       finally { this.metaBusy = false; }
     },
+    // App Meta da Maracatu (config self-service em Configurações)
+    metaApp: { configurado: false, appId: '', redirectUri: '' },
+    metaAppForm: { appId: '', appSecret: '' },
+    async carregarMetaApp() {
+      try { this.metaApp = await this.api('GET', '/monitoramento/meta/app-config'); }
+      catch { this.metaApp = { configurado: false, appId: '', redirectUri: '' }; }
+    },
+    async salvarMetaApp() {
+      const f = this.metaAppForm;
+      if (!f.appId.trim() || !f.appSecret.trim()) return;
+      try {
+        await this.api('POST', '/monitoramento/meta/app-config', { appId: f.appId.trim(), appSecret: f.appSecret.trim() });
+        this.metaAppForm = { appId: '', appSecret: '' };
+        await this.carregarMetaApp();
+        this.mostrarToast('App da Maracatu salvo! Agora clique em Conectar. ✅');
+      } catch (e) { this.mostrarToast('Erro ao salvar: ' + (e.message || e)); }
+    },
+    copiar(txt) { try { navigator.clipboard.writeText(txt); this.mostrarToast('Copiado. 📋'); } catch { } },
     async desconectarMeta(clienteId) {
       if (!confirm(clienteId === 'maracatu' ? 'Desconectar o Instagram da Maracatu (conta-casa)? Os posts de concorrentes param de carregar.' : 'Desconectar a conta Meta deste cliente?')) return;
       try {
