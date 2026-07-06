@@ -471,6 +471,9 @@ document.addEventListener('alpine:init', () => {
     agendaTempo: 'futuros', // filtro da lista linear: 'todos' | 'futuros' | 'passados'
     eventoModal: false,
     eventoForm: { id: '', clienteId: '', data: '', hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '', membros: [], desenvolvimento: '', solucao: '', satisfacao: 0, satisfacaoJust: '' },
+    // Registro do evento em tópicos (desenvolvimento/solução): campo de add + estado da IA
+    evTopBuf: { desenvolvimento: '', solucao: '' },
+    evIaBusy: { desenvolvimento: false, solucao: false },
     TIPOS_EVENTO: ['Reunião', 'Ligação', 'WhatsApp', 'E-mail', 'Visita', 'Campanha', 'Reunião online', 'Outro'], // 'Entrega' removido 02/07 (eventos antigos seguem renderizando)
     // ── Gestão de Tráfego (página trafego: admin + gestortrafego) ──
     TRAF_TAREFAS,
@@ -1838,6 +1841,39 @@ document.addEventListener('alpine:init', () => {
       const { id, ...resto } = c; resto.agenda = agenda;
       try { await this.api('POST', '/clientes', { id: c.id, empresa: c.empresa, dados: resto }); c.agenda = agenda; this.eventoModal = false; this.agendaDiaSel = f.data; this.mostrarToast('Evento salvo. 📅'); }
       catch (e) { alert(e.message || e); }
+    },
+    // ── Registro do evento em tópicos (até 5) — desenvolvimento/solução ──
+    // Guardado como string com \n (compatível com o resto); a UI edita como lista.
+    evTopicos(campo) { return String(this.eventoForm[campo] || '').split('\n').map(s => s.trim()).filter(Boolean); },
+    _evSet(campo, arr) { this.eventoForm[campo] = arr.slice(0, 5).join('\n'); },
+    evAddTopico(campo) {
+      const v = (this.evTopBuf[campo] || '').trim(); if (!v) return;
+      const arr = this.evTopicos(campo); if (arr.length >= 5) return this.mostrarToast('Máximo de 5 tópicos.');
+      arr.push(v); this._evSet(campo, arr); this.evTopBuf[campo] = '';
+    },
+    evRemoveTopico(campo, i) { const arr = this.evTopicos(campo); arr.splice(i, 1); this._evSet(campo, arr); },
+    evEditTopico(campo, i, val) { const arr = this.evTopicos(campo); arr[i] = val; this.eventoForm[campo] = arr.join('\n'); },
+    async evIaTopicos(campo) {
+      const arr = this.evTopicos(campo);
+      const rascunho = (this.evTopBuf[campo] || '').trim() || arr.join('. ');
+      if (!rascunho) return this.mostrarToast('Escreva um rascunho no campo pra IA organizar. ✍️');
+      if (arr.length >= 5) return this.mostrarToast('Já são 5 tópicos — remova algum pra IA sugerir.');
+      const c = (this.clients || []).find(x => x.id === this.eventoForm.clienteId);
+      this.evIaBusy[campo] = true;
+      try {
+        const r = await this.api('POST', '/ia/topicos-evento', {
+          campo, texto: rascunho,
+          cliente: (c && (c.empresa || c.nome)) || '', tipo: this.eventoForm.tipo, assunto: this.eventoForm.titulo,
+          existentes: this.evTopBuf[campo].trim() ? arr : [], // se o rascunho é livre, mescla; se veio dos próprios tópicos, substitui
+        });
+        let novos = (r && r.topicos) || [];
+        const base = this.evTopBuf[campo].trim() ? arr : []; // rascunho livre → acrescenta aos existentes; senão troca
+        const final = [...base];
+        for (const t of novos) { if (final.length >= 5) break; if (!final.some(x => x.toLowerCase() === String(t).toLowerCase())) final.push(String(t)); }
+        this._evSet(campo, final); this.evTopBuf[campo] = '';
+        this.mostrarToast(final.length ? 'Tópicos organizados pela IA. ✨' : 'A IA não achou tópicos no rascunho.');
+      } catch (e) { this.mostrarToast('IA: ' + (e.message || e)); }
+      this.evIaBusy[campo] = false;
     },
     async removerEventoAg(ev) {
       if (!ev || ev.fonte !== 'agenda') return;

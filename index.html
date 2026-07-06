@@ -4595,8 +4595,40 @@
       <!-- Registro do evento (preencher depois que acontecer) -->
       <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:12px">
         <div class="fw-800 fs-12 mb-2" style="color:var(--text-2)"><i class="ph ph-notebook ic-ph"></i> Registro do evento <span class="text-3 fs-11 fw-400">· preencha depois que acontecer</span></div>
-        <div class="form-group" style="margin-bottom:10px"><label class="form-label">Desenvolvimento <span class="text-3 fs-11">(resumo do que aconteceu)</span></label><textarea class="form-input" rows="2" x-model="eventoForm.desenvolvimento" placeholder="Como foi o evento, o que foi discutido…"></textarea></div>
-        <div class="form-group" style="margin-bottom:10px"><label class="form-label">Solução / Resolução <span class="text-3 fs-11">(o que ficou resolvido)</span></label><textarea class="form-input" rows="2" x-model="eventoForm.solucao" placeholder="Decisões, encaminhamentos, o que ficou acertado…"></textarea></div>
+        <!-- Desenvolvimento — em tópicos (até 5), com IA -->
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">Desenvolvimento <span class="text-3 fs-11">(resumo do que aconteceu · até 5 tópicos)</span></label>
+          <template x-for="(t,i) in evTopicos('desenvolvimento')" :key="'dv'+i">
+            <div class="flex items-center gap-2" style="margin-bottom:5px">
+              <span style="color:#2563eb;font-weight:800">•</span>
+              <input class="form-input fs-13" :value="t" @input="evEditTopico('desenvolvimento',i,$event.target.value)">
+              <button type="button" class="btn btn-icon btn-ghost btn-sm" @click="evRemoveTopico('desenvolvimento',i)" title="Remover tópico"><i class="ph ph-x ic-ph"></i></button>
+            </div>
+          </template>
+          <div class="flex items-center gap-2" x-show="evTopicos('desenvolvimento').length < 5">
+            <input class="form-input fs-13" placeholder="Adicionar tópico — ou cole um rascunho e clique IA" x-model="evTopBuf.desenvolvimento" @keydown.enter.prevent="evAddTopico('desenvolvimento')">
+            <button type="button" class="btn btn-ghost btn-sm" @click="evAddTopico('desenvolvimento')" title="Adicionar como tópico"><i class="ph ph-plus ic-ph"></i></button>
+            <button type="button" class="btn btn-sm" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap" @click="evIaTopicos('desenvolvimento')" :disabled="evIaBusy.desenvolvimento" title="A IA organiza o rascunho em até 5 tópicos"><i class="ph ph-magic-wand ic-ph"></i> <span x-text="evIaBusy.desenvolvimento?'…':'IA'"></span></button>
+          </div>
+          <div class="text-3 fs-11" x-show="evTopicos('desenvolvimento').length >= 5" style="margin-top:2px">Máximo de 5 tópicos atingido.</div>
+        </div>
+        <!-- Solução / Resolução — em tópicos (até 5), com IA -->
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label">Solução / Resolução <span class="text-3 fs-11">(o que ficou resolvido · até 5 tópicos)</span></label>
+          <template x-for="(t,i) in evTopicos('solucao')" :key="'sl'+i">
+            <div class="flex items-center gap-2" style="margin-bottom:5px">
+              <span style="color:#16a34a;font-weight:800">•</span>
+              <input class="form-input fs-13" :value="t" @input="evEditTopico('solucao',i,$event.target.value)">
+              <button type="button" class="btn btn-icon btn-ghost btn-sm" @click="evRemoveTopico('solucao',i)" title="Remover tópico"><i class="ph ph-x ic-ph"></i></button>
+            </div>
+          </template>
+          <div class="flex items-center gap-2" x-show="evTopicos('solucao').length < 5">
+            <input class="form-input fs-13" placeholder="Adicionar tópico — ou cole um rascunho e clique IA" x-model="evTopBuf.solucao" @keydown.enter.prevent="evAddTopico('solucao')">
+            <button type="button" class="btn btn-ghost btn-sm" @click="evAddTopico('solucao')" title="Adicionar como tópico"><i class="ph ph-plus ic-ph"></i></button>
+            <button type="button" class="btn btn-sm" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap" @click="evIaTopicos('solucao')" :disabled="evIaBusy.solucao" title="A IA organiza o rascunho em até 5 tópicos"><i class="ph ph-magic-wand ic-ph"></i> <span x-text="evIaBusy.solucao?'…':'IA'"></span></button>
+          </div>
+          <div class="text-3 fs-11" x-show="evTopicos('solucao').length >= 5" style="margin-top:2px">Máximo de 5 tópicos atingido.</div>
+        </div>
         <div class="form-group">
           <label class="form-label">Satisfação do cliente</label>
           <div class="flex gap-2">
@@ -4783,7 +4815,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=298"></script>
+<script src="js/app.js?v=299"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
