@@ -1171,6 +1171,39 @@ document.addEventListener('alpine:init', () => {
         this.trafLog = Array.isArray(log) ? log : [];
       } catch (e) { /* sem rede: segue com o que tem em memória */ }
     },
+    // ── Últimas reuniões do gestor de tráfego (card na Rotina do dia) ──
+    // Nomes-alvo: o usuário logado se for gestor de tráfego + quem tiver papel
+    // 'gestortrafego' na equipe (pro admin também enxergar as reuniões dele).
+    get trafGestorNomes() {
+      const nomes = new Set();
+      const eu = this.usuario;
+      if (eu && eu.papel === 'gestortrafego' && eu.nome) nomes.add(eu.nome);
+      for (const m of (this.equipe || [])) if (m.papel === 'gestortrafego' && m.nome) nomes.add(m.nome);
+      return [...nomes];
+    },
+    linhasDe(str) { return String(str || '').split('\n').map(s => s.trim()).filter(Boolean); },
+    // 3 reuniões mais recentes (passadas/hoje) em que o gestor de tráfego é colaborador.
+    get trafReunioesGestor() {
+      const alvo = this.trafGestorNomes, h = this._hojeStr(), out = [];
+      const ehReuniao = (t) => /reuni/i.test(t || '');
+      for (const c of (this.clients || []))
+        for (const e of (c.agenda || [])) {
+          if (!e || !e.data || !ehReuniao(e.tipo)) continue;
+          const dia = String(e.data).slice(0, 10);
+          if (dia > h) continue; // só as que já aconteceram
+          const membros = Array.isArray(e.membros) ? e.membros : [];
+          if (alvo.length && !membros.some(m => alvo.includes(m))) continue; // sem gestor definido → mostra todas
+          out.push({
+            id: e.id, data: dia, hora: e.hora || '', tipo: e.tipo, titulo: e.titulo || e.tipo || 'Reunião',
+            clienteId: c.id, cliente: c.empresa || c.nome || '—', fonte: 'agenda',
+            membros, nota: e.nota || '', link: e.link || '', satisfacao: +e.satisfacao || 0, satisfacaoJust: e.satisfacaoJust || '',
+            desenv: this.linhasDe(e.desenvolvimento), solucao: this.linhasDe(e.solucao),
+          });
+        }
+      out.sort((a, b) => (b.data + (b.hora || '')).localeCompare(a.data + (a.hora || '')));
+      return out.slice(0, 3);
+    },
+
     // Carteira do checklist: TODOS os clientes ativos, em ordem alfabética (dropdown).
     get trafClientes() {
       return (this.clients || [])

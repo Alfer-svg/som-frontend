@@ -2592,6 +2592,42 @@
           </div>
           </div>
           <div class="traf-rotina-lateral">
+            <!-- Últimas 3 reuniões do gestor de tráfego (resumo em tópicos) -->
+            <div class="card" style="padding:14px">
+              <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
+                <div class="fw-600 fs-13"><i class="ph ph-handshake ic-ph" style="color:#7c3aed"></i> Últimas reuniões</div>
+                <button class="btn btn-ghost btn-sm" @click="go('agenda')" title="Ver a Agenda completa"><i class="ph ph-calendar-dots ic-ph"></i> Agenda</button>
+              </div>
+              <div x-show="!trafReunioesGestor.length" class="text-3 fs-12" style="padding:14px 0;text-align:center"><i class="ph ph-handshake" style="font-size:20px;opacity:.5"></i><div style="margin-top:4px">Nenhuma reunião registrada ainda.</div></div>
+              <template x-for="rv in trafReunioesGestor" :key="'trv'+rv.id">
+                <div style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px">
+                  <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                    <span class="badge fs-11 fw-700" style="background:#EDE9FE;color:#6D28D9;white-space:nowrap"><span x-text="rv.data.slice(8,10)+'/'+rv.data.slice(5,7)"></span><span x-show="rv.hora" x-text="' · '+rv.hora"></span></span>
+                    <span class="fw-700 fs-12 truncate" style="flex:1" x-text="rv.titulo"></span>
+                    <span x-show="rv.satisfacao" style="font-size:15px" x-text="['','😠','🙁','😐','🙂','😄'][rv.satisfacao]" :title="'Satisfação do cliente'"></span>
+                  </div>
+                  <div class="text-3 fs-11" style="margin-top:2px" x-text="rv.cliente"></div>
+                  <!-- Desenvolvimento -->
+                  <div x-show="rv.desenv.length" style="margin-top:8px">
+                    <div class="fw-700 fs-11" style="color:#2563eb"><i class="ph ph-chats-circle ic-ph"></i> Desenvolvimento</div>
+                    <ul style="margin:2px 0 0 0;padding-left:16px">
+                      <template x-for="(t,i) in rv.desenv" :key="'dv'+rv.id+i"><li class="fs-12 text-2" style="margin-bottom:1px" x-text="t"></li></template>
+                    </ul>
+                  </div>
+                  <!-- Solução / Resolução -->
+                  <div x-show="rv.solucao.length" style="margin-top:6px">
+                    <div class="fw-700 fs-11" style="color:#16a34a"><i class="ph ph-check-circle ic-ph"></i> Resolução</div>
+                    <ul style="margin:2px 0 0 0;padding-left:16px">
+                      <template x-for="(t,i) in rv.solucao" :key="'sl'+rv.id+i"><li class="fs-12 text-2" style="margin-bottom:1px" x-text="t"></li></template>
+                    </ul>
+                  </div>
+                  <div x-show="!rv.desenv.length && !rv.solucao.length" class="text-3 fs-11" style="margin-top:6px;font-style:italic">Sem registro preenchido — abra na Agenda pra anotar o que rolou.</div>
+                  <div class="flex justify-end" style="margin-top:6px">
+                    <button class="btn btn-ghost btn-sm" @click="editarEvento(rv)" title="Abrir/editar esta reunião"><i class="ph ph-pencil-simple ic-ph"></i> Abrir</button>
+                  </div>
+                </div>
+              </template>
+            </div>
             <!-- Rosca: quanto falta pra cumprir a demanda do dia (clientes × 8 tarefas) -->
             <div class="card" style="padding:14px;display:flex;align-items:center;gap:14px">
               <svg viewBox="0 0 120 120" width="110" height="110" style="flex-shrink:0">
@@ -4815,7 +4851,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=299"></script>
+<script src="js/app.js?v=300"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
