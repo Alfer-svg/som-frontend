@@ -476,6 +476,9 @@ document.addEventListener('alpine:init', () => {
     TRAF_TAREFAS,
     trafDia: '',            // 'YYYY-MM-DD' do checklist em edição (default hoje)
     trafTab: 'rotina',      // aba da página: rotina | contas | indicadores (admin)
+    // Filtro de período da aba Contas & Campanhas: 'mes' (snapshot instantâneo) | '7' | '15' | '30' | 'custom'
+    trafContasPer: 'mes', trafContasIni: '', trafContasFim: '',
+    trafContasLive: null, trafContasLoading: false, trafContasErro: '', trafCampAberta: {},
     trafCliSel: '',         // cliente selecionado no checklist (as 8 tarefas são POR CLIENTE)
     trafChecklists: [],     // coleção trafego.checklist — um doc por dia+cliente
     trafLog: [],            // coleção trafego.log — otimizações registradas
@@ -1755,6 +1758,44 @@ document.addEventListener('alpine:init', () => {
         mediaItens,
       };
     },
+    // ── Filtro de período da aba Contas & Campanhas ──
+    // 'mes' usa o snapshot instantâneo (trafResultados). 7/15/30/custom chamam o
+    // consolidado ao vivo no Google Ads pela janela escolhida.
+    trafPerLabel() {
+      return { mes: 'Mês corrente', '7': 'Últimos 7 dias', '15': 'Últimos 15 dias', '30': 'Últimos 30 dias', custom: 'Período' }[this.trafContasPer] || '';
+    },
+    _isoDiasAtras(n) { return new Date(Date.now() - n * 864e5 - 3 * 3600e3).toISOString().slice(0, 10); },
+    async trafSetPeriodo(p) {
+      this.trafContasPer = p;
+      if (p === 'mes') { this.trafContasLive = null; this.trafContasErro = ''; return; }
+      if (p === 'custom') { if (!this.trafContasIni) this.trafContasIni = this._isoDiasAtras(7); if (!this.trafContasFim) this.trafContasFim = this._isoDiasAtras(0); return; } // espera Aplicar
+      await this.carregarContasPeriodo();
+    },
+    async carregarContasPeriodo() {
+      const p = this.trafContasPer;
+      let qs = '';
+      if (p === 'custom') {
+        if (!this.trafContasIni || !this.trafContasFim) { this.trafContasErro = 'Escolha as duas datas.'; return; }
+        if (this.trafContasIni > this.trafContasFim) { this.trafContasErro = 'A data inicial é depois da final.'; return; }
+        qs = '?ini=' + this.trafContasIni + '&fim=' + this.trafContasFim;
+      } else {
+        qs = '?ini=' + this._isoDiasAtras(Number(p) - 1) + '&fim=' + this._isoDiasAtras(0);
+      }
+      this.trafContasLoading = true; this.trafContasErro = ''; this.trafContasLive = null;
+      try {
+        const r = await this.api('GET', '/google-ads/consolidado' + qs);
+        if (!r || r.configurado === false) { this.trafContasErro = 'Google Ads ainda não configurado nesta conta.'; }
+        else this.trafContasLive = r;
+      } catch (e) { this.trafContasErro = e.message || 'Falha ao consultar o Google Ads.'; }
+      this.trafContasLoading = false;
+    },
+    // Linhas da tabela: snapshot (mês) ou consolidado ao vivo (7/15/30/custom).
+    get trafContasRows() {
+      if (this.trafContasPer === 'mes') return this.trafResultados;
+      return (this.trafContasLive && this.trafContasLive.rows) || [];
+    },
+    trafCampToggle(id) { this.trafCampAberta = { ...this.trafCampAberta, [id]: !this.trafCampAberta[id] }; },
+
     // Resultados reais das contas (snapshot do Google Ads) + variação de leads vs ~7 dias atrás.
     get trafResultados() {
       const d7 = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);

@@ -2721,24 +2721,74 @@
           </div>
 
           <div class="card" style="padding:0;overflow:hidden">
-            <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-600 fs-13"><i class="ph ph-google-logo ic-ph" style="color:#2563eb"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Google Ads, mês corrente (snapshot automático)</span></div>
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+              <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
+                <div class="fw-600 fs-13"><i class="ph ph-google-logo ic-ph" style="color:#2563eb"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Google Ads</span></div>
+                <!-- Seletor de período: 7/15/30 dias + intervalo x→x -->
+                <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                  <template x-for="p in [['mes','Mês'],['7','7 dias'],['15','15 dias'],['30','30 dias']]" :key="'per'+p[0]">
+                    <button class="btn btn-sm" :style="trafContasPer===p[0]?'background:#2563eb;color:#fff;border-color:#2563eb':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo(p[0])" x-text="p[1]"></button>
+                  </template>
+                  <button class="btn btn-sm" :style="trafContasPer==='custom'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Período</button>
+                </div>
+              </div>
+              <!-- Intervalo personalizado -->
+              <div x-show="trafContasPer==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:4px">
+                <span class="text-3 fs-12">De</span>
+                <input type="date" class="form-input fs-12" style="max-width:160px" x-model="trafContasIni">
+                <span class="text-3 fs-12">até</span>
+                <input type="date" class="form-input fs-12" style="max-width:160px" x-model="trafContasFim">
+                <button class="btn btn-sm btn-primary" @click="carregarContasPeriodo()"><i class="ph ph-magnifying-glass ic-ph"></i> Aplicar</button>
+              </div>
+              <div class="text-3 fs-11" style="margin-top:6px">
+                <span x-show="trafContasPer==='mes'">Mês corrente · snapshot automático (atualiza de hora em hora)</span>
+                <span x-show="trafContasPer!=='mes' && trafContasLive" x-text="'Janela: '+ (trafContasLive.ini||'') +' a '+ (trafContasLive.fim||'') +' · consulta ao vivo no Google Ads'"></span>
+                <span x-show="trafContasPer!=='mes' && !trafContasLive && !trafContasLoading" x-text="trafContasErro || (trafContasPer==='custom' ? 'Escolha o intervalo e clique Aplicar.' : '')"></span>
+              </div>
+            </div>
             <div style="overflow-x:auto">
-              <table class="table">
-                <thead><tr><th>Cliente</th><th>Leads</th><th>Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas ativas</th></tr></thead>
+              <div x-show="trafContasLoading" class="text-3 fs-13" style="padding:18px;text-align:center"><i class="ph ph-circle-notch ic-ph" style="font-size:20px"></i><div style="margin-top:6px">Consultando o Google Ads no período…</div></div>
+              <table class="table" x-show="!trafContasLoading">
+                <thead><tr><th style="width:26px"></th><th>Cliente</th><th>Leads</th><th x-show="trafContasPer==='mes'">Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas</th></tr></thead>
                 <tbody>
-                  <template x-for="r in trafResultados" :key="r.id">
+                  <template x-for="r in trafContasRows" :key="'gc'+r.id">
                     <tr>
+                      <td>
+                        <button x-show="r.campanhas && r.campanhas.length" class="btn btn-icon btn-ghost btn-sm" @click="trafCampToggle(r.id)" :title="trafCampAberta[r.id]?'Recolher campanhas':'Ver campanhas'"><i class="ph ic-ph" :class="trafCampAberta[r.id]?'ph-caret-down':'ph-caret-right'"></i></button>
+                      </td>
                       <td class="fw-700" x-text="r.nome"></td>
-                      <td x-text="r.leads ?? '—'"></td>
-                      <td><span x-show="r.dLeads !== null" :style="r.dLeads>=0?'color:#15803d':'color:#b91c1c'" x-text="(r.dLeads>=0?'+':'')+r.dLeads"></span><span x-show="r.dLeads === null" class="text-3">—</span></td>
+                      <td x-text="r.erro ? '—' : (r.leads ?? '—')"></td>
+                      <td x-show="trafContasPer==='mes'"><span x-show="r.dLeads !== null && r.dLeads !== undefined" :style="r.dLeads>=0?'color:#15803d':'color:#b91c1c'" x-text="(r.dLeads>=0?'+':'')+r.dLeads"></span><span x-show="r.dLeads === null || r.dLeads === undefined" class="text-3">—</span></td>
                       <td x-text="r.custoLead != null ? mascCur(r.custoLead) : '—'"></td>
                       <td x-text="r.gasto != null ? mascCur(r.gasto) : '—'"></td>
-                      <td x-text="r.campanhas ?? '—'"></td>
+                      <td><span x-text="(r.campanhasAtivas ?? r.campanhas ?? '—')"></span><span class="text-3 fs-11" x-show="typeof r.campanhasAtivas==='number'"> ativas</span></td>
                     </tr>
+                    <template x-if="trafCampAberta[r.id] && r.campanhas && r.campanhas.length">
+                      <tr>
+                        <td></td>
+                        <td colspan="6" style="padding:0 0 8px 0">
+                          <table style="width:100%;font-size:12px;background:var(--surface-2);border-radius:8px">
+                            <thead><tr class="text-3"><th style="text-align:left;padding:6px 10px">Campanha</th><th style="padding:6px">Status</th><th style="padding:6px">Leads</th><th style="padding:6px">Gasto</th><th style="padding:6px">Cliques</th><th style="padding:6px">CTR</th></tr></thead>
+                            <tbody>
+                              <template x-for="cp in r.campanhas" :key="'cp'+r.id+cp.nome">
+                                <tr>
+                                  <td style="padding:5px 10px" class="truncate" x-text="cp.nome"></td>
+                                  <td style="padding:5px 6px;text-align:center"><span class="badge fs-11" :style="cp.status==='ENABLED'?'background:#dcfce7;color:#15803d':'background:var(--surface);color:var(--text-3)'" x-text="cp.status==='ENABLED'?'ativa':(cp.status==='PAUSED'?'pausada':cp.status.toLowerCase())"></span></td>
+                                  <td style="padding:5px 6px;text-align:center" x-text="cp.leads ?? '—'"></td>
+                                  <td style="padding:5px 6px;text-align:center" x-text="mascCur(cp.gasto)"></td>
+                                  <td style="padding:5px 6px;text-align:center" x-text="cp.cliques"></td>
+                                  <td style="padding:5px 6px;text-align:center" x-text="cp.ctr+'%'"></td>
+                                </tr>
+                              </template>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    </template>
                   </template>
                 </tbody>
               </table>
-              <div x-show="!trafResultados.length" class="text-3 fs-12" style="padding:14px;text-align:center">Nenhum cliente com Google Ads sincronizado ainda — preencha o Customer ID no cadastro.</div>
+              <div x-show="!trafContasLoading && !trafContasRows.length" class="text-3 fs-12" style="padding:14px;text-align:center" x-text="trafContasErro || 'Nenhum cliente com Google Ads sincronizado no período.'"></div>
             </div>
           </div>
 
@@ -4733,7 +4783,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=297"></script>
+<script src="js/app.js?v=298"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
