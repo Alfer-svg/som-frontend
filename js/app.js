@@ -492,6 +492,7 @@ document.addEventListener('alpine:init', () => {
     cliTipoTab: 'recorrente', // aba de tipo na lista de Clientes: 'recorrente' | 'avulso'
     crmTab: 'funil', // CRM: 'funil' (kanban) | 'lista' (tabela de leads)
     fichaTab: 'geral', // ficha de Monitoramento: geral | acoes | historico | documentos | acessos
+    monTab: 'clientes', // Monitoramento: 'clientes' (monitoramento de clientes) | 'fichario' (checklists arquivados)
     verArquivadosContrato: false, // lista de Contratos: mostrar arquivados (encerrados/vencidos +10d)
     orcFiltro: 'ativos', // filtro da lista de Orçamentos: 'ativos' | 'rascunhos' | 'arquivados'
     presenca: [], // quem está online (Operacional); admin vê todos
@@ -1370,6 +1371,13 @@ document.addEventListener('alpine:init', () => {
     trafSelMes(mes) { this.trafFichMes = mes; const dm = this.trafFichDiasMes; this.trafFichSel = dm.length ? dm[0].data : ''; },
     trafAbrirFichario() {
       this.trafTab = 'fichario';
+      if (!this.trafFichMes && this.trafFichMeses.length) this.trafFichMes = this.trafFichMeses[0].mes;
+      if ((!this.trafFichSel || !this.trafFichDiasMes.some(d => d.data === this.trafFichSel)) && this.trafFichDiasMes.length) this.trafFichSel = this.trafFichDiasMes[0].data;
+    },
+    // Fichário agora vive no Monitoramento (aba). Garante os checklists carregados e prepara a vista.
+    async monAbrirFichario() {
+      this.monTab = 'fichario';
+      if (!this.trafChecklists.length) await this.carregarTrafego();
       if (!this.trafFichMes && this.trafFichMeses.length) this.trafFichMes = this.trafFichMeses[0].mes;
       if ((!this.trafFichSel || !this.trafFichDiasMes.some(d => d.data === this.trafFichSel)) && this.trafFichDiasMes.length) this.trafFichSel = this.trafFichDiasMes[0].data;
     },

@@ -1348,6 +1348,13 @@
 
       <!-- ========== MONITORAMENTO ========== -->
       <section x-show="page==='monitoramento'">
+        <!-- 2 abas: monitoramento de clientes | fichário (checklists arquivados do Tráfego) -->
+        <div class="tabs">
+          <div class="tab" :class="monTab==='clientes'?'active':''" @click="monTab='clientes'"><i class="ph ph-broadcast ic-ph"></i> Monitoramento de clientes</div>
+          <div class="tab" :class="monTab==='fichario'?'active':''" @click="monAbrirFichario()"><i class="ph ph-folders ic-ph"></i> Fichário</div>
+        </div>
+
+        <div x-show="monTab==='clientes'">
         <!-- 📡 RADAR — pendências acionáveis de todos os clientes -->
         <div class="card" x-show="clients.length" :class="radar.length ? 'radar-pulse' : ''" style="margin-bottom:14px;padding:0;overflow:hidden;background:#E9F5EE;border-color:#CEEAD6">
           <div class="flex items-center justify-between" style="padding:20px 26px;cursor:pointer;gap:16px;flex-wrap:wrap" :style="radarAberto&&radar.length?'border-bottom:1px solid #CEEAD6':''" @click="radarAberto=!radarAberto" title="Clique pra abrir/recolher">
@@ -1940,6 +1947,77 @@
             </div>
           </template>
         </div>
+        </div><!-- /monTab clientes -->
+
+        <!-- ─────── Aba: Fichário (checklists arquivados por dia) — movido do Tráfego ─────── -->
+        <div x-show="monTab==='fichario'">
+          <!-- Barra: meses (navegação p/ escalar meses/anos) + filtro por cliente -->
+          <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:10px">
+            <div class="flex items-center gap-2" style="flex-wrap:wrap;min-width:0">
+              <span class="text-3 fs-12" style="margin-right:2px">Mês:</span>
+              <template x-for="m in trafFichMeses" :key="'fm'+m.mes">
+                <button type="button" class="btn btn-sm" :style="(trafFichMes||(trafFichMeses[0]&&trafFichMeses[0].mes))===m.mes ? 'background:#141210;color:#fff;border-color:#141210' : ''" @click="trafSelMes(m.mes)">
+                  <span x-text="m.label"></span>
+                  <span class="badge fs-11 fw-700" :style="'margin-left:5px;'+((trafFichMes||(trafFichMeses[0]&&trafFichMeses[0].mes))===m.mes ? 'background:rgba(255,255,255,.22);color:#fff' : 'background:var(--surface-2);color:var(--text-3)')" x-text="m.dias"></span>
+                </button>
+              </template>
+              <span x-show="!trafFichMeses.length" class="text-3 fs-12">Nenhum mês arquivado ainda.</span>
+            </div>
+            <select class="form-select" style="width:auto;min-width:180px;flex-shrink:0" x-model="trafFichCliFiltro" title="Filtrar as fichas por cliente">
+              <option value="">Todos os clientes</option>
+              <template x-for="c in trafClientes" :key="'ffc'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start">
+          <!-- Gaveta de dias (do mês selecionado) -->
+          <div class="card" style="padding:10px">
+            <div class="fw-600 fs-13 mb-2" style="padding:4px 4px 0"><i class="ph ph-folders ic-ph" style="color:#F9A825"></i> Dias arquivados</div>
+            <template x-for="d in trafFichDiasMes" :key="'fd'+d.data">
+              <button type="button" class="btn btn-sm"
+                :style="'width:100%;justify-content:space-between;margin-bottom:6px;'+(trafFichSel===d.data ? 'background:#F9A825;color:#fff;border-color:#F9A825' : 'background:var(--surface-2);color:var(--text-2)')"
+                @click="trafFichSel=d.data">
+                <span x-text="fmtDate(d.data)"></span>
+                <span class="badge fs-11 fw-800" :style="d.completos>=d.total?'background:#dcfce7;color:#15803d':'background:#fff7ed;color:#F9A825'" x-text="d.completos+'/'+d.total+' ✓'"></span>
+              </button>
+            </template>
+            <div x-show="trafFichMeses.length && !trafFichDiasMes.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum dia neste mês.</div>
+            <div x-show="!trafFichMeses.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum checklist arquivado ainda — preencha e salve na aba Rotina do Tráfego.</div>
+          </div>
+          <!-- Fichas do dia -->
+          <div>
+            <template x-for="c in trafFichDo(trafFichSel)" :key="'fich'+c.data+c.clienteId">
+              <div class="card" style="padding:12px;margin-bottom:10px">
+                <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:6px">
+                  <div class="fw-600 fs-13"><i class="ph ph-buildings ic-ph"></i> <span x-text="c.cliente||'—'"></span></div>
+                  <div class="flex items-center gap-2">
+                    <span class="badge fs-11 fw-800" :style="c.itens.filter(i=>i.feito||i.na).length>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="c.itens.filter(i=>i.feito||i.na).length+'/'+TRAF_TAREFAS.length"></span>
+                    <span class="text-3 fs-11" x-show="c.por" x-text="'por '+c.por"></span>
+                  </div>
+                </div>
+                <template x-for="i in c.itens" :key="c.clienteId+i.id">
+                  <div class="flex items-start gap-2 fs-12" style="padding:5px 0;border-bottom:1px solid var(--border)">
+                    <span :style="i.feito?'color:#16a34a':'color:var(--text-3)'" x-text="i.na?'–':(i.feito?'✓':'○')"></span>
+                    <div style="flex:1;min-width:0">
+                      <span :style="(i.feito||i.na)?(i.na?'color:var(--text-3);font-style:italic':''):'color:var(--text-3)'" x-text="trafTarefa(i.id).texto"></span>
+                      <span class="text-3 fs-11" x-show="i.na" style="font-style:italic"> · não se aplica</span>
+                      <span class="text-3 fs-11" x-show="i.hora && !i.na" x-text="' · '+i.hora"></span>
+                      <div class="text-3 fs-11" x-show="i.evidencia" style="font-style:italic" x-text="'Evidência: '+i.evidencia"></div>
+                    </div>
+                  </div>
+                </template>
+                <!-- Otimizações do dia deste cliente (do log) — arquivadas junto na ficha -->
+                <div x-show="trafLogDe(c.data, c.clienteId).length" style="margin-top:8px;background:#FEF7E0;border-radius:8px;padding:9px">
+                  <div class="fw-800 fs-12 mb-1" style="color:#F9A825"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia (<span x-text="trafLogDe(c.data, c.clienteId).length"></span>)</div>
+                  <template x-for="l in trafLogDe(c.data, c.clienteId)" :key="'flog'+l.id">
+                    <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span><span class="text-3 fs-11" x-show="l.por" x-text="' · '+l.por"></span></div>
+                  </template>
+                </div>
+              </div>
+            </template>
+            <div x-show="!trafFichSel || !trafFichDo(trafFichSel).length" class="card text-3 fs-12" style="padding:20px;text-align:center"><span x-show="!trafFichSel">Escolha um dia na gaveta ao lado.</span><span x-show="trafFichSel && trafFichCliFiltro">Nenhuma ficha desse cliente neste dia.</span><span x-show="trafFichSel && !trafFichCliFiltro">Nenhuma ficha neste dia.</span></div>
+          </div>
+          </div>
+        </div>
       </section>
 
       <!-- ========== AGENDA / CALENDÁRIO DE EVENTOS (Tráfego) ========== -->
@@ -2222,7 +2300,6 @@
             <i class="ph ph-wallet ic-ph"></i> Contas &amp; Campanhas
             <span x-show="trafSaldoAlertas.sem.length" class="badge fs-11 fw-800" style="background:#fee2e2;color:#dc2626;margin-left:4px" x-text="trafSaldoAlertas.sem.length"></span>
           </div>
-          <div class="tab" :class="trafTab==='fichario'?'active':''" @click="trafAbrirFichario()"><i class="ph ph-folders ic-ph"></i> Fichário</div>
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
 
@@ -2531,76 +2608,6 @@
               </table>
             </div>
             <div x-show="trafMetaEhDemo" class="text-3 fs-11" style="padding:8px 14px;border-top:1px solid var(--border)">Quando a integração do Meta Ads for ligada (app próprio + OAuth por cliente), esta tabela passa a mostrar os dados reais automaticamente — o layout já está pronto.</div>
-          </div>
-        </div>
-
-        <!-- ─────── Aba: Fichário (checklists arquivados por dia) ─────── -->
-        <div x-show="trafTab==='fichario'">
-          <!-- Barra: meses (navegação p/ escalar meses/anos) + filtro por cliente -->
-          <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:10px">
-            <div class="flex items-center gap-2" style="flex-wrap:wrap;min-width:0">
-              <span class="text-3 fs-12" style="margin-right:2px">Mês:</span>
-              <template x-for="m in trafFichMeses" :key="'fm'+m.mes">
-                <button type="button" class="btn btn-sm" :style="(trafFichMes||(trafFichMeses[0]&&trafFichMeses[0].mes))===m.mes ? 'background:#141210;color:#fff;border-color:#141210' : ''" @click="trafSelMes(m.mes)">
-                  <span x-text="m.label"></span>
-                  <span class="badge fs-11 fw-700" :style="'margin-left:5px;'+((trafFichMes||(trafFichMeses[0]&&trafFichMeses[0].mes))===m.mes ? 'background:rgba(255,255,255,.22);color:#fff' : 'background:var(--surface-2);color:var(--text-3)')" x-text="m.dias"></span>
-                </button>
-              </template>
-              <span x-show="!trafFichMeses.length" class="text-3 fs-12">Nenhum mês arquivado ainda.</span>
-            </div>
-            <select class="form-select" style="width:auto;min-width:180px;flex-shrink:0" x-model="trafFichCliFiltro" title="Filtrar as fichas por cliente">
-              <option value="">Todos os clientes</option>
-              <template x-for="c in trafClientes" :key="'ffc'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
-            </select>
-          </div>
-          <div style="display:grid;grid-template-columns:230px 1fr;gap:14px;align-items:start">
-          <!-- Gaveta de dias (do mês selecionado) -->
-          <div class="card" style="padding:10px">
-            <div class="fw-600 fs-13 mb-2" style="padding:4px 4px 0"><i class="ph ph-folders ic-ph" style="color:#F9A825"></i> Dias arquivados</div>
-            <template x-for="d in trafFichDiasMes" :key="'fd'+d.data">
-              <button type="button" class="btn btn-sm"
-                :style="'width:100%;justify-content:space-between;margin-bottom:6px;'+(trafFichSel===d.data ? 'background:#F9A825;color:#fff;border-color:#F9A825' : 'background:var(--surface-2);color:var(--text-2)')"
-                @click="trafFichSel=d.data">
-                <span x-text="fmtDate(d.data)"></span>
-                <span class="badge fs-11 fw-800" :style="d.completos>=d.total?'background:#dcfce7;color:#15803d':'background:#fff7ed;color:#F9A825'" x-text="d.completos+'/'+d.total+' ✓'"></span>
-              </button>
-            </template>
-            <div x-show="trafFichMeses.length && !trafFichDiasMes.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum dia neste mês.</div>
-            <div x-show="!trafFichMeses.length" class="text-3 fs-12" style="padding:8px 4px">Nenhum checklist arquivado ainda — preencha e salve na aba Rotina.</div>
-          </div>
-          <!-- Fichas do dia -->
-          <div>
-            <template x-for="c in trafFichDo(trafFichSel)" :key="'fich'+c.data+c.clienteId">
-              <div class="card" style="padding:12px;margin-bottom:10px">
-                <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:6px">
-                  <div class="fw-600 fs-13"><i class="ph ph-buildings ic-ph"></i> <span x-text="c.cliente||'—'"></span></div>
-                  <div class="flex items-center gap-2">
-                    <span class="badge fs-11 fw-800" :style="c.itens.filter(i=>i.feito||i.na).length>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="c.itens.filter(i=>i.feito||i.na).length+'/'+TRAF_TAREFAS.length"></span>
-                    <span class="text-3 fs-11" x-show="c.por" x-text="'por '+c.por"></span>
-                  </div>
-                </div>
-                <template x-for="i in c.itens" :key="c.clienteId+i.id">
-                  <div class="flex items-start gap-2 fs-12" style="padding:5px 0;border-bottom:1px solid var(--border)">
-                    <span :style="i.feito?'color:#16a34a':'color:var(--text-3)'" x-text="i.na?'–':(i.feito?'✓':'○')"></span>
-                    <div style="flex:1;min-width:0">
-                      <span :style="(i.feito||i.na)?(i.na?'color:var(--text-3);font-style:italic':''):'color:var(--text-3)'" x-text="trafTarefa(i.id).texto"></span>
-                      <span class="text-3 fs-11" x-show="i.na" style="font-style:italic"> · não se aplica</span>
-                      <span class="text-3 fs-11" x-show="i.hora && !i.na" x-text="' · '+i.hora"></span>
-                      <div class="text-3 fs-11" x-show="i.evidencia" style="font-style:italic" x-text="'Evidência: '+i.evidencia"></div>
-                    </div>
-                  </div>
-                </template>
-                <!-- Otimizações do dia deste cliente (do log) — arquivadas junto na ficha -->
-                <div x-show="trafLogDe(c.data, c.clienteId).length" style="margin-top:8px;background:#FEF7E0;border-radius:8px;padding:9px">
-                  <div class="fw-800 fs-12 mb-1" style="color:#F9A825"><i class="ph ph-list-plus ic-ph"></i> Otimizações do dia (<span x-text="trafLogDe(c.data, c.clienteId).length"></span>)</div>
-                  <template x-for="l in trafLogDe(c.data, c.clienteId)" :key="'flog'+l.id">
-                    <div class="fs-12" style="padding:3px 0"><span class="text-3 fs-11" x-text="l.hora"></span> · <span x-text="l.alteracao"></span><span class="text-3" x-show="l.motivo" x-text="' — '+l.motivo"></span><span class="text-3 fs-11" x-show="l.por" x-text="' · '+l.por"></span></div>
-                  </template>
-                </div>
-              </div>
-            </template>
-            <div x-show="!trafFichSel || !trafFichDo(trafFichSel).length" class="card text-3 fs-12" style="padding:20px;text-align:center"><span x-show="!trafFichSel">Escolha um dia na gaveta ao lado.</span><span x-show="trafFichSel && trafFichCliFiltro">Nenhuma ficha desse cliente neste dia.</span><span x-show="trafFichSel && !trafFichCliFiltro">Nenhuma ficha neste dia.</span></div>
-          </div>
           </div>
         </div>
 
@@ -4518,7 +4525,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=286"></script>
+<script src="js/app.js?v=287"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
