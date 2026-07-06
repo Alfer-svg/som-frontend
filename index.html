@@ -2501,8 +2501,26 @@
           <div class="traf-rotina-lateral">
           <!-- Checklist por cliente -->
           <div class="card" style="padding:14px">
-            <div class="fw-600 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
-              <span class="text-3 fs-11 fw-400" x-show="trafCliSel && trafCheckDia().por" x-text="'· por '+trafCheckDia().por"></span>
+            <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
+              <div class="fw-600 fs-13"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
+                <span class="text-3 fs-11 fw-400" x-show="trafCliSel && trafCheckDia().por" x-text="'· por '+trafCheckDia().por"></span>
+              </div>
+              <button class="btn btn-ghost btn-sm" @click="trafGerenciarAberto=!trafGerenciarAberto" title="Habilitar/desabilitar quais clientes fazem tráfego"><i class="ph ph-sliders-horizontal ic-ph"></i> Clientes do tráfego <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="trafClientes.length"></span></button>
+            </div>
+            <!-- Painel: liga/desliga cada cliente no módulo de tráfego (a CHAVE do módulo) -->
+            <div x-show="trafGerenciarAberto" x-cloak style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:12px;background:var(--surface-2)">
+              <div class="text-3 fs-12 mb-2">Quem está <b>ligado</b> aparece em todo o módulo de Tráfego (checklist, contas, saldos, reuniões, insights). Quem está <b>desligado</b> some de tudo aqui.</div>
+              <div style="max-height:280px;overflow-y:auto">
+                <template x-for="c in trafClientesGerenciar" :key="'tg'+c.id">
+                  <div class="flex items-center justify-between" style="padding:6px 4px;border-bottom:1px solid var(--border)">
+                    <span class="fs-13" :style="c.ativo?'':'color:var(--text-3);text-decoration:line-through'" x-text="c.nome"></span>
+                    <button class="btn btn-sm" :style="c.ativo?'background:#dcfce7;color:#15803d;border-color:#bbf7d0':'background:var(--surface);color:var(--text-3)'" @click="toggleTrafego(c.id)" :title="c.ativo?'Desligar do tráfego':'Ligar no tráfego'">
+                      <i class="ph ic-ph" :class="c.ativo?'ph-toggle-right':'ph-toggle-left'" style="font-size:18px"></i> <span x-text="c.ativo?'Ativo':'Desligado'"></span>
+                    </button>
+                  </div>
+                </template>
+                <div x-show="!trafClientesGerenciar.length" class="text-3 fs-12" style="padding:10px;text-align:center">Nenhum cliente ativo cadastrado.</div>
+              </div>
             </div>
             <!-- Dropdown só de ativos — ✓ = já fechou as 8 do dia -->
             <div class="flex items-center gap-2" style="margin-bottom:10px">
@@ -4856,7 +4874,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=301"></script>
+<script src="js/app.js?v=302"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

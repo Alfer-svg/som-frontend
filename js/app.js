@@ -482,6 +482,7 @@ document.addEventListener('alpine:init', () => {
     // Filtro de período da aba Contas & Campanhas: 'mes' (snapshot instantâneo) | '7' | '15' | '30' | 'custom'
     trafContasPer: 'mes', trafContasIni: '', trafContasFim: '',
     trafContasLive: null, trafContasLoading: false, trafContasErro: '', trafCampAberta: {},
+    trafGerenciarAberto: false, // painel de habilitar/desabilitar clientes do tráfego
     trafCliSel: '',         // cliente selecionado no checklist (as 8 tarefas são POR CLIENTE)
     trafChecklists: [],     // coleção trafego.checklist — um doc por dia+cliente
     trafLog: [],            // coleção trafego.log — otimizações registradas
@@ -960,7 +961,7 @@ document.addEventListener('alpine:init', () => {
     // limite aprovado - consumido). Pós-paga (saldoTipo POS) não tem saldo — fica fora dos alertas.
     // O campo manual da ficha vale só como fallback de quem ainda não sincronizou. META: segue manual.
     _contasCanal(canal) {
-      const ativos = (this.clients || []).filter(c => c.status !== 'Inativo');
+      const ativos = (this.clients || []).filter(c => this.fazTrafego(c));
       if (canal === 'google') {
         return ativos.map(c => {
           const nome = c.empresa || c.nome || '—';
@@ -1139,7 +1140,7 @@ document.addEventListener('alpine:init', () => {
     get dtfAds() { // consolidado do snapshot diário (adsAuto, ESTE MÊS) — sem chamada de API
       const rows = []; let gasto = 0, leads = 0;
       for (const c of (this.clients || [])) {
-        const a = c.adsAuto; if (!a) continue;
+        const a = c.adsAuto; if (!a || !this.fazTrafego(c)) continue;
         gasto += a.gasto || 0; leads += a.leads || 0;
         rows.push({ nome: c.empresa || c.nome || '—', gasto: a.gasto || 0, leads: a.leads || 0, cpl: a.custoLead || 0, camp: a.campanhasAtivas || 0, saldo: (a.saldo ?? null), em: a.em || '' });
       }
@@ -1149,7 +1150,7 @@ document.addEventListener('alpine:init', () => {
     get dtfSemRotinaHoje() { // campanha ativa e SEM rotina completa hoje — pra cobrar
       const h = this._hojeStr();
       return (this.clients || []).filter(c => {
-        const a = c.adsAuto; if (!a || !(a.campanhasAtivas > 0)) return false;
+        const a = c.adsAuto; if (!a || !(a.campanhasAtivas > 0) || !this.fazTrafego(c)) return false;
         const ck = (this.trafChecklists || []).find(x => x.data === h && x.clienteId === c.id);
         return this._trafResolvidos(ck) < TRAF_TAREFAS.length;
       }).map(c => c.empresa || c.nome || '—');
@@ -1186,7 +1187,8 @@ document.addEventListener('alpine:init', () => {
     get trafReunioesGestor() {
       const alvo = this.trafGestorNomes, h = this._hojeStr(), out = [];
       const ehReuniao = (t) => /reuni/i.test(t || '');
-      for (const c of (this.clients || []))
+      for (const c of (this.clients || [])) {
+        if (!this.fazTrafego(c)) continue; // cliente fora do tráfego → reunião não aparece aqui
         for (const e of (c.agenda || [])) {
           if (!e || !e.data || !ehReuniao(e.tipo)) continue;
           const dia = String(e.data).slice(0, 10);
@@ -1200,14 +1202,34 @@ document.addEventListener('alpine:init', () => {
             desenv: this.linhasDe(e.desenvolvimento), solucao: this.linhasDe(e.solucao),
           });
         }
+      }
       out.sort((a, b) => (b.data + (b.hora || '')).localeCompare(a.data + (a.hora || '')));
       return out.slice(0, 3);
     },
 
-    // Carteira do checklist: TODOS os clientes ativos, em ordem alfabética (dropdown).
-    get trafClientes() {
+    // ── CHAVE DO MÓDULO TRÁFEGO ──────────────────────────────────────────────
+    // Um cliente "faz tráfego" se está ativo E não foi desabilitado no tráfego
+    // (trafegoAtivo !== false). Cliente desabilitado some de TODO o módulo.
+    fazTrafego(c) { return !!c && c.status !== 'Inativo' && c.trafegoAtivo !== false; },
+    // Painel de gerenciar: TODOS os clientes ativos (com o estado do interruptor).
+    get trafClientesGerenciar() {
       return (this.clients || [])
         .filter(c => c.status !== 'Inativo')
+        .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', ativo: c.trafegoAtivo !== false }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    },
+    async toggleTrafego(id) {
+      const c = (this.clients || []).find(x => x.id === id); if (!c) return;
+      const novo = !(c.trafegoAtivo !== false); // habilitado→desabilita ; desabilitado→habilita
+      c.trafegoAtivo = novo;
+      const { id: _i, ...dados } = c; dados.trafegoAtivo = novo;
+      try { await this.api('POST', '/clientes', { id: c.id, empresa: c.empresa, dados }); this.mostrarToast(novo ? 'Cliente ativado no Tráfego. ✅' : 'Cliente desativado do Tráfego. 🚫'); }
+      catch (e) { c.trafegoAtivo = !novo; this.mostrarToast('Não salvou — ' + (e.message || e)); }
+    },
+    // Carteira do checklist: só os clientes que FAZEM tráfego, em ordem alfabética.
+    get trafClientes() {
+      return (this.clients || [])
+        .filter(c => this.fazTrafego(c))
         .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—' }))
         .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     },
@@ -1731,7 +1753,7 @@ document.addEventListener('alpine:init', () => {
     },
     get trafLogVisivel() { const f = this.trafLogFiltro; return this.trafLog.filter(l => !f || l.clienteId === f).slice(0, 200); },
     // Campanhas ativas AGORA (real, do snapshot Google Ads) somando os clientes ativos.
-    get trafCampanhasAtivas() { return (this.clients || []).filter(c => c.status !== 'Inativo' && c.adsAuto).reduce((a, c) => a + (Number(c.adsAuto.campanhasAtivas) || 0), 0); },
+    get trafCampanhasAtivas() { return (this.clients || []).filter(c => this.fazTrafego(c) && c.adsAuto).reduce((a, c) => a + (Number(c.adsAuto.campanhasAtivas) || 0), 0); },
     // Cards do quadro Tráfego (Operacional) ordenados por prioridade — pra lista do módulo.
     get trafCardsPrioridade() {
       // Urgência vem das ETIQUETAS do card (red=Urgente, sky=PRIORIDADE); depois, prazo mais próximo.
@@ -1747,7 +1769,7 @@ document.addEventListener('alpine:init', () => {
     _trafDemoSeed(s) { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) % 997; return h; },
     get trafResultadosMeta() {
       return (this.clients || [])
-        .filter(c => c.status !== 'Inativo' && (c.adsMetaAuto || (c.ads && c.ads.meta && c.ads.meta.ativo)))
+        .filter(c => this.fazTrafego(c) && (c.adsMetaAuto || (c.ads && c.ads.meta && c.ads.meta.ativo)))
         .map(c => {
           const nome = c.empresa || c.nome || '—';
           if (c.adsMetaAuto) return { id: c.id, nome, leads: c.adsMetaAuto.leads, custoLead: c.adsMetaAuto.custoLead, gasto: c.adsMetaAuto.gasto, campanhas: c.adsMetaAuto.campanhasAtivas, dLeads: null, demo: false };
@@ -1767,7 +1789,7 @@ document.addEventListener('alpine:init', () => {
       const marcar = (lista, canal) => (lista || []).map(x => ({ ...x, canal }));
       const tudo = [...marcar(this.contasGoogle, 'Google'), ...marcar(this.contasMeta, 'Meta')];
       const semInfo = (this.clients || [])
-        .filter(c => c.status !== 'Inativo' && c.adsAuto && Number(c.adsAuto.campanhasAtivas) > 0
+        .filter(c => this.fazTrafego(c) && c.adsAuto && Number(c.adsAuto.campanhasAtivas) > 0
           && (c.adsAuto.saldo === undefined || c.adsAuto.saldo === null) && c.adsAuto.saldoTipo !== 'POS'
           && !(c.ads && c.ads.google && c.ads.google.ativo))
         .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', canal: 'Google' }));
@@ -1841,7 +1863,7 @@ document.addEventListener('alpine:init', () => {
     get trafResultados() {
       const d7 = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
       return (this.clients || [])
-        .filter(c => c.status !== 'Inativo' && c.adsAuto)
+        .filter(c => this.fazTrafego(c) && c.adsAuto)
         .map(c => {
           const h = Array.isArray(c.adsHist) ? c.adsHist : [];
           const antigo = h.filter(x => x.data <= d7).slice(-1)[0];
