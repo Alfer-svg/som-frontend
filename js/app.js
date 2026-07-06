@@ -1255,7 +1255,7 @@ document.addEventListener('alpine:init', () => {
       return Object.keys(map).sort((a, b) => a.localeCompare(b, 'pt-BR')).map(cli => ({
         cliente: cli,
         posts: map[cli].slice().sort((a, b) => ((a.tema || a.nome || '')).localeCompare(b.tema || b.nome || '', 'pt-BR')),
-        feitos: map[cli].filter(p => p.status === 'Concluído').length,
+        feitos: map[cli].filter(p => !!p.publicado).length,
       }));
     },
     get operPostsTotal() { return this.operPostsDia.reduce((s, g) => s + g.posts.length, 0); },
@@ -1315,13 +1315,14 @@ document.addEventListener('alpine:init', () => {
     // Resolvido = feito OU não se aplica.
     operChkFeitos(pessoa) { const c = this.operChecklists.find(x => x.pessoa === pessoa && x.data === (this.operChkData || this._hojeStr())); return c ? c.itens.filter(i => i.feito || i.na).length : 0; },
     operChkFeitosGrupo(pessoa, grupoId) { const g = SOCIAL_ROTINA.find(x => x.id === grupoId); if (!g) return 0; const c = this.operChkDoc(pessoa); return g.itens.filter(t => { const i = c.itens.find(x => x.id === t.id); return i && (i.feito || i.na); }).length; },
-    // Marca/desmarca um post como publicado (feito) — reflete no status/coluna do quadro.
+    // Marca/desmarca um post como PUBLICADO na rede — marca do social media, independente
+    // do status do quadro (Concluído no quadro = criativo pronto, não que já foi ao ar).
     async operTogglePost(p) {
-      const eraFeito = p.status === 'Concluído';
-      if (eraFeito) { p.status = p._statusAnt || 'A Fazer'; }
-      else { p._statusAnt = p.status; p.status = 'Concluído'; p.concluidoEm = new Date().toISOString(); }
-      try { await this.salvarProjetoApi(p); this.mostrarToast(eraFeito ? 'Post reaberto.' : 'Post marcado como publicado. ✅'); }
-      catch (e) { p.status = eraFeito ? 'Concluído' : (p._statusAnt || 'A Fazer'); this.mostrarToast('Não salvou — confira a conexão. ⚠️'); }
+      const era = !!p.publicado;
+      p.publicado = !era;
+      p.publicadoEm = era ? '' : new Date().toISOString();
+      try { await this.salvarProjetoApi(p); this.mostrarToast(era ? 'Publicação desmarcada.' : 'Post marcado como publicado. ✅'); }
+      catch (e) { p.publicado = era; this.mostrarToast('Não salvou — confira a conexão. ⚠️'); }
     },
     async salvarOperChk(pessoa) {
       const c = this.operChkDoc(pessoa);

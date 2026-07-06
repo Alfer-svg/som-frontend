@@ -2131,13 +2131,14 @@
                   </div>
                   <template x-for="p in g.posts" :key="'opp'+p.id">
                     <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
-                      <input type="checkbox" :checked="p.status==='Concluído'" @click.stop="operTogglePost(p)" style="cursor:pointer;width:18px;height:18px;flex-shrink:0" :title="p.status==='Concluído'?'Reabrir post':'Marcar como publicado'">
+                      <input type="checkbox" :checked="!!p.publicado" @click.stop="operTogglePost(p)" style="cursor:pointer;width:18px;height:18px;flex-shrink:0" :title="p.publicado?'Desmarcar publicação':'Marcar como publicado'">
                       <div class="flex items-center gap-2" style="flex:1;min-width:0;cursor:pointer" @click="operAbrirPost(p)" title="Abrir no quadro de Produção">
                         <span class="badge fs-11 fw-700" style="background:#F4F8FE;color:#1967D2;flex-shrink:0" x-text="p.tipoPost||'Post'"></span>
                         <span class="badge fs-11 fw-700" x-show="p.avulso" style="background:#CCFBF1;color:#0d9488;flex-shrink:0" title="Demanda interna importada">Interna</span>
-                        <span class="fs-13 fw-600" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="p.status==='Concluído'?'text-decoration:line-through;color:var(--text-3)':''" x-text="p.tema||p.nome||'Sem título'"></span>
+                        <span class="fs-13 fw-600" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="p.publicado?'text-decoration:line-through;color:var(--text-3)':''" x-text="p.tema||p.nome||'Sem título'"></span>
                       </div>
-                      <span class="badge fs-11 fw-700" :style="'background:'+operStatusCor(p.status).bg+';color:'+operStatusCor(p.status).cor" x-text="p.status||'A Fazer'"></span>
+                      <span class="badge fs-11 fw-700" x-show="p.publicado" style="background:#E6F4EA;color:#15803d;flex-shrink:0"><i class="ph ph-check-circle"></i> Publicado</span>
+                      <span class="badge fs-11 fw-700" x-show="!p.publicado" :style="'background:'+operStatusCor(p.status).bg+';color:'+operStatusCor(p.status).cor" x-text="p.status||'A Fazer'"></span>
                     </div>
                   </template>
                 </div>
@@ -4517,7 +4518,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=285"></script>
+<script src="js/app.js?v=286"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
