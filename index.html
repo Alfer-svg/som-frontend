@@ -2785,7 +2785,7 @@
             <div style="overflow-x:auto">
               <div x-show="trafContasLoading" class="text-3 fs-13" style="padding:18px;text-align:center"><i class="ph ph-circle-notch ic-ph" style="font-size:20px"></i><div style="margin-top:6px">Consultando o Google Ads no período…</div></div>
               <table class="table" x-show="!trafContasLoading">
-                <thead><tr><th style="width:26px"></th><th>Cliente</th><th>Leads</th><th x-show="trafContasPer==='mes'">Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas</th></tr></thead>
+                <thead><tr><th style="width:26px"></th><th>Cliente</th><th>Leads</th><th x-show="trafContasPer==='mes'">Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Saldo</th><th>Campanhas</th></tr></thead>
                 <tbody>
                   <template x-for="r in trafContasRows" :key="'gc'+r.id">
                     <tr>
@@ -2797,12 +2797,17 @@
                       <td x-show="trafContasPer==='mes'"><span x-show="r.dLeads !== null && r.dLeads !== undefined" :style="r.dLeads>=0?'color:#15803d':'color:#b91c1c'" x-text="(r.dLeads>=0?'+':'')+r.dLeads"></span><span x-show="r.dLeads === null || r.dLeads === undefined" class="text-3">—</span></td>
                       <td x-text="r.custoLead != null ? mascCur(r.custoLead) : '—'"></td>
                       <td x-text="r.gasto != null ? mascCur(r.gasto) : '—'"></td>
+                      <td>
+                        <span x-show="r.saldo != null" style="font-weight:700;white-space:nowrap" :style="'color:'+(r.saldo<=0?'#dc2626':(r.saldo<200?'#F9A825':'#15803d'))" x-text="mascCur(r.saldo)"></span>
+                        <span x-show="r.saldo == null && r.saldoTipo === 'POS'" class="text-3 fs-11" title="Conta pós-paga — sem limite de saldo">pós-paga</span>
+                        <span x-show="r.saldo == null && r.saldoTipo !== 'POS'" class="text-3">—</span>
+                      </td>
                       <td><span x-text="(r.campanhasAtivas ?? r.campanhas ?? '—')"></span><span class="text-3 fs-11" x-show="typeof r.campanhasAtivas==='number'"> ativas</span></td>
                     </tr>
                     <template x-if="trafCampAberta[r.id] && r.campanhas && r.campanhas.length">
                       <tr>
                         <td></td>
-                        <td colspan="6" style="padding:0 0 8px 0">
+                        <td colspan="7" style="padding:0 0 8px 0">
                           <table style="width:100%;font-size:12px;background:var(--surface-2);border-radius:8px">
                             <thead><tr class="text-3"><th style="text-align:left;padding:6px 10px">Campanha</th><th style="padding:6px">Status</th><th style="padding:6px">Leads</th><th style="padding:6px">Gasto</th><th style="padding:6px">Cliques</th><th style="padding:6px">CTR</th></tr></thead>
                             <tbody>
@@ -4851,7 +4856,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=300"></script>
+<script src="js/app.js?v=301"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

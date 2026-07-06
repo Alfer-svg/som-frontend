@@ -1826,9 +1826,14 @@ document.addEventListener('alpine:init', () => {
       this.trafContasLoading = false;
     },
     // Linhas da tabela: snapshot (mês) ou consolidado ao vivo (7/15/30/custom).
+    // Anexa o SALDO atual da conta (do snapshot) — é "de agora", vale em qualquer período.
     get trafContasRows() {
-      if (this.trafContasPer === 'mes') return this.trafResultados;
-      return (this.trafContasLive && this.trafContasLive.rows) || [];
+      const base = this.trafContasPer === 'mes' ? this.trafResultados : ((this.trafContasLive && this.trafContasLive.rows) || []);
+      return base.map(r => {
+        const c = (this.clients || []).find(x => x.id === r.id);
+        const a = c && c.adsAuto;
+        return { ...r, saldo: a ? (a.saldo ?? null) : null, saldoTipo: a ? (a.saldoTipo || null) : null };
+      });
     },
     trafCampToggle(id) { this.trafCampAberta = { ...this.trafCampAberta, [id]: !this.trafCampAberta[id] }; },
 
