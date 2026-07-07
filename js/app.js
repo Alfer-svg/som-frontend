@@ -1350,6 +1350,12 @@ document.addEventListener('alpine:init', () => {
     },
     // Otimizações do Matheus num dia (opcionalmente de um cliente) — pro card do dia e pro Fichário.
     operLogDia(dia) { return (this.operLog || []).filter(l => l.data === dia); },
+    // Feed unido do dia: otimizações MANUAIS (operLog) + registro AUTOMÁTICO da produção (samLog), + recente primeiro
+    operRegistroDia(dia) {
+      const manual = (this.operLog || []).filter(l => l.data === dia).map(l => ({ id: l.id, hora: l.hora || '', cliente: l.cliente || '', texto: l.alteracao || '', motivo: l.motivo || '', por: l.por || '', auto: false }));
+      const auto = (this.samLog || []).filter(l => l.data === dia).map(l => ({ id: l.id, hora: l.hora || '', cliente: '', texto: l.texto || '', motivo: '', por: l.por || '', auto: true }));
+      return [...manual, ...auto].sort((a, b) => String(b.hora).localeCompare(String(a.hora)));
+    },
     operLogDe(dia, clienteId) { return (this.operLog || []).filter(l => l.data === dia && (l.clienteId || '') === (clienteId || '')); },
     // Navegação de dia (‹ hoje ›) das postagens/checklist.
     operMudaDia(delta) { const d = new Date(this.operChkData + 'T12:00:00'); d.setDate(d.getDate() + delta); this.operChkData = this._iso(d); },
