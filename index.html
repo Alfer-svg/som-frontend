@@ -2266,6 +2266,31 @@
                   <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
                 </div>
 
+            <!-- O que ainda falta (pulsa vermelho enquanto houver pendência) -->
+            <div class="card" style="padding:16px;margin-bottom:14px" :class="matTemPendencia ? 'pulse-red' : ''">
+              <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
+              <template x-if="!matTemPendencia">
+                <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Tudo em dia! Nada pendente. 🎉</div></div>
+              </template>
+              <template x-for="g in matPendentesDia" :key="'mpd'+g.cliente">
+                <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+                  <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-image-square ic-ph"></i></span>
+                  <div style="flex:1;min-width:0"><div class="fs-13 fw-600" x-text="g.cliente"></div><div class="text-3 fs-11" x-text="'faltam publicar '+(g.posts.length-g.feitos)+' de '+g.posts.length+' post(s)'"></div></div>
+                  <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="g.feitos+'/'+g.posts.length"></span>
+                </div>
+              </template>
+              <div x-show="matRotinasHoje.abertas>0" class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+                <span class="kpi-ico" style="background:#DCFCE7;color:#16a34a;width:26px;height:26px;font-size:13px"><i class="ph ph-list-checks ic-ph"></i></span>
+                <div style="flex:1"><div class="fs-13 fw-600">Rotina de clientes em aberto</div><div class="text-3 fs-11" x-text="matRotinasHoje.abertas+' rotina(s) de cliente começada(s) e não concluída(s)'"></div></div>
+                <button class="btn btn-ghost btn-sm" @click="matSub='operacao'; operChkAberto=true">Abrir</button>
+              </div>
+              <div x-show="operResumoTrelo.atrasados" class="flex items-center gap-2" style="padding:8px 0">
+                <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-warning-circle ic-ph"></i></span>
+                <div style="flex:1"><div class="fs-13 fw-600">Posts atrasados no quadro</div><div class="text-3 fs-11"><span x-text="operResumoTrelo.atrasados"></span> post(s) com prazo vencido</div></div>
+                <button class="btn btn-ghost btn-sm" @click="go('operacional'); opTab='quadro'">Ver quadro</button>
+              </div>
+            </div>
+
             <!-- cabeçalho: dia + progresso (esquerda) · agenda compacta (direita) -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:stretch">
               <div class="card" style="padding:16px;display:flex;flex-direction:column">
@@ -2509,31 +2534,6 @@
                     </div>
                   </template>
                 </div>
-              </div>
-            </div>
-
-            <!-- O que ainda falta (pulsa vermelho enquanto houver pendência) -->
-            <div class="card" style="padding:16px;margin-bottom:14px" :class="matTemPendencia ? 'pulse-red' : ''">
-              <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
-              <template x-if="!matTemPendencia">
-                <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Tudo em dia! Nada pendente. 🎉</div></div>
-              </template>
-              <template x-for="g in matPendentesDia" :key="'mpd'+g.cliente">
-                <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
-                  <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-image-square ic-ph"></i></span>
-                  <div style="flex:1;min-width:0"><div class="fs-13 fw-600" x-text="g.cliente"></div><div class="text-3 fs-11" x-text="'faltam publicar '+(g.posts.length-g.feitos)+' de '+g.posts.length+' post(s)'"></div></div>
-                  <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="g.feitos+'/'+g.posts.length"></span>
-                </div>
-              </template>
-              <div x-show="matRotinasHoje.abertas>0" class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
-                <span class="kpi-ico" style="background:#DCFCE7;color:#16a34a;width:26px;height:26px;font-size:13px"><i class="ph ph-list-checks ic-ph"></i></span>
-                <div style="flex:1"><div class="fs-13 fw-600">Rotina de clientes em aberto</div><div class="text-3 fs-11" x-text="matRotinasHoje.abertas+' rotina(s) de cliente começada(s) e não concluída(s)'"></div></div>
-                <button class="btn btn-ghost btn-sm" @click="matSub='operacao'; operChkAberto=true">Abrir</button>
-              </div>
-              <div x-show="operResumoTrelo.atrasados" class="flex items-center gap-2" style="padding:8px 0">
-                <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-warning-circle ic-ph"></i></span>
-                <div style="flex:1"><div class="fs-13 fw-600">Posts atrasados no quadro</div><div class="text-3 fs-11"><span x-text="operResumoTrelo.atrasados"></span> post(s) com prazo vencido</div></div>
-                <button class="btn btn-ghost btn-sm" @click="go('operacional'); opTab='quadro'">Ver quadro</button>
               </div>
             </div>
 
@@ -5523,7 +5523,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=340"></script>
+<script src="js/app.js?v=341"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
