@@ -2227,7 +2227,7 @@
         <div class="text-3" style="font-size:13px;margin-top:4px;margin-bottom:14px">Acompanhamento operacional por colaborador.</div>
         <div class="tabs">
           <template x-for="m in [['matheus','Matheus'],['laryssa','Laryssa'],['samara','Samara']]" :key="'ot'+m[0]">
-            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelIG()"><span x-text="m[1]"></span></div>
+            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelIG(); if(m[0]==='samara') carregarSamara()"><span x-text="m[1]"></span></div>
           </template>
         </div>
 
@@ -2846,10 +2846,205 @@
         </div>
 
         <!-- Samara — estrutura por enquanto -->
-        <div x-show="operTab==='samara'" class="card" style="padding:40px 20px;text-align:center">
-          <span style="width:52px;height:52px;border-radius:14px;background:#E8F0FE;color:#4285F4;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin-bottom:10px">S</span>
-          <div class="fw-600 fs-15">Samara</div>
-          <div class="text-3 fs-13" style="margin-top:4px">Painel operacional de Samara — conteúdo a definir.</div>
+        <!-- ═══════ SAMARA — Painel do dia · Produção de Conteúdo ═══════ -->
+        <div x-show="operTab==='samara'" x-init="carregarSamara()">
+          <div x-show="samLoading && !samLoaded" class="card text-3 fs-13" style="padding:40px 0;text-align:center"><i class="ph ph-spinner ph-spin" style="font-size:24px;opacity:.5"></i><div style="margin-top:8px">Carregando o painel…</div></div>
+
+          <template x-if="samLoaded">
+          <div>
+            <!-- Cabeçalho -->
+            <div class="flex items-center justify-between mb-3" style="gap:10px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:20px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-film-slate ic-ph" style="color:#4285F4"></i> Painel do dia <span class="text-3 fs-14 fw-400">· Produção de Conteúdo</span></div>
+                <div class="text-3 fs-12" style="margin-top:2px" x-text="samDataTitulo"></div>
+              </div>
+              <div class="card" style="padding:8px 14px;display:flex;align-items:center;gap:8px" :style="samRitmo.verdes===samRitmo.total?'background:#F3FAF6':'background:#FEFBEF'">
+                <span style="width:10px;height:10px;border-radius:50%;flex:none" :style="'background:'+(samRitmo.verdes===samRitmo.total?'#34A853':'#F9A825')"></span>
+                <div>
+                  <div class="fw-600 fs-13">Dia no ritmo</div>
+                  <div class="text-3 fs-11"><span x-text="samRitmo.verdes"></span> de <span x-text="samRitmo.total"></span> indicadores verdes</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Faixa de lembrete do GMN (fora da quarta) -->
+            <div x-show="samGmnEstado.modo==='azul'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#F4F8FE;border:1px solid #D2E3FC;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i>
+              <span x-show="samGmnEstado.amanha"><b>Amanhã é quarta</b> — dia de verificar e atualizar o Google Meu Negócio dos clientes.</span>
+              <span x-show="!samGmnEstado.amanha">O <b>Google Meu Negócio</b> dos clientes é verificado toda <b>quarta-feira</b>.</span>
+            </div>
+            <div x-show="samGmnEstado.modo==='vermelho'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#FEF6F4;border:1px solid #FCE8E6;color:#EA4335;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <i class="ph ph-warning-circle ic-ph"></i> <span><b>O GMN da semana ficou incompleto</b> — <span x-text="samGmnEstado.feitos"></span> de <span x-text="samGmnEstado.total"></span> clientes verificados na quarta. Feche os que faltam.</span>
+            </div>
+
+            <!-- 4 KPIs -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px">
+              <div class="card kpi" style="background:#F4F8FE">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-device-mobile ic-ph"></i></span> Stories hoje</div>
+                <div class="kpi-value fs-22"><span x-text="samStoriesFeitos"></span><span class="text-3 fs-15">/<span x-text="samClientes.length"></span></span></div>
+                <div class="text-3 fs-11">publicados hoje</div>
+              </div>
+              <div class="card kpi" style="background:#F3FAF6">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle ic-ph"></i></span> Vídeos concluídos</div>
+                <div class="kpi-value fs-22" x-text="samKpiVideosConcl"></div>
+                <div class="text-3 fs-11">finalizados hoje</div>
+              </div>
+              <div class="card kpi" style="background:#FEFBEF">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-hammer ic-ph"></i></span> Em andamento</div>
+                <div class="kpi-value fs-22" x-text="samKpiVideosAnd"></div>
+                <div class="text-3 fs-11">vídeos sendo feitos</div>
+              </div>
+              <div class="card kpi" style="background:#FEF6F4">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-file-text ic-ph"></i></span> Roteiros prontos</div>
+                <div class="kpi-value fs-22"><span x-text="samRoteirosProntos"></span><span class="text-3 fs-15">/<span x-text="samRoteiros.length"></span></span></div>
+                <div class="text-3 fs-11">p/ captação</div>
+              </div>
+            </div>
+
+            <!-- Duas colunas -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px;align-items:start">
+
+              <!-- ░ COLUNA ESQUERDA ░ -->
+              <div style="display:flex;flex-direction:column;gap:14px">
+
+                <!-- Vídeos de hoje -->
+                <div class="card" style="padding:16px">
+                  <div class="flex items-center justify-between mb-2"><div class="fw-600 fs-15"><i class="ph ph-video-camera ic-ph" style="color:#4285F4"></i> Vídeos de hoje</div><span class="text-3 fs-11">adiciona · inicia · conclui</span></div>
+                  <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+                    <input class="input fs-13" style="flex:1;min-width:150px" placeholder="Ex.: Reel bastidores Akio…" x-model="samVForm.titulo" @keydown.enter="samAddVideo()">
+                    <select class="input fs-13" style="max-width:130px" x-model="samVForm.cliente"><option value="">Cliente…</option><template x-for="c in samClientes" :key="'svc'+c.id"><option :value="c.empresa||c.nome" x-text="c.empresa||c.nome"></option></template></select>
+                    <select class="input fs-13" style="max-width:120px" x-model="samVForm.tipo"><template x-for="t in ['Edição','Gravação','Vídeo de IA','Motion','Outro']" :key="'svt'+t"><option :value="t" x-text="t"></option></template></select>
+                    <button class="btn btn-sm btn-primary" @click="samAddVideo()"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
+                  </div>
+                  <div x-show="!samVideosHoje.length" class="text-3 fs-12" style="padding:8px 0;text-align:center">Nenhum vídeo lançado hoje ainda.</div>
+                  <template x-for="v in samVideosHoje" :key="'sv'+v.id">
+                    <div class="flex items-center" style="gap:10px;border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px" :style="v.status==='em_andamento'?'border-color:#F9A825;background:#FEFBEF':(v.status==='concluido'?'opacity:.7':'')">
+                      <span style="width:24px;height:24px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center" :style="v.status==='concluido'?'background:#E6F4EA;color:#34A853':(v.status==='em_andamento'?'background:#FEF7E0;color:#F9A825':'background:var(--surface-2);color:#9ca3af')"><i class="ph" :class="v.status==='concluido'?'ph-check':(v.status==='em_andamento'?'ph-dots-three':'ph-circle')"></i></span>
+                      <div style="flex:1;min-width:0">
+                        <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="v.status==='concluido'?'text-decoration:line-through':''"><span x-text="v.titulo"></span><span class="text-3 fw-400" x-show="v.cliente" x-text="' · '+v.cliente"></span></div>
+                        <div class="text-3 fs-11"><span x-text="v.tipo"></span><span x-show="v.status==='em_andamento' && v.iniEm" x-text="' · iniciado às '+v.iniEm"></span><span x-show="v.status==='concluido' && v.fimEm" x-text="' · concluído às '+v.fimEm"></span><span x-show="v.status==='nao_iniciado'"> · ainda não iniciado</span></div>
+                      </div>
+                      <template x-if="v.status==='nao_iniciado'"><button class="btn btn-sm btn-primary" @click="samIniciarVideo(v)"><i class="ph ph-play ic-ph"></i> Iniciar</button></template>
+                      <template x-if="v.status==='em_andamento'"><button class="btn btn-sm" style="background:#34A853;color:#fff;border-color:#34A853" @click="samConcluirVideo(v)"><i class="ph ph-check ic-ph"></i> Concluir</button></template>
+                      <template x-if="v.status==='concluido'"><span class="badge fs-11 fw-600" style="background:#E6F4EA;color:#34A853">concluído</span></template>
+                      <button class="btn btn-icon btn-ghost btn-sm" @click="samRemVideo(v)" title="Remover" style="color:var(--text-3)"><i class="ph ph-x ic-ph"></i></button>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Stories orgânicos de hoje -->
+                <div class="card" style="padding:16px">
+                  <div class="flex items-center justify-between mb-3"><div class="fw-600 fs-15"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div><button class="btn btn-sm" @click="samRegistrarTodosStories()"><i class="ph ph-check-square ic-ph"></i> Registrar todos</button></div>
+                  <template x-for="c in samClientes" :key="'ss'+c.id">
+                    <div class="flex items-center" style="gap:10px;margin-bottom:9px;cursor:pointer" @click="samToggleStory(c)">
+                      <div class="fs-13" style="width:130px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="c.empresa||c.nome"></div>
+                      <div class="progress" style="flex:1;height:8px"><div :style="'width:'+(samStoryFeito(c)?100:6)+'%;background:'+(samStoryFeito(c)?'#34A853':'#E5E7EB')"></div></div>
+                      <span class="fs-11 text-3" style="width:26px;text-align:right">1/<span x-text="samStoryFeito(c)?1:0"></span></span>
+                      <span class="badge fs-10 fw-600" style="width:64px;text-align:center" :style="samStoryFeito(c)?'background:#E6F4EA;color:#34A853':'background:var(--surface-2);color:#9ca3af'" x-text="samStoryFeito(c)?'feito':'pendente'"></span>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Dia de Google Meu Negócio (só na quarta) -->
+                <div class="card" style="padding:16px" x-show="samGmnEstado.modo==='checklist'">
+                  <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i> Dia de Google Meu Negócio</div><span class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4">QUARTA</span></div>
+                  <div class="text-3 fs-12 mb-3">Verificar avaliações + atualizar posts · marque conforme faz.</div>
+                  <template x-for="c in samClientes" :key="'sg'+c.id">
+                    <div class="flex items-center" style="gap:10px;margin-bottom:8px;cursor:pointer" @click="samToggleGmn(c)">
+                      <span style="width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid" :style="samGmnVerif(c)?'background:#34A853;border-color:#34A853;color:#fff':'border-color:#D1D5DB;color:transparent'"><i class="ph ph-check" style="font-size:13px"></i></span>
+                      <div class="fs-13 fw-600" style="flex:1" x-text="c.empresa||c.nome"></div>
+                      <span class="text-3 fs-11" x-show="samGmnVerif(c)" x-text="'verificado '+samGmnHora(c)"></span>
+                      <span class="text-3 fs-11" x-show="!samGmnVerif(c)">pendente</span>
+                    </div>
+                  </template>
+                  <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
+                </div>
+              </div>
+
+              <!-- ░ COLUNA DIREITA ░ -->
+              <div style="display:flex;flex-direction:column;gap:14px">
+
+                <!-- Roteiros de captações -->
+                <div class="card" style="padding:16px">
+                  <div class="flex items-center justify-between mb-2"><div class="fw-600 fs-15"><i class="ph ph-note-pencil ic-ph" style="color:#4285F4"></i> Roteiros de captações</div><button class="btn btn-sm" @click="samRAberto=!samRAberto"><i class="ph ph-plus ic-ph"></i> Novo roteiro</button></div>
+                  <div x-show="samRAberto" class="mb-3" style="border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;gap:8px">
+                    <input class="input fs-13" placeholder="Título do roteiro (ex.: Reel ansiedade no trabalho)" x-model="samRForm.titulo">
+                    <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                      <select class="input fs-13" style="flex:1;min-width:120px" x-model="samRForm.cliente"><option value="">Cliente…</option><template x-for="c in samClientes" :key="'src'+c.id"><option :value="c.empresa||c.nome" x-text="c.empresa||c.nome"></option></template></select>
+                      <label class="text-3 fs-11">captação <input type="date" class="input fs-12" style="max-width:150px" x-model="samRForm.captacao"></label>
+                      <label class="text-3 fs-11">prazo <input type="date" class="input fs-12" style="max-width:150px" x-model="samRForm.prazo"></label>
+                    </div>
+                    <div><button class="btn btn-sm btn-primary" @click="samAddRoteiro()">Adicionar roteiro</button></div>
+                  </div>
+                  <div x-show="!samRoteiros.length" class="text-3 fs-12" style="padding:6px 0;text-align:center">Nenhum roteiro cadastrado.</div>
+                  <template x-for="r in samRoteirosOrd" :key="'sr'+r.id">
+                    <div style="border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px">
+                      <div class="flex items-center justify-between" style="gap:8px">
+                        <div style="min-width:0">
+                          <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span x-text="r.titulo"></span><span class="text-3 fw-400" x-show="r.cliente" x-text="' · '+r.cliente"></span></div>
+                          <div class="text-3 fs-11"><span x-show="r.captacao" x-text="'p/ captação '+_dBR(r.captacao)"></span><span x-show="r.prazo" x-text="' · prazo '+_dBR(r.prazo)"></span></div>
+                        </div>
+                        <button class="btn btn-icon btn-ghost btn-sm" @click="samRemRoteiro(r)" title="Remover" style="color:var(--text-3);flex:none"><i class="ph ph-x ic-ph"></i></button>
+                      </div>
+                      <div class="flex items-center justify-between" style="margin-top:8px;gap:8px">
+                        <div class="flex items-center gap-2">
+                          <template x-for="s in [['nao_iniciado','não iniciado','#9ca3af','var(--surface-2)'],['escrevendo','escrevendo','#B06000','#FEF7E0'],['pronto','pronto','#34A853','#E6F4EA']]" :key="'srs'+r.id+s[0]">
+                            <button class="badge fs-10 fw-600" style="cursor:pointer" :style="r.status===s[0]?('background:'+s[3]+';color:'+s[2]+';outline:1.5px solid '+s[2]):'background:transparent;color:#9ca3af;outline:1px solid var(--border)'" @click="samRoteiroStatus(r,s[0])" x-text="s[1]"></button>
+                          </template>
+                        </div>
+                        <button class="btn btn-sm btn-ghost" style="color:#4285F4" @click="samRoteiroDoc(r)"><i class="ph ph-file-text ic-ph"></i> <span x-text="r.docUrl?'Abrir no Docs':'Vincular Docs'"></span></button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Captações marcadas -->
+                <div class="card" style="padding:16px">
+                  <div class="flex items-center justify-between mb-2"><div class="fw-600 fs-15"><i class="ph ph-calendar-check ic-ph" style="color:#4285F4"></i> Captações marcadas</div><button class="btn btn-sm" @click="samCAberto=!samCAberto"><i class="ph ph-plus ic-ph"></i> Nova captação</button></div>
+                  <div x-show="samCAberto" class="mb-3" style="border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;gap:8px">
+                    <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                      <select class="input fs-13" style="flex:1;min-width:120px" x-model="samCForm.cliente"><option value="">Cliente…</option><template x-for="c in samClientes" :key="'scc'+c.id"><option :value="c.empresa||c.nome" x-text="c.empresa||c.nome"></option></template></select>
+                      <input class="input fs-13" style="flex:1;min-width:120px" placeholder="Local (ex.: consultório)" x-model="samCForm.local">
+                    </div>
+                    <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                      <label class="text-3 fs-11">data <input type="date" class="input fs-12" style="max-width:150px" x-model="samCForm.data"></label>
+                      <label class="text-3 fs-11">hora <input type="time" class="input fs-12" style="max-width:110px" x-model="samCForm.hora"></label>
+                      <input class="input fs-13" style="flex:1;min-width:110px" placeholder="Tipo (ex.: bastidores)" x-model="samCForm.tipo">
+                    </div>
+                    <div><button class="btn btn-sm btn-primary" @click="samAddCaptacao()">Adicionar captação</button></div>
+                  </div>
+                  <div x-show="!samCaptacoesOrd.length" class="text-3 fs-12" style="padding:6px 0;text-align:center">Nenhuma captação futura marcada.</div>
+                  <template x-for="c in samCaptacoesOrd" :key="'sc'+c.id">
+                    <div class="flex items-center" style="gap:12px;border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px">
+                      <div style="width:44px;text-align:center;flex:none;border-radius:8px;padding:4px 0" :style="c.data===_hojeStr()?'background:#FEF7E0':'background:var(--surface-2)'">
+                        <div class="fw-700 fs-16" :style="c.data===_hojeStr()?'color:#B06000':''" x-text="_samDiaBadge(c.data).dia"></div>
+                        <div style="font-size:9px;letter-spacing:.04em;font-weight:700" :style="c.data===_hojeStr()?'color:#B06000':'color:#9ca3af'" x-text="_samDiaBadge(c.data).mes"></div>
+                      </div>
+                      <div style="flex:1;min-width:0">
+                        <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span x-text="c.cliente"></span><span class="text-3 fw-400" x-show="c.local" x-text="' — '+c.local"></span></div>
+                        <div class="text-3 fs-11"><span x-show="c.hora" x-text="c.hora+'h · '"></span><span x-text="c.tipo"></span></div>
+                      </div>
+                      <button class="badge fs-10 fw-600" style="cursor:pointer;flex:none" :style="c.status==='confirmada'?'background:#E6F4EA;color:#34A853':'background:#FEF7E0;color:#B06000'" @click="samToggleCaptacao(c)" x-text="c.status==='confirmada'?'confirmada':'a confirmar'"></button>
+                      <button class="btn btn-icon btn-ghost btn-sm" @click="samRemCaptacao(c)" title="Remover" style="color:var(--text-3);flex:none"><i class="ph ph-x ic-ph"></i></button>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Registro de hoje -->
+                <div class="card" style="padding:16px">
+                  <div class="flex items-center justify-between mb-2"><div class="fw-600 fs-15"><i class="ph ph-clock-counter-clockwise ic-ph" style="color:#4285F4"></i> Registro de hoje</div><span class="text-3 fs-11">timestamps automáticos</span></div>
+                  <div x-show="!samLogHoje.length" class="text-3 fs-12" style="padding:6px 0;text-align:center">Nada registrado hoje ainda.</div>
+                  <template x-for="l in samLogHoje" :key="'sl'+l.id">
+                    <div class="flex items-center" style="gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+                      <span class="fs-12 fw-600" style="width:42px;flex:none;color:#4285F4" x-text="l.hora"></span>
+                      <span class="fs-13" x-text="l.texto"></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+          </template>
         </div>
       </section>
 
@@ -5301,7 +5496,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=326"></script>
+<script src="js/app.js?v=327"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

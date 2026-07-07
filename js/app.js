@@ -1496,6 +1496,129 @@ document.addEventListener('alpine:init', () => {
     },
     relCronoStop() { clearInterval(this._relCronoT); this._relCronoT = null; },
     get relCronoRestante() { return Math.max(0, 15 - this.relCrono); },
+
+    // ══════════════ SAMARA — Painel do dia · Produção de Conteúdo ══════════════
+    // Tudo persistido no store genérico de coleções (operacoes.samara.*).
+    samLoaded: false, samLoading: false,
+    samVideos: [], samStories: [], samGmn: [], samRoteiros: [], samCaptacoes: [], samLog: [],
+    samVForm: { titulo: '', cliente: '', tipo: 'Edição' },
+    samRForm: { titulo: '', cliente: '', captacao: '', prazo: '' }, samRAberto: false,
+    samCForm: { cliente: '', local: '', data: '', hora: '', tipo: 'Captação' }, samCAberto: false,
+    // helpers de data/hora (America/Recife)
+    _horaBR() { return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); },
+    _semanaISO(d) { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const dn = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - dn); const ano = t.getUTCFullYear(); const jan1 = new Date(Date.UTC(ano, 0, 1)); const sem = Math.ceil((((t - jan1) / 86400000) + 1) / 7); return ano + '-W' + String(sem).padStart(2, '0'); },
+    get samClientes() { return this.relClientes; }, // mesmos clientes do social (fazSocial)
+    async carregarSamara() {
+      if (this.samLoading) return; this.samLoading = true;
+      try {
+        const [v, s, g, r, c, l] = await Promise.all([
+          this.api('GET', '/colecoes/operacoes.samara.videos'),
+          this.api('GET', '/colecoes/operacoes.samara.stories'),
+          this.api('GET', '/colecoes/operacoes.samara.gmn'),
+          this.api('GET', '/colecoes/operacoes.samara.roteiros'),
+          this.api('GET', '/colecoes/operacoes.samara.captacoes'),
+          this.api('GET', '/colecoes/operacoes.samara.log'),
+        ]);
+        this.samVideos = Array.isArray(v) ? v : []; this.samStories = Array.isArray(s) ? s : [];
+        this.samGmn = Array.isArray(g) ? g : []; this.samRoteiros = Array.isArray(r) ? r : [];
+        this.samCaptacoes = Array.isArray(c) ? c : []; this.samLog = Array.isArray(l) ? l : [];
+        this.samLoaded = true;
+      } catch (e) { this.mostrarToast('Não consegui carregar o painel da Samara — ' + (e.message || e)); }
+      this.samLoading = false;
+    },
+    async _samSave(nome, arr) { try { await this.api('POST', '/colecoes/operacoes.samara.' + nome, { itens: arr }); } catch (e) { this.mostrarToast('Não salvou (' + nome + ') — confira a conexão. ⚠️'); } },
+    _samLogPush(texto, tipo) {
+      this.samLog.unshift({ id: MD.uid(), ts: new Date().toISOString(), data: this._hojeStr(), hora: this._horaBR(), texto, tipo: tipo || 'geral', por: (this.usuario && this.usuario.nome) || '' });
+      this.samLog = this.samLog.slice(0, 200); this._samSave('log', this.samLog);
+    },
+    get samLogHoje() { const h = this._hojeStr(); return this.samLog.filter(x => x.data === h); },
+
+    // ── Vídeos de hoje ──
+    get samVideosHoje() { const h = this._hojeStr(); const ord = { em_andamento: 0, nao_iniciado: 1, concluido: 2 }; return this.samVideos.filter(v => v.data === h).slice().sort((a, b) => (ord[a.status] - ord[b.status])); },
+    samAddVideo() {
+      const f = this.samVForm; if (!f.titulo.trim()) { this.mostrarToast('Escreva o que é o vídeo.'); return; }
+      this.samVideos.unshift({ id: MD.uid(), titulo: f.titulo.trim(), cliente: f.cliente || '', tipo: f.tipo || 'Edição', status: 'nao_iniciado', data: this._hojeStr(), iniEm: '', fimEm: '', por: (this.usuario && this.usuario.nome) || '' });
+      this.samVForm = { titulo: '', cliente: '', tipo: f.tipo }; this._samSave('videos', this.samVideos);
+    },
+    samIniciarVideo(v) { v.status = 'em_andamento'; v.iniEm = this._horaBR(); this._samSave('videos', this.samVideos); this._samLogPush('Iniciou edição — ' + v.titulo, 'video'); },
+    samConcluirVideo(v) { v.status = 'concluido'; v.fimEm = this._horaBR(); this._samSave('videos', this.samVideos); this._samLogPush('Concluiu edição — ' + v.titulo, 'video'); },
+    samRemVideo(v) { if (!confirm('Remover este vídeo do dia?')) return; this.samVideos = this.samVideos.filter(x => x.id !== v.id); this._samSave('videos', this.samVideos); },
+
+    // ── Stories orgânicos de hoje (1 por cliente) ──
+    _samStoryRec(cli) { const h = this._hojeStr(); return this.samStories.find(s => s.clienteId === cli.id && s.data === h); },
+    samStoryFeito(cli) { const r = this._samStoryRec(cli); return !!(r && r.feito); },
+    samToggleStory(cli) {
+      const h = this._hojeStr(); let r = this._samStoryRec(cli);
+      if (r) { r.feito = !r.feito; r.em = new Date().toISOString(); }
+      else { r = { clienteId: cli.id, cliente: cli.empresa || cli.nome, data: h, feito: true, em: new Date().toISOString() }; this.samStories.push(r); }
+      this._samSave('stories', this.samStories);
+      this._samLogPush((r.feito ? 'Publicou story — ' : 'Desmarcou story — ') + (cli.empresa || cli.nome), 'story');
+    },
+    get samStoriesFeitos() { return this.samClientes.filter(c => this.samStoryFeito(c)).length; },
+    samRegistrarTodosStories() { this.samClientes.forEach(c => { if (!this.samStoryFeito(c)) this.samToggleStory(c); }); },
+
+    // ── Dia de Google Meu Negócio (checklist semanal, quarta-feira) ──
+    _samGmnRec(cli) { const sem = this._semanaISO(new Date()); return this.samGmn.find(g => g.clienteId === cli.id && g.semana === sem); },
+    samGmnVerif(cli) { const r = this._samGmnRec(cli); return !!(r && r.verificado); },
+    samGmnHora(cli) { const r = this._samGmnRec(cli); return (r && r.verificado && r.em) ? new Date(r.em).toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }) : ''; },
+    samToggleGmn(cli) {
+      const sem = this._semanaISO(new Date()); let r = this._samGmnRec(cli);
+      if (r) { r.verificado = !r.verificado; r.em = r.verificado ? new Date().toISOString() : ''; }
+      else { r = { clienteId: cli.id, cliente: cli.empresa || cli.nome, semana: sem, verificado: true, em: new Date().toISOString() }; this.samGmn.push(r); }
+      this._samSave('gmn', this.samGmn);
+    },
+    get samGmnFeitos() { return this.samClientes.filter(c => this.samGmnVerif(c)).length; },
+    // estado do bloco GMN conforme o dia da semana
+    get samGmnEstado() {
+      const dow = new Date().getDay(); // 0 dom .. 3 qua .. 6 sáb
+      const total = this.samClientes.length, feitos = this.samGmnFeitos;
+      if (dow === 3) return { modo: 'checklist', feitos, total };
+      if (dow === 4 && feitos < total) return { modo: 'vermelho', feitos, total };
+      return { modo: 'azul', amanha: dow === 2, feitos, total };
+    },
+
+    // ── Roteiros de captações ──
+    get samRoteirosOrd() { const st = { escrevendo: 0, nao_iniciado: 1, pronto: 2 }; return this.samRoteiros.slice().sort((a, b) => (st[a.status] - st[b.status]) || String(a.captacao || '').localeCompare(String(b.captacao || ''))); },
+    samAddRoteiro() {
+      const f = this.samRForm; if (!f.titulo.trim()) { this.mostrarToast('Dê um título ao roteiro.'); return; }
+      this.samRoteiros.unshift({ id: MD.uid(), titulo: f.titulo.trim(), cliente: f.cliente || '', captacao: f.captacao || '', prazo: f.prazo || '', status: 'nao_iniciado', docUrl: '', por: (this.usuario && this.usuario.nome) || '' });
+      this.samRForm = { titulo: '', cliente: '', captacao: '', prazo: '' }; this.samRAberto = false; this._samSave('roteiros', this.samRoteiros);
+    },
+    samRoteiroStatus(r, s) { r.status = s; this._samSave('roteiros', this.samRoteiros); },
+    samRoteiroDoc(r) {
+      if (r.docUrl) { window.open(r.docUrl, '_blank'); return; }
+      const u = prompt('Cole o link do Google Docs deste roteiro:'); if (u && /^https?:\/\//.test(u.trim())) { r.docUrl = u.trim(); this._samSave('roteiros', this.samRoteiros); window.open(r.docUrl, '_blank'); }
+    },
+    samRemRoteiro(r) { if (!confirm('Remover este roteiro?')) return; this.samRoteiros = this.samRoteiros.filter(x => x.id !== r.id); this._samSave('roteiros', this.samRoteiros); },
+    get samRoteirosProntos() { return this.samRoteiros.filter(r => r.status === 'pronto').length; },
+
+    // ── Captações marcadas ──
+    get samCaptacoesOrd() { const h = this._hojeStr(); return this.samCaptacoes.filter(c => (c.data || '') >= h).slice().sort((a, b) => String(a.data + (a.hora || '')).localeCompare(String(b.data + (b.hora || '')))); },
+    samAddCaptacao() {
+      const f = this.samCForm; if (!f.cliente.trim() || !f.data) { this.mostrarToast('Informe cliente e data da captação.'); return; }
+      this.samCaptacoes.push({ id: MD.uid(), cliente: f.cliente.trim(), local: f.local || '', data: f.data, hora: f.hora || '', tipo: f.tipo || 'Captação', status: 'a_confirmar', por: (this.usuario && this.usuario.nome) || '' });
+      this.samCForm = { cliente: '', local: '', data: '', hora: '', tipo: 'Captação' }; this.samCAberto = false; this._samSave('captacoes', this.samCaptacoes);
+    },
+    samToggleCaptacao(c) { c.status = c.status === 'confirmada' ? 'a_confirmar' : 'confirmada'; this._samSave('captacoes', this.samCaptacoes); },
+    samRemCaptacao(c) { if (!confirm('Remover esta captação?')) return; this.samCaptacoes = this.samCaptacoes.filter(x => x.id !== c.id); this._samSave('captacoes', this.samCaptacoes); },
+    _samDiaBadge(iso) { if (!iso) return { dia: '--', mes: '' }; const [a, m, d] = iso.split('-'); const nomes = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']; return { dia: d, mes: iso === this._hojeStr() ? 'HOJE' : (nomes[(+m) - 1] || '') }; },
+
+    // ── KPIs + "Dia no ritmo" ──
+    get samKpiVideosConcl() { return this.samVideosHoje.filter(v => v.status === 'concluido').length; },
+    get samKpiVideosAnd() { return this.samVideosHoje.filter(v => v.status === 'em_andamento').length; },
+    get samRitmo() {
+      // 4 indicadores: stories completos, nenhum vídeo parado em andamento no fim, roteiros prontos, captação de hoje confirmada
+      const tot = this.samClientes.length || 1;
+      const g1 = this.samStoriesFeitos >= tot;                    // stories do dia completos
+      const g2 = this.samRoteirosProntos >= 1;                    // ao menos 1 roteiro pronto
+      const g3 = this.samVideosHoje.length ? this.samKpiVideosConcl >= 1 : true; // algo concluído (se há vídeos)
+      const hoje = this._hojeStr(); const capHoje = this.samCaptacoes.filter(c => c.data === hoje);
+      const g4 = capHoje.length ? capHoje.every(c => c.status === 'confirmada') : true; // captações de hoje confirmadas
+      const verdes = [g1, g2, g3, g4].filter(Boolean).length;
+      return { verdes, total: 4 };
+    },
+    get samDataTitulo() { const d = new Date(); const s = d.toLocaleDateString('pt-BR', { timeZone: 'America/Recife', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }); return s.charAt(0).toUpperCase() + s.slice(1); },
+
     // % geral do dia: média de publicações + rotina (indicador único de progresso).
     get matProgressoDia() {
       const pub = this.operPostsTotal ? this.operPostsFeitos / this.operPostsTotal : 1;
