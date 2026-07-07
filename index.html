@@ -2265,11 +2265,15 @@
                 <div class="fw-600 fs-15"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Empresas do mesmo segmento</div>
                 <div class="text-3 fs-12" style="margin-top:2px">Posts de referência do segmento do cliente — clique num post pra ver a análise da IA.</div>
               </div>
-              <select class="form-select" style="max-width:280px" x-model="operInspClienteId" @change="operInspTroca()" title="Escolha o cliente pra ver referências do segmento dele">
-                <option value="">Selecione o cliente…</option>
-                <template x-for="c in operInspClientes" :key="'oic'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
-              </select>
+              <div class="flex items-center gap-2">
+                <select class="form-select" style="max-width:260px" x-model="operInspClienteId" @change="operInspTroca()" title="Escolha o cliente pra ver referências do segmento dele">
+                  <option value="">Selecione o cliente…</option>
+                  <template x-for="c in operInspClientes" :key="'oic'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
+                </select>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="operInspAberto=!operInspAberto" :title="operInspAberto?'Recolher o card':'Expandir o card'"><i class="ph" :class="operInspAberto?'ph-caret-up':'ph-caret-down'"></i></button>
+              </div>
             </div>
+            <div x-show="operInspAberto">
             <div x-show="!operInspClienteId" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente pra ver referências de empresas do mesmo segmento.</div></div>
             <div x-show="operInspClienteId">
               <!-- @s das empresas do segmento (a IA descobre ao selecionar o cliente; dá pra ajustar à mão) -->
@@ -2321,6 +2325,7 @@
                   </template>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 
@@ -4922,7 +4927,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=304"></script>
+<script src="js/app.js?v=305"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
