@@ -2221,25 +2221,7 @@
 
         <!-- ════════ MATHEUS — Social Media: postagens do dia + rotina ════════ -->
         <div x-show="operTab==='matheus'">
-          <!-- Navegador de dia + resumo do quadro (o que precisa ser feito) -->
-          <div class="card" style="padding:14px;margin-bottom:14px">
-            <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
-              <div class="flex items-center gap-2">
-                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
-                <div style="min-width:190px;text-align:center">
-                  <div class="fw-600 fs-14" style="text-transform:capitalize" x-text="operChkLabel"></div>
-                </div>
-                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
-                <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()" style="margin-left:2px">Hoje</button>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="badge fs-12 fw-700" :style="operResumoTrelo.atrasados?'background:#FCE8E6;color:#C5221F':'background:#E6F4EA;color:#15803d'" :title="operResumoTrelo.atrasados+' post(s) atrasado(s) no quadro'"><i class="ph ph-warning-circle"></i> <span x-text="operResumoTrelo.atrasados"></span> atrasados</span>
-                <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2" :title="operResumoTrelo.semana+' post(s) pendentes até o fim da semana'"><i class="ph ph-calendar-dots"></i> <span x-text="operResumoTrelo.semana"></span> na semana</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Agenda do Matheus (eventos da Agenda em que ele é colaborador) -->
+          <!-- Agenda do Matheus (eventos da Agenda em que ele é colaborador) — em cima da data -->
           <div class="card" style="padding:16px;margin-bottom:14px">
             <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
               <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
@@ -2258,6 +2240,29 @@
             </template>
           </div>
 
+          <!-- Cliente em foco + navegador de dia — ESTE seletor de cliente vale pra tudo abaixo -->
+          <div class="card" style="padding:14px;margin-bottom:14px">
+            <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
+              <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                <select class="form-select" style="max-width:240px;font-weight:600" x-model="operInspClienteId" @change="operInspTroca()" title="Cliente em foco — vale pra Empresas do mesmo segmento e tudo abaixo">
+                  <option value="">Selecione o cliente…</option>
+                  <template x-for="c in operInspClientes" :key="'oicd'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
+                </select>
+                <span style="width:1px;height:24px;background:var(--border);margin:0 4px"></span>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                <div style="min-width:170px;text-align:center">
+                  <div class="fw-600 fs-14" style="text-transform:capitalize" x-text="operChkLabel"></div>
+                </div>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
+                <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()" style="margin-left:2px">Hoje</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="badge fs-12 fw-700" :style="operResumoTrelo.atrasados?'background:#FCE8E6;color:#C5221F':'background:#E6F4EA;color:#15803d'" :title="operResumoTrelo.atrasados+' post(s) atrasado(s) no quadro'"><i class="ph ph-warning-circle"></i> <span x-text="operResumoTrelo.atrasados"></span> atrasados</span>
+                <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2" :title="operResumoTrelo.semana+' post(s) pendentes até o fim da semana'"><i class="ph ph-calendar-dots"></i> <span x-text="operResumoTrelo.semana"></span> na semana</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Empresas do mesmo segmento: feed de posts de referência + análise por IA (popup) -->
           <div class="card" style="padding:16px;margin-bottom:14px">
             <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
@@ -2265,13 +2270,7 @@
                 <div class="fw-600 fs-15"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Empresas do mesmo segmento</div>
                 <div class="text-3 fs-12" style="margin-top:2px">Posts de referência do segmento do cliente — clique num post pra ver a análise da IA.</div>
               </div>
-              <div class="flex items-center gap-2">
-                <select class="form-select" style="max-width:260px" x-model="operInspClienteId" @change="operInspTroca()" title="Escolha o cliente pra ver referências do segmento dele">
-                  <option value="">Selecione o cliente…</option>
-                  <template x-for="c in operInspClientes" :key="'oic'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
-                </select>
-                <button class="btn btn-icon btn-ghost btn-sm" @click="operInspAberto=!operInspAberto" :title="operInspAberto?'Recolher o card':'Expandir o card'"><i class="ph" :class="operInspAberto?'ph-caret-up':'ph-caret-down'"></i></button>
-              </div>
+              <button class="btn btn-icon btn-ghost btn-sm" @click="operInspAberto=!operInspAberto" :title="operInspAberto?'Recolher o card':'Expandir o card'"><i class="ph" :class="operInspAberto?'ph-caret-up':'ph-caret-down'"></i></button>
             </div>
             <div x-show="operInspAberto">
             <div x-show="!operInspClienteId" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente pra ver referências de empresas do mesmo segmento.</div></div>
@@ -2405,10 +2404,6 @@
               <div class="flex items-center justify-between" style="gap:8px;cursor:pointer;flex-wrap:wrap" @click="operChkAberto=!operChkAberto" title="Clique pra recolher/abrir">
                 <div class="fw-600 fs-15"><i class="ph ph-list-checks ic-ph" style="color:#34A853"></i> Rotina do dia</div>
                 <div class="flex items-center gap-2">
-                  <select class="form-select" style="max-width:190px;font-size:12px;padding:4px 8px" x-model="operInspClienteId" @click.stop @change="operInspTroca()" title="Cliente em foco — dispara a busca de empresas do mesmo segmento no card abaixo">
-                    <option value="">Cliente…</option>
-                    <template x-for="c in operInspClientes" :key="'oicr'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
-                  </select>
                   <span class="badge fs-12 fw-700" :style="operChkFeitos('matheus')>=SOCIAL_ROTINA_N?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="operChkFeitos('matheus')+'/'+SOCIAL_ROTINA_N"></span>
                   <i class="ph ic-ph text-3" style="font-size:19px" :class="operChkAberto?'ph-caret-up':'ph-caret-down'"></i>
                 </div>
@@ -4927,7 +4922,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=305"></script>
+<script src="js/app.js?v=306"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
