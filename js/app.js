@@ -1723,6 +1723,11 @@ document.addEventListener('alpine:init', () => {
       catch (e) { c.socialAtivo = !novo; this.mostrarToast('Não salvou — ' + (e.message || e)); }
     },
     get operInspClientes() { return (this.clients || []).filter(c => this.fazSocial(c)).slice().sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '', 'pt-BR')); },
+    // Seletor de "cliente em foco" inclui também os DESLIGADOS (marcados) — pra dar
+    // pra religar pelo interruptor ali mesmo. Só exclui os Inativos de cadastro.
+    get operFocoClientes() { return (this.clients || []).filter(c => (c.status || 'Ativo') !== 'Inativo').slice().sort((a, b) => (a.empresa || a.nome || '').localeCompare(b.empresa || b.nome || '', 'pt-BR')); },
+    // O cliente em foco está ligado no Matheus? (chave socialAtivo)
+    get operFocoAtivo() { const c = (this.clients || []).find(x => x.id === this.operInspClienteId); return !!c && c.socialAtivo !== false; },
     operInspTroca() { // trocou o cliente no menu drop: a IA descobre os concorrentes e busca os posts
       const c = (this.clients || []).find(x => x.id === this.operInspClienteId);
       this.operInspConc = (c && Array.isArray(c.concorrentes)) ? c.concorrentes.slice() : [];

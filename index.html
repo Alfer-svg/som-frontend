@@ -2364,8 +2364,12 @@
               <div class="flex items-center gap-2" style="flex-wrap:wrap">
                 <select class="form-select" style="max-width:240px;font-weight:600" x-model="operInspClienteId" @change="operInspTroca()" title="Cliente em foco — vale pra Empresas do mesmo segmento e tudo abaixo">
                   <option value="">Selecione o cliente…</option>
-                  <template x-for="c in operInspClientes" :key="'oicd'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
+                  <template x-for="c in operFocoClientes" :key="'oicd'+c.id"><option :value="c.id" x-text="(c.empresa||c.nome||'—') + (c.socialAtivo===false ? '  · desligado' : '')"></option></template>
                 </select>
+                <!-- CHAVE do cliente em foco: liga/desliga do módulo do Matheus (socialAtivo) -->
+                <button x-show="operInspClienteId" class="btn btn-sm" :style="operFocoAtivo?'background:#dcfce7;color:#15803d;border-color:#bbf7d0':'background:var(--surface);color:var(--text-3);border-color:var(--border)'" @click="toggleSocial(operInspClienteId)" :title="operFocoAtivo?'Cliente ligado no Matheus — clique pra desligar (some de todo o módulo)':'Cliente desligado — clique pra ligar no Matheus'">
+                  <i class="ph ic-ph" :class="operFocoAtivo?'ph-toggle-right':'ph-toggle-left'" style="font-size:18px"></i> <span x-text="operFocoAtivo?'Ativo':'Desligado'"></span>
+                </button>
                 <span style="width:1px;height:24px;background:var(--border);margin:0 4px"></span>
                 <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
                 <div style="min-width:170px;text-align:center">
@@ -5502,7 +5506,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=330"></script>
+<script src="js/app.js?v=331"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
