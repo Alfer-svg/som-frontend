@@ -2434,14 +2434,14 @@
             <!-- Postagens do dia (programação de cada cliente + demandas internas) -->
             <div class="card" style="padding:16px">
               <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
-                <div class="fw-600 fs-15"><i class="ph ph-megaphone ic-ph" style="color:#4285F4"></i> Postagens do dia</div>
+                <div class="fw-600 fs-15"><i class="ph ph-megaphone ic-ph" style="color:#4285F4"></i> Postagens do dia<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
                 <div class="flex items-center gap-2">
-                  <span class="badge fs-12 fw-700" :style="operPostsTotal && operPostsFeitos>=operPostsTotal?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-show="operPostsTotal" x-text="operPostsFeitos+'/'+operPostsTotal+' publicados'"></span>
+                  <span class="badge fs-12 fw-700" :style="operPostsViewTotal && operPostsViewFeitos>=operPostsViewTotal?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-show="operPostsViewTotal" x-text="operPostsViewFeitos+'/'+operPostsViewTotal+' publicados'"></span>
                   <button class="btn btn-ghost btn-sm" @click="operImportModal=true" title="Importar uma demanda interna (post avulso do quadro) para este dia"><i class="ph ph-download-simple ic-ph"></i> Importar</button>
                 </div>
               </div>
-              <div x-show="!operPostsDia.length" class="text-3 fs-13" style="padding:22px 0;text-align:center"><i class="ph ph-coffee" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Nenhuma postagem programada para este dia.</div></div>
-              <template x-for="g in operPostsDia" :key="'opg'+g.cliente">
+              <div x-show="!operPostsDiaView.length" class="text-3 fs-13" style="padding:22px 0;text-align:center"><i class="ph ph-coffee" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px" x-text="operClienteFocoNome ? ('Nenhuma postagem de '+operClienteFocoNome+' programada para este dia.') : 'Nenhuma postagem programada para este dia.'"></div></div>
+              <template x-for="g in operPostsDiaView" :key="'opg'+g.cliente">
                 <div style="margin-bottom:12px">
                   <div class="flex items-center gap-2 mb-1">
                     <span :style="'width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;overflow:hidden;flex-shrink:0;background:'+avatarBg(g.cliente)+';color:'+avatarFg(g.cliente)" x-text="g.cliente.charAt(0).toUpperCase()"></span>
@@ -4985,7 +4985,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=307"></script>
+<script src="js/app.js?v=308"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

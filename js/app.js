@@ -1370,6 +1370,12 @@ document.addEventListener('alpine:init', () => {
     },
     get operPostsTotal() { return this.operPostsDia.reduce((s, g) => s + g.posts.length, 0); },
     get operPostsFeitos() { return this.operPostsDia.reduce((s, g) => s + g.feitos, 0); },
+    // Nome (empresa) do cliente em foco — usado pra filtrar a programação do dia.
+    get operClienteFocoNome() { const c = (this.clients || []).find(x => x.id === this.operInspClienteId); return c ? (c.empresa || c.nome || '') : ''; },
+    // Postagens do dia FILTRADAS pelo cliente em foco (se houver um selecionado no card de data).
+    get operPostsDiaView() { const nome = this.operClienteFocoNome; return nome ? this.operPostsDia.filter(g => g.cliente === nome) : this.operPostsDia; },
+    get operPostsViewTotal() { return this.operPostsDiaView.reduce((s, g) => s + g.posts.length, 0); },
+    get operPostsViewFeitos() { return this.operPostsDiaView.reduce((s, g) => s + g.feitos, 0); },
     // Resumo do quadro (Trello): o que precisa ser feito — atrasados e pendentes desta semana.
     get operResumoTrelo() {
       const h = this._hojeStr();
