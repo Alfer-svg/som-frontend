@@ -2766,7 +2766,7 @@
                   </div>
                 </a>
               </template>
-              <div class="fw-800 fs-13" style="color:#B91C1C;margin:12px 0 8px">▼ PIORES</div>
+              <div class="fw-800 fs-13" style="color:#B91C1C;margin:12px 0 8px" x-show="rel.piores.length">▼ PIORES</div>
               <template x-for="(p,i) in rel.piores" :key="'rpio'+p.link">
                 <a :href="p.link" target="_blank" rel="noopener" class="flex items-center" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:10px;gap:10px;margin-bottom:8px">
                   <span class="fw-800 fs-16" style="width:28px;text-align:center;flex:none;color:#B91C1C">▼</span>
@@ -5274,7 +5274,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=319"></script>
+<script src="js/app.js?v=320"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
