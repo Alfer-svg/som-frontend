@@ -2938,12 +2938,12 @@
                   <div class="text-3 fs-11 mb-3">Faixa de stories/dia por cliente (cronograma semanal). Registre quantos publicou hoje.</div>
                   <template x-for="m in samStoriesMeta" :key="'ss'+m.cliente">
                     <div class="flex items-center" style="gap:10px;margin-bottom:9px">
-                      <div class="fs-13 fw-600" style="width:120px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="m.cliente"></div>
-                      <span class="badge fs-10 fw-600" style="flex:none;min-width:34px;text-align:center" :style="samStoryMetaOk(m)?'background:#E6F4EA;color:#34A853':'background:#E8F0FE;color:#4285F4'" x-text="m.faixa"></span>
+                      <div class="fs-13 fw-600" style="width:118px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="m.cliente"></div>
+                      <span class="fs-11" style="flex:none;min-width:74px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#6b7280'"><span class="text-3">meta</span> <b x-text="m.faixa"></b></span>
                       <div class="progress" style="flex:1;height:8px"><div :style="'width:'+Math.min(100,Math.round(samStoryQtd(m.cliente)/m.alvo*100))+'%;background:'+(samStoryMetaOk(m)?'#34A853':(samStoryQtd(m.cliente)>0?'#F9A825':'#E5E7EB'))"></div></div>
                       <div class="flex items-center" style="gap:6px;flex:none">
                         <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDec(m.cliente)" :disabled="samStoryQtd(m.cliente)<=0" style="padding:2px 7px"><i class="ph ph-minus"></i></button>
-                        <span class="fw-700 fs-14" style="width:16px;text-align:center" x-text="samStoryQtd(m.cliente)"></span>
+                        <span class="fw-700 fs-14" style="width:18px;text-align:center" x-text="samStoryQtd(m.cliente)"></span>
                         <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryInc(m.cliente)" style="padding:2px 7px"><i class="ph ph-plus" style="color:#4285F4"></i></button>
                       </div>
                       <i class="ph ph-check-circle" style="flex:none;font-size:18px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#e5e7eb'"></i>
@@ -5502,7 +5502,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=329"></script>
+<script src="js/app.js?v=330"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
