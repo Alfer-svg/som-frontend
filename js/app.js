@@ -1544,18 +1544,43 @@ document.addEventListener('alpine:init', () => {
     samConcluirVideo(v) { v.status = 'concluido'; v.fimEm = this._horaBR(); this._samSave('videos', this.samVideos); this._samLogPush('Concluiu edição — ' + v.titulo, 'video'); },
     samRemVideo(v) { if (!confirm('Remover este vídeo do dia?')) return; this.samVideos = this.samVideos.filter(x => x.id !== v.id); this._samSave('videos', this.samVideos); },
 
-    // ── Stories orgânicos de hoje (1 por cliente) ──
-    _samStoryRec(cli) { const h = this._hojeStr(); return this.samStories.find(s => s.clienteId === cli.id && s.data === h); },
-    samStoryFeito(cli) { const r = this._samStoryRec(cli); return !!(r && r.feito); },
-    samToggleStory(cli) {
-      const h = this._hojeStr(); let r = this._samStoryRec(cli);
-      if (r) { r.feito = !r.feito; r.em = new Date().toISOString(); }
-      else { r = { clienteId: cli.id, cliente: cli.empresa || cli.nome, data: h, feito: true, em: new Date().toISOString() }; this.samStories.push(r); }
-      this._samSave('stories', this.samStories);
-      this._samLogPush((r.feito ? 'Publicou story — ' : 'Desmarcou story — ') + (cli.empresa || cli.nome), 'story');
+    // ── Stories orgânicos de hoje — META POR CLIENTE (Cronograma Semanal de Stories) ──
+    // Faixa de stories/dia por cliente (referência do Dinho). min = piso da meta.
+    get samStoriesMeta() {
+      return [
+        { cliente: 'CMJ', faixa: '2-3', min: 2, alvo: 3 },
+        { cliente: 'Medic', faixa: '2', min: 2, alvo: 2 },
+        { cliente: 'MilPrint', faixa: '2', min: 2, alvo: 2 },
+        { cliente: 'Vetor', faixa: '3', min: 3, alvo: 3 },
+        { cliente: 'Akio', faixa: '1-2', min: 1, alvo: 2 },
+        { cliente: 'Lanche Card', faixa: '3', min: 3, alvo: 3 },
+        { cliente: 'Hospital (HEP)', faixa: '2-3', min: 2, alvo: 3 },
+        { cliente: 'Corpo Livre', faixa: '3+', min: 3, alvo: 3 },
+        { cliente: 'Mediar', faixa: '2-3', min: 2, alvo: 3 },
+        { cliente: 'Studyo', faixa: '3-4', min: 3, alvo: 4 },
+        { cliente: 'Martur', faixa: '3-5', min: 3, alvo: 5 },
+        { cliente: 'SOGNO', faixa: '1-2', min: 1, alvo: 2 },
+        { cliente: 'Vitanutri', faixa: '2-3', min: 2, alvo: 3 },
+        { cliente: 'UNIFACOL', faixa: 'conforme material', min: 1, alvo: 1, demanda: true },
+        { cliente: 'SSM', faixa: 'conforme demanda', min: 1, alvo: 1, demanda: true },
+      ];
     },
-    get samStoriesFeitos() { return this.samClientes.filter(c => this.samStoryFeito(c)).length; },
-    samRegistrarTodosStories() { this.samClientes.forEach(c => { if (!this.samStoryFeito(c)) this.samToggleStory(c); }); },
+    _samStoryRec(nome) { const h = this._hojeStr(); return this.samStories.find(s => s.cliente === nome && s.data === h); },
+    samStoryQtd(nome) { const r = this._samStoryRec(nome); return (r && Number(r.feitos)) || 0; },
+    _samStorySet(nome, qtd) {
+      const h = this._hojeStr(); let r = this._samStoryRec(nome);
+      qtd = Math.max(0, qtd);
+      if (r) { r.feitos = qtd; r.em = new Date().toISOString(); }
+      else { r = { cliente: nome, data: h, feitos: qtd, em: new Date().toISOString() }; this.samStories.push(r); }
+      this._samSave('stories', this.samStories);
+    },
+    samStoryInc(nome) { const q = this.samStoryQtd(nome) + 1; this._samStorySet(nome, q); this._samLogPush('Story publicado — ' + nome + ' (' + q + ')', 'story'); },
+    samStoryDec(nome) { const q = this.samStoryQtd(nome) - 1; if (q < 0) return; this._samStorySet(nome, q); },
+    samStoryMetaOk(m) { return this.samStoryQtd(m.cliente) >= (m.min || 1); }, // bateu o piso da faixa
+    get samStoriesTotalHoje() { return this.samStoriesMeta.reduce((a, m) => a + this.samStoryQtd(m.cliente), 0); },
+    get samStoriesNaMeta() { return this.samStoriesMeta.filter(m => this.samStoryMetaOk(m)).length; },
+    // preenche cada cliente com o piso da faixa (atalho); demanda fica em 1
+    samStoriesPreencherMeta() { this.samStoriesMeta.forEach(m => { if (this.samStoryQtd(m.cliente) < m.min) this._samStorySet(m.cliente, m.min); }); },
 
     // ── Dia de Google Meu Negócio (checklist semanal, quarta-feira) ──
     _samGmnRec(cli) { const sem = this._semanaISO(new Date()); return this.samGmn.find(g => g.clienteId === cli.id && g.semana === sem); },
@@ -1607,9 +1632,8 @@ document.addEventListener('alpine:init', () => {
     get samKpiVideosConcl() { return this.samVideosHoje.filter(v => v.status === 'concluido').length; },
     get samKpiVideosAnd() { return this.samVideosHoje.filter(v => v.status === 'em_andamento').length; },
     get samRitmo() {
-      // 4 indicadores: stories completos, nenhum vídeo parado em andamento no fim, roteiros prontos, captação de hoje confirmada
-      const tot = this.samClientes.length || 1;
-      const g1 = this.samStoriesFeitos >= tot;                    // stories do dia completos
+      // 4 indicadores: stories na meta, roteiros prontos, algo concluído, captação de hoje confirmada
+      const g1 = this.samStoriesNaMeta >= this.samStoriesMeta.length; // todos os clientes bateram a faixa de stories
       const g2 = this.samRoteirosProntos >= 1;                    // ao menos 1 roteiro pronto
       const g3 = this.samVideosHoje.length ? this.samKpiVideosConcl >= 1 : true; // algo concluído (se há vídeos)
       const hoje = this._hojeStr(); const capHoje = this.samCaptacoes.filter(c => c.data === hoje);

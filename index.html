@@ -2880,9 +2880,9 @@
             <!-- 4 KPIs -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px">
               <div class="card kpi" style="background:#F4F8FE">
-                <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-device-mobile ic-ph"></i></span> Stories hoje</div>
-                <div class="kpi-value fs-22"><span x-text="samStoriesFeitos"></span><span class="text-3 fs-15">/<span x-text="samClientes.length"></span></span></div>
-                <div class="text-3 fs-11">publicados hoje</div>
+                <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-device-mobile ic-ph"></i></span> Stories na meta</div>
+                <div class="kpi-value fs-22"><span x-text="samStoriesNaMeta"></span><span class="text-3 fs-15">/<span x-text="samStoriesMeta.length"></span></span></div>
+                <div class="text-3 fs-11"><span x-text="samStoriesTotalHoje"></span> stories publicados hoje</div>
               </div>
               <div class="card kpi" style="background:#F3FAF6">
                 <div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle ic-ph"></i></span> Vídeos concluídos</div>
@@ -2932,15 +2932,21 @@
                   </template>
                 </div>
 
-                <!-- Stories orgânicos de hoje -->
+                <!-- Stories orgânicos de hoje — meta/dia por cliente (Cronograma Semanal) -->
                 <div class="card" style="padding:16px">
-                  <div class="flex items-center justify-between mb-3"><div class="fw-600 fs-15"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div><button class="btn btn-sm" @click="samRegistrarTodosStories()"><i class="ph ph-check-square ic-ph"></i> Registrar todos</button></div>
-                  <template x-for="c in samClientes" :key="'ss'+c.id">
-                    <div class="flex items-center" style="gap:10px;margin-bottom:9px;cursor:pointer" @click="samToggleStory(c)">
-                      <div class="fs-13" style="width:130px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="c.empresa||c.nome"></div>
-                      <div class="progress" style="flex:1;height:8px"><div :style="'width:'+(samStoryFeito(c)?100:6)+'%;background:'+(samStoryFeito(c)?'#34A853':'#E5E7EB')"></div></div>
-                      <span class="fs-11 text-3" style="width:26px;text-align:right">1/<span x-text="samStoryFeito(c)?1:0"></span></span>
-                      <span class="badge fs-10 fw-600" style="width:64px;text-align:center" :style="samStoryFeito(c)?'background:#E6F4EA;color:#34A853':'background:var(--surface-2);color:#9ca3af'" x-text="samStoryFeito(c)?'feito':'pendente'"></span>
+                  <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div><button class="btn btn-sm" @click="samStoriesPreencherMeta()" title="Marca cada cliente com o piso da faixa"><i class="ph ph-check-square ic-ph"></i> Bater a meta</button></div>
+                  <div class="text-3 fs-11 mb-3">Faixa de stories/dia por cliente (cronograma semanal). Registre quantos publicou hoje.</div>
+                  <template x-for="m in samStoriesMeta" :key="'ss'+m.cliente">
+                    <div class="flex items-center" style="gap:10px;margin-bottom:9px">
+                      <div class="fs-13 fw-600" style="width:120px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="m.cliente"></div>
+                      <span class="badge fs-10 fw-600" style="flex:none;min-width:34px;text-align:center" :style="samStoryMetaOk(m)?'background:#E6F4EA;color:#34A853':'background:#E8F0FE;color:#4285F4'" x-text="m.faixa"></span>
+                      <div class="progress" style="flex:1;height:8px"><div :style="'width:'+Math.min(100,Math.round(samStoryQtd(m.cliente)/m.alvo*100))+'%;background:'+(samStoryMetaOk(m)?'#34A853':(samStoryQtd(m.cliente)>0?'#F9A825':'#E5E7EB'))"></div></div>
+                      <div class="flex items-center" style="gap:6px;flex:none">
+                        <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDec(m.cliente)" :disabled="samStoryQtd(m.cliente)<=0" style="padding:2px 7px"><i class="ph ph-minus"></i></button>
+                        <span class="fw-700 fs-14" style="width:16px;text-align:center" x-text="samStoryQtd(m.cliente)"></span>
+                        <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryInc(m.cliente)" style="padding:2px 7px"><i class="ph ph-plus" style="color:#4285F4"></i></button>
+                      </div>
+                      <i class="ph ph-check-circle" style="flex:none;font-size:18px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#e5e7eb'"></i>
                     </div>
                   </template>
                 </div>
@@ -5496,7 +5502,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=328"></script>
+<script src="js/app.js?v=329"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
