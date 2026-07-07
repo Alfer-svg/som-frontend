@@ -2228,8 +2228,8 @@
         <div style="font-size:22px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-list-checks ic-ph" style="color:#4285F4"></i> Operacional</div>
         <div class="text-3" style="font-size:13px;margin-top:4px;margin-bottom:14px">Acompanhamento operacional por colaborador.</div>
         <div class="tabs">
-          <template x-for="m in [['matheus','Matheus'],['laryssa','Laryssa'],['samara','Samara']]" :key="'ot'+m[0]">
-            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelIG(); if(m[0]==='samara') carregarSamara()"><span x-text="m[1]"></span></div>
+          <template x-for="m in [['matheus','Matheus'],['laryssa','Laryssa']]" :key="'ot'+m[0]">
+            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelIG()"><span x-text="m[1]"></span></div>
           </template>
         </div>
 
@@ -2243,6 +2243,29 @@
 
           <!-- ═══════ PAINEL DO DIA (dashboard do Matheus) ═══════ -->
           <div x-show="matSub==='painel'">
+            <!-- Google Meu Negócio (migrado da Samara — só na quarta aparece o checklist) -->
+            <div x-show="samGmnEstado.modo==='azul'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#F4F8FE;border:1px solid #D2E3FC;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i>
+              <span x-show="samGmnEstado.amanha"><b>Amanhã é quarta</b> — dia de verificar e atualizar o Google Meu Negócio dos clientes.</span>
+              <span x-show="!samGmnEstado.amanha">O <b>Google Meu Negócio</b> dos clientes é verificado toda <b>quarta-feira</b>.</span>
+            </div>
+            <div x-show="samGmnEstado.modo==='vermelho'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#FEF6F4;border:1px solid #FCE8E6;color:#EA4335;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <i class="ph ph-warning-circle ic-ph"></i> <span><b>O GMN da semana ficou incompleto</b> — <span x-text="samGmnEstado.feitos"></span> de <span x-text="samGmnEstado.total"></span> clientes verificados na quarta. Feche os que faltam.</span>
+            </div>
+            <div class="card" style="padding:16px" x-show="samGmnEstado.modo==='checklist'">
+                  <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i> Dia de Google Meu Negócio</div><span class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4">QUARTA</span></div>
+                  <div class="text-3 fs-12 mb-3">Verificar avaliações + atualizar posts · marque conforme faz.</div>
+                  <template x-for="c in samClientes" :key="'sg'+c.id">
+                    <div class="flex items-center" style="gap:10px;margin-bottom:8px;cursor:pointer" @click="samToggleGmn(c)">
+                      <span style="width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid" :style="samGmnVerif(c)?'background:#34A853;border-color:#34A853;color:#fff':'border-color:#D1D5DB;color:transparent'"><i class="ph ph-check" style="font-size:13px"></i></span>
+                      <div class="fs-13 fw-600" style="flex:1" x-text="c.empresa||c.nome"></div>
+                      <span class="text-3 fs-11" x-show="samGmnVerif(c)" x-text="'verificado '+samGmnHora(c)"></span>
+                      <span class="text-3 fs-11" x-show="!samGmnVerif(c)">pendente</span>
+                    </div>
+                  </template>
+                  <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
+                </div>
+
             <!-- cabeçalho: dia + progresso (esquerda) · agenda compacta (direita) -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:stretch">
               <div class="card" style="padding:16px;display:flex;flex-direction:column">
@@ -3050,71 +3073,7 @@
         </div>
 
         <!-- Samara — estrutura por enquanto -->
-        <!-- ═══════ SAMARA — Painel do dia · Produção de Conteúdo ═══════ -->
-        <div x-show="operTab==='samara'" x-init="carregarSamara()">
-          <div x-show="samLoading && !samLoaded" class="card text-3 fs-13" style="padding:40px 0;text-align:center"><i class="ph ph-spinner ph-spin" style="font-size:24px;opacity:.5"></i><div style="margin-top:8px">Carregando o painel…</div></div>
-
-          <template x-if="samLoaded">
-          <div>
-            <!-- Cabeçalho -->
-            <div class="flex items-center justify-between mb-3" style="gap:10px;flex-wrap:wrap">
-              <div>
-                <div style="font-size:20px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-film-slate ic-ph" style="color:#4285F4"></i> Painel do dia <span class="text-3 fs-14 fw-400">· Produção de Conteúdo</span></div>
-                <div class="text-3 fs-12" style="margin-top:2px" x-text="samDataTitulo"></div>
-              </div>
-              <div class="card" style="padding:8px 14px;display:flex;align-items:center;gap:8px" :style="samRitmo.verdes===samRitmo.total?'background:#F3FAF6':'background:#FEFBEF'">
-                <span style="width:10px;height:10px;border-radius:50%;flex:none" :style="'background:'+(samRitmo.verdes===samRitmo.total?'#34A853':'#F9A825')"></span>
-                <div>
-                  <div class="fw-600 fs-13">Dia no ritmo</div>
-                  <div class="text-3 fs-11"><span x-text="samRitmo.verdes"></span> de <span x-text="samRitmo.total"></span> indicadores verdes</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Faixa de lembrete do GMN (fora da quarta) -->
-            <div x-show="samGmnEstado.modo==='azul'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#F4F8FE;border:1px solid #D2E3FC;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i>
-              <span x-show="samGmnEstado.amanha"><b>Amanhã é quarta</b> — dia de verificar e atualizar o Google Meu Negócio dos clientes.</span>
-              <span x-show="!samGmnEstado.amanha">O <b>Google Meu Negócio</b> dos clientes é verificado toda <b>quarta-feira</b>.</span>
-            </div>
-            <div x-show="samGmnEstado.modo==='vermelho'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#FEF6F4;border:1px solid #FCE8E6;color:#EA4335;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <i class="ph ph-warning-circle ic-ph"></i> <span><b>O GMN da semana ficou incompleto</b> — <span x-text="samGmnEstado.feitos"></span> de <span x-text="samGmnEstado.total"></span> clientes verificados na quarta. Feche os que faltam.</span>
-            </div>
-
-            <!-- 4 KPIs migrados para o painel do Matheus (Produção de conteúdo) -->
-
-            <!-- Duas colunas -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px;align-items:start">
-
-              <!-- ░ COLUNA ESQUERDA ░ -->
-              <div style="display:flex;flex-direction:column;gap:14px">
-
-                <!-- Dia de Google Meu Negócio (só na quarta) -->
-                <div class="card" style="padding:16px" x-show="samGmnEstado.modo==='checklist'">
-                  <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i> Dia de Google Meu Negócio</div><span class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4">QUARTA</span></div>
-                  <div class="text-3 fs-12 mb-3">Verificar avaliações + atualizar posts · marque conforme faz.</div>
-                  <template x-for="c in samClientes" :key="'sg'+c.id">
-                    <div class="flex items-center" style="gap:10px;margin-bottom:8px;cursor:pointer" @click="samToggleGmn(c)">
-                      <span style="width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid" :style="samGmnVerif(c)?'background:#34A853;border-color:#34A853;color:#fff':'border-color:#D1D5DB;color:transparent'"><i class="ph ph-check" style="font-size:13px"></i></span>
-                      <div class="fs-13 fw-600" style="flex:1" x-text="c.empresa||c.nome"></div>
-                      <span class="text-3 fs-11" x-show="samGmnVerif(c)" x-text="'verificado '+samGmnHora(c)"></span>
-                      <span class="text-3 fs-11" x-show="!samGmnVerif(c)">pendente</span>
-                    </div>
-                  </template>
-                  <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
-                </div>
-              </div>
-
-              <!-- ░ COLUNA DIREITA ░ -->
-              <div style="display:flex;flex-direction:column;gap:14px">
-
-                <!-- Registro de hoje: migrado/fundido em "Registro & otimizações do dia" (Matheus › Operação) -->
-              </div>
-            </div>
-          </div>
-          </template>
-        </div>
-      </section>
+</section>
 
       <!-- ========== GESTÃO DE TRÁFEGO (rotina por cliente + contas + indicadores) ========== -->
       <section x-show="page==='trafego'">
@@ -5564,7 +5523,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=338"></script>
+<script src="js/app.js?v=339"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
