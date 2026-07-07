@@ -514,8 +514,8 @@ document.addEventListener('alpine:init', () => {
     operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '', operInspIA: false, operInspSemMeta: false,
     operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '', operInspExp: {}, operInspAberto: true, matSub: 'painel',
     matTop: null, matTopLoading: false, matTopErro: '', matTopAberto: true,
-    // Relatório mensal de Instagram (tela da Laryssa) — igual ao PDF Maracatu Digital
-    relCliId: '', relMes: '', rel: null, relLoading: false, relErro: '',
+    // Relatório de Instagram (tela da Laryssa) — período navegável 7/15/30/personalizado
+    relCliId: '', relPeriodo: '30', relIni: '', relFim: '', rel: null, relLoading: false, relErro: '',
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -1435,29 +1435,15 @@ document.addEventListener('alpine:init', () => {
     get matPostsMelhores() { return this.matRankPosts.slice(0, 3); },
     get matPostsPiores() { const p = this.matRankPosts; return p.slice(Math.max(0, p.length - 3)).reverse(); }, // pior primeiro
 
-    // ── RELATÓRIO MENSAL (tela da Laryssa) ────────────────────────────────────
+    // ── RELATÓRIO DE INSTAGRAM (tela da Laryssa) — período navegável ───────────
     // Lista de clientes do social pro seletor do relatório (mesma chave do módulo).
     get relClientes() { return (this.clients || []).filter(c => this.fazSocial(c)).slice().sort((a, b) => (a.empresa || a.nome || '').localeCompare(b.empresa || b.nome || '', 'pt-BR')); },
-    get relMesLabel() {
-      const m = (this.rel && this.rel.mes) || this.relMes; if (!m) return '';
-      const [a, mm] = m.split('-'); const nomes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-      return (nomes[(+mm) - 1] || '') + ' ' + a;
-    },
-    get relMesTitulo() {
-      const m = (this.rel && this.rel.mes) || this.relMes; if (!m) return '';
-      const [a, mm] = m.split('-'); const nomes = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
-      return (nomes[(+mm) - 1] || '') + ' ' + a;
-    },
-    get relProxMesTitulo() {
-      const m = (this.rel && this.rel.mes) || this.relMes; if (!m) return '';
-      let [a, mm] = m.split('-').map(Number); mm++; if (mm > 12) { mm = 1; a++; }
-      const nomes = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
-      return (nomes[mm - 1] || '') + ' ' + a;
-    },
-    get relMesAntLabel() {
-      const m = (this.rel && this.rel.mesAnterior); if (!m) return 'mês anterior';
-      const [a, mm] = m.split('-'); const nomes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-      return (nomes[(+mm) - 1] || '') + '/' + a.slice(2);
+    _dBR(iso) { if (!iso) return ''; const [a, m, d] = String(iso).split('-'); return d + '/' + m + '/' + a.slice(2); },
+    // Título do período: "Últimos 30 dias" ou "01/07/26 a 15/07/26"
+    get relPeriodoTitulo() {
+      const p = this.rel && this.rel.periodo;
+      if (p) return p.custom ? (this._dBR(p.ini) + ' a ' + this._dBR(p.fim)) : ('Últimos ' + p.dias + ' dias');
+      return this.relPeriodo === 'custom' ? 'Período personalizado' : ('Últimos ' + this.relPeriodo + ' dias');
     },
     // formata número grande: 48200 -> "48,2 mil"
     relNum(n) {
@@ -1470,20 +1456,33 @@ document.addEventListener('alpine:init', () => {
     relCmpColor(v) { return v == null ? '' : (v >= 0 ? '#15803d' : '#B91C1C'); },
     // altura da barra do gráfico de evolução (0–100%) pelo alcance do mês
     relBarH(v) { const vals = (this.rel && this.rel.tendencia || []).map(t => t.alcance).filter(x => x != null); const mx = Math.max(1, ...vals); return v == null ? 4 : Math.max(6, Math.round((v / mx) * 100)); },
+    // Trocar período (7/15/30/custom). Presets carregam na hora; custom espera Aplicar.
+    relSetPeriodo(p) {
+      this.relPeriodo = p;
+      if (p !== 'custom') this.carregarRelIG(true);
+    },
     // NOME PRÓPRIO: 'carregarRelatorio' já é a página financeira de Relatórios — não reusar!
     async carregarRelIG(force) {
       if (this.relLoading) return;
       let id = this.relCliId;
       if (!id) { const c = this.relClientes[0]; if (c) { id = this.relCliId = c.id; } }
       if (!id) { this.rel = null; return; }
-      if (!force && this.rel && this.rel.__id === id && this.rel.__mes === (this.relMes || '')) return;
+      // querystring do período
+      let qs;
+      if (this.relPeriodo === 'custom') {
+        if (!this.relIni || !this.relFim) return; // precisa das duas datas
+        qs = '?ini=' + this.relIni + '&fim=' + this.relFim;
+      } else {
+        qs = '?dias=' + (this.relPeriodo || '30');
+      }
+      const chaveP = id + qs;
+      if (!force && this.rel && this.rel.__chave === chaveP) return;
       this.relLoading = true; this.relErro = ''; this.rel = null;
       this.relCronoStart(); // cronômetro de ~15s enquanto a IA escreve
       try {
-        const qs = this.relMes ? ('?mes=' + this.relMes) : '';
         const r = await this.api('GET', '/monitoramento/meta/relatorio/' + id + qs);
         if (r && r.erro === 'sem_conta') { this.relErro = 'sem_conta'; }
-        else { r.__id = id; r.__mes = (this.relMes || ''); this.rel = r; }
+        else { r.__chave = chaveP; this.rel = r; }
       } catch (e) { this.relErro = (e && e.message) || 'Não consegui montar o relatório agora.'; }
       this.relCronoStop();
       this.relLoading = false;

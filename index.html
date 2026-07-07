@@ -2600,14 +2600,29 @@
 
         <!-- ═══════ LARYSSA — RELATÓRIO MENSAL de Instagram (identidade visual SOM / estilo Google) ═══════ -->
         <div x-show="operTab==='laryssa'" x-init="carregarRelIG(); $watch('clients', () => { if (operTab==='laryssa' && !rel && !relLoading) carregarRelIG(); })">
-          <!-- Barra de controle: cliente + mês + gerar -->
-          <div class="card" style="padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <div class="fs-12 fw-600" style="color:#4285F4"><i class="ph ph-chart-line-up ic-ph"></i> Relatório mensal</div>
-            <select class="input" style="max-width:280px;flex:1;min-width:180px" x-model="relCliId" @change="carregarRelIG(true)">
-              <template x-for="c in relClientes" :key="'rc'+c.id"><option :value="c.id" x-text="c.empresa || c.nome || '—'"></option></template>
-            </select>
-            <input type="month" class="input" style="max-width:170px" x-model="relMes" @change="carregarRelIG(true)" title="Mês do relatório (padrão: mês atual)">
-            <button class="btn btn-sm" @click="carregarRelIG(true)" :disabled="relLoading"><i class="ph ph-arrows-clockwise ic-ph"></i> Atualizar</button>
+          <!-- Barra de controle: cliente + período navegável (7/15/30/personalizado) -->
+          <div class="card" style="padding:12px 14px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div class="fs-12 fw-600" style="color:#4285F4"><i class="ph ph-chart-line-up ic-ph"></i> Relatório</div>
+              <select class="input" style="max-width:280px;flex:1;min-width:180px" x-model="relCliId" @change="carregarRelIG(true)">
+                <template x-for="c in relClientes" :key="'rc'+c.id"><option :value="c.id" x-text="c.empresa || c.nome || '—'"></option></template>
+              </select>
+              <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                <template x-for="p in [['7','7 dias'],['15','15 dias'],['30','30 dias']]" :key="'relper'+p[0]">
+                  <button class="btn btn-sm" :style="relPeriodo===p[0]?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="relSetPeriodo(p[0])" x-text="p[1]"></button>
+                </template>
+                <button class="btn btn-sm" :style="relPeriodo==='custom'?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="relSetPeriodo('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Personalizado</button>
+              </div>
+              <button class="btn btn-icon btn-ghost btn-sm" @click="carregarRelIG(true)" :disabled="relLoading" title="Atualizar"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
+            </div>
+            <!-- Intervalo personalizado -->
+            <div x-show="relPeriodo==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:10px">
+              <span class="text-3 fs-12">De</span>
+              <input type="date" class="input fs-12" style="max-width:160px" x-model="relIni">
+              <span class="text-3 fs-12">até</span>
+              <input type="date" class="input fs-12" style="max-width:160px" x-model="relFim">
+              <button class="btn btn-sm btn-primary" @click="carregarRelIG(true)" :disabled="!relIni||!relFim||relLoading"><i class="ph ph-magnifying-glass ic-ph"></i> Aplicar</button>
+            </div>
           </div>
 
           <!-- Spinner com cronômetro de ~15s + explicação do porquê -->
@@ -2637,45 +2652,45 @@
                 <i x-show="!rel.foto" class="ph ph-instagram-logo" style="font-size:26px;color:#4285F4"></i>
               </div>
               <div style="flex:1;min-width:0">
-                <div class="text-3 fs-12"><i class="ph ph-chart-line-up ic-ph" style="color:#4285F4"></i> Relatório mensal · <span x-text="relMesTitulo"></span></div>
+                <div class="text-3 fs-12"><i class="ph ph-chart-line-up ic-ph" style="color:#4285F4"></i> Relatório de Instagram · <span x-text="relPeriodoTitulo"></span></div>
                 <div style="font-size:22px;font-weight:500;letter-spacing:-.3px;line-height:1.15" x-text="rel.cliente"></div>
                 <div class="text-3 fs-12" x-text="'@' + (rel.username||'')"></div>
               </div>
-              <span class="badge fs-11 fw-600" style="background:#E8F0FE;color:#4285F4;align-self:flex-start" x-text="'Período ' + rel.mes"></span>
+              <span class="badge fs-11 fw-600" style="background:#E8F0FE;color:#4285F4;align-self:flex-start" x-text="rel.periodo.custom ? (_dBR(rel.periodo.ini)+' a '+_dBR(rel.periodo.fim)) : (rel.periodo.dias+' dias')"></span>
             </div>
 
-            <!-- ░░ RESUMO DO MÊS ░░ -->
+            <!-- ░░ RESUMO DO PERÍODO ░░ -->
             <div class="flex items-center gap-2"><i class="ph ph-list-numbers ic-ph" style="color:#4285F4"></i><span class="fw-600 fs-15">Os números que importam</span></div>
-            <div class="text-3 fs-12" style="margin:2px 0 10px" x-show="rel.resumo.temBaseComparacao">Comparação sempre com o mês anterior (<span x-text="relMesAntLabel"></span>).</div>
-            <div class="text-3 fs-12" style="margin:2px 0 10px" x-show="!rel.resumo.temBaseComparacao"><i class="ph ph-hourglass-medium"></i> Ainda sem histórico do mês anterior — as comparações aparecem quando o segundo mês fechar.</div>
+            <div class="text-3 fs-12" style="margin:2px 0 10px" x-show="rel.resumo.temBaseComparacao">Comparado com o período anterior de mesmo tamanho.</div>
+            <div class="text-3 fs-12" style="margin:2px 0 10px" x-show="!rel.resumo.temBaseComparacao"><i class="ph ph-hourglass-medium"></i> Sem publicações no período anterior — a comparação aparece quando houver.</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:22px">
               <!-- Contas alcançadas (azul) -->
               <div class="card kpi" style="background:#F4F8FE">
                 <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-users ic-ph"></i></span> Contas alcançadas</div>
-                <div class="kpi-value fs-22" x-text="relNum(rel.resumo.alcance28d)"></div>
-                <div class="fs-11 fw-600" style="margin-top:2px" :style="'color:'+relCmpColor(rel.resumo.vsAnterior.alcance)" x-show="rel.resumo.vsAnterior.alcance!=null"><span x-text="relCmpTxt(rel.resumo.vsAnterior.alcance,'%')"></span> <span class="text-3 fw-400">vs. <span x-text="relMesAntLabel"></span></span></div>
-                <div class="text-3 fs-11" style="margin-top:2px" x-show="rel.resumo.vsAnterior.alcance==null">alcance nos últimos 28 dias</div>
+                <div class="kpi-value fs-22" x-text="relNum(rel.resumo.alcance)"></div>
+                <div class="fs-11 fw-600" style="margin-top:2px" :style="'color:'+relCmpColor(rel.resumo.vsAnterior.alcance)" x-show="rel.resumo.vsAnterior.alcance!=null"><span x-text="relCmpTxt(rel.resumo.vsAnterior.alcance,'%')"></span> <span class="text-3 fw-400">vs. período anterior</span></div>
+                <div class="text-3 fs-11" style="margin-top:2px" x-show="rel.resumo.vsAnterior.alcance==null">alcance das publicações do período</div>
               </div>
               <!-- Taxa engajamento (verde) -->
               <div class="card kpi" style="background:#F3FAF6">
                 <div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-heartbeat ic-ph"></i></span> Taxa de engajamento</div>
                 <div class="kpi-value fs-22" x-text="(rel.resumo.taxaEngajamento!=null? String(rel.resumo.taxaEngajamento).replace('.',',') : '—')+'%'"></div>
-                <div class="fs-11 fw-600" style="margin-top:2px" :style="'color:'+relCmpColor(rel.resumo.vsAnterior.engaj)" x-show="rel.resumo.vsAnterior.engaj!=null"><span x-text="relCmpTxt(rel.resumo.vsAnterior.engaj,'pp')"></span> <span class="text-3 fw-400">vs. <span x-text="relMesAntLabel"></span></span></div>
+                <div class="fs-11 fw-600" style="margin-top:2px" :style="'color:'+relCmpColor(rel.resumo.vsAnterior.engaj)" x-show="rel.resumo.vsAnterior.engaj!=null"><span x-text="relCmpTxt(rel.resumo.vsAnterior.engaj,'pp')"></span> <span class="text-3 fw-400">vs. período anterior</span></div>
                 <div class="text-3 fs-11" style="margin-top:2px" x-show="rel.resumo.vsAnterior.engaj==null">interações sobre o alcance</div>
               </div>
               <!-- Seguidores (amarelo) -->
               <div class="card kpi" style="background:#FEFBEF">
                 <div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-user-plus ic-ph"></i></span> Seguidores</div>
                 <div class="kpi-value fs-22" x-text="relInt(rel.resumo.seguidores)"></div>
-                <div class="fs-11 fw-600" style="margin-top:2px" :class="rel.resumo.saldoSeguidores>=0?'text-green':'text-red'" x-show="rel.resumo.saldoSeguidores!=null"><span x-text="(rel.resumo.saldoSeguidores>=0?'▲ +':'▼ ')+relInt(Math.abs(rel.resumo.saldoSeguidores))"></span> <span class="text-3 fw-400">no mês</span></div>
+                <div class="fs-11 fw-600" style="margin-top:2px" :class="rel.resumo.saldoSeguidores>=0?'text-green':'text-red'" x-show="rel.resumo.saldoSeguidores!=null"><span x-text="(rel.resumo.saldoSeguidores>=0?'▲ +':'▼ ')+relInt(Math.abs(rel.resumo.saldoSeguidores))"></span> <span class="text-3 fw-400">no período</span></div>
                 <div class="text-3 fs-11" style="margin-top:2px" x-show="rel.resumo.saldoSeguidores==null">base atual do perfil</div>
               </div>
               <!-- Posts (vermelho) -->
               <div class="card kpi" style="background:#FEF6F4">
                 <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-images ic-ph"></i></span> Posts publicados</div>
                 <div class="kpi-value fs-22" x-text="rel.resumo.posts"></div>
-                <div class="fs-11 fw-600" style="margin-top:2px" :style="'color:'+relCmpColor(rel.resumo.postsAnterior!=null? rel.resumo.posts-rel.resumo.postsAnterior : null)" x-show="rel.resumo.postsAnterior!=null"><span x-text="relCmpTxt(rel.resumo.posts-rel.resumo.postsAnterior,'posts')"></span> <span class="text-3 fw-400">vs. <span x-text="relMesAntLabel"></span></span></div>
-                <div class="text-3 fs-11" style="margin-top:2px" x-show="rel.resumo.postsAnterior==null">publicações no mês</div>
+                <div class="fs-11 fw-600" style="margin-top:2px" :style="'color:'+relCmpColor(rel.resumo.vsAnterior.posts)" x-show="rel.resumo.vsAnterior.posts!=null"><span x-text="relCmpTxt(rel.resumo.vsAnterior.posts,'posts')"></span> <span class="text-3 fw-400">vs. período anterior</span></div>
+                <div class="text-3 fs-11" style="margin-top:2px" x-show="rel.resumo.vsAnterior.posts==null">publicações no período</div>
               </div>
             </div>
 
@@ -2686,9 +2701,9 @@
               <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;align-items:end;height:130px">
                 <template x-for="(t,i) in rel.tendencia" :key="'ev'+t.mes">
                   <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
-                    <div class="fs-10 fw-600" style="margin-bottom:4px" :style="t.mes===rel.mes?'color:#4285F4':'color:#9ca3af'" x-text="t.alcance!=null? relNum(t.alcance) : ''"></div>
-                    <div style="width:70%;border-radius:6px 6px 0 0;transition:height .3s" :style="'height:'+relBarH(t.alcance)+'%;background:'+(t.mes===rel.mes?'#4285F4':'#E8F0FE')"></div>
-                    <div class="fs-10" style="margin-top:6px;text-transform:uppercase" :style="t.mes===rel.mes?'color:#202124;font-weight:600':'color:#9ca3af'" x-text="t.mes.slice(5)"></div>
+                    <div class="fs-10 fw-600" style="margin-bottom:4px" :style="t.mes===rel.periodo.fim.slice(0,7)?'color:#4285F4':'color:#9ca3af'" x-text="t.alcance!=null? relNum(t.alcance) : ''"></div>
+                    <div style="width:70%;border-radius:6px 6px 0 0;transition:height .3s" :style="'height:'+relBarH(t.alcance)+'%;background:'+(t.mes===rel.periodo.fim.slice(0,7)?'#4285F4':'#E8F0FE')"></div>
+                    <div class="fs-10" style="margin-top:6px;text-transform:uppercase" :style="t.mes===rel.periodo.fim.slice(0,7)?'color:#202124;font-weight:600':'color:#9ca3af'" x-text="t.mes.slice(5)"></div>
                   </div>
                 </template>
               </div>
@@ -2744,7 +2759,7 @@
 
             <!-- ░░ SEGUIDORES ░░ -->
             <div class="flex items-center gap-2"><i class="ph ph-users-three ic-ph" style="color:#4285F4"></i><span class="fw-600 fs-15">Crescimento da base</span></div>
-            <div class="text-3 fs-12" style="margin:2px 0 10px">Quantos seguidores o perfil tem hoje e quanto variou no mês.</div>
+            <div class="text-3 fs-12" style="margin:2px 0 10px">Quantos seguidores o perfil tem hoje e quanto variou no período.</div>
             <div class="card" style="padding:18px 16px;margin-bottom:22px">
               <div class="flex items-center" style="gap:20px;justify-content:center;text-align:center;flex-wrap:wrap">
                 <div>
@@ -2794,7 +2809,8 @@
                   </div>
                 </a>
               </template>
-              <div class="text-3 fs-11" style="text-align:center" x-show="!rel.melhores.length">Nenhuma publicação com métrica neste mês ainda.</div>
+              <div class="text-3 fs-11" style="text-align:center" x-show="!rel.melhores.length">Nenhuma publicação com métrica neste período ainda.</div>
+              <div class="text-3 fs-11" style="text-align:center;margin-top:6px" x-show="rel.melhores.length && rel.poucosPosts"><i class="ph ph-info"></i> Poucas publicações no período — melhores e piores podem se aproximar. Amplie para 30 dias pra separar melhor.</div>
             </div>
 
             <!-- ░░ LEITURA ESTRATÉGICA ░░ -->
@@ -2808,7 +2824,7 @@
             <!-- ░░ PRÓXIMOS PASSOS ░░ -->
             <template x-if="rel.proximos && rel.proximos.length">
               <div style="margin-bottom:22px">
-                <div class="flex items-center gap-2"><i class="ph ph-flag ic-ph" style="color:#4285F4"></i><span class="fw-600 fs-15">Próximos passos</span> <span class="badge fs-11 fw-600" style="background:#E8F0FE;color:#4285F4" x-text="relProxMesTitulo"></span></div>
+                <div class="flex items-center gap-2"><i class="ph ph-flag ic-ph" style="color:#4285F4"></i><span class="fw-600 fs-15">Próximos passos</span> <span class="badge fs-11 fw-600" style="background:#E8F0FE;color:#4285F4">Próximo período</span></div>
                 <div style="display:grid;gap:10px;margin-top:8px">
                   <template x-for="(pp,i) in rel.proximos" :key="'pp'+i">
                     <div class="card" style="padding:14px;display:flex;gap:12px;align-items:flex-start">
@@ -5285,7 +5301,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=323"></script>
+<script src="js/app.js?v=324"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
