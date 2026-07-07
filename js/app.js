@@ -1406,6 +1406,8 @@ document.addEventListener('alpine:init', () => {
     // Clientes com posts ainda por publicar hoje (o que falta).
     get matPendentesDia() { return this.operPostsDia.filter(g => g.feitos < g.posts.length); },
     get matRotina() { return { feitos: this.operChkFeitos('matheus'), total: SOCIAL_ROTINA_N }; },
+    // Tem algo pendente hoje? (posts por publicar, rotina incompleta ou posts atrasados) — pulsa o card.
+    get matTemPendencia() { return this.matPendentesDia.length > 0 || this.matRotina.feitos < this.matRotina.total || this.operResumoTrelo.atrasados > 0; },
     get matReunioesDia() { const d = this.operChkData || this._hojeStr(); return (this.operEventosMatheus || []).filter(e => e.data === d); },
     // Ranking dos melhores posts dos clientes (backend, cache 3h). Carrega sob demanda.
     async carregarMelhores(force) {
