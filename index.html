@@ -2223,28 +2223,51 @@
         <div x-show="operTab==='matheus'">
           <!-- Sub-menu do Matheus: Painel do dia (dashboard) × Operação -->
           <div class="flex items-center gap-2" style="margin-bottom:14px;flex-wrap:wrap">
-            <button class="btn btn-sm" :class="matSub==='painel'?'btn-primary':'btn-ghost'" @click="matSub='painel'"><i class="ph ph-gauge ic-ph"></i> Painel do dia</button>
+            <button class="btn btn-sm" :class="matSub==='painel'?'btn-primary':'btn-ghost'" @click="matSub='painel'"><i class="ph ph-gauge ic-ph"></i> Painel</button>
             <button class="btn btn-sm" :class="matSub==='operacao'?'btn-primary':'btn-ghost'" @click="matSub='operacao'"><i class="ph ph-list-checks ic-ph"></i> Operação</button>
           </div>
 
           <!-- ═══════ PAINEL DO DIA (dashboard do Matheus) ═══════ -->
           <div x-show="matSub==='painel'">
-            <!-- cabeçalho: dia + progresso geral -->
-            <div class="card" style="padding:16px;margin-bottom:14px">
-              <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:12px">
-                <div>
-                  <div class="fw-600 fs-15"><i class="ph ph-gauge ic-ph" style="color:#4285F4"></i> Painel do dia — Matheus</div>
-                  <div class="text-3 fs-12" style="text-transform:capitalize" x-text="operChkLabel"></div>
+            <!-- cabeçalho: dia + progresso (esquerda) · agenda compacta (direita) -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:stretch">
+              <div class="card" style="padding:16px;display:flex;flex-direction:column">
+                <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
+                  <div>
+                    <div class="fw-600 fs-15"><i class="ph ph-gauge ic-ph" style="color:#4285F4"></i> Painel — Matheus</div>
+                    <div class="text-3 fs-12" style="text-transform:capitalize" x-text="operChkLabel"></div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                    <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()">Hoje</button>
+                    <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
-                  <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()">Hoje</button>
-                  <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
+                <div style="margin-top:auto;padding-top:16px">
+                  <div class="flex items-center justify-between" style="margin-bottom:6px"><span class="fs-13 fw-700">Progresso do dia</span><span class="fw-800 fs-18" :style="'color:'+corScore(matProgressoDia)" x-text="matProgressoDia+'%'"></span></div>
+                  <div class="progress" style="height:10px"><div :style="'width:'+matProgressoDia+'%;background:'+corScore(matProgressoDia)"></div></div>
                 </div>
               </div>
-              <div style="margin-top:14px">
-                <div class="flex items-center justify-between" style="margin-bottom:6px"><span class="fs-13 fw-700">Progresso do dia</span><span class="fw-800 fs-18" :style="'color:'+corScore(matProgressoDia)" x-text="matProgressoDia+'%'"></span></div>
-                <div class="progress" style="height:10px"><div :style="'width:'+matProgressoDia+'%;background:'+corScore(matProgressoDia)"></div></div>
+
+              <!-- Agenda compacta (quase quadrada) -->
+              <div class="card" style="padding:16px;display:flex;flex-direction:column">
+                <div class="flex items-center justify-between mb-2" style="gap:8px">
+                  <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
+                  <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar evento — o Matheus já entra como colaborador"><i class="ph ph-plus ic-ph"></i> Evento</button>
+                </div>
+                <div x-show="!operEventosMatheus.length" class="text-3 fs-13" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 0;text-align:center"><i class="ph ph-calendar-check" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Sem eventos futuros.</div></div>
+                <div x-show="operEventosMatheus.length" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow:auto">
+                  <template x-for="ev in operEventosMatheus.slice(0,4)" :key="'oem'+ev.id">
+                    <div class="flex items-center gap-2" style="padding:7px 9px;border:1px solid var(--border);border-radius:10px;cursor:pointer" @click="editarEvento(ev)" title="Abrir/editar o evento">
+                      <span class="badge fs-11 fw-700" style="background:#FEF7E0;color:#B06000;flex-shrink:0;white-space:nowrap"><span x-text="ev.data.slice(8,10)+'/'+ev.data.slice(5,7)"></span><span x-show="ev.hora" x-text="' · '+ev.hora"></span></span>
+                      <div style="flex:1;min-width:0">
+                        <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.titulo"></div>
+                        <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.cliente"></div>
+                      </div>
+                    </div>
+                  </template>
+                  <button x-show="operEventosMatheus.length>4" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-4)+' na agenda completa'"></button>
+                </div>
               </div>
             </div>
 
@@ -2318,25 +2341,6 @@
 
           <!-- ═══════ OPERAÇÃO (conteúdo do dia a dia) ═══════ -->
           <div x-show="matSub==='operacao'">
-          <!-- Agenda do Matheus (eventos da Agenda em que ele é colaborador) — em cima da data -->
-          <div class="card" style="padding:16px;margin-bottom:14px">
-            <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
-              <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
-              <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar um novo evento — o Matheus já entra como colaborador"><i class="ph ph-plus ic-ph"></i> Evento</button>
-            </div>
-            <div x-show="!operEventosMatheus.length" class="text-3 fs-13" style="padding:22px 0;text-align:center"><i class="ph ph-calendar-check" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Nenhum evento futuro com o Matheus na Agenda.</div></div>
-            <template x-for="ev in operEventosMatheus" :key="'oem'+ev.id">
-              <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;cursor:pointer" @click="editarEvento(ev)" title="Abrir/editar o evento">
-                <span class="badge fs-11 fw-700" style="background:#FEF7E0;color:#B06000;flex-shrink:0;white-space:nowrap"><span x-text="ev.data.slice(8,10)+'/'+ev.data.slice(5,7)"></span><span x-show="ev.hora" x-text="' · '+ev.hora"></span></span>
-                <span class="badge fs-11 fw-700" :style="'background:'+agTipoCor(ev.tipo)+'22;color:'+agTipoCor(ev.tipo)+';flex-shrink:0'"><span x-text="agTipoIcon(ev.tipo)"></span> <span x-text="ev.tipo"></span></span>
-                <div style="flex:1;min-width:0">
-                  <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.titulo"></div>
-                  <div class="text-3 fs-11" x-text="ev.cliente"></div>
-                </div>
-              </div>
-            </template>
-          </div>
-
           <!-- Cliente em foco + navegador de dia — ESTE seletor de cliente vale pra tudo abaixo -->
           <div class="card" style="padding:14px;margin-bottom:14px">
             <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
@@ -5017,7 +5021,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=309"></script>
+<script src="js/app.js?v=310"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
