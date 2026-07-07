@@ -1312,10 +1312,12 @@ document.addEventListener('alpine:init', () => {
     get operNomeMatheus() { const m = (this.equipe || []).find(x => /matheus/i.test(x.nome || '')); return m ? m.nome : 'Matheus'; },
     get operEventosMatheus() { // próximos eventos (de hoje em diante), todos os clientes
       const h = this._hojeStr(), out = [];
-      for (const c of (this.clients || []))
+      for (const c of (this.clients || [])) {
+        if (!this.fazSocial(c)) continue; // cliente desligado no social → evento não aparece no módulo do Matheus
         for (const e of (c.agenda || []))
           if (e && e.data && String(e.data).slice(0, 10) >= h && (e.membros || []).some(m => /matheus/i.test(m)))
             out.push({ ...e, data: String(e.data).slice(0, 10), clienteId: c.id, cliente: c.empresa || c.nome || '—', fonte: 'agenda' });
+      }
       out.sort((a, b) => (a.data + (a.hora || '')).localeCompare(b.data + (b.hora || '')));
       return out;
     },
@@ -1360,7 +1362,9 @@ document.addEventListener('alpine:init', () => {
     // pro dia — agrupadas por cliente. `interna:true` marca o que veio de demanda avulsa.
     get operPostsDia() {
       const d = this.operChkData || this._hojeStr();
-      const posts = (this.projects || []).filter(p => p.isPost && !p.arquivado && String(p.prazo || '').slice(0, 10) === d);
+      // nomes de clientes DESLIGADOS no social — os posts deles somem do módulo do Matheus
+      const desligados = new Set((this.clients || []).filter(c => (c.status || 'Ativo') !== 'Inativo' && c.socialAtivo === false).map(c => (c.empresa || c.nome || '').trim()));
+      const posts = (this.projects || []).filter(p => p.isPost && !p.arquivado && String(p.prazo || '').slice(0, 10) === d && !desligados.has((p.cliente || '').trim()));
       const map = {};
       for (const p of posts) { const k = p.cliente || '— Interno'; (map[k] = map[k] || []).push(p); }
       return Object.keys(map).sort((a, b) => a.localeCompare(b, 'pt-BR')).map(cli => ({
@@ -1484,7 +1488,26 @@ document.addEventListener('alpine:init', () => {
     // Rotina do cliente concluída no dia = todos os itens da rotina resolvidos.
     operChkConcluido(clienteId) { if (!clienteId) return false; const c = this.operChecklists.find(x => x.clienteId === clienteId && x.data === (this.operChkData || this._hojeStr())); return !!c && c.itens.filter(i => i.feito || i.na).length >= SOCIAL_ROTINA_N; },
     // ── Concorrentes no Instagram: menu drop de cliente + top 3 posts (business_discovery) ──
-    get operInspClientes() { return (this.clients || []).filter(c => (c.status || 'Ativo') === 'Ativo').slice().sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '', 'pt-BR')); },
+    // ── CHAVE DO MÓDULO DO MATHEUS (social media) ────────────────────────────
+    // Um cliente é atendido pelo Matheus se está ativo E não foi desligado
+    // (socialAtivo !== false). Desligado some de todo o módulo do Matheus.
+    fazSocial(c) { return !!c && (c.status || 'Ativo') !== 'Inativo' && c.socialAtivo !== false; },
+    socialGerenciarAberto: false,
+    get socialClientesGerenciar() {
+      return (this.clients || [])
+        .filter(c => (c.status || 'Ativo') !== 'Inativo')
+        .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', ativo: c.socialAtivo !== false }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    },
+    async toggleSocial(id) {
+      const c = (this.clients || []).find(x => x.id === id); if (!c) return;
+      const novo = !(c.socialAtivo !== false);
+      c.socialAtivo = novo;
+      const { id: _i, ...dados } = c; dados.socialAtivo = novo;
+      try { await this.api('POST', '/clientes', { id: c.id, empresa: c.empresa, dados }); this.mostrarToast(novo ? 'Cliente ativado no Social Media. ✅' : 'Cliente desativado do Social Media. 🚫'); }
+      catch (e) { c.socialAtivo = !novo; this.mostrarToast('Não salvou — ' + (e.message || e)); }
+    },
+    get operInspClientes() { return (this.clients || []).filter(c => this.fazSocial(c)).slice().sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '', 'pt-BR')); },
     operInspTroca() { // trocou o cliente no menu drop: a IA descobre os concorrentes e busca os posts
       const c = (this.clients || []).find(x => x.id === this.operInspClienteId);
       this.operInspConc = (c && Array.isArray(c.concorrentes)) ? c.concorrentes.slice() : [];

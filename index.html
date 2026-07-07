@@ -2375,8 +2375,24 @@
                 <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()" style="margin-left:2px">Hoje</button>
               </div>
               <div class="flex items-center gap-2">
+                <button class="btn btn-ghost btn-sm" @click="socialGerenciarAberto=!socialGerenciarAberto" title="Habilitar/desabilitar quais clientes o Matheus atende (social media)"><i class="ph ph-sliders-horizontal ic-ph"></i> Clientes do Matheus <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspClientes.length"></span></button>
                 <span class="badge fs-12 fw-700" :style="operResumoTrelo.atrasados?'background:#FCE8E6;color:#C5221F':'background:#E6F4EA;color:#15803d'" :title="operResumoTrelo.atrasados+' post(s) atrasado(s) no quadro'"><i class="ph ph-warning-circle"></i> <span x-text="operResumoTrelo.atrasados"></span> atrasados</span>
                 <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2" :title="operResumoTrelo.semana+' post(s) pendentes até o fim da semana'"><i class="ph ph-calendar-dots"></i> <span x-text="operResumoTrelo.semana"></span> na semana</span>
+              </div>
+            </div>
+            <!-- Painel: liga/desliga cada cliente no módulo do Matheus (a CHAVE do módulo) -->
+            <div x-show="socialGerenciarAberto" style="border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:12px;background:var(--surface-2)">
+              <div class="text-3 fs-12 mb-2">Quem está <b>ligado</b> aparece em todo o painel do Matheus (foco, postagens, KPIs, pendências, rotina, agenda). Quem está <b>desligado</b> some de tudo aqui.</div>
+              <div style="max-height:280px;overflow-y:auto">
+                <template x-for="c in socialClientesGerenciar" :key="'sg'+c.id">
+                  <div class="flex items-center justify-between" style="padding:6px 4px;border-bottom:1px solid var(--border)">
+                    <span class="fs-13" :style="c.ativo?'':'color:var(--text-3);text-decoration:line-through'" x-text="c.nome"></span>
+                    <button class="btn btn-sm" :style="c.ativo?'background:#dcfce7;color:#15803d;border-color:#bbf7d0':'background:var(--surface);color:var(--text-3)'" @click="toggleSocial(c.id)" :title="c.ativo?'Desligar do Matheus':'Ligar no Matheus'">
+                      <i class="ph ic-ph" :class="c.ativo?'ph-toggle-right':'ph-toggle-left'" style="font-size:18px"></i> <span x-text="c.ativo?'Ativo':'Desligado'"></span>
+                    </button>
+                  </div>
+                </template>
+                <div x-show="!socialClientesGerenciar.length" class="text-3 fs-12" style="padding:10px;text-align:center">Nenhum cliente ativo cadastrado.</div>
               </div>
             </div>
           </div>
@@ -5040,7 +5056,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=316"></script>
+<script src="js/app.js?v=317"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
