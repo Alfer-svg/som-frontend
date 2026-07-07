@@ -2609,14 +2609,14 @@
               </select>
               <div class="flex items-center gap-2" style="flex-wrap:wrap">
                 <template x-for="p in [['7','7 dias'],['15','15 dias'],['30','30 dias']]" :key="'relper'+p[0]">
-                  <button class="btn btn-sm" :style="relPeriodo===p[0]?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="relSetPeriodo(p[0])" x-text="p[1]"></button>
+                  <button class="btn btn-sm" :style="relIGPer===p[0]?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="relIGSetPer(p[0])" x-text="p[1]"></button>
                 </template>
-                <button class="btn btn-sm" :style="relPeriodo==='custom'?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="relSetPeriodo('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Personalizado</button>
+                <button class="btn btn-sm" :style="relIGPer==='custom'?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="relIGSetPer('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Personalizado</button>
               </div>
               <button class="btn btn-icon btn-ghost btn-sm" @click="carregarRelIG(true)" :disabled="relLoading" title="Atualizar"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
             </div>
             <!-- Intervalo personalizado -->
-            <div x-show="relPeriodo==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:10px">
+            <div x-show="relIGPer==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:10px">
               <span class="text-3 fs-12">De</span>
               <input type="date" class="input fs-12" style="max-width:160px" x-model="relIni">
               <span class="text-3 fs-12">até</span>
@@ -2634,8 +2634,8 @@
               </svg>
               <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:17px" x-text="relCronoRestante>0 ? relCronoRestante+'s' : '⌛'"></div>
             </div>
-            <div class="fw-600 fs-14" style="margin-top:12px">Montando o relatório do mês…</div>
-            <div class="text-3 fs-12" style="margin-top:6px;max-width:420px;margin-left:auto;margin-right:auto" x-show="relCronoRestante>0">Leva uns <b>15 segundos</b>: eu puxo alcance e engajamento de cada post no Instagram e a <b>IA da Maracatu escreve a leitura estratégica</b> do mês. Depois fica salvo por 6h — abrir de novo é instantâneo.</div>
+            <div class="fw-600 fs-14" style="margin-top:12px">Montando o relatório do período…</div>
+            <div class="text-3 fs-12" style="margin-top:6px;max-width:420px;margin-left:auto;margin-right:auto" x-show="relCronoRestante>0">Leva uns <b>15 segundos</b>: eu puxo alcance e engajamento de cada post no Instagram e a <b>IA da Maracatu escreve a leitura estratégica</b> do período. Depois fica salvo por 6h — abrir de novo é instantâneo.</div>
             <div class="text-3 fs-12" style="margin-top:6px" x-show="relCronoRestante<=0">Quase lá — finalizando a leitura da IA…</div>
           </div>
           <div x-show="!relLoading && relErro==='sem_conta'" class="card fs-13" style="padding:14px 16px;background:#FEF7E0;border:1px solid #FCE8B2;color:#B06000"><i class="ph ph-instagram-logo ic-ph"></i> Esse cliente ainda não tem Instagram conectado no Monitoramento. Conecte a conta dele (Configurações › Integrações ou no card do cliente) para eu ler as métricas.</div>
@@ -5301,7 +5301,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=324"></script>
+<script src="js/app.js?v=325"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

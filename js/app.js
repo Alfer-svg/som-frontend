@@ -515,7 +515,7 @@ document.addEventListener('alpine:init', () => {
     operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '', operInspExp: {}, operInspAberto: true, matSub: 'painel',
     matTop: null, matTopLoading: false, matTopErro: '', matTopAberto: true,
     // Relatório de Instagram (tela da Laryssa) — período navegável 7/15/30/personalizado
-    relCliId: '', relPeriodo: '30', relIni: '', relFim: '', rel: null, relLoading: false, relErro: '',
+    relCliId: '', relIGPer: '30', relIni: '', relFim: '', rel: null, relLoading: false, relErro: '',
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -1443,7 +1443,7 @@ document.addEventListener('alpine:init', () => {
     get relPeriodoTitulo() {
       const p = this.rel && this.rel.periodo;
       if (p) return p.custom ? (this._dBR(p.ini) + ' a ' + this._dBR(p.fim)) : ('Últimos ' + p.dias + ' dias');
-      return this.relPeriodo === 'custom' ? 'Período personalizado' : ('Últimos ' + this.relPeriodo + ' dias');
+      return this.relIGPer === 'custom' ? 'Período personalizado' : ('Últimos ' + this.relIGPer + ' dias');
     },
     // formata número grande: 48200 -> "48,2 mil"
     relNum(n) {
@@ -1457,8 +1457,9 @@ document.addEventListener('alpine:init', () => {
     // altura da barra do gráfico de evolução (0–100%) pelo alcance do mês
     relBarH(v) { const vals = (this.rel && this.rel.tendencia || []).map(t => t.alcance).filter(x => x != null); const mx = Math.max(1, ...vals); return v == null ? 4 : Math.max(6, Math.round((v / mx) * 100)); },
     // Trocar período (7/15/30/custom). Presets carregam na hora; custom espera Aplicar.
-    relSetPeriodo(p) {
-      this.relPeriodo = p;
+    // NOME PRÓPRIO: 'relSetPeriodo'/'relPeriodo' já existem na página financeira de Relatórios!
+    relIGSetPer(p) {
+      this.relIGPer = p;
       if (p !== 'custom') this.carregarRelIG(true);
     },
     // NOME PRÓPRIO: 'carregarRelatorio' já é a página financeira de Relatórios — não reusar!
@@ -1469,11 +1470,11 @@ document.addEventListener('alpine:init', () => {
       if (!id) { this.rel = null; return; }
       // querystring do período
       let qs;
-      if (this.relPeriodo === 'custom') {
+      if (this.relIGPer === 'custom') {
         if (!this.relIni || !this.relFim) return; // precisa das duas datas
         qs = '?ini=' + this.relIni + '&fim=' + this.relFim;
       } else {
-        qs = '?dias=' + (this.relPeriodo || '30');
+        qs = '?dias=' + (this.relIGPer || '30');
       }
       const chaveP = id + qs;
       if (!force && this.rel && this.rel.__chave === chaveP) return;
