@@ -1502,7 +1502,7 @@ document.addEventListener('alpine:init', () => {
     samLoaded: false, samLoading: false,
     samVideos: [], samStories: [], samGmn: [], samRoteiros: [], samCaptacoes: [], samLog: [],
     samVForm: { titulo: '', cliente: '', tipo: 'Edição' },
-    samRForm: { titulo: '', cliente: '', captacao: '', prazo: '' }, samRAberto: false,
+    samRForm: { titulo: '', cliente: '', captacao: '' }, samRAberto: false,
     samCForm: { cliente: '', local: '', data: '', hora: '', tipo: 'Captação' }, samCAberto: false,
     // helpers de data/hora (America/Recife)
     _horaBR() { return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); },
@@ -1606,13 +1606,22 @@ document.addEventListener('alpine:init', () => {
     get samRoteirosOrd() { const st = { escrevendo: 0, nao_iniciado: 1, pronto: 2 }; return this.samRoteiros.slice().sort((a, b) => (st[a.status] - st[b.status]) || String(a.captacao || '').localeCompare(String(b.captacao || ''))); },
     samAddRoteiro() {
       const f = this.samRForm; if (!f.titulo.trim()) { this.mostrarToast('Dê um título ao roteiro.'); return; }
-      this.samRoteiros.unshift({ id: MD.uid(), titulo: f.titulo.trim(), cliente: f.cliente || '', captacao: f.captacao || '', prazo: f.prazo || '', status: 'nao_iniciado', docUrl: '', por: (this.usuario && this.usuario.nome) || '' });
-      this.samRForm = { titulo: '', cliente: '', captacao: '', prazo: '' }; this.samRAberto = false; this._samSave('roteiros', this.samRoteiros);
+      this.samRoteiros.unshift({ id: MD.uid(), titulo: f.titulo.trim(), cliente: f.cliente || '', captacao: f.captacao || '', status: 'nao_iniciado', docUrl: '', por: (this.usuario && this.usuario.nome) || '' });
+      this.samRForm = { titulo: '', cliente: '', captacao: '' }; this.samRAberto = false; this._samSave('roteiros', this.samRoteiros);
     },
     samRoteiroStatus(r, s) { r.status = s; this._samSave('roteiros', this.samRoteiros); },
-    samRoteiroDoc(r) {
-      if (r.docUrl) { window.open(r.docUrl, '_blank'); return; }
-      const u = prompt('Cole o link do Google Docs deste roteiro:'); if (u && /^https?:\/\//.test(u.trim())) { r.docUrl = u.trim(); this._samSave('roteiros', this.samRoteiros); window.open(r.docUrl, '_blank'); }
+    // Abre o doc já vinculado
+    samRoteiroDoc(r) { if (r.docUrl) window.open(r.docUrl, '_blank'); },
+    // Cria um Google Docs NOVO (docs.new) e já move o roteiro pra "escrevendo"
+    samRoteiroCriarDoc(r) {
+      window.open('https://docs.new', '_blank');
+      if (r.status === 'nao_iniciado') { r.status = 'escrevendo'; this._samSave('roteiros', this.samRoteiros); }
+      this.mostrarToast('Abri um Google Docs novo. Depois é só clicar no 🔗 pra colar o link e salvar no roteiro.');
+    },
+    // Vincula um link de doc já existente
+    samRoteiroVincular(r) {
+      const u = prompt('Cole o link do Google Docs deste roteiro:');
+      if (u && /^https?:\/\//.test(u.trim())) { r.docUrl = u.trim(); this._samSave('roteiros', this.samRoteiros); }
     },
     samRemRoteiro(r) { if (!confirm('Remover este roteiro?')) return; this.samRoteiros = this.samRoteiros.filter(x => x.id !== r.id); this._samSave('roteiros', this.samRoteiros); },
     get samRoteirosProntos() { return this.samRoteiros.filter(r => r.status === 'pronto').length; },

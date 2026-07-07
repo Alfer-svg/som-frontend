@@ -2985,7 +2985,6 @@
                     <div class="flex items-center gap-2" style="flex-wrap:wrap">
                       <select class="input fs-13" style="flex:1;min-width:120px" x-model="samRForm.cliente"><option value="">Cliente…</option><template x-for="c in samClientes" :key="'src'+c.id"><option :value="c.empresa||c.nome" x-text="c.empresa||c.nome"></option></template></select>
                       <label class="text-3 fs-11">captação <input type="date" class="input fs-12" style="max-width:150px" x-model="samRForm.captacao"></label>
-                      <label class="text-3 fs-11">prazo <input type="date" class="input fs-12" style="max-width:150px" x-model="samRForm.prazo"></label>
                     </div>
                     <div><button class="btn btn-sm btn-primary" @click="samAddRoteiro()">Adicionar roteiro</button></div>
                   </div>
@@ -2995,7 +2994,7 @@
                       <div class="flex items-center justify-between" style="gap:8px">
                         <div style="min-width:0">
                           <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span x-text="r.titulo"></span><span class="text-3 fw-400" x-show="r.cliente" x-text="' · '+r.cliente"></span></div>
-                          <div class="text-3 fs-11"><span x-show="r.captacao" x-text="'p/ captação '+_dBR(r.captacao)"></span><span x-show="r.prazo" x-text="' · prazo '+_dBR(r.prazo)"></span></div>
+                          <div class="text-3 fs-11" x-show="r.captacao"><i class="ph ph-camera"></i> <span x-text="'captação '+_dBR(r.captacao)"></span></div>
                         </div>
                         <button class="btn btn-icon btn-ghost btn-sm" @click="samRemRoteiro(r)" title="Remover" style="color:var(--text-3);flex:none"><i class="ph ph-x ic-ph"></i></button>
                       </div>
@@ -3005,7 +3004,17 @@
                             <button class="badge fs-10 fw-600" style="cursor:pointer" :style="r.status===s[0]?('background:'+s[3]+';color:'+s[2]+';outline:1.5px solid '+s[2]):'background:transparent;color:#9ca3af;outline:1px solid var(--border)'" @click="samRoteiroStatus(r,s[0])" x-text="s[1]"></button>
                           </template>
                         </div>
-                        <button class="btn btn-sm btn-ghost" style="color:#4285F4" @click="samRoteiroDoc(r)"><i class="ph ph-file-text ic-ph"></i> <span x-text="r.docUrl?'Abrir no Docs':'Vincular Docs'"></span></button>
+                        <div class="flex items-center gap-2" style="flex:none">
+                          <template x-if="r.docUrl">
+                            <button class="btn btn-sm btn-ghost" style="color:#4285F4" @click="samRoteiroDoc(r)"><i class="ph ph-file-text ic-ph"></i> Abrir no Docs</button>
+                          </template>
+                          <template x-if="!r.docUrl">
+                            <div class="flex items-center gap-2">
+                              <button class="btn btn-sm btn-primary" @click="samRoteiroCriarDoc(r)"><i class="ph ph-file-plus ic-ph"></i> Criar no Docs</button>
+                              <button class="btn btn-icon btn-ghost btn-sm" @click="samRoteiroVincular(r)" title="Já tenho o doc — colar o link" style="color:#4285F4"><i class="ph ph-link ic-ph"></i></button>
+                            </div>
+                          </template>
+                        </div>
                       </div>
                     </div>
                   </template>
@@ -5509,7 +5518,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=332"></script>
+<script src="js/app.js?v=333"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
