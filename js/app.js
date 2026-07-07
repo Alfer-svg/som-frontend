@@ -514,6 +514,8 @@ document.addEventListener('alpine:init', () => {
     operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '', operInspIA: false, operInspSemMeta: false,
     operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '', operInspExp: {}, operInspAberto: true, matSub: 'painel',
     matTop: null, matTopLoading: false, matTopErro: '', matTopAberto: true,
+    // Relatório mensal de Instagram (tela da Laryssa) — igual ao PDF Maracatu Digital
+    relCliId: '', relMes: '', rel: null, relLoading: false, relErro: '',
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -1432,6 +1434,57 @@ document.addEventListener('alpine:init', () => {
     get matRankPosts() { return (this.matTop && Array.isArray(this.matTop.posts)) ? this.matTop.posts : []; },
     get matPostsMelhores() { return this.matRankPosts.slice(0, 3); },
     get matPostsPiores() { const p = this.matRankPosts; return p.slice(Math.max(0, p.length - 3)).reverse(); }, // pior primeiro
+
+    // ── RELATÓRIO MENSAL (tela da Laryssa) ────────────────────────────────────
+    // Lista de clientes do social pro seletor do relatório (mesma chave do módulo).
+    get relClientes() { return (this.clients || []).filter(c => this.fazSocial(c)).slice().sort((a, b) => (a.empresa || a.nome || '').localeCompare(b.empresa || b.nome || '', 'pt-BR')); },
+    get relMesLabel() {
+      const m = (this.rel && this.rel.mes) || this.relMes; if (!m) return '';
+      const [a, mm] = m.split('-'); const nomes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+      return (nomes[(+mm) - 1] || '') + ' ' + a;
+    },
+    get relMesTitulo() {
+      const m = (this.rel && this.rel.mes) || this.relMes; if (!m) return '';
+      const [a, mm] = m.split('-'); const nomes = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+      return (nomes[(+mm) - 1] || '') + ' ' + a;
+    },
+    get relProxMesTitulo() {
+      const m = (this.rel && this.rel.mes) || this.relMes; if (!m) return '';
+      let [a, mm] = m.split('-').map(Number); mm++; if (mm > 12) { mm = 1; a++; }
+      const nomes = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+      return (nomes[mm - 1] || '') + ' ' + a;
+    },
+    get relMesAntLabel() {
+      const m = (this.rel && this.rel.mesAnterior); if (!m) return 'mês anterior';
+      const [a, mm] = m.split('-'); const nomes = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+      return (nomes[(+mm) - 1] || '') + '/' + a.slice(2);
+    },
+    // formata número grande: 48200 -> "48,2 mil"
+    relNum(n) {
+      if (n == null) return '—'; n = +n;
+      if (n >= 1000) { const k = n / 1000; return (k >= 100 ? Math.round(k) : (Math.round(k * 10) / 10)).toLocaleString('pt-BR') + ' mil'; }
+      return n.toLocaleString('pt-BR');
+    },
+    relInt(n) { return (n == null) ? '—' : (+n).toLocaleString('pt-BR'); },
+    relCmpTxt(v, unit) { if (v == null) return ''; const a = Math.abs(v); const s = String(a).replace('.', ','); return (v >= 0 ? '▲ ' : '▼ ') + (unit === 'pp' ? s + ' pp' : (unit === '%' ? s + '%' : (Math.round(a)).toLocaleString('pt-BR') + ' ' + unit)); },
+    relCmpColor(v) { return v == null ? '' : (v >= 0 ? '#15803d' : '#B91C1C'); },
+    // altura da barra do gráfico de evolução (0–100%) pelo alcance do mês
+    relBarH(v) { const vals = (this.rel && this.rel.tendencia || []).map(t => t.alcance).filter(x => x != null); const mx = Math.max(1, ...vals); return v == null ? 4 : Math.max(6, Math.round((v / mx) * 100)); },
+    async carregarRelatorio(force) {
+      if (this.relLoading) return;
+      let id = this.relCliId;
+      if (!id) { const c = this.relClientes[0]; if (c) { id = this.relCliId = c.id; } }
+      if (!id) { this.rel = null; return; }
+      if (!force && this.rel && this.rel.__id === id && this.rel.__mes === (this.relMes || '')) return;
+      this.relLoading = true; this.relErro = ''; this.rel = null;
+      try {
+        const qs = this.relMes ? ('?mes=' + this.relMes) : '';
+        const r = await this.api('GET', '/monitoramento/meta/relatorio/' + id + qs);
+        if (r && r.erro === 'sem_conta') { this.relErro = 'sem_conta'; }
+        else { r.__id = id; r.__mes = (this.relMes || ''); this.rel = r; }
+      } catch (e) { this.relErro = (e && e.message) || 'Não consegui montar o relatório agora.'; }
+      this.relLoading = false;
+    },
     // % geral do dia: média de publicações + rotina (indicador único de progresso).
     get matProgressoDia() {
       const pub = this.operPostsTotal ? this.operPostsFeitos / this.operPostsTotal : 1;
