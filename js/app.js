@@ -1470,21 +1470,32 @@ document.addEventListener('alpine:init', () => {
     relCmpColor(v) { return v == null ? '' : (v >= 0 ? '#15803d' : '#B91C1C'); },
     // altura da barra do gráfico de evolução (0–100%) pelo alcance do mês
     relBarH(v) { const vals = (this.rel && this.rel.tendencia || []).map(t => t.alcance).filter(x => x != null); const mx = Math.max(1, ...vals); return v == null ? 4 : Math.max(6, Math.round((v / mx) * 100)); },
-    async carregarRelatorio(force) {
+    // NOME PRÓPRIO: 'carregarRelatorio' já é a página financeira de Relatórios — não reusar!
+    async carregarRelIG(force) {
       if (this.relLoading) return;
       let id = this.relCliId;
       if (!id) { const c = this.relClientes[0]; if (c) { id = this.relCliId = c.id; } }
       if (!id) { this.rel = null; return; }
       if (!force && this.rel && this.rel.__id === id && this.rel.__mes === (this.relMes || '')) return;
       this.relLoading = true; this.relErro = ''; this.rel = null;
+      this.relCronoStart(); // cronômetro de ~15s enquanto a IA escreve
       try {
         const qs = this.relMes ? ('?mes=' + this.relMes) : '';
         const r = await this.api('GET', '/monitoramento/meta/relatorio/' + id + qs);
         if (r && r.erro === 'sem_conta') { this.relErro = 'sem_conta'; }
         else { r.__id = id; r.__mes = (this.relMes || ''); this.rel = r; }
       } catch (e) { this.relErro = (e && e.message) || 'Não consegui montar o relatório agora.'; }
+      this.relCronoStop();
       this.relLoading = false;
     },
+    // Cronômetro do carregamento: conta ~15s (tempo típico da IA + Graph) e depois fica "quase lá…"
+    relCrono: 0, _relCronoT: null,
+    relCronoStart() {
+      this.relCrono = 0; clearInterval(this._relCronoT);
+      this._relCronoT = setInterval(() => { this.relCrono++; if (this.relCrono >= 60) clearInterval(this._relCronoT); }, 1000);
+    },
+    relCronoStop() { clearInterval(this._relCronoT); this._relCronoT = null; },
+    get relCronoRestante() { return Math.max(0, 15 - this.relCrono); },
     // % geral do dia: média de publicações + rotina (indicador único de progresso).
     get matProgressoDia() {
       const pub = this.operPostsTotal ? this.operPostsFeitos / this.operPostsTotal : 1;

@@ -2227,7 +2227,7 @@
         <div class="text-3" style="font-size:13px;margin-top:4px;margin-bottom:14px">Acompanhamento operacional por colaborador.</div>
         <div class="tabs">
           <template x-for="m in [['matheus','Matheus'],['laryssa','Laryssa'],['samara','Samara']]" :key="'ot'+m[0]">
-            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelatorio()"><span x-text="m[1]"></span></div>
+            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelIG()"><span x-text="m[1]"></span></div>
           </template>
         </div>
 
@@ -2599,20 +2599,32 @@
         </div>
 
         <!-- ═══════ LARYSSA — RELATÓRIO MENSAL de Instagram (igual ao PDF Maracatu Digital) ═══════ -->
-        <div x-show="operTab==='laryssa'" x-init="carregarRelatorio(); $watch('clients', () => { if (operTab==='laryssa' && !rel && !relLoading) carregarRelatorio(); })" style="--rel-orange:#F15A29">
+        <div x-show="operTab==='laryssa'" x-init="carregarRelIG(); $watch('clients', () => { if (operTab==='laryssa' && !rel && !relLoading) carregarRelIG(); })" style="--rel-orange:#F15A29">
           <!-- Barra de controle: cliente + mês + gerar -->
           <div class="card" style="padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <div class="fs-12 fw-700" style="letter-spacing:.08em;color:var(--rel-orange)">RELATÓRIO MENSAL</div>
-            <select class="input" style="max-width:280px;flex:1;min-width:180px" x-model="relCliId" @change="carregarRelatorio(true)">
+            <select class="input" style="max-width:280px;flex:1;min-width:180px" x-model="relCliId" @change="carregarRelIG(true)">
               <template x-for="c in relClientes" :key="'rc'+c.id"><option :value="c.id" x-text="c.empresa || c.nome || '—'"></option></template>
             </select>
-            <input type="month" class="input" style="max-width:170px" x-model="relMes" @change="carregarRelatorio(true)" title="Mês do relatório (padrão: mês atual)">
-            <button class="btn btn-sm" @click="carregarRelatorio(true)" :disabled="relLoading"><i class="ph ph-arrows-clockwise ic-ph"></i> Atualizar</button>
+            <input type="month" class="input" style="max-width:170px" x-model="relMes" @change="carregarRelIG(true)" title="Mês do relatório (padrão: mês atual)">
+            <button class="btn btn-sm" @click="carregarRelIG(true)" :disabled="relLoading"><i class="ph ph-arrows-clockwise ic-ph"></i> Atualizar</button>
           </div>
 
-          <div x-show="relLoading" class="card text-3 fs-13" style="padding:40px 0;text-align:center"><i class="ph ph-chart-line-up" style="font-size:26px;opacity:.5"></i><div style="margin-top:8px">Montando o relatório do mês…</div></div>
+          <!-- Spinner com cronômetro de ~15s + explicação do porquê -->
+          <div x-show="relLoading" class="card" style="padding:34px 20px;text-align:center">
+            <div style="position:relative;width:64px;height:64px;margin:0 auto">
+              <svg viewBox="0 0 36 36" style="width:64px;height:64px;transform:rotate(-90deg)">
+                <circle cx="18" cy="18" r="16" fill="none" stroke="#eee" stroke-width="3"></circle>
+                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--rel-orange)" stroke-width="3" stroke-linecap="round" :stroke-dasharray="100" :stroke-dashoffset="Math.max(0, 100 - Math.min(100, (relCrono/15)*100))" style="transition:stroke-dashoffset 1s linear"></circle>
+              </svg>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px" x-text="relCronoRestante>0 ? relCronoRestante+'s' : '⌛'"></div>
+            </div>
+            <div class="fw-700 fs-14" style="margin-top:12px">Montando o relatório do mês…</div>
+            <div class="text-3 fs-12" style="margin-top:6px;max-width:420px;margin-left:auto;margin-right:auto" x-show="relCronoRestante>0">Leva uns <b>15 segundos</b>: eu puxo alcance e engajamento de cada post no Instagram e a <b>IA da Maracatu escreve a leitura estratégica</b> do mês. Depois fica salvo por 6h — abrir de novo é instantâneo.</div>
+            <div class="text-3 fs-12" style="margin-top:6px" x-show="relCronoRestante<=0">Quase lá — finalizando a leitura da IA…</div>
+          </div>
           <div x-show="!relLoading && relErro==='sem_conta'" class="card fs-13" style="padding:16px;background:#FEF7E0;color:#B06000">Esse cliente ainda não tem Instagram conectado no Monitoramento. Conecte a conta dele (Configurações › Integrações ou no card do cliente) para eu ler as métricas.</div>
-          <div x-show="!relLoading && relErro && relErro!=='sem_conta'" class="card fs-13" style="padding:16px;background:#FEF2F2;color:#B91C1C"><span x-text="relErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="carregarRelatorio(true)">Tentar de novo</button></div>
+          <div x-show="!relLoading && relErro && relErro!=='sem_conta'" class="card fs-13" style="padding:16px;background:#FEF2F2;color:#B91C1C"><span x-text="relErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="carregarRelIG(true)">Tentar de novo</button></div>
           <div x-show="!relLoading && !relClientes.length" class="card text-3 fs-13" style="padding:24px;text-align:center">Nenhum cliente ativo no Social Media. Ative os clientes na aba do Matheus.</div>
 
           <template x-if="!relLoading && rel && !relErro">
@@ -5274,7 +5286,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=321"></script>
+<script src="js/app.js?v=322"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
