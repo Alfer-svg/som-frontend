@@ -2598,14 +2598,71 @@
           </div>
         </div>
 
-        <!-- Laryssa / Samara — estrutura por enquanto -->
-        <template x-for="m in [['laryssa','Laryssa'],['samara','Samara']]" :key="'oc'+m[0]">
-          <div x-show="operTab===m[0]" class="card" style="padding:40px 20px;text-align:center">
-            <span style="width:52px;height:52px;border-radius:14px;background:#E8F0FE;color:#4285F4;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin-bottom:10px" x-text="m[1].charAt(0)"></span>
-            <div class="fw-600 fs-15" x-text="m[1]"></div>
-            <div class="text-3 fs-13" style="margin-top:4px">Painel operacional de <span x-text="m[1]"></span> — conteúdo a definir.</div>
+        <!-- ═══════ LARYSSA — Ranking de publicações (3 melhores × 3 piores) ═══════ -->
+        <div x-show="operTab==='laryssa'" x-init="carregarMelhores()">
+          <div class="card" style="padding:16px">
+            <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
+              <div>
+                <div class="fw-600 fs-15"><i class="ph ph-ranking ic-ph" style="color:#7c3aed"></i> Ranking de publicações</div>
+                <div class="text-3 fs-12" style="margin-top:2px" x-text="(matTop && matTop.criterio) || 'As 3 melhores e as 3 piores por interações (curtidas + comentários).'"></div>
+              </div>
+              <button class="btn btn-icon btn-ghost btn-sm" @click="carregarMelhores(true)" :disabled="matTopLoading" title="Atualizar ranking"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
+            </div>
+            <div x-show="matTopLoading" class="text-3 fs-13" style="padding:22px 0;text-align:center"><i class="ph ph-ranking" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Avaliando as publicações dos clientes…</div></div>
+            <div x-show="!matTopLoading && matTopErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="matTopErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="carregarMelhores(true)">Tentar de novo</button></div>
+            <div x-show="!matTopLoading && !matTopErro && matTop && matTop.aviso==='sem_conta_meta'" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF7E0;color:#B06000">Falta conectar o Instagram da Maracatu (Configurações › Integrações) — é ele que abre a porta pra eu ler as métricas das publicações dos clientes.</div>
+            <div x-show="!matTopLoading && !matTopErro && matTop && !matTop.aviso && !matRankPosts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Nenhuma publicação com métrica ainda — confira se os clientes têm @ do Instagram no cadastro.</div>
+
+            <div x-show="!matTopLoading && matRankPosts.length" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:6px">
+              <!-- 3 MELHORES -->
+              <div>
+                <div class="fw-700 fs-13 mb-2" style="color:#15803d"><i class="ph ph-trophy ic-ph"></i> 3 melhores</div>
+                <template x-for="(p,i) in matPostsMelhores" :key="'lm'+p.link">
+                  <a :href="p.link" target="_blank" rel="noopener" class="flex items-center" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:8px;gap:10px;margin-bottom:8px" :title="'Abrir o post de '+p.cliente+' no Instagram'">
+                    <span class="fw-800 fs-16" style="width:26px;text-align:center;flex:none" :style="i===0?'color:#F59E0B':(i===1?'color:#9CA3AF':'color:#B45309')" x-text="'#'+(i+1)"></span>
+                    <div style="width:48px;height:48px;border-radius:8px;background:var(--surface-2);overflow:hidden;flex:none" x-show="p.img"><img :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null"></div>
+                    <div style="flex:1;min-width:0">
+                      <div class="fs-13 fw-700" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.cliente"></div>
+                      <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.texto || '(sem legenda)'"></div>
+                      <div class="flex items-center gap-2" style="margin-top:3px">
+                        <span class="badge fs-11 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
+                        <span class="badge fs-11 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
+                        <span class="badge fs-11 fw-700" x-show="p.engaj!=null" style="background:#EDE9FE;color:#6D28D9" x-text="p.engaj+'%'"></span>
+                      </div>
+                    </div>
+                  </a>
+                </template>
+              </div>
+              <!-- 3 PIORES -->
+              <div>
+                <div class="fw-700 fs-13 mb-2" style="color:#B91C1C"><i class="ph ph-trend-down ic-ph"></i> 3 piores</div>
+                <template x-for="(p,i) in matPostsPiores" :key="'lp'+p.link">
+                  <a :href="p.link" target="_blank" rel="noopener" class="flex items-center" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:8px;gap:10px;margin-bottom:8px" :title="'Abrir o post de '+p.cliente+' no Instagram'">
+                    <span class="fw-800 fs-16" style="width:26px;text-align:center;flex:none;color:#B91C1C" x-text="'#'+(i+1)"></span>
+                    <div style="width:48px;height:48px;border-radius:8px;background:var(--surface-2);overflow:hidden;flex:none" x-show="p.img"><img :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null"></div>
+                    <div style="flex:1;min-width:0">
+                      <div class="fs-13 fw-700" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.cliente"></div>
+                      <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.texto || '(sem legenda)'"></div>
+                      <div class="flex items-center gap-2" style="margin-top:3px">
+                        <span class="badge fs-11 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
+                        <span class="badge fs-11 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
+                        <span class="badge fs-11 fw-700" x-show="p.engaj!=null" style="background:#EDE9FE;color:#6D28D9" x-text="p.engaj+'%'"></span>
+                      </div>
+                    </div>
+                  </a>
+                </template>
+              </div>
+            </div>
+            <div x-show="!matTopLoading && matRankPosts.length && matRankPosts.length<6" class="text-3 fs-11" style="margin-top:8px;text-align:center">Poucas publicações com métrica ainda — melhores e piores podem se repetir.</div>
           </div>
-        </template>
+        </div>
+
+        <!-- Samara — estrutura por enquanto -->
+        <div x-show="operTab==='samara'" class="card" style="padding:40px 20px;text-align:center">
+          <span style="width:52px;height:52px;border-radius:14px;background:#E8F0FE;color:#4285F4;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin-bottom:10px">S</span>
+          <div class="fw-600 fs-15">Samara</div>
+          <div class="text-3 fs-13" style="margin-top:4px">Painel operacional de Samara — conteúdo a definir.</div>
+        </div>
       </section>
 
       <!-- ========== GESTÃO DE TRÁFEGO (rotina por cliente + contas + indicadores) ========== -->
@@ -5056,7 +5113,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=317"></script>
+<script src="js/app.js?v=318"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

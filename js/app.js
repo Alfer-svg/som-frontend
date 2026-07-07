@@ -1428,6 +1428,10 @@ document.addEventListener('alpine:init', () => {
       catch (e) { this.matTopErro = (e && e.message) || 'Não consegui carregar o ranking agora.'; }
       this.matTopLoading = false;
     },
+    // Ranking p/ a Laryssa: 3 melhores × 3 piores publicações (mesmo endpoint do Matheus).
+    get matRankPosts() { return (this.matTop && Array.isArray(this.matTop.posts)) ? this.matTop.posts : []; },
+    get matPostsMelhores() { return this.matRankPosts.slice(0, 3); },
+    get matPostsPiores() { const p = this.matRankPosts; return p.slice(Math.max(0, p.length - 3)).reverse(); }, // pior primeiro
     // % geral do dia: média de publicações + rotina (indicador único de progresso).
     get matProgressoDia() {
       const pub = this.operPostsTotal ? this.operPostsFeitos / this.operPostsTotal : 1;
