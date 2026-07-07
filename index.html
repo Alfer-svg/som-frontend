@@ -1032,6 +1032,7 @@
                       <b x-text="numLancamento(f)"></b>
                       <span x-text="f.descricao || '—'"></span>
                       <span class="badge" :style="'background:var(--surface-2);color:var(--text-2);font-weight:600'+(f.tipo==='receita'&&f.cliente?';cursor:pointer':'')" :title="f.tipo==='receita'&&f.cliente?'Ver situação financeira do cliente':''" @click.stop="(f.tipo==='receita'&&f.cliente)&&abrirFinanceCliente(f.cliente)" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria||''" x-show="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria"></span>
+                      <span class="badge" x-show="f.origem==='captacao'" :style="f.liberado===false?'background:#FEF7E0;color:#B06000;font-weight:700':'background:#E6F4EA;color:#15803d;font-weight:700'" :title="f.liberado===false?'Serviço de captação ainda não concluído — pagamento travado':'Serviço concluído — pagamento liberado'" x-text="f.liberado===false?'⏳ aguardando serviço':'✅ liberado pra pagar'"></span>
                     </div>
                     <div class="fin-card-sub">
                       <span x-show="f.categoria" x-text="f.categoria+' · '"></span>Vence: <span x-text="fmtDate(f.vencimento)"></span><span x-show="f.pagoEm" x-text="' · Pago: '+fmtDate(f.pagoEm)"></span>
@@ -1064,7 +1065,8 @@
                   <button x-show="f.tipo==='receita' && !f.boletoId && f.status!=='pago'" class="fin-btn-cora" @click="gerarBoleto(f)" :disabled="!!f._cobrando" title="Emitir um boleto bancário (com Pix) no Banco Inter pra esta cobrança"><i class="ph ph-barcode ic-ph"></i> Gerar boleto (Inter)</button>
                   <button x-show="f.tipo==='receita'" @click="cobrarEmail(f)" :disabled="!!f._cobrando" title="Enviar a cobrança/boleto por e-mail pro cliente"><i class="ph ph-envelope ic-ph"></i> E-mail</button>
                   <button x-show="f.tipo==='receita'" @click="cobrarWhatsApp(f)" title="Abrir o WhatsApp com a mensagem de cobrança pronta pra enviar"><i class="ph ph-whatsapp-logo ic-ph"></i> WhatsApp</button>
-                  <button x-show="f.status!=='pago'" class="fin-btn-receber" @click="receberPagar(f)" :title="f.tipo==='receita'?'Dar baixa: marcar como recebido (pede a data da quitação)':'Dar baixa: marcar como pago (pede a data)'"><i class="ph ph-check-circle ic-ph"></i> <span x-text="f.tipo==='receita'?'Receber':'Pagar'"></span></button>
+                  <button x-show="f.status!=='pago' && f.liberado!==false" class="fin-btn-receber" @click="receberPagar(f)" :title="f.tipo==='receita'?'Dar baixa: marcar como recebido (pede a data da quitação)':'Dar baixa: marcar como pago (pede a data)'"><i class="ph ph-check-circle ic-ph"></i> <span x-text="f.tipo==='receita'?'Receber':'Pagar'"></span></button>
+                  <span x-show="f.liberado===false" class="text-3 fs-12" style="display:inline-flex;align-items:center;gap:5px"><i class="ph ph-lock-simple"></i> pagamento travado até o serviço ser concluído</span>
                   <button x-show="f.status==='pago'" @click="togglePago(f)" title="Desfazer a baixa: volta o lançamento pra pendente (ex.: marcou errado ou o pagamento foi estornado)"><i class="ph ph-arrow-counter-clockwise ic-ph"></i> Reabrir</button>
                   <button @click="alterarVencimento(f)" title="Mudar a data de vencimento deste lançamento"><i class="ph ph-clock ic-ph"></i> Alterar vencimento</button>
                   <button @click="abrirAjuste(f)" title="Aplicar acréscimo (juros/multa) ou desconto (à vista) no valor deste lançamento"><i class="ph ph-plus-minus ic-ph"></i> Acréscimo/Desconto</button>
@@ -3030,24 +3032,73 @@
                     </div>
                     <div class="flex items-center gap-2" style="flex-wrap:wrap">
                       <label class="text-3 fs-11">data <input type="date" class="input fs-12" style="max-width:150px" x-model="samCForm.data"></label>
-                      <label class="text-3 fs-11">hora <input type="time" class="input fs-12" style="max-width:110px" x-model="samCForm.hora"></label>
                       <input class="input fs-13" style="flex:1;min-width:110px" placeholder="Tipo (ex.: bastidores)" x-model="samCForm.tipo">
+                    </div>
+                    <!-- Prestador (fornecedor) + valor -->
+                    <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                      <select class="input fs-13" style="flex:1;min-width:140px" x-model="samCForm.prestador"><option value="">Prestador (fornecedor)…</option><template x-for="fo in fornecedoresOrd" :key="'scp'+fo.id"><option :value="fo.nome" x-text="fo.nome"></option></template></select>
+                      <label class="text-3 fs-11">valor R$ <input type="number" min="0" step="0.01" class="input fs-12" style="max-width:120px" x-model="samCForm.valor" placeholder="0,00"></label>
+                    </div>
+                    <div class="text-3 fs-11" style="margin-top:-2px">Não achou o prestador? <a href="#" @click.prevent="novoFornecedor()" style="color:#4285F4;font-weight:600">Cadastrar fornecedor</a></div>
+                    <!-- Condição de pagamento -->
+                    <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                      <span class="text-3 fs-11">pagamento</span>
+                      <button class="btn btn-sm" :style="samCForm.condPagto==='avista'?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="samCForm.condPagto='avista'">À vista</button>
+                      <button class="btn btn-sm" :style="samCForm.condPagto==='parcelado'?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="samCForm.condPagto='parcelado'">Parcelado</button>
+                    </div>
+                    <!-- À vista: 1 prazo -->
+                    <div x-show="samCForm.condPagto==='avista'" class="flex items-center gap-2" style="flex-wrap:wrap">
+                      <label class="text-3 fs-11">prazo de pagamento <input type="date" class="input fs-12" style="max-width:150px" x-model="samCForm.prazo"></label>
+                    </div>
+                    <!-- Parcelado: várias datas + valores -->
+                    <div x-show="samCForm.condPagto==='parcelado'" style="display:grid;gap:6px">
+                      <template x-for="(p,i) in samCForm.parcelas" :key="'scpar'+i">
+                        <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                          <span class="text-3 fs-11" style="width:52px" x-text="(i+1)+'ª'"></span>
+                          <input type="date" class="input fs-12" style="max-width:150px" x-model="p.data">
+                          <input type="number" min="0" step="0.01" class="input fs-12" style="max-width:110px" placeholder="R$ da parcela" x-model="p.valor">
+                          <button class="btn btn-icon btn-ghost btn-sm" @click="samCRmParcela(i)" title="Remover parcela" style="color:var(--text-3)"><i class="ph ph-x ic-ph"></i></button>
+                        </div>
+                      </template>
+                      <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:6px">
+                        <button class="btn btn-ghost btn-sm" @click="samCAddParcela()"><i class="ph ph-plus ic-ph"></i> parcela</button>
+                        <span class="text-3 fs-11">soma das parcelas: <b :style="(Number(samCForm.valor)||0)>0 && samCParcelasSoma!==(Number(samCForm.valor)||0)?'color:#B91C1C':'color:#15803d'" x-text="'R$ '+samCParcelasSoma.toLocaleString('pt-BR')"></b> <span x-show="(Number(samCForm.valor)||0)>0" x-text="' / total R$ '+(Number(samCForm.valor)||0).toLocaleString('pt-BR')"></span></span>
+                      </div>
                     </div>
                     <div><button class="btn btn-sm btn-primary" @click="samAddCaptacao()">Adicionar captação</button></div>
                   </div>
                   <div x-show="!samCaptacoesOrd.length" class="text-3 fs-12" style="padding:6px 0;text-align:center">Nenhuma captação futura marcada.</div>
                   <template x-for="c in samCaptacoesOrd" :key="'sc'+c.id">
-                    <div class="flex items-center" style="gap:12px;border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px">
-                      <div style="width:44px;text-align:center;flex:none;border-radius:8px;padding:4px 0" :style="c.data===_hojeStr()?'background:#FEF7E0':'background:var(--surface-2)'">
-                        <div class="fw-700 fs-16" :style="c.data===_hojeStr()?'color:#B06000':''" x-text="_samDiaBadge(c.data).dia"></div>
-                        <div style="font-size:9px;letter-spacing:.04em;font-weight:700" :style="c.data===_hojeStr()?'color:#B06000':'color:#9ca3af'" x-text="_samDiaBadge(c.data).mes"></div>
+                    <div style="border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px" :style="c.concluida?'background:#F3FAF6;border-color:#CDE9D6':''">
+                      <div class="flex items-center" style="gap:12px">
+                        <div style="width:44px;text-align:center;flex:none;border-radius:8px;padding:4px 0" :style="c.data===_hojeStr()?'background:#FEF7E0':'background:var(--surface-2)'">
+                          <div class="fw-700 fs-16" :style="c.data===_hojeStr()?'color:#B06000':''" x-text="_samDiaBadge(c.data).dia"></div>
+                          <div style="font-size:9px;letter-spacing:.04em;font-weight:700" :style="c.data===_hojeStr()?'color:#B06000':'color:#9ca3af'" x-text="_samDiaBadge(c.data).mes"></div>
+                        </div>
+                        <div style="flex:1;min-width:0">
+                          <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span x-text="c.cliente"></span><span class="text-3 fw-400" x-show="c.local" x-text="' — '+c.local"></span></div>
+                          <div class="text-3 fs-11"><span x-text="c.tipo"></span><span x-show="c.prestador" x-text="' · 🎬 '+c.prestador"></span><span x-show="c.valor" x-text="' · R$ '+(Number(c.valor)||0).toLocaleString('pt-BR')"></span><span x-show="c.valor" x-text="' · '+(c.condPagto==='parcelado'?((c.parcelas||[]).length+'× parcelado'):'à vista')"></span></div>
+                        </div>
+                        <button class="badge fs-10 fw-600" style="cursor:pointer;flex:none" :style="c.status==='confirmada'?'background:#E6F4EA;color:#34A853':'background:#FEF7E0;color:#B06000'" @click="samToggleCaptacao(c)" x-text="c.status==='confirmada'?'confirmada':'a confirmar'"></button>
+                        <button class="btn btn-icon btn-ghost btn-sm" @click="samRemCaptacao(c)" title="Remover" style="color:var(--text-3);flex:none"><i class="ph ph-x ic-ph"></i></button>
                       </div>
-                      <div style="flex:1;min-width:0">
-                        <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span x-text="c.cliente"></span><span class="text-3 fw-400" x-show="c.local" x-text="' — '+c.local"></span></div>
-                        <div class="text-3 fs-11"><span x-show="c.hora" x-text="c.hora+'h · '"></span><span x-text="c.tipo"></span></div>
+                      <!-- pagamento + concluir -->
+                      <div class="flex items-center justify-between" style="gap:8px;margin-top:8px;flex-wrap:wrap">
+                        <div class="fs-11" x-show="c.valor">
+                          <template x-if="!c.concluida"><span style="color:#B06000"><i class="ph ph-lock-simple"></i> pagamento trava até concluir o serviço</span></template>
+                          <template x-if="c.concluida"><span style="color:#15803d"><i class="ph ph-lock-simple-open"></i> pagamento liberado no Financeiro</span></template>
+                        </div>
+                        <div style="flex:1" x-show="!c.valor"></div>
+                        <template x-if="!c.concluida">
+                          <button class="btn btn-sm" style="background:#34A853;color:#fff;border-color:#34A853" @click="samConcluirCaptacao(c)"><i class="ph ph-check ic-ph"></i> Concluir serviço</button>
+                        </template>
+                        <template x-if="c.concluida">
+                          <div class="flex items-center gap-2">
+                            <span class="badge fs-10 fw-600" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle"></i> concluído</span>
+                            <button class="btn btn-icon btn-ghost btn-sm" @click="samReabrirCaptacao(c)" title="Reabrir (desfaz a conclusão e trava o pagamento de novo)" style="color:var(--text-3)"><i class="ph ph-arrow-counter-clockwise ic-ph"></i></button>
+                          </div>
+                        </template>
                       </div>
-                      <button class="badge fs-10 fw-600" style="cursor:pointer;flex:none" :style="c.status==='confirmada'?'background:#E6F4EA;color:#34A853':'background:#FEF7E0;color:#B06000'" @click="samToggleCaptacao(c)" x-text="c.status==='confirmada'?'confirmada':'a confirmar'"></button>
-                      <button class="btn btn-icon btn-ghost btn-sm" @click="samRemCaptacao(c)" title="Remover" style="color:var(--text-3);flex:none"><i class="ph ph-x ic-ph"></i></button>
                     </div>
                   </template>
                 </div>
@@ -5518,7 +5569,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=333"></script>
+<script src="js/app.js?v=334"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

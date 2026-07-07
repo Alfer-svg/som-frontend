@@ -1503,7 +1503,7 @@ document.addEventListener('alpine:init', () => {
     samVideos: [], samStories: [], samGmn: [], samRoteiros: [], samCaptacoes: [], samLog: [],
     samVForm: { titulo: '', cliente: '', tipo: 'Edição' },
     samRForm: { titulo: '', cliente: '', captacao: '' }, samRAberto: false,
-    samCForm: { cliente: '', local: '', data: '', hora: '', tipo: 'Captação' }, samCAberto: false,
+    samCForm: { cliente: '', local: '', data: '', tipo: 'Captação', prestador: '', valor: '', condPagto: 'avista', prazo: '', parcelas: [{ data: '', valor: '' }] }, samCAberto: false,
     // helpers de data/hora (America/Recife)
     _horaBR() { return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); },
     _semanaISO(d) { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const dn = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - dn); const ano = t.getUTCFullYear(); const jan1 = new Date(Date.UTC(ano, 0, 1)); const sem = Math.ceil((((t - jan1) / 86400000) + 1) / 7); return ano + '-W' + String(sem).padStart(2, '0'); },
@@ -1627,14 +1627,72 @@ document.addEventListener('alpine:init', () => {
     get samRoteirosProntos() { return this.samRoteiros.filter(r => r.status === 'pronto').length; },
 
     // ── Captações marcadas ──
-    get samCaptacoesOrd() { const h = this._hojeStr(); return this.samCaptacoes.filter(c => (c.data || '') >= h).slice().sort((a, b) => String(a.data + (a.hora || '')).localeCompare(String(b.data + (b.hora || '')))); },
+    // Lista: próximas (data>=hoje) + qualquer uma ainda NÃO concluída (pra dar pra concluir mesmo se já passou)
+    get samCaptacoesOrd() { const h = this._hojeStr(); return this.samCaptacoes.filter(c => !c.concluida || (c.data || '') >= h).slice().sort((a, b) => String(a.data || '').localeCompare(String(b.data || ''))); },
+    // Parcelas do form
+    samCAddParcela() { this.samCForm.parcelas.push({ data: '', valor: '' }); },
+    samCRmParcela(i) { this.samCForm.parcelas.splice(i, 1); if (!this.samCForm.parcelas.length) this.samCForm.parcelas.push({ data: '', valor: '' }); },
+    get samCParcelasSoma() { return (this.samCForm.parcelas || []).reduce((a, p) => a + (Number(p.valor) || 0), 0); },
     samAddCaptacao() {
       const f = this.samCForm; if (!f.cliente.trim() || !f.data) { this.mostrarToast('Informe cliente e data da captação.'); return; }
-      this.samCaptacoes.push({ id: MD.uid(), cliente: f.cliente.trim(), local: f.local || '', data: f.data, hora: f.hora || '', tipo: f.tipo || 'Captação', status: 'a_confirmar', por: (this.usuario && this.usuario.nome) || '' });
-      this.samCForm = { cliente: '', local: '', data: '', hora: '', tipo: 'Captação' }; this.samCAberto = false; this._samSave('captacoes', this.samCaptacoes);
+      const valor = Number(f.valor) || 0;
+      const capId = MD.uid();
+      const finIds = [];
+      // Ao agendar: gera lançamento(s) de DESPESA no Financeiro, TRAVADO (liberado:false) até concluir o serviço.
+      if (valor > 0 && f.prestador) {
+        const parc = f.condPagto === 'parcelado'
+          ? (f.parcelas || []).filter(p => p.data && Number(p.valor) > 0).map(p => ({ data: p.data, valor: Number(p.valor) }))
+          : [{ data: f.prazo || f.data, valor }];
+        const n = parc.length || 1;
+        (parc.length ? parc : [{ data: f.prazo || f.data, valor }]).forEach((p, i) => {
+          const fid = MD.uid(); finIds.push(fid);
+          this.finance.push({
+            id: fid, tipo: 'despesa',
+            descricao: 'Captação — ' + f.cliente.trim() + (f.tipo ? ' · ' + f.tipo : '') + (n > 1 ? ' (' + (i + 1) + '/' + n + ')' : ''),
+            valor: p.valor, categoria: 'Projeto pontual', fornecedor: f.prestador, cliente: '',
+            status: 'pendente', liberado: false, origem: 'captacao', captacaoId: capId,
+            vencimento: p.data, data: this._hojeStr(),
+          });
+        });
+        this.persist('finance', this.finance);
+      }
+      this.samCaptacoes.push({
+        id: capId, cliente: f.cliente.trim(), local: f.local || '', data: f.data, tipo: f.tipo || 'Captação',
+        prestador: f.prestador || '', valor, condPagto: f.condPagto || 'avista',
+        prazo: f.prazo || '', parcelas: f.condPagto === 'parcelado' ? (f.parcelas || []).filter(p => p.data && Number(p.valor) > 0) : [],
+        status: 'a_confirmar', concluida: false, finIds, por: (this.usuario && this.usuario.nome) || '',
+      });
+      this.samCForm = { cliente: '', local: '', data: '', tipo: 'Captação', prestador: '', valor: '', condPagto: 'avista', prazo: '', parcelas: [{ data: '', valor: '' }] };
+      this.samCAberto = false; this._samSave('captacoes', this.samCaptacoes);
+      this.mostrarToast(finIds.length ? 'Captação marcada + despesa lançada no Financeiro (travada até concluir). 💰' : 'Captação marcada.');
     },
     samToggleCaptacao(c) { c.status = c.status === 'confirmada' ? 'a_confirmar' : 'confirmada'; this._samSave('captacoes', this.samCaptacoes); },
-    samRemCaptacao(c) { if (!confirm('Remover esta captação?')) return; this.samCaptacoes = this.samCaptacoes.filter(x => x.id !== c.id); this._samSave('captacoes', this.samCaptacoes); },
+    // Concluir o serviço → LIBERA o pagamento no Financeiro (liberado:true nos lançamentos ligados)
+    samConcluirCaptacao(c) {
+      c.concluida = true; c.concluidoEm = new Date().toISOString(); c.status = 'confirmada';
+      let liberou = 0;
+      (this.finance || []).forEach(f => { if (f.captacaoId === c.id && f.status !== 'pago') { f.liberado = true; liberou++; } });
+      if (liberou) this.persist('finance', this.finance);
+      this._samSave('captacoes', this.samCaptacoes);
+      this._samLogPush('Serviço concluído — ' + c.cliente + (liberou ? ' · pagamento liberado no Financeiro' : ''), 'captacao');
+      this.mostrarToast(liberou ? 'Serviço concluído — pagamento liberado no Financeiro. ✅' : 'Serviço concluído. ✅');
+    },
+    // Reabrir (desfazer conclusão) → volta a travar o pagamento (só nos ainda não pagos)
+    samReabrirCaptacao(c) {
+      c.concluida = false; c.concluidoEm = '';
+      let travou = 0;
+      (this.finance || []).forEach(f => { if (f.captacaoId === c.id && f.status !== 'pago') { f.liberado = false; travou++; } });
+      if (travou) this.persist('finance', this.finance);
+      this._samSave('captacoes', this.samCaptacoes);
+    },
+    samRemCaptacao(c) {
+      const temFin = (c.finIds || []).length;
+      if (!confirm('Remover esta captação?' + (temFin ? '\n\nOs lançamentos ligados no Financeiro (ainda não pagos) também serão removidos.' : ''))) return;
+      const antes = (this.finance || []).length;
+      this.finance = (this.finance || []).filter(f => !(f.captacaoId === c.id && f.status !== 'pago'));
+      if (this.finance.length !== antes) this.persist('finance', this.finance);
+      this.samCaptacoes = this.samCaptacoes.filter(x => x.id !== c.id); this._samSave('captacoes', this.samCaptacoes);
+    },
     _samDiaBadge(iso) { if (!iso) return { dia: '--', mes: '' }; const [a, m, d] = iso.split('-'); const nomes = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']; return { dia: d, mes: iso === this._hojeStr() ? 'HOJE' : (nomes[(+m) - 1] || '') }; },
 
     // ── KPIs + "Dia no ritmo" ──
@@ -2641,13 +2699,13 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     get despesaMes() { return this.finance.filter(f => f.tipo === 'despesa' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
     get saldoMes()   { return this.receitaMes - this.despesaMes; },
     get aReceber()   { return this.finance.filter(f => f.tipo === 'receita' && f.status !== 'pago' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
-    get aPagar()     { return this.finance.filter(f => f.tipo === 'despesa' && f.status !== 'pago' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
+    get aPagar()     { return this.finance.filter(f => f.tipo === 'despesa' && f.status !== 'pago' && f.liberado !== false && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
     finMesAnterior() { if (this.finMes === 0) { this.finMes = 11; this.finAno--; } else this.finMes--; },
     finMesProximo() { if (this.finMes === 11) { this.finMes = 0; this.finAno++; } else this.finMes++; },
     // Previsão de caixa: a receber / a pagar com vencimento de hoje até hoje+N dias.
     _dataEm(dias) { const d = new Date(); d.setDate(d.getDate() + dias); return d.toISOString().slice(0, 10); },
     receberEm(dias) { const h = MD.today(), lim = this._dataEm(dias); return this.finance.filter(f => f.tipo === 'receita' && f.status !== 'pago' && f.vencimento && f.vencimento >= h && f.vencimento <= lim).reduce((a, f) => a + (+f.valor || 0), 0); },
-    pagarEm(dias)   { const h = MD.today(), lim = this._dataEm(dias); return this.finance.filter(f => f.tipo === 'despesa' && f.status !== 'pago' && f.vencimento && f.vencimento >= h && f.vencimento <= lim).reduce((a, f) => a + (+f.valor || 0), 0); },
+    pagarEm(dias)   { const h = MD.today(), lim = this._dataEm(dias); return this.finance.filter(f => f.tipo === 'despesa' && f.status !== 'pago' && f.liberado !== false && f.vencimento && f.vencimento >= h && f.vencimento <= lim).reduce((a, f) => a + (+f.valor || 0), 0); },
     // Cor de fundo da linha: pago = verde levíssimo, atrasado = vermelho levíssimo, senão zebra.
     lancRowBg(f, i) {
       if (f.status === 'pago') return 'background:rgba(34,197,94,.07)';
