@@ -2227,7 +2227,7 @@
         <div class="text-3" style="font-size:13px;margin-top:4px;margin-bottom:14px">Acompanhamento operacional por colaborador.</div>
         <div class="tabs">
           <template x-for="m in [['matheus','Matheus'],['laryssa','Laryssa'],['samara','Samara']]" :key="'ot'+m[0]">
-            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]"><span x-text="m[1]"></span></div>
+            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelatorio()"><span x-text="m[1]"></span></div>
           </template>
         </div>
 
@@ -2599,7 +2599,7 @@
         </div>
 
         <!-- ═══════ LARYSSA — RELATÓRIO MENSAL de Instagram (igual ao PDF Maracatu Digital) ═══════ -->
-        <div x-show="operTab==='laryssa'" x-init="carregarRelatorio()" style="--rel-orange:#F15A29">
+        <div x-show="operTab==='laryssa'" x-init="carregarRelatorio(); $watch('clients', () => { if (operTab==='laryssa' && !rel && !relLoading) carregarRelatorio(); })" style="--rel-orange:#F15A29">
           <!-- Barra de controle: cliente + mês + gerar -->
           <div class="card" style="padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <div class="fs-12 fw-700" style="letter-spacing:.08em;color:var(--rel-orange)">RELATÓRIO MENSAL</div>
@@ -5274,7 +5274,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=320"></script>
+<script src="js/app.js?v=321"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
