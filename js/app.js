@@ -512,7 +512,7 @@ document.addEventListener('alpine:init', () => {
     operLogForm: { clienteId: '', alteracao: '', motivo: '' },
     // Concorrentes no Instagram (aba do Matheus): cliente do menu drop + @s (IA descobre) + top posts
     operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '', operInspIA: false, operInspSemMeta: false,
-    operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '',
+    operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '', operInspExp: {},
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -1470,6 +1470,7 @@ document.addEventListener('alpine:init', () => {
     operInspN(n) { n = +n || 0; return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.', ',') + ' mil' : String(n); },
     operInspData(d) { return d ? (d.slice(8, 10) + '/' + d.slice(5, 7) + '/' + d.slice(0, 4)) : ''; },
     operInspTipo(t) { return t === 'VIDEO' ? 'Reel' : (t === 'CAROUSEL_ALBUM' ? 'Carrossel' : 'Post'); },
+    operInspVerMais(p) { this.operInspExp[p.link] = !this.operInspExp[p.link]; },
     // clicou num post do feed → abre o popup e pede a análise da IA pro Matheus
     operInspAbrir(p) { this.operInspSel = p; this.operInspAnalise = null; this.operInspAnaliseErro = ''; this.operInspAnalisar(); },
     async operInspAnalisar() {

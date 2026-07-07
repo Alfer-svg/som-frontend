@@ -2288,32 +2288,38 @@
                 <span x-text="operInspErro"></span>
               </div>
               <div x-show="!operInspLoading && !operInspErro && operInspConc.length && !operInspPosts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Nenhum post encontrado dessas empresas.</div>
-              <!-- FEED: um post por vez (rola pra ver mais) -->
-              <div x-show="!operInspLoading && operInspPosts.length" style="display:flex;flex-direction:column;gap:14px;max-height:72vh;overflow:auto;padding-right:4px">
-                <template x-for="p in operInspPosts" :key="'oip'+p.link">
-                  <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface);cursor:pointer" @click="operInspAbrir(p)" :title="'Ver análise do post de @'+p.concorrente">
-                    <div class="flex items-center gap-2" style="padding:10px 12px">
-                      <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex:none" x-text="(p.concorrente||'?').slice(0,1).toUpperCase()"></div>
-                      <div style="line-height:1.15;min-width:0">
-                        <div class="fw-700 fs-13" x-text="'@'+p.concorrente"></div>
-                        <div class="text-3 fs-11" x-text="operInspData(p.data)+(p.seguidores? ' · '+operInspN(p.seguidores)+' seguidores':'')"></div>
+              <!-- FEED estilo Instagram: um post por vez (rola pra ver mais) -->
+              <div x-show="!operInspLoading && operInspPosts.length" style="max-height:74vh;overflow:auto;padding:2px 4px 2px 0">
+                <div style="max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:18px">
+                  <template x-for="p in operInspPosts" :key="'oip'+p.link">
+                    <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)">
+                      <div class="flex items-center gap-2" style="padding:10px 12px">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex:none" x-text="(p.concorrente||'?').slice(0,1).toUpperCase()"></div>
+                        <div style="line-height:1.15;min-width:0;flex:1">
+                          <div class="fw-700 fs-13" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="'@'+p.concorrente"></div>
+                          <div class="text-3 fs-11" x-text="operInspData(p.data)+(p.seguidores? ' · '+operInspN(p.seguidores)+' seg':'')"></div>
+                        </div>
+                        <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
+                        <a :href="p.link" target="_blank" rel="noopener" style="color:var(--blue);font-weight:800;padding:0 4px" title="Abrir no Instagram">↗</a>
                       </div>
-                      <span class="badge fs-11 fw-700" style="margin-left:auto;background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
-                      <a :href="p.link" target="_blank" rel="noopener" @click.stop style="color:var(--blue);font-weight:800;padding:0 4px" title="Abrir no Instagram">↗</a>
-                    </div>
-                    <div x-show="p.img" style="background:#000;max-height:440px;overflow:hidden;display:flex;justify-content:center">
-                      <img :src="p.img" style="max-width:100%;max-height:440px;object-fit:contain" loading="lazy" @error="p.img=null">
-                    </div>
-                    <div style="padding:12px">
-                      <div class="fs-13 text-2" style="white-space:pre-wrap;word-break:break-word" x-text="p.texto || '(sem legenda)'"></div>
-                      <div class="flex items-center gap-2" style="margin-top:10px">
-                        <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
-                        <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
-                        <span class="btn btn-sm" style="margin-left:auto;background:#EDE9FE;color:#6D28D9;pointer-events:none"><i class="ph ph-sparkle"></i> Ver análise</span>
+                      <!-- imagem quadrada, sem tarja preta -->
+                      <div style="width:100%;aspect-ratio:1/1;background:var(--surface-2);overflow:hidden" x-show="p.img">
+                        <img :src="p.img" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy" @error="p.img=null">
+                      </div>
+                      <div style="padding:12px">
+                        <!-- ações -->
+                        <div class="flex items-center gap-2" style="margin-bottom:8px">
+                          <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
+                          <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
+                          <button class="btn btn-sm" style="margin-left:auto;background:#6D28D9;color:#fff" @click="operInspAbrir(p)"><i class="ph ph-sparkle"></i> Ver análise</button>
+                        </div>
+                        <!-- legenda: clampada com ver mais/menos -->
+                        <div class="fs-13 text-2" style="white-space:pre-wrap;word-break:break-word;overflow:hidden" :style="operInspExp[p.link] ? '' : 'display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical'" x-text="p.texto || '(sem legenda)'"></div>
+                        <button x-show="(p.texto||'').length>160" class="btn-link fs-12" style="margin-top:4px;color:var(--text-3);background:none;border:none;padding:0;cursor:pointer" @click="operInspVerMais(p)" x-text="operInspExp[p.link] ? 'ver menos' : 'ver mais'"></button>
                       </div>
                     </div>
-                  </div>
-                </template>
+                  </template>
+                </div>
               </div>
             </div>
           </div>
@@ -4916,7 +4922,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=303"></script>
+<script src="js/app.js?v=304"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
