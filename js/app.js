@@ -512,7 +512,7 @@ document.addEventListener('alpine:init', () => {
     operLogForm: { clienteId: '', alteracao: '', motivo: '' },
     // Concorrentes no Instagram (aba do Matheus): cliente do menu drop + @s (IA descobre) + top posts
     operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '', operInspIA: false, operInspSemMeta: false,
-    operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '', operInspExp: {}, operInspAberto: true,
+    operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '', operInspExp: {}, operInspAberto: true, matSub: 'painel',
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -1326,10 +1326,11 @@ document.addEventListener('alpine:init', () => {
     async addOperLog() {
       const f = this.operLogForm;
       if (!(f.alteracao || '').trim()) return alert('Descreva o ajuste/otimização feito.');
-      const c = (this.clients || []).find(x => x.id === f.clienteId);
+      const cid = this.operInspClienteId || ''; // cliente em foco (card de data), não seletor próprio
+      const c = (this.clients || []).find(x => x.id === cid);
       this.operLog.unshift({
         id: MD.uid(), data: this.operChkData || this._hojeStr(), hora: new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }),
-        clienteId: f.clienteId || '', cliente: (c && (c.empresa || c.nome)) || '',
+        clienteId: cid, cliente: (c && (c.empresa || c.nome)) || '',
         alteracao: f.alteracao.trim(), motivo: (f.motivo || '').trim(),
         por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString(),
       });
@@ -1377,6 +1378,33 @@ document.addEventListener('alpine:init', () => {
       const atrasados = all.filter(p => p.status !== 'Concluído' && String(p.prazo || '').slice(0, 10) < h && p.prazo);
       const semana = all.filter(p => p.status !== 'Concluído' && String(p.prazo || '').slice(0, 10) >= h && String(p.prazo || '').slice(0, 10) <= fimSemana);
       return { atrasados: atrasados.length, semana: semana.length };
+    },
+
+    // ── Dashboard do Matheus (painel do dia) ──────────────────────────────
+    // Clientes com programação no dia: total × atendidos (tudo publicado) × faltam.
+    get matClientesDia() {
+      const g = this.operPostsDia.filter(x => x.cliente !== '— Interno');
+      const total = g.length;
+      const atendidos = g.filter(x => x.posts.length && x.feitos >= x.posts.length).length;
+      return { total, atendidos, faltam: total - atendidos };
+    },
+    // Clientes "trabalhados" hoje = com post publicado OU otimização registrada (≈ contas mexidas).
+    get matTrabalhados() {
+      const d = this.operChkData || this._hojeStr();
+      const set = new Set();
+      for (const g of this.operPostsDia) if (g.feitos > 0 && g.cliente !== '— Interno') set.add(g.cliente);
+      for (const l of this.operLogDia(d)) if (l.cliente) set.add(l.cliente);
+      return set.size;
+    },
+    // Clientes com posts ainda por publicar hoje (o que falta).
+    get matPendentesDia() { return this.operPostsDia.filter(g => g.feitos < g.posts.length); },
+    get matRotina() { return { feitos: this.operChkFeitos('matheus'), total: SOCIAL_ROTINA_N }; },
+    get matReunioesDia() { const d = this.operChkData || this._hojeStr(); return (this.operEventosMatheus || []).filter(e => e.data === d); },
+    // % geral do dia: média de publicações + rotina (indicador único de progresso).
+    get matProgressoDia() {
+      const pub = this.operPostsTotal ? this.operPostsFeitos / this.operPostsTotal : 1;
+      const rot = SOCIAL_ROTINA_N ? this.operChkFeitos('matheus') / SOCIAL_ROTINA_N : 1;
+      return Math.round(((pub + rot) / 2) * 100);
     },
     // Cor do status do post (badge).
     operStatusCor(s) { return s === 'Concluído' ? { bg: '#E6F4EA', cor: '#15803d' } : (s === 'Em Andamento' || s === 'Em andamento' ? { bg: '#E8F0FE', cor: '#1967D2' } : { bg: '#F1F0EC', cor: '#6b6b6b' }); },

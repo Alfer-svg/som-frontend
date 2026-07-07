@@ -2221,6 +2221,71 @@
 
         <!-- ════════ MATHEUS — Social Media: postagens do dia + rotina ════════ -->
         <div x-show="operTab==='matheus'">
+          <!-- Sub-menu do Matheus: Painel do dia (dashboard) × Operação -->
+          <div class="flex items-center gap-2" style="margin-bottom:14px;flex-wrap:wrap">
+            <button class="btn btn-sm" :class="matSub==='painel'?'btn-primary':'btn-ghost'" @click="matSub='painel'"><i class="ph ph-gauge ic-ph"></i> Painel do dia</button>
+            <button class="btn btn-sm" :class="matSub==='operacao'?'btn-primary':'btn-ghost'" @click="matSub='operacao'"><i class="ph ph-list-checks ic-ph"></i> Operação</button>
+          </div>
+
+          <!-- ═══════ PAINEL DO DIA (dashboard do Matheus) ═══════ -->
+          <div x-show="matSub==='painel'">
+            <!-- cabeçalho: dia + progresso geral -->
+            <div class="card" style="padding:16px;margin-bottom:14px">
+              <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:12px">
+                <div>
+                  <div class="fw-600 fs-15"><i class="ph ph-gauge ic-ph" style="color:#4285F4"></i> Painel do dia — Matheus</div>
+                  <div class="text-3 fs-12" style="text-transform:capitalize" x-text="operChkLabel"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                  <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()">Hoje</button>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
+                </div>
+              </div>
+              <div style="margin-top:14px">
+                <div class="flex items-center justify-between" style="margin-bottom:6px"><span class="fs-13 fw-700">Progresso do dia</span><span class="fw-800 fs-18" :style="'color:'+corScore(matProgressoDia)" x-text="matProgressoDia+'%'"></span></div>
+                <div class="progress" style="height:10px"><div :style="'width:'+matProgressoDia+'%;background:'+corScore(matProgressoDia)"></div></div>
+              </div>
+            </div>
+
+            <!-- KPIs do dia -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:14px">
+              <div class="card kpi" style="background:#F3F0FF"><div class="kpi-label"><span class="kpi-ico" style="background:#EDE9FE;color:#6D28D9"><i class="ph ph-megaphone-simple ic-ph"></i></span> Publicações</div><div class="kpi-value fs-22" x-text="operPostsFeitos+'/'+operPostsTotal"></div><div class="fs-12 text-3">publicadas hoje<span x-show="operResumoTrelo.atrasados" style="color:#C5221F;font-weight:700"> · <span x-text="operResumoTrelo.atrasados"></span> atrasadas</span></div></div>
+              <div class="card kpi" style="background:#EFFdF5"><div class="kpi-label"><span class="kpi-ico" style="background:#DCFCE7;color:#15803d"><i class="ph ph-users-three ic-ph"></i></span> Clientes atendidos</div><div class="kpi-value fs-22"><span x-text="matClientesDia.atendidos"></span><span class="text-3 fw-500 fs-16">/<span x-text="matClientesDia.total"></span></span></div><div class="fs-12 text-3"><b x-text="matClientesDia.faltam"></b> faltam atender hoje</div></div>
+              <div class="card kpi" style="background:#ECFEFF"><div class="kpi-label"><span class="kpi-ico" style="background:#CFFAFE;color:#0891B2"><i class="ph ph-check-circle ic-ph"></i></span> Contas trabalhadas</div><div class="kpi-value fs-22" x-text="matTrabalhados"></div><div class="fs-12 text-3">com post ou ajuste hoje</div></div>
+              <div class="card kpi" style="background:#F0FDF4"><div class="kpi-label"><span class="kpi-ico" style="background:#DCFCE7;color:#16a34a"><i class="ph ph-list-checks ic-ph"></i></span> Rotina do dia</div><div class="kpi-value fs-22" x-text="matRotina.feitos+'/'+matRotina.total"></div><div class="fs-12 text-3">itens da rotina</div></div>
+              <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#0d9488"><i class="ph ph-list-plus ic-ph"></i></span> Otimizações</div><div class="kpi-value fs-22" x-text="operLogDia(operChkData||_hojeStr()).length"></div><div class="fs-12 text-3">ajustes registrados</div></div>
+              <div class="card kpi" style="background:#FFF7ED"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF3C7;color:#B45309"><i class="ph ph-calendar-dots ic-ph"></i></span> Reuniões/eventos</div><div class="kpi-value fs-22" x-text="matReunioesDia.length"></div><div class="fs-12 text-3">na agenda hoje</div></div>
+            </div>
+
+            <!-- O que ainda falta -->
+            <div class="card" style="padding:16px;margin-bottom:14px">
+              <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
+              <template x-if="!matPendentesDia.length && matRotina.feitos>=matRotina.total && !operResumoTrelo.atrasados">
+                <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Tudo em dia! Nada pendente. 🎉</div></div>
+              </template>
+              <template x-for="g in matPendentesDia" :key="'mpd'+g.cliente">
+                <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+                  <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-image-square ic-ph"></i></span>
+                  <div style="flex:1;min-width:0"><div class="fs-13 fw-600" x-text="g.cliente"></div><div class="text-3 fs-11" x-text="'faltam publicar '+(g.posts.length-g.feitos)+' de '+g.posts.length+' post(s)'"></div></div>
+                  <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="g.feitos+'/'+g.posts.length"></span>
+                </div>
+              </template>
+              <div x-show="matRotina.feitos<matRotina.total" class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+                <span class="kpi-ico" style="background:#DCFCE7;color:#16a34a;width:26px;height:26px;font-size:13px"><i class="ph ph-list-checks ic-ph"></i></span>
+                <div style="flex:1"><div class="fs-13 fw-600">Rotina do dia</div><div class="text-3 fs-11" x-text="(matRotina.total-matRotina.feitos)+' item(ns) da rotina pendentes'"></div></div>
+                <button class="btn btn-ghost btn-sm" @click="matSub='operacao'; operChkAberto=true">Abrir</button>
+              </div>
+              <div x-show="operResumoTrelo.atrasados" class="flex items-center gap-2" style="padding:8px 0">
+                <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-warning-circle ic-ph"></i></span>
+                <div style="flex:1"><div class="fs-13 fw-600">Posts atrasados no quadro</div><div class="text-3 fs-11"><span x-text="operResumoTrelo.atrasados"></span> post(s) com prazo vencido</div></div>
+                <button class="btn btn-ghost btn-sm" @click="go('operacional'); opTab='quadro'">Ver quadro</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════ OPERAÇÃO (conteúdo do dia a dia) ═══════ -->
+          <div x-show="matSub==='operacao'">
           <!-- Agenda do Matheus (eventos da Agenda em que ele é colaborador) — em cima da data -->
           <div class="card" style="padding:16px;margin-bottom:14px">
             <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
@@ -2438,12 +2503,9 @@
           <div class="card" style="padding:16px;margin-top:14px">
             <div class="fw-600 fs-15 mb-1"><i class="ph ph-list-plus ic-ph" style="color:#0891B2"></i> Otimizações & ajustes do dia</div>
             <div class="text-3 fs-12 mb-3">O que foi ajustado hoje — repostagem, mudança de estratégia, ajuste de conteúdo. Fica registrado no Fichário.</div>
-            <div style="display:grid;grid-template-columns:200px 1fr auto;gap:8px;align-items:start;margin-bottom:12px">
-              <select class="form-select" x-model="operLogForm.clienteId" title="Cliente (opcional)">
-                <option value="">Geral (sem cliente)</option>
-                <template x-for="c in trafClientes" :key="'olc'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
-              </select>
+            <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start;margin-bottom:12px">
               <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="text-3 fs-12">Registrando para: <b x-text="(operInspClientes.find(c=>c.id===operInspClienteId)||{}).empresa || 'Geral (sem cliente)'"></b> — escolha o cliente no card de data lá em cima.</div>
                 <input class="form-input" x-model="operLogForm.alteracao" placeholder="O que foi feito? (ex.: repostei o carrossel com nova capa)" @keydown.enter="addOperLog()">
                 <input class="form-input" x-model="operLogForm.motivo" placeholder="Por quê? (opcional)" @keydown.enter="addOperLog()">
               </div>
@@ -2461,6 +2523,7 @@
                 <button class="btn btn-icon btn-ghost btn-sm" @click="removerOperLog(l.id)" title="Excluir" style="color:var(--red);flex-shrink:0"><i class="ph ph-trash ic-ph"></i></button>
               </div>
             </template>
+          </div>
           </div>
         </div>
 
@@ -4922,7 +4985,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=306"></script>
+<script src="js/app.js?v=307"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
