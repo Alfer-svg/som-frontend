@@ -2716,7 +2716,7 @@
             <div class="card" style="padding:16px;margin-bottom:22px">
               <div class="flex items-baseline gap-2">
                 <div style="font-size:32px;font-weight:500;color:#202124" x-text="(rel.taxaMes!=null? String(rel.taxaMes).replace('.',',') : '—')+'%'"></div>
-                <div class="text-3 fs-12">taxa de engajamento sobre o alcance do mês</div>
+                <div class="text-3 fs-12">taxa de engajamento sobre o alcance do período</div>
               </div>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px">
                 <div class="card kpi" style="background:#FEF6F4">
@@ -2746,7 +2746,7 @@
                 <div class="card" style="padding:14px" :style="f.label===rel.melhorFormato && f.publicados? 'border:1.5px solid #34A853;background:#F3FAF6':''">
                   <div class="flex items-center justify-between">
                     <div class="fw-600 fs-15" x-text="f.label"></div>
-                    <span class="badge fs-10 fw-600" x-show="f.label===rel.melhorFormato && f.publicados" style="background:#E6F4EA;color:#34A853"><i class="ph ph-trophy"></i> Melhor do mês</span>
+                    <span class="badge fs-10 fw-600" x-show="f.label===rel.melhorFormato && f.publicados" style="background:#E6F4EA;color:#34A853"><i class="ph ph-trophy"></i> Melhor do período</span>
                   </div>
                   <div class="text-3 fs-11" style="margin-top:6px">Publicados <b class="text-1" x-text="f.publicados"></b></div>
                   <div class="text-3 fs-11">Alcance médio <b class="text-1" x-text="relNum(f.alcanceMedio)"></b></div>
@@ -2768,15 +2768,15 @@
                 </div>
                 <div style="width:1px;height:34px;background:var(--border)"></div>
                 <div>
-                  <div class="text-3 fs-11" style="text-transform:uppercase;letter-spacing:.04em">Saldo do mês</div>
+                  <div class="text-3 fs-11" style="text-transform:uppercase;letter-spacing:.04em">Saldo do período</div>
                   <div style="font-size:24px;font-weight:500" :class="rel.resumo.saldoSeguidores!=null?(rel.resumo.saldoSeguidores>=0?'text-green':'text-red'):''" x-text="rel.resumo.saldoSeguidores!=null? ((rel.resumo.saldoSeguidores>=0?'+':'')+relInt(rel.resumo.saldoSeguidores)) : '—'"></div>
                 </div>
               </div>
-              <div class="text-3 fs-11" style="margin-top:10px;text-align:center" x-show="rel.resumo.saldoSeguidores==null"><i class="ph ph-hourglass-medium"></i> O saldo mês a mês aparece assim que eu tiver o número do mês anterior guardado.</div>
+              <div class="text-3 fs-11" style="margin-top:10px;text-align:center" x-show="rel.resumo.saldoSeguidores==null"><i class="ph ph-hourglass-medium"></i> A variação de seguidores aparece quando eu tiver o número do início da janela guardado.</div>
             </div>
 
             <!-- ░░ PUBLICAÇÕES ░░ -->
-            <div class="flex items-center gap-2"><i class="ph ph-ranking ic-ph" style="color:#4285F4"></i><span class="fw-600 fs-15">Melhores e piores do mês</span></div>
+            <div class="flex items-center gap-2"><i class="ph ph-ranking ic-ph" style="color:#4285F4"></i><span class="fw-600 fs-15">Melhores e piores do período</span></div>
             <div class="text-3 fs-12" style="margin:2px 0 10px">Ordenado pela taxa de engajamento de cada publicação sobre o próprio alcance.</div>
             <div class="card" style="padding:16px;margin-bottom:22px">
               <div class="fw-600 fs-13" style="color:#34A853;margin-bottom:8px"><i class="ph ph-trend-up ic-ph"></i> Melhores</div>
@@ -5301,7 +5301,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=325"></script>
+<script src="js/app.js?v=326"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
