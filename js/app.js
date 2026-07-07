@@ -1304,7 +1304,7 @@ document.addEventListener('alpine:init', () => {
           this.api('GET', '/colecoes/operacoes.checklist'),
           this.api('GET', '/colecoes/operacoes.log'),
         ]);
-        this.operChecklists = (Array.isArray(cks) ? cks : []).filter(x => x && x.pessoa && x.data);
+        this.operChecklists = (Array.isArray(cks) ? cks : []).filter(x => x && x.data && (x.clienteId || x.pessoa));
         this.operLog = Array.isArray(log) ? log : [];
       } catch (e) { /* sem rede: segue com o que tem em memória */ }
     },
@@ -1405,9 +1405,15 @@ document.addEventListener('alpine:init', () => {
     },
     // Clientes com posts ainda por publicar hoje (o que falta).
     get matPendentesDia() { return this.operPostsDia.filter(g => g.feitos < g.posts.length); },
-    get matRotina() { return { feitos: this.operChkFeitos('matheus'), total: SOCIAL_ROTINA_N }; },
-    // Tem algo pendente hoje? (posts por publicar, rotina incompleta ou posts atrasados) — pulsa o card.
-    get matTemPendencia() { return this.matPendentesDia.length > 0 || this.matRotina.feitos < this.matRotina.total || this.operResumoTrelo.atrasados > 0; },
+    // Rotinas por cliente no dia: quantas iniciadas × quantas concluídas (todos os itens resolvidos).
+    get matRotinasHoje() {
+      const d = this.operChkData || this._hojeStr();
+      const docs = (this.operChecklists || []).filter(x => x.clienteId && x.data === d && (x.itens || []).some(i => i.feito || i.na));
+      const concluidas = docs.filter(c => (c.itens || []).filter(i => i.feito || i.na).length >= SOCIAL_ROTINA_N).length;
+      return { iniciadas: docs.length, concluidas, abertas: docs.length - concluidas };
+    },
+    // Tem algo pendente hoje? (posts por publicar, rotina de cliente em aberto ou posts atrasados) — pulsa o card.
+    get matTemPendencia() { return this.matPendentesDia.length > 0 || this.matRotinasHoje.abertas > 0 || this.operResumoTrelo.atrasados > 0; },
     get matReunioesDia() { const d = this.operChkData || this._hojeStr(); return (this.operEventosMatheus || []).filter(e => e.data === d); },
     // Ranking dos melhores posts dos clientes (backend, cache 3h). Carrega sob demanda.
     async carregarMelhores(force) {
@@ -1421,8 +1427,8 @@ document.addEventListener('alpine:init', () => {
     // % geral do dia: média de publicações + rotina (indicador único de progresso).
     get matProgressoDia() {
       const pub = this.operPostsTotal ? this.operPostsFeitos / this.operPostsTotal : 1;
-      const rot = SOCIAL_ROTINA_N ? this.operChkFeitos('matheus') / SOCIAL_ROTINA_N : 1;
-      return Math.round(((pub + rot) / 2) * 100);
+      const r = this.matRotinasHoje.iniciadas ? this.matRotinasHoje.concluidas / this.matRotinasHoje.iniciadas : 1;
+      return Math.round(((pub + r) / 2) * 100);
     },
     // Cor do status do post (badge).
     operStatusCor(s) { return s === 'Concluído' ? { bg: '#E6F4EA', cor: '#15803d' } : (s === 'Em Andamento' || s === 'Em andamento' ? { bg: '#E8F0FE', cor: '#1967D2' } : { bg: '#F1F0EC', cor: '#6b6b6b' }); },
@@ -1444,32 +1450,39 @@ document.addEventListener('alpine:init', () => {
       catch (e) { p.prazo = ''; this.mostrarToast('Não consegui importar — confira a conexão. ⚠️'); }
     },
 
-    // ── Checklist da rotina (por pessoa + dia) ──
-    operChkDoc(pessoa) {
+    // ── Checklist da rotina POR CLIENTE + dia (alimenta a ficha do cliente) ──
+    // key = clienteId; o doc guarda cliente (nome) e pessoa (quem fez) pro Fichário.
+    operChkDoc(clienteId) {
       const d = this.operChkData || this._hojeStr();
-      let c = this.operChecklists.find(x => x.pessoa === pessoa && x.data === d);
-      if (!c) { c = { pessoa, data: d, itens: [], por: '', em: '' }; this.operChecklists.push(c); }
+      let c = clienteId ? this.operChecklists.find(x => x.clienteId === clienteId && x.data === d) : null;
+      if (!c) {
+        const cli = (this.clients || []).find(x => x.id === clienteId);
+        c = { clienteId: clienteId || '', cliente: cli ? (cli.empresa || cli.nome || '') : '', pessoa: 'matheus', data: d, itens: [], por: '', em: '' };
+        if (clienteId) this.operChecklists.push(c); // sem cliente = doc descartável (não polui a lista)
+      }
       for (const g of SOCIAL_ROTINA) for (const t of g.itens) if (!c.itens.some(i => i.id === t.id)) c.itens.push({ id: t.id, feito: false, hora: '' });
       return c;
     },
-    operChkItem(pessoa, id) { return this.operChkDoc(pessoa).itens.find(i => i.id === id); },
-    operChkMarcou(pessoa, id) {
-      const i = this.operChkItem(pessoa, id); if (!i) return;
+    operChkItem(clienteId, id) { return this.operChkDoc(clienteId).itens.find(i => i.id === id); },
+    operChkMarcou(clienteId, id) {
+      const i = this.operChkItem(clienteId, id); if (!i) return;
       if (i.feito) { i.na = false; if (!i.hora) i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); }
       else i.hora = '';
-      this.salvarOperChk(pessoa);
+      this.salvarOperChk(clienteId);
     },
-    // "Não se aplica": item não vale hoje — conta como resolvido no x/19.
-    operChkNA(pessoa, id) {
-      const i = this.operChkItem(pessoa, id); if (!i) return;
+    // "Não se aplica": item não vale hoje pra esse cliente — conta como resolvido.
+    operChkNA(clienteId, id) {
+      const i = this.operChkItem(clienteId, id); if (!i) return;
       i.na = !i.na;
       if (i.na) { i.feito = false; i.hora = new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); }
       else i.hora = '';
-      this.salvarOperChk(pessoa);
+      this.salvarOperChk(clienteId);
     },
     // Resolvido = feito OU não se aplica.
-    operChkFeitos(pessoa) { const c = this.operChecklists.find(x => x.pessoa === pessoa && x.data === (this.operChkData || this._hojeStr())); return c ? c.itens.filter(i => i.feito || i.na).length : 0; },
-    operChkFeitosGrupo(pessoa, grupoId) { const g = SOCIAL_ROTINA.find(x => x.id === grupoId); if (!g) return 0; const c = this.operChkDoc(pessoa); return g.itens.filter(t => { const i = c.itens.find(x => x.id === t.id); return i && (i.feito || i.na); }).length; },
+    operChkFeitos(clienteId) { const c = this.operChecklists.find(x => x.clienteId === clienteId && x.data === (this.operChkData || this._hojeStr())); return c ? c.itens.filter(i => i.feito || i.na).length : 0; },
+    operChkFeitosGrupo(clienteId, grupoId) { const g = SOCIAL_ROTINA.find(x => x.id === grupoId); if (!g) return 0; const c = this.operChkDoc(clienteId); return g.itens.filter(t => { const i = c.itens.find(x => x.id === t.id); return i && (i.feito || i.na); }).length; },
+    // Rotina do cliente concluída no dia = todos os itens da rotina resolvidos.
+    operChkConcluido(clienteId) { if (!clienteId) return false; const c = this.operChecklists.find(x => x.clienteId === clienteId && x.data === (this.operChkData || this._hojeStr())); return !!c && c.itens.filter(i => i.feito || i.na).length >= SOCIAL_ROTINA_N; },
     // ── Concorrentes no Instagram: menu drop de cliente + top 3 posts (business_discovery) ──
     get operInspClientes() { return (this.clients || []).filter(c => (c.status || 'Ativo') === 'Ativo').slice().sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '', 'pt-BR')); },
     operInspTroca() { // trocou o cliente no menu drop: a IA descobre os concorrentes e busca os posts
@@ -1539,8 +1552,8 @@ document.addEventListener('alpine:init', () => {
       try { await this.salvarProjetoApi(p); this.mostrarToast(era ? 'Publicação desmarcada.' : 'Post marcado como publicado. ✅'); }
       catch (e) { p.publicado = era; this.mostrarToast('Não salvou — confira a conexão. ⚠️'); }
     },
-    async salvarOperChk(pessoa) {
-      const c = this.operChkDoc(pessoa);
+    async salvarOperChk(clienteId) {
+      const c = this.operChkDoc(clienteId);
       c.por = (this.usuario && this.usuario.nome) || c.por;
       c.em = new Date().toISOString();
       try { await this.api('POST', '/colecoes/operacoes.checklist', { itens: this.operChecklists }); }
@@ -1560,7 +1573,12 @@ document.addEventListener('alpine:init', () => {
       for (const l of this.trafLog) if (l.clienteId) add(l.data, l.cliente);
       for (const p of (this.projects || [])) if (p.isPost && p.publicado) add(String(p.publicadoEm || p.prazo || '').slice(0, 10), p.cliente || '— Interno');
       for (const l of (this.operLog || [])) add(l.data, l.cliente || '— Interno');
-      const rot = {}; for (const c of (this.operChecklists || [])) if (c.pessoa === 'matheus' && (c.itens || []).some(i => i.feito || i.na)) rot[c.data] = true;
+      const rot = {};
+      for (const c of (this.operChecklists || [])) {
+        if (!(c.itens || []).some(i => i.feito || i.na)) continue;
+        if (c.clienteId) add(c.data, c.cliente || '— Interno'); // rotina POR CLIENTE entra no card do cliente
+        else if (c.pessoa === 'matheus') rot[c.data] = true;    // legado: rotina global antiga (dia)
+      }
       for (const d of Object.keys(rot)) if (!m[d]) m[d] = new Set();
       return Object.keys(m).sort().reverse().map(d => ({ data: d, total: m[d].size, rotina: !!rot[d] }));
     },
@@ -1570,7 +1588,7 @@ document.addEventListener('alpine:init', () => {
       const groups = {};
       const g = (nome, clienteId) => {
         const k = this._fichKey(nome);
-        if (!groups[k]) groups[k] = { cliente: k, clienteId: clienteId || '', trafDoc: null, trafLog: [], posts: [], operLog: [] };
+        if (!groups[k]) groups[k] = { cliente: k, clienteId: clienteId || '', trafDoc: null, trafLog: [], posts: [], operLog: [], rotina: null };
         if (clienteId && !groups[k].clienteId) groups[k].clienteId = clienteId;
         return groups[k];
       };
@@ -1578,6 +1596,7 @@ document.addEventListener('alpine:init', () => {
       for (const l of this.trafLog) if (l.data === dia && l.clienteId) g(l.cliente, l.clienteId).trafLog.push(l);
       for (const p of (this.projects || [])) if (p.isPost && p.publicado && String(p.publicadoEm || p.prazo || '').slice(0, 10) === dia) g(p.cliente || '— Interno').posts.push(p);
       for (const l of (this.operLog || [])) if (l.data === dia) g(l.cliente || '— Interno', l.clienteId).operLog.push(l);
+      for (const c of (this.operChecklists || [])) if (c.clienteId && c.data === dia && (c.itens || []).some(i => i.feito || i.na)) g(c.cliente || '— Interno', c.clienteId).rotina = c;
       let out = Object.values(groups).sort((a, b) => a.cliente.localeCompare(b.cliente, 'pt-BR'));
       if (this.trafFichCliFiltro) { const nome = (this.trafClientes.find(c => c.id === this.trafFichCliFiltro) || {}).nome; out = out.filter(c => c.clienteId === this.trafFichCliFiltro || (nome && c.cliente === nome)); }
       return out;
