@@ -512,6 +512,7 @@ document.addEventListener('alpine:init', () => {
     operLogForm: { clienteId: '', alteracao: '', motivo: '' },
     // Concorrentes no Instagram (aba do Matheus): cliente do menu drop + @s (IA descobre) + top posts
     operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '', operInspIA: false, operInspSemMeta: false,
+    operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '',
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -1467,6 +1468,20 @@ document.addEventListener('alpine:init', () => {
       } catch (e) { alert(e.message || e); }
     },
     operInspN(n) { n = +n || 0; return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.', ',') + ' mil' : String(n); },
+    operInspData(d) { return d ? (d.slice(8, 10) + '/' + d.slice(5, 7) + '/' + d.slice(0, 4)) : ''; },
+    operInspTipo(t) { return t === 'VIDEO' ? 'Reel' : (t === 'CAROUSEL_ALBUM' ? 'Carrossel' : 'Post'); },
+    // clicou num post do feed → abre o popup e pede a análise da IA pro Matheus
+    operInspAbrir(p) { this.operInspSel = p; this.operInspAnalise = null; this.operInspAnaliseErro = ''; this.operInspAnalisar(); },
+    async operInspAnalisar() {
+      const id = this.operInspClienteId, p = this.operInspSel; if (!id || !p) return;
+      this.operInspAnaliseLoading = true; this.operInspAnaliseErro = '';
+      try {
+        this.operInspAnalise = await this.api('POST', '/monitoramento/meta/analisar-post/' + id, {
+          post: { concorrente: p.concorrente, texto: p.texto, tipo: p.tipo, likes: p.likes, comentarios: p.comentarios, seguidores: p.seguidores },
+        });
+      } catch (e) { this.operInspAnaliseErro = (e && e.message) || 'Não consegui analisar esse post agora.'; }
+      this.operInspAnaliseLoading = false;
+    },
 
     // Marca/desmarca um post como PUBLICADO na rede — marca do social media, independente
     // do status do quadro (Concluído no quadro = criativo pronto, não que já foi ao ar).

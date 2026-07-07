@@ -2258,54 +2258,96 @@
             </template>
           </div>
 
-          <!-- Concorrentes no Instagram: menu drop de cliente + top 3 posts de melhor desempenho -->
+          <!-- Empresas do mesmo segmento: feed de posts de referência + análise por IA (popup) -->
           <div class="card" style="padding:16px;margin-bottom:14px">
             <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
-              <div class="fw-600 fs-15"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Concorrentes no Instagram</div>
-              <select class="form-select" style="max-width:280px" x-model="operInspClienteId" @change="operInspTroca()" title="Escolha o cliente pra ver o que os concorrentes dele estão postando de melhor">
+              <div>
+                <div class="fw-600 fs-15"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Empresas do mesmo segmento</div>
+                <div class="text-3 fs-12" style="margin-top:2px">Posts de referência do segmento do cliente — clique num post pra ver a análise da IA.</div>
+              </div>
+              <select class="form-select" style="max-width:280px" x-model="operInspClienteId" @change="operInspTroca()" title="Escolha o cliente pra ver referências do segmento dele">
                 <option value="">Selecione o cliente…</option>
                 <template x-for="c in operInspClientes" :key="'oic'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
               </select>
             </div>
-            <div x-show="!operInspClienteId" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente no menu acima pra espiar os concorrentes dele.</div></div>
+            <div x-show="!operInspClienteId" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente pra ver referências de empresas do mesmo segmento.</div></div>
             <div x-show="operInspClienteId">
-              <!-- @s dos concorrentes (a IA descobre ao selecionar o cliente; dá pra ajustar à mão) -->
+              <!-- @s das empresas do segmento (a IA descobre ao selecionar o cliente; dá pra ajustar à mão) -->
               <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
-                <span class="badge fs-11 fw-700" x-show="operInspIA" style="background:#EDE9FE;color:#6D28D9" title="Concorrentes descobertos automaticamente pela IA a partir do perfil do cliente"><i class="ph ph-sparkle"></i> achados pela IA</span>
+                <span class="badge fs-11 fw-700" x-show="operInspIA" style="background:#EDE9FE;color:#6D28D9" title="Empresas do mesmo segmento descobertas pela IA a partir do que o cliente realmente faz"><i class="ph ph-sparkle"></i> achadas pela IA</span>
                 <template x-for="h in operInspConc" :key="'oih'+h">
                   <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D;display:inline-flex;align-items:center;gap:4px">@<span x-text="h"></span>
-                    <i class="ph ph-x" style="cursor:pointer" @click="operInspRmConc(h)" title="Remover concorrente"></i></span>
+                    <i class="ph ph-x" style="cursor:pointer" @click="operInspRmConc(h)" title="Remover"></i></span>
                 </template>
-                <input class="form-input" style="max-width:190px" placeholder="@concorrente" x-model="operInspNovo" @keydown.enter.prevent="operInspAddConc()">
-                <button class="btn btn-ghost btn-sm" @click="operInspAddConc()" title="Adicionar concorrente deste cliente"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
+                <input class="form-input" style="max-width:210px" placeholder="@empresa do segmento" x-model="operInspNovo" @keydown.enter.prevent="operInspAddConc()">
+                <button class="btn btn-ghost btn-sm" @click="operInspAddConc()" title="Adicionar empresa do segmento"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
                 <button class="btn btn-icon btn-ghost btn-sm" x-show="operInspConc.length" @click="operInspCarrega(true)" title="Buscar de novo agora"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
               </div>
-              <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px" x-text="operInspConc.length ? 'Buscando os melhores posts dos concorrentes…' : 'A IA está descobrindo os concorrentes deste cliente…'"></div></div>
+              <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px" x-text="operInspConc.length ? 'Buscando os melhores posts do segmento…' : 'A IA está descobrindo empresas do mesmo segmento…'"></div></div>
               <div x-show="!operInspLoading && operInspErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF7E0;color:#B06000">
                 <span x-text="operInspErro"></span>
-                <button x-show="operInspSemMeta" class="btn btn-sm" style="margin-left:8px;background:#1877F2;color:#fff" @click="conectarMeta('maracatu')" title="Login/consentimento na Meta com a conta que administra a página da Maracatu"><i class="ph ph-instagram-logo ic-ph"></i> Conectar Instagram da Maracatu</button>
               </div>
-              <div x-show="!operInspLoading && !operInspErro && operInspConc.length && !operInspPosts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Nenhum post encontrado dos concorrentes.</div>
-              <div x-show="!operInspLoading && operInspPosts.length" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+              <div x-show="!operInspLoading && !operInspErro && operInspConc.length && !operInspPosts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Nenhum post encontrado dessas empresas.</div>
+              <!-- FEED: um post por vez (rola pra ver mais) -->
+              <div x-show="!operInspLoading && operInspPosts.length" style="display:flex;flex-direction:column;gap:14px;max-height:72vh;overflow:auto;padding-right:4px">
                 <template x-for="p in operInspPosts" :key="'oip'+p.link">
-                  <a :href="p.link" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;overflow:hidden;display:block" :title="'Abrir o post de @'+p.concorrente+' no Instagram'">
-                    <div style="height:150px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;overflow:hidden">
-                      <img x-show="p.img" :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null">
-                      <i x-show="!p.img" class="ph ph-instagram-logo" style="font-size:34px;opacity:.35"></i>
-                    </div>
-                    <div style="padding:10px">
-                      <div class="flex items-center gap-2 mb-1">
-                        <span class="fw-700 fs-12" x-text="'@'+p.concorrente"></span>
-                        <span class="text-3 fs-11" style="margin-left:auto" x-text="p.data ? p.data.slice(8,10)+'/'+p.data.slice(5,7) : ''"></span>
+                  <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface);cursor:pointer" @click="operInspAbrir(p)" :title="'Ver análise do post de @'+p.concorrente">
+                    <div class="flex items-center gap-2" style="padding:10px 12px">
+                      <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex:none" x-text="(p.concorrente||'?').slice(0,1).toUpperCase()"></div>
+                      <div style="line-height:1.15;min-width:0">
+                        <div class="fw-700 fs-13" x-text="'@'+p.concorrente"></div>
+                        <div class="text-3 fs-11" x-text="operInspData(p.data)+(p.seguidores? ' · '+operInspN(p.seguidores)+' seguidores':'')"></div>
                       </div>
-                      <div class="fs-12 text-2" style="min-height:32px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical" x-text="p.texto || '(sem legenda)'"></div>
-                      <div class="flex items-center gap-2" style="margin-top:8px">
-                        <span class="badge fs-11 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
-                        <span class="badge fs-11 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
-                        <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="p.tipo==='VIDEO'?'Reel':'Post'"></span>
+                      <span class="badge fs-11 fw-700" style="margin-left:auto;background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
+                      <a :href="p.link" target="_blank" rel="noopener" @click.stop style="color:var(--blue);font-weight:800;padding:0 4px" title="Abrir no Instagram">↗</a>
+                    </div>
+                    <div x-show="p.img" style="background:#000;max-height:440px;overflow:hidden;display:flex;justify-content:center">
+                      <img :src="p.img" style="max-width:100%;max-height:440px;object-fit:contain" loading="lazy" @error="p.img=null">
+                    </div>
+                    <div style="padding:12px">
+                      <div class="fs-13 text-2" style="white-space:pre-wrap;word-break:break-word" x-text="p.texto || '(sem legenda)'"></div>
+                      <div class="flex items-center gap-2" style="margin-top:10px">
+                        <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
+                        <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
+                        <span class="btn btn-sm" style="margin-left:auto;background:#EDE9FE;color:#6D28D9;pointer-events:none"><i class="ph ph-sparkle"></i> Ver análise</span>
                       </div>
                     </div>
-                  </a>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- POPUP: análise da IA do post selecionado (positivos, negativos, por que) -->
+          <div x-show="operInspSel" x-cloak @click="operInspSel=null" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:18px">
+            <div @click.stop style="background:var(--surface);border-radius:16px;max-width:560px;width:100%;max-height:86vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.35)">
+              <div class="flex items-center justify-between" style="padding:15px 18px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface)">
+                <div class="fw-700 fs-15"><i class="ph ph-sparkle" style="color:#6D28D9"></i> Análise do post <span class="text-3 fw-500" x-text="'· @'+((operInspSel||{}).concorrente||'')"></span></div>
+                <i class="ph ph-x" style="cursor:pointer;font-size:20px" @click="operInspSel=null"></i>
+              </div>
+              <div style="padding:18px">
+                <div x-show="operInspAnaliseLoading" class="text-3 fs-13" style="text-align:center;padding:26px"><i class="ph ph-sparkle" style="font-size:24px;color:#6D28D9"></i><div style="margin-top:8px">A IA está analisando esse post pro Matheus…</div></div>
+                <div x-show="!operInspAnaliseLoading && operInspAnaliseErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="operInspAnaliseErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="operInspAnalisar()">Tentar de novo</button></div>
+                <template x-if="!operInspAnaliseLoading && operInspAnalise">
+                  <div style="display:flex;flex-direction:column;gap:16px">
+                    <div>
+                      <div class="fw-700 fs-13" style="color:#059669;margin-bottom:6px"><i class="ph ph-thumbs-up"></i> Pontos positivos</div>
+                      <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px">
+                        <template x-for="(x,i) in operInspAnalise.positivos" :key="'pos'+i"><li class="fs-13 text-2" x-text="x"></li></template>
+                      </ul>
+                    </div>
+                    <div x-show="(operInspAnalise.negativos||[]).length">
+                      <div class="fw-700 fs-13" style="color:#DC2626;margin-bottom:6px"><i class="ph ph-thumbs-down"></i> Pontos negativos / a melhorar</div>
+                      <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px">
+                        <template x-for="(x,i) in operInspAnalise.negativos" :key="'neg'+i"><li class="fs-13 text-2" x-text="x"></li></template>
+                      </ul>
+                    </div>
+                    <div style="background:#EDE9FE;border-radius:12px;padding:12px 14px">
+                      <div class="fw-700 fs-13" style="color:#6D28D9;margin-bottom:4px"><i class="ph ph-target"></i> Por que esse post foi selecionado</div>
+                      <div class="fs-13" style="color:#4C1D95" x-text="operInspAnalise.porque"></div>
+                    </div>
+                    <a :href="(operInspSel||{}).link" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="align-self:flex-start"><i class="ph ph-instagram-logo"></i> Abrir o post no Instagram</a>
+                  </div>
                 </template>
               </div>
             </div>
@@ -2352,7 +2394,7 @@
               <div class="flex items-center justify-between" style="gap:8px;cursor:pointer;flex-wrap:wrap" @click="operChkAberto=!operChkAberto" title="Clique pra recolher/abrir">
                 <div class="fw-600 fs-15"><i class="ph ph-list-checks ic-ph" style="color:#34A853"></i> Rotina do dia</div>
                 <div class="flex items-center gap-2">
-                  <select class="form-select" style="max-width:190px;font-size:12px;padding:4px 8px" x-model="operInspClienteId" @click.stop @change="operInspTroca()" title="Cliente em foco — dispara a busca de concorrentes no card abaixo">
+                  <select class="form-select" style="max-width:190px;font-size:12px;padding:4px 8px" x-model="operInspClienteId" @click.stop @change="operInspTroca()" title="Cliente em foco — dispara a busca de empresas do mesmo segmento no card abaixo">
                     <option value="">Cliente…</option>
                     <template x-for="c in operInspClientes" :key="'oicr'+c.id"><option :value="c.id" x-text="c.empresa"></option></template>
                   </select>
@@ -3073,7 +3115,7 @@
         <div class="fw-800 fs-14 mb-2"><i class="ph ph-plugs-connected ic-ph"></i> Integrações</div>
         <div class="card mb-4" style="padding:16px" x-init="carregarMetaApp()">
           <div class="fw-600 fs-14 mb-1"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Instagram da Maracatu (conta-casa)</div>
-          <div class="text-3 fs-12 mb-3">Porta de entrada do SOM na Meta — usada pra puxar os posts dos concorrentes em todo o sistema. É da <b>Maracatu</b> (app próprio, nada da Alfer). Configura uma vez e fica valendo.</div>
+          <div class="text-3 fs-12 mb-3">Porta de entrada do SOM na Meta — usada pra puxar os posts das empresas do mesmo segmento em todo o sistema. É da <b>Maracatu</b> (app próprio, nada da Alfer). Configura uma vez e fica valendo.</div>
 
           <!-- PASSO 1: cadastrar o app da Maracatu na Meta (só na 1ª vez) -->
           <div x-show="!metaApp.configurado" style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
@@ -4874,7 +4916,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=302"></script>
+<script src="js/app.js?v=303"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
