@@ -513,6 +513,7 @@ document.addEventListener('alpine:init', () => {
     // Concorrentes no Instagram (aba do Matheus): cliente do menu drop + @s (IA descobre) + top posts
     operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '', operInspIA: false, operInspSemMeta: false,
     operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '', operInspExp: {}, operInspAberto: true, matSub: 'painel',
+    matTop: null, matTopLoading: false, matTopErro: '',
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, dragColNome: '', // arrastar cards entre listas + arrastar colunas (estilo Trello)
@@ -1406,6 +1407,15 @@ document.addEventListener('alpine:init', () => {
     get matPendentesDia() { return this.operPostsDia.filter(g => g.feitos < g.posts.length); },
     get matRotina() { return { feitos: this.operChkFeitos('matheus'), total: SOCIAL_ROTINA_N }; },
     get matReunioesDia() { const d = this.operChkData || this._hojeStr(); return (this.operEventosMatheus || []).filter(e => e.data === d); },
+    // Ranking dos melhores posts dos clientes (backend, cache 3h). Carrega sob demanda.
+    async carregarMelhores(force) {
+      if (this.matTopLoading) return;
+      if (!force && this.matTop) return;
+      this.matTopLoading = true; this.matTopErro = '';
+      try { this.matTop = await this.api('GET', '/monitoramento/meta/melhores-posts'); }
+      catch (e) { this.matTopErro = (e && e.message) || 'Não consegui carregar o ranking agora.'; }
+      this.matTopLoading = false;
+    },
     // % geral do dia: média de publicações + rotina (indicador único de progresso).
     get matProgressoDia() {
       const pub = this.operPostsTotal ? this.operPostsFeitos / this.operPostsTotal : 1;
