@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=245">
+  <link rel="stylesheet" href="css/styles.css?v=246">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -2369,9 +2369,8 @@
 
           <!-- (Samara) O que ainda falta hoje | Stories orgânicos de hoje — mesma linha, abaixo dos KPIs coloridos. Wrapper leva x-show; grid interno mantém display:grid. -->
           <div x-show="operTab==='samara'">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
-              <!-- ESQUERDA: O que ainda falta EM CIMA + Vídeos de hoje EMBAIXO (empilhados, mesma coluna) -->
-              <div style="display:flex;flex-direction:column;gap:14px">
+            <!-- Masonry 2 colunas: os cards da Samara empacotam sem deixar vão entre colunas de alturas diferentes. -->
+            <div class="masonry-2">
               <!-- O que ainda falta hoje (Samara — produção de conteúdo) — pulsa vermelho enquanto houver pendência (igual Matheus) -->
               <div class="card" style="padding:16px" :class="samPendentesHoje.total>0 ? 'pulse-red' : ''">
                 <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
@@ -2559,10 +2558,8 @@
                   <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
                 </div>
               </div>
-              </div><!-- /flex esquerda (Falta · Vídeos · Roteiros · Captações · GMN) -->
-              <!-- DIREITA: Stories orgânicos EM CIMA + Registro EMBAIXO (flex-column). Quando o Stories recolhe, o Registro sobe junto. -->
-              <div style="display:flex;flex-direction:column;gap:14px">
-              <!-- Stories orgânicos de hoje (movido pra CÁ, ao lado do "O que ainda falta") -->
+              <!-- Stories e Registro seguem na sequência do masonry (ficam juntos; recolher o Stories continua puxando o Registro pra cima). -->
+              <!-- Stories orgânicos de hoje -->
               <div class="card" style="padding:16px">
                 <div class="flex items-center justify-between mb-1" style="gap:8px">
                   <div class="fw-600 fs-15" style="cursor:pointer;flex:1;min-width:0" @click="samStoriesAberto=!samStoriesAberto" title="Recolher/expandir"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div>
@@ -2615,8 +2612,7 @@
                   </template>
                 </div>
               </div>
-              </div><!-- /flex direita (Stories + Registro) -->
-            </div>
+            </div><!-- /masonry-2 -->
           </div>
 
           <!-- LINHA 2: O que ainda falta hoje | Rotina do dia (lado a lado) -->
@@ -5691,7 +5687,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=377"></script>
+<script src="js/app.js?v=378"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
