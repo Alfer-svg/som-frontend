@@ -2343,24 +2343,59 @@
 
           <!-- LINHA 1: Agenda | Painel (lado a lado) — align stretch p/ o Painel ter a MESMA altura da Agenda -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:stretch">
-          <!-- (a2) Agenda -->
-          <div class="card" style="padding:16px">
-            <div class="flex items-center justify-between mb-2" style="gap:8px">
-              <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
-              <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar evento — o colaborador já entra vinculado"><i class="ph ph-plus ic-ph"></i> Evento</button>
-            </div>
-            <div x-show="!operEventosMatheus.length" class="text-3 fs-13" style="padding:16px 0;text-align:center"><i class="ph ph-calendar-check" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Sem eventos futuros.</div></div>
-            <div x-show="operEventosMatheus.length" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto">
-              <template x-for="ev in operEventosMatheus.slice(0,6)" :key="'oema'+ev.id">
-                <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;cursor:pointer" @click="editarEvento(ev)" title="Abrir/editar o evento">
-                  <span class="badge fs-11 fw-700" style="background:#FEF7E0;color:#B06000;flex-shrink:0;white-space:nowrap"><span x-text="ev.data.slice(8,10)+'/'+ev.data.slice(5,7)"></span><span x-show="ev.hora" x-text="' · '+ev.hora"></span></span>
-                  <div style="flex:1;min-width:0">
-                    <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.titulo"></div>
-                    <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.cliente"></div>
+          <!-- LINHA 1 · célula esquerda: Matheus = Postagens do dia (trocada com a Agenda) · Samara = Agenda -->
+          <div>
+            <!-- Postagens do dia (Matheus) -->
+            <div class="card" style="padding:16px" x-show="operTab==='matheus'">
+              <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
+                <div class="fw-600 fs-15"><i class="ph ph-megaphone ic-ph" style="color:#4285F4"></i> Postagens do dia<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
+                <div class="flex items-center gap-2">
+                  <span class="badge fs-12 fw-700" :style="operPostsViewTotal && operPostsViewFeitos>=operPostsViewTotal?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-show="operPostsViewTotal" x-text="operPostsViewFeitos+'/'+operPostsViewTotal+' publicados'"></span>
+                  <button class="btn btn-ghost btn-sm" @click="operImportModal=true" title="Importar uma demanda interna (post avulso do quadro) para este dia"><i class="ph ph-download-simple ic-ph"></i> Importar</button>
+                </div>
+              </div>
+              <div x-show="!operPostsDiaView.length" class="text-3 fs-13" style="padding:22px 0;text-align:center"><i class="ph ph-coffee" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px" x-text="operClienteFocoNome ? ('Nenhuma postagem de '+operClienteFocoNome+' programada para este dia.') : 'Nenhuma postagem programada para este dia.'"></div></div>
+              <template x-for="g in operPostsDiaView" :key="'opg'+g.cliente">
+                <div style="margin-bottom:12px">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span :style="'width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;overflow:hidden;flex-shrink:0;background:'+avatarBg(g.cliente)+';color:'+avatarFg(g.cliente)" x-text="g.cliente.charAt(0).toUpperCase()"></span>
+                    <span class="fw-700 fs-13" x-text="g.cliente"></span>
+                    <span class="text-3 fs-11" x-text="'· '+g.posts.length+' post'+(g.posts.length>1?'s':'')"></span>
                   </div>
+                  <template x-for="p in g.posts" :key="'opp'+p.id">
+                    <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
+                      <input type="checkbox" :checked="!!p.publicado" @click.stop="operTogglePost(p)" style="cursor:pointer;width:18px;height:18px;flex-shrink:0;accent-color:#34A853" :title="p.publicado?'Desmarcar publicação':'Marcar como publicado'">
+                      <div class="flex items-center gap-2" style="flex:1;min-width:0;cursor:pointer" @click="operAbrirPost(p)" title="Abrir no quadro de Produção">
+                        <span class="badge fs-11 fw-700" style="background:#F4F8FE;color:#1967D2;flex-shrink:0" x-text="p.tipoPost||'Post'"></span>
+                        <span class="badge fs-11 fw-700" x-show="p.avulso" style="background:#CCFBF1;color:#0d9488;flex-shrink:0" title="Demanda interna importada">Interna</span>
+                        <span class="fs-13 fw-600" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="p.publicado?'text-decoration:line-through;color:var(--text-3)':''" x-text="p.tema||p.nome||'Sem título'"></span>
+                      </div>
+                      <span class="badge fs-11 fw-700" x-show="p.publicado" style="background:#E6F4EA;color:#15803d;flex-shrink:0"><i class="ph ph-check-circle"></i> Publicado</span>
+                      <span class="badge fs-11 fw-700" x-show="!p.publicado" :style="'background:'+operStatusCor(p.status).bg+';color:'+operStatusCor(p.status).cor" x-text="p.status||'A Fazer'"></span>
+                    </div>
+                  </template>
                 </div>
               </template>
-              <button x-show="operEventosMatheus.length>6" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-6)+' na agenda completa'"></button>
+            </div>
+            <!-- Agenda (Samara mantém a agenda aqui na LINHA 1) -->
+            <div class="card" style="padding:16px" x-show="operTab==='samara'">
+              <div class="flex items-center justify-between mb-2" style="gap:8px">
+                <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
+                <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar evento — o colaborador já entra vinculado"><i class="ph ph-plus ic-ph"></i> Evento</button>
+              </div>
+              <div x-show="!operEventosMatheus.length" class="text-3 fs-13" style="padding:16px 0;text-align:center"><i class="ph ph-calendar-check" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Sem eventos futuros.</div></div>
+              <div x-show="operEventosMatheus.length" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto">
+                <template x-for="ev in operEventosMatheus.slice(0,6)" :key="'oemaS'+ev.id">
+                  <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;cursor:pointer" @click="editarEvento(ev)" title="Abrir/editar o evento">
+                    <span class="badge fs-11 fw-700" style="background:#FEF7E0;color:#B06000;flex-shrink:0;white-space:nowrap"><span x-text="ev.data.slice(8,10)+'/'+ev.data.slice(5,7)"></span><span x-show="ev.hora" x-text="' · '+ev.hora"></span></span>
+                    <div style="flex:1;min-width:0">
+                      <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.titulo"></div>
+                      <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.cliente"></div>
+                    </div>
+                  </div>
+                </template>
+                <button x-show="operEventosMatheus.length>6" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-6)+' na agenda completa'"></button>
+              </div>
             </div>
           </div>
           <!-- (c) Painel do dia -->
@@ -2810,37 +2845,25 @@
               </template>
             </div>
           </div>
-          <!-- Postagens do dia — movida pra CÁ (embaixo da Rotina, mesma coluna): recolhe/expande a Rotina e a Postagens sobe/desce junto. -->
+          <!-- Agenda (Matheus) — trocada de lugar com Postagens do dia (agora fica embaixo da Rotina). -->
           <div class="card" style="padding:16px" x-show="operTab==='matheus'">
-            <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
-              <div class="fw-600 fs-15"><i class="ph ph-megaphone ic-ph" style="color:#4285F4"></i> Postagens do dia<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
-              <div class="flex items-center gap-2">
-                <span class="badge fs-12 fw-700" :style="operPostsViewTotal && operPostsViewFeitos>=operPostsViewTotal?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-show="operPostsViewTotal" x-text="operPostsViewFeitos+'/'+operPostsViewTotal+' publicados'"></span>
-                <button class="btn btn-ghost btn-sm" @click="operImportModal=true" title="Importar uma demanda interna (post avulso do quadro) para este dia"><i class="ph ph-download-simple ic-ph"></i> Importar</button>
-              </div>
+            <div class="flex items-center justify-between mb-2" style="gap:8px">
+              <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
+              <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar evento — o colaborador já entra vinculado"><i class="ph ph-plus ic-ph"></i> Evento</button>
             </div>
-            <div x-show="!operPostsDiaView.length" class="text-3 fs-13" style="padding:22px 0;text-align:center"><i class="ph ph-coffee" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px" x-text="operClienteFocoNome ? ('Nenhuma postagem de '+operClienteFocoNome+' programada para este dia.') : 'Nenhuma postagem programada para este dia.'"></div></div>
-            <template x-for="g in operPostsDiaView" :key="'opg'+g.cliente">
-              <div style="margin-bottom:12px">
-                <div class="flex items-center gap-2 mb-1">
-                  <span :style="'width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;overflow:hidden;flex-shrink:0;background:'+avatarBg(g.cliente)+';color:'+avatarFg(g.cliente)" x-text="g.cliente.charAt(0).toUpperCase()"></span>
-                  <span class="fw-700 fs-13" x-text="g.cliente"></span>
-                  <span class="text-3 fs-11" x-text="'· '+g.posts.length+' post'+(g.posts.length>1?'s':'')"></span>
-                </div>
-                <template x-for="p in g.posts" :key="'opp'+p.id">
-                  <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px">
-                    <input type="checkbox" :checked="!!p.publicado" @click.stop="operTogglePost(p)" style="cursor:pointer;width:18px;height:18px;flex-shrink:0;accent-color:#34A853" :title="p.publicado?'Desmarcar publicação':'Marcar como publicado'">
-                    <div class="flex items-center gap-2" style="flex:1;min-width:0;cursor:pointer" @click="operAbrirPost(p)" title="Abrir no quadro de Produção">
-                      <span class="badge fs-11 fw-700" style="background:#F4F8FE;color:#1967D2;flex-shrink:0" x-text="p.tipoPost||'Post'"></span>
-                      <span class="badge fs-11 fw-700" x-show="p.avulso" style="background:#CCFBF1;color:#0d9488;flex-shrink:0" title="Demanda interna importada">Interna</span>
-                      <span class="fs-13 fw-600" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="p.publicado?'text-decoration:line-through;color:var(--text-3)':''" x-text="p.tema||p.nome||'Sem título'"></span>
-                    </div>
-                    <span class="badge fs-11 fw-700" x-show="p.publicado" style="background:#E6F4EA;color:#15803d;flex-shrink:0"><i class="ph ph-check-circle"></i> Publicado</span>
-                    <span class="badge fs-11 fw-700" x-show="!p.publicado" :style="'background:'+operStatusCor(p.status).bg+';color:'+operStatusCor(p.status).cor" x-text="p.status||'A Fazer'"></span>
+            <div x-show="!operEventosMatheus.length" class="text-3 fs-13" style="padding:16px 0;text-align:center"><i class="ph ph-calendar-check" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Sem eventos futuros.</div></div>
+            <div x-show="operEventosMatheus.length" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto">
+              <template x-for="ev in operEventosMatheus.slice(0,6)" :key="'oema'+ev.id">
+                <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;cursor:pointer" @click="editarEvento(ev)" title="Abrir/editar o evento">
+                  <span class="badge fs-11 fw-700" style="background:#FEF7E0;color:#B06000;flex-shrink:0;white-space:nowrap"><span x-text="ev.data.slice(8,10)+'/'+ev.data.slice(5,7)"></span><span x-show="ev.hora" x-text="' · '+ev.hora"></span></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.titulo"></div>
+                    <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.cliente"></div>
                   </div>
-                </template>
-              </div>
-            </template>
+                </div>
+              </template>
+              <button x-show="operEventosMatheus.length>6" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-6)+' na agenda completa'"></button>
+            </div>
           </div>
           <!-- Registro & otimizações do dia (Matheus) — abaixo de Rotina/Postagens. Na Samara ele fica na coluna do Stories (acompanha o recolher). -->
           <div class="card" style="padding:14px" x-show="operTab==='matheus'">
@@ -5704,7 +5727,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=382"></script>
+<script src="js/app.js?v=383"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
