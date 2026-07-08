@@ -1426,6 +1426,31 @@ document.addEventListener('alpine:init', () => {
     // Postagens do dia FILTRADAS pelo cliente em foco (se houver um selecionado no card de data).
     get operPostsDiaView() { const nome = this.operClienteFocoNome; return nome ? this.operPostsDia.filter(g => g.cliente === nome) : this.operPostsDia; },
     get operPostsViewTotal() { return this.operPostsDiaView.reduce((s, g) => s + g.posts.length, 0); },
+    // Lista PLANA de posts (pra tabela): cada item = { p, cliente, primeiro (1º do cliente), nCli }.
+    get operPostsFlat() {
+      const out = [];
+      for (const g of this.operPostsDiaView) g.posts.forEach((p, i) => out.push({ p, cliente: g.cliente, primeiro: i === 0, nCli: g.posts.length }));
+      return out;
+    },
+    // Formato legível + ícone a partir do tipo do post.
+    formatoPost(p) {
+      const t = String((p && p.tipoPost) || '').toLowerCase();
+      if (/reel|v[íi]deo|video/.test(t)) return { label: 'Video', ico: 'ph-play-circle' };
+      if (/carrossel|carousel/.test(t)) return { label: 'Carrossel', ico: 'ph-squares-four' };
+      if (/est[áa]tico|foto|imagem/.test(t)) return { label: 'Foto', ico: 'ph-image' };
+      return { label: (p && p.tipoPost) || 'Post', ico: 'ph-image' };
+    },
+    // Rótulo da semana (segunda a domingo) que contém a data.
+    semanaPostLabel(dateStr) {
+      const base = String(dateStr || this.operChkData || this._hojeStr());
+      const d = new Date(base + 'T00:00:00'); if (isNaN(d.getTime())) return '';
+      const dow = (d.getDay() + 6) % 7; // 0 = segunda
+      const seg = new Date(d); seg.setDate(d.getDate() - dow);
+      const dom = new Date(seg); dom.setDate(seg.getDate() + 6);
+      const f = x => String(x.getDate()).padStart(2, '0') + '/' + String(x.getMonth() + 1).padStart(2, '0');
+      const mesmoMes = seg.getMonth() === dom.getMonth();
+      return (mesmoMes ? String(seg.getDate()).padStart(2, '0') : f(seg)) + ' a ' + f(dom);
+    },
     get operPostsViewFeitos() { return this.operPostsDiaView.reduce((s, g) => s + g.feitos, 0); },
     // Resumo do quadro (Trello): o que precisa ser feito — atrasados e pendentes desta semana.
     get operResumoTrelo() {
