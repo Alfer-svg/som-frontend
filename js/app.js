@@ -1601,6 +1601,14 @@ document.addEventListener('alpine:init', () => {
     get samStoriesNaMeta() { return this.samStoriesMeta.filter(m => this.samStoryMetaOk(m)).length; },
     // preenche cada cliente com o piso da faixa (atalho); demanda fica em 1
     samStoriesPreencherMeta() { this.samStoriesMeta.forEach(m => { if (this.samStoryQtd(m.cliente) < m.min) this._samStorySet(m.cliente, m.min); }); },
+    // Pendências da Samara hoje (pro card "O que ainda falta" do painel compartilhado):
+    // stories abaixo da meta + vídeos não concluídos + roteiros não prontos.
+    get samPendentesHoje() {
+      const stories = (this.samStoriesMeta || []).filter(m => !this.samStoryMetaOk(m)).length;
+      const videos = (this.samVideosHoje || []).filter(v => v.status !== 'concluido').length;
+      const roteiros = (this.samRoteiros || []).filter(r => r.status !== 'pronto').length;
+      return { stories, videos, roteiros, total: stories + videos + roteiros };
+    },
 
     // ── Dia de Google Meu Negócio (checklist semanal, quarta-feira) ──
     _samGmnRec(cli) { const sem = this._semanaISO(new Date()); return this.samGmn.find(g => g.clienteId === cli.id && g.semana === sem); },
