@@ -2398,25 +2398,8 @@
               </div>
             </div>
           </div>
-          <!-- (c) Painel do dia -->
-          <div class="card" style="padding:16px;display:flex;flex-direction:column">
-            <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
-              <div>
-                <div class="fw-600 fs-15"><i class="ph ph-gauge ic-ph" style="color:#4285F4"></i> Painel — <span x-text="operTab==='samara'?'Samara':'Matheus'"></span></div>
-                <div class="text-3 fs-12" style="text-transform:capitalize" x-text="operChkLabel"></div>
-              </div>
-              <div class="flex items-center gap-2">
-                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
-                <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()">Hoje</button>
-                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
-              </div>
-            </div>
-            <div style="margin-top:auto;padding-top:16px">
-              <div class="flex items-center justify-between" style="margin-bottom:6px"><span class="fs-13 fw-700">Progresso do dia</span><span class="fw-800 fs-18" :style="'color:'+corScore(progressoDia)" x-text="progressoDia+'%'"></span></div>
-              <div class="progress" style="height:10px"><div :style="'width:'+progressoDia+'%;background:'+corScore(progressoDia)"></div></div>
-            </div>
-          </div>
-          </div><!-- /LINHA 1 (Agenda | Painel) -->
+          <!-- (c) Painel do dia MIGROU pro topo da coluna direita da LINHA 2 (flui com Rotina/Agenda/Registro, sem deixar vão ao lado da Postagens comprida). -->
+          </div><!-- /LINHA 1 (agora só Postagens/Agenda em largura cheia) -->
 
           <!-- KPIs coloridos "Produção de conteúdo" (Samara) — logo abaixo da Agenda|Painel. Wrapper leva o x-show; o grid interno mantém display:grid (armadilha Alpine). -->
           <div x-show="operTab==='samara'" style="margin-bottom:14px">
@@ -2811,6 +2794,24 @@
           <!-- Célula direita da LINHA 2: Rotina EM CIMA + Postagens EMBAIXO (empilhados numa coluna flex). -->
           <!-- flex SEM x-show (armadilha Alpine: x-show zera display:flex). Cada card interno leva seu próprio x-show. -->
           <div style="display:flex;flex-direction:column;gap:14px">
+          <!-- (c) Painel do dia — MOVIDO pra CÁ (topo da coluna direita), acompanha Rotina/Agenda/Registro sem deixar vão. -->
+          <div class="card" style="padding:16px;display:flex;flex-direction:column">
+            <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
+              <div>
+                <div class="fw-600 fs-15"><i class="ph ph-gauge ic-ph" style="color:#4285F4"></i> Painel — <span x-text="operTab==='samara'?'Samara':'Matheus'"></span></div>
+                <div class="text-3 fs-12" style="text-transform:capitalize" x-text="operChkLabel"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()">Hoje</button>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
+              </div>
+            </div>
+            <div style="margin-top:auto;padding-top:16px">
+              <div class="flex items-center justify-between" style="margin-bottom:6px"><span class="fs-13 fw-700">Progresso do dia</span><span class="fw-800 fs-18" :style="'color:'+corScore(progressoDia)" x-text="progressoDia+'%'"></span></div>
+              <div class="progress" style="height:10px"><div :style="'width:'+progressoDia+'%;background:'+corScore(progressoDia)"></div></div>
+            </div>
+          </div>
           <!-- Rotina do dia — 2º card da LINHA 2 (só na aba do Matheus) -->
           <div class="card" x-show="operTab==='matheus'" style="padding:16px">
             <div class="flex items-center justify-between" style="gap:8px;cursor:pointer;flex-wrap:wrap" @click="operChkAberto=!operChkAberto" title="Clique pra recolher/abrir">
@@ -5727,7 +5728,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=384"></script>
+<script src="js/app.js?v=385"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
