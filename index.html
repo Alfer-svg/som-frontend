@@ -2457,7 +2457,46 @@
                 </template>
               </div>
           </div>
-          </div><!-- /flex Empresas+FaltaHoje (célula esquerda) -->
+          <!-- (e) Melhores posts dos clientes — MOVIDO pra CÁ: abaixo do "O que ainda falta hoje", mesma coluna (só aba Matheus; Samara tem cópia abaixo dos Stories) -->
+          <div class="card" style="padding:16px" x-show="operTab==='matheus'" x-init="carregarMelhores()">
+            <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
+              <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts dos clientes
+                <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="btn btn-icon btn-ghost btn-sm" x-show="matTopAberto" @click="carregarMelhores(true)" :disabled="matTopLoading" title="Atualizar ranking"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="matTopAberto=!matTopAberto" :title="matTopAberto?'Recolher':'Expandir'"><i class="ph" :class="matTopAberto?'ph-caret-up':'ph-caret-down'"></i></button>
+              </div>
+            </div>
+            <div x-show="matTopAberto">
+              <div class="text-3 fs-12 mb-3" style="margin-top:6px" x-show="matTop && matTop.criterio"><i class="ph ph-info ic-ph"></i> <span x-text="matTop && matTop.criterio"></span></div>
+              <div x-show="matTopLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-trophy" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Avaliando os posts dos clientes…</div></div>
+              <div x-show="!matTopLoading && matTopErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="matTopErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="carregarMelhores(true)">Tentar de novo</button></div>
+              <div x-show="!matTopLoading && matTop && !matTop.posts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Sem posts com métrica ainda — conecte os clientes no Meta.</div>
+              <template x-if="!matTopLoading && matTop && matTop.posts.length">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <!-- fonte filtrada por perfil: Samara=Reels/Vídeos · Matheus=Posts · admin=Todos -->
+                  <template x-for="(p,i) in (operTab==='samara' ? filtraMidiaReels(matTop.posts) : filtraMidiaPosts(matTop.posts))" :key="'mtp'+p.link">
+                    <a :href="p.link" target="_blank" rel="noopener" class="flex items-center" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:8px;gap:10px" :title="'Abrir o post de '+p.cliente+' no Instagram'">
+                      <span class="fw-800 fs-16" style="width:28px;text-align:center;flex:none" :style="i===0?'color:#F59E0B':(i===1?'color:#9CA3AF':(i===2?'color:#B45309':'color:var(--text-3)'))" x-text="'#'+(i+1)"></span>
+                      <div style="width:52px;height:52px;border-radius:8px;background:var(--surface-2);overflow:hidden;flex:none" x-show="p.img"><img :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null"></div>
+                      <div style="flex:1;min-width:0">
+                        <div class="fs-13 fw-700" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.cliente"></div>
+                        <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.texto || '(sem legenda)'"></div>
+                        <div class="flex items-center gap-2" style="margin-top:3px">
+                          <span class="badge fs-11 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
+                          <span class="badge fs-11 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
+                          <span class="badge fs-11 fw-700" x-show="p.engajamentoPct!=null" style="background:#ECFEFF;color:#0891B2" x-text="p.engajamentoPct+'% engaj.'"></span>
+                          <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
+                        </div>
+                      </div>
+                    </a>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+          </div><!-- /flex Empresas+FaltaHoje+Melhores (célula esquerda) -->
           <!-- Célula direita da LINHA 2: Rotina EM CIMA + Postagens EMBAIXO (empilhados numa coluna flex). -->
           <!-- flex SEM x-show (armadilha Alpine: x-show zera display:flex). Cada card interno leva seu próprio x-show. -->
           <div style="display:flex;flex-direction:column;gap:14px">
@@ -2602,46 +2641,8 @@
           </div>
 
             <!-- Empresas do mesmo segmento MIGROU pra célula esquerda da LINHA 2 (empilhado sobre o "O que falta hoje"). -->
-            <!-- (e) Melhores posts dos clientes — COMUM (mesmo filtro de mídia por perfil); agora em LARGURA CHEIA (card solto) -->
-            <!-- Ranking dos melhores posts dos clientes (recolhível) — só aba Matheus; na Samara vai abaixo dos Stories -->
-            <div class="card" style="padding:16px;margin-bottom:14px" x-show="operTab==='matheus'" x-init="carregarMelhores()">
-              <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
-                <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts dos clientes
-                  <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button class="btn btn-icon btn-ghost btn-sm" x-show="matTopAberto" @click="carregarMelhores(true)" :disabled="matTopLoading" title="Atualizar ranking"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
-                  <button class="btn btn-icon btn-ghost btn-sm" @click="matTopAberto=!matTopAberto" :title="matTopAberto?'Recolher':'Expandir'"><i class="ph" :class="matTopAberto?'ph-caret-up':'ph-caret-down'"></i></button>
-                </div>
-              </div>
-              <div x-show="matTopAberto">
-                <div class="text-3 fs-12 mb-3" style="margin-top:6px" x-show="matTop && matTop.criterio"><i class="ph ph-info ic-ph"></i> <span x-text="matTop && matTop.criterio"></span></div>
-                <div x-show="matTopLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-trophy" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Avaliando os posts dos clientes…</div></div>
-                <div x-show="!matTopLoading && matTopErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="matTopErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="carregarMelhores(true)">Tentar de novo</button></div>
-                <div x-show="!matTopLoading && matTop && !matTop.posts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Sem posts com métrica ainda — conecte os clientes no Meta.</div>
-                <template x-if="!matTopLoading && matTop && matTop.posts.length">
-                  <div style="display:flex;flex-direction:column;gap:8px">
-                    <!-- fonte filtrada por perfil: Samara=Reels/Vídeos · Matheus=Posts · admin=Todos -->
-                    <template x-for="(p,i) in (operTab==='samara' ? filtraMidiaReels(matTop.posts) : filtraMidiaPosts(matTop.posts))" :key="'mtp'+p.link">
-                      <a :href="p.link" target="_blank" rel="noopener" class="flex items-center" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:8px;gap:10px" :title="'Abrir o post de '+p.cliente+' no Instagram'">
-                        <span class="fw-800 fs-16" style="width:28px;text-align:center;flex:none" :style="i===0?'color:#F59E0B':(i===1?'color:#9CA3AF':(i===2?'color:#B45309':'color:var(--text-3)'))" x-text="'#'+(i+1)"></span>
-                        <div style="width:52px;height:52px;border-radius:8px;background:var(--surface-2);overflow:hidden;flex:none" x-show="p.img"><img :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null"></div>
-                        <div style="flex:1;min-width:0">
-                          <div class="fs-13 fw-700" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.cliente"></div>
-                          <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.texto || '(sem legenda)'"></div>
-                          <div class="flex items-center gap-2" style="margin-top:3px">
-                            <span class="badge fs-11 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
-                            <span class="badge fs-11 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
-                            <span class="badge fs-11 fw-700" x-show="p.engajamentoPct!=null" style="background:#ECFEFF;color:#0891B2" x-text="p.engajamentoPct+'% engaj.'"></span>
-                            <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
-                          </div>
-                        </div>
-                      </a>
-                    </template>
-                  </div>
-                </template>
-              </div>
-            </div><!-- /Melhores posts (largura cheia) -->
+            <!-- (e) Melhores posts dos clientes (Matheus) MIGROU pra célula esquerda da LINHA 2, abaixo do "O que ainda falta hoje". -->
+            <div style="display:none"></div>
 
             <!-- ─── COLUNAS (só os cards EXCLUSIVOS por perfil) ─── -->
             <!-- Coluna MATHEUS removida: seu único card (Postagens do dia) migrou p/ a coluna flex embaixo da Rotina (LINHA 2). -->
@@ -5669,7 +5670,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=364"></script>
+<script src="js/app.js?v=365"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
