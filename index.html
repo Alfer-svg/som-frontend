@@ -2341,8 +2341,8 @@
           </div>
           </div><!-- /wrapper x-show dos KPIs (x-show num wrapper pra não zerar o display:grid) -->
 
-          <!-- LINHA 1: Agenda | Painel (lado a lado) — align stretch p/ o Painel ter a MESMA altura da Agenda -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:stretch">
+          <!-- LINHA 1: Postagens (Matheus)/Agenda (Samara) | Painel — align START p/ o Painel NÃO esticar quando o card ao lado é comprido. -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
           <!-- LINHA 1 · célula esquerda: Matheus = Postagens do dia (trocada com a Agenda) · Samara = Agenda -->
           <div>
             <!-- Postagens do dia (Matheus) -->
@@ -5727,7 +5727,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=383"></script>
+<script src="js/app.js?v=384"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
