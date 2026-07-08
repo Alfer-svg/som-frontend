@@ -2355,6 +2355,50 @@
           </div>
           <!-- /grid Agenda + O que ainda falta hoje -->
 
+          <!-- Tarefas delegadas pela Laryssa (por frente da aba + cliente em foco) -->
+          <div class="card" x-show="operClienteObj && tarefasDelegadas(operClienteObj, operTab).length" style="padding:16px;margin-bottom:14px;border-left:3px solid #7c3aed">
+            <div class="fw-600 fs-15 mb-2"><i class="ph ph-clipboard-text ic-ph" style="color:#7c3aed"></i> Tarefas da Laryssa<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
+            <template x-for="t in tarefasDelegadas(operClienteObj, operTab)" :key="'td'+t.id">
+              <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+                <div class="flex items-start gap-2">
+                  <i class="ph ic-ph" :class="t.status==='feito'?'ph-check-circle':'ph-circle-dashed'" :style="t.status==='feito'?'color:#16a34a':'color:#7c3aed'" style="font-size:19px;flex:none;margin-top:1px"></i>
+                  <div style="flex:1;min-width:0">
+                    <div class="fs-13 fw-600" :style="t.status==='feito'?'color:var(--text-3);text-decoration:line-through':''" x-text="t.titulo"></div>
+                    <div class="text-3 fs-11" x-show="t.status!=='feito'">delegada por <span x-text="t.delegadaPor||'Laryssa'"></span></div>
+                    <div class="fs-12" style="margin-top:4px;background:#F3FAF6;border:1px solid #dcfce7;border-radius:8px;padding:6px 8px" x-show="t.status==='feito'"><b style="color:#15803d">Feito</b> por <span x-text="t.feitoPorNome"></span> — <span class="text-3" x-text="t.feedback"></span></div>
+                  </div>
+                  <button x-show="t.status!=='feito'" class="btn btn-sm" style="background:#16a34a;color:#fff;border-color:#16a34a;white-space:nowrap" @click="concluirTarefaDelegada(operClienteObj,t)"><i class="ph ph-check ic-ph"></i> Concluir</button>
+                  <button x-show="t.status==='feito'" class="btn btn-icon btn-ghost btn-sm" @click="removerTarefaDelegada(operClienteObj,t)" title="Remover" style="color:var(--text-3)"><i class="ph ph-x ic-ph"></i></button>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- GMN — Google Meu Negócio: só na aba da Samara, na parte superior -->
+          <div x-show="operTab==='samara'">
+            <div x-show="samGmnEstado.modo==='azul'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#F4F8FE;border:1px solid #D2E3FC;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i>
+              <span x-show="samGmnEstado.amanha"><b>Amanhã é quarta</b> — dia de verificar e atualizar o Google Meu Negócio dos clientes.</span>
+              <span x-show="!samGmnEstado.amanha">O <b>Google Meu Negócio</b> dos clientes é verificado toda <b>quarta-feira</b>.</span>
+            </div>
+            <div x-show="samGmnEstado.modo==='vermelho'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#FEF6F4;border:1px solid #FCE8E6;color:#EA4335;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <i class="ph ph-warning-circle ic-ph"></i> <span><b>O GMN da semana ficou incompleto</b> — <span x-text="samGmnEstado.feitos"></span> de <span x-text="samGmnEstado.total"></span> clientes verificados na quarta. Feche os que faltam.</span>
+            </div>
+            <div class="card" style="padding:16px;margin-bottom:14px" x-show="samGmnEstado.modo==='checklist'">
+              <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i> Dia de Google Meu Negócio</div><span class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4">QUARTA</span></div>
+              <div class="text-3 fs-12 mb-3">Verificar avaliações + atualizar posts · marque conforme faz.</div>
+              <template x-for="c in samClientes" :key="'sg'+c.id">
+                <div class="flex items-center" style="gap:10px;margin-bottom:8px;cursor:pointer" @click="samToggleGmn(c)">
+                  <span style="width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid" :style="samGmnVerif(c)?'background:#34A853;border-color:#34A853;color:#fff':'border-color:#D1D5DB;color:transparent'"><i class="ph ph-check" style="font-size:13px"></i></span>
+                  <div class="fs-13 fw-600" style="flex:1" x-text="c.empresa||c.nome"></div>
+                  <span class="text-3 fs-11" x-show="samGmnVerif(c)" x-text="'verificado '+samGmnHora(c)"></span>
+                  <span class="text-3 fs-11" x-show="!samGmnVerif(c)">pendente</span>
+                </div>
+              </template>
+              <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
+            </div>
+          </div>
+
           <!-- (c) Painel do dia — progresso do perfil da aba (Matheus: postagens/rotina · Samara: produção) -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:stretch">
               <div class="card" style="padding:16px;display:flex;flex-direction:column">
@@ -2528,29 +2572,6 @@
 
               <!-- Coluna MATHEUS (social media) -->
               <div x-show="operTab==='matheus'" style="display:flex;flex-direction:column;gap:14px">
-
-                <!-- GMN — Google Meu Negócio (só na quarta aparece o checklist) -->
-                <div x-show="samGmnEstado.modo==='azul'" class="card fs-13" style="padding:12px 16px;background:#F4F8FE;border:1px solid #D2E3FC;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                  <i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i>
-                  <span x-show="samGmnEstado.amanha"><b>Amanhã é quarta</b> — dia de verificar e atualizar o Google Meu Negócio dos clientes.</span>
-                  <span x-show="!samGmnEstado.amanha">O <b>Google Meu Negócio</b> dos clientes é verificado toda <b>quarta-feira</b>.</span>
-                </div>
-                <div x-show="samGmnEstado.modo==='vermelho'" class="card fs-13" style="padding:12px 16px;background:#FEF6F4;border:1px solid #FCE8E6;color:#EA4335;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                  <i class="ph ph-warning-circle ic-ph"></i> <span><b>O GMN da semana ficou incompleto</b> — <span x-text="samGmnEstado.feitos"></span> de <span x-text="samGmnEstado.total"></span> clientes verificados na quarta. Feche os que faltam.</span>
-                </div>
-                <div class="card" style="padding:16px" x-show="samGmnEstado.modo==='checklist'">
-                  <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i> Dia de Google Meu Negócio</div><span class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4">QUARTA</span></div>
-                  <div class="text-3 fs-12 mb-3">Verificar avaliações + atualizar posts · marque conforme faz.</div>
-                  <template x-for="c in samClientes" :key="'sg'+c.id">
-                    <div class="flex items-center" style="gap:10px;margin-bottom:8px;cursor:pointer" @click="samToggleGmn(c)">
-                      <span style="width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid" :style="samGmnVerif(c)?'background:#34A853;border-color:#34A853;color:#fff':'border-color:#D1D5DB;color:transparent'"><i class="ph ph-check" style="font-size:13px"></i></span>
-                      <div class="fs-13 fw-600" style="flex:1" x-text="c.empresa||c.nome"></div>
-                      <span class="text-3 fs-11" x-show="samGmnVerif(c)" x-text="'verificado '+samGmnHora(c)"></span>
-                      <span class="text-3 fs-11" x-show="!samGmnVerif(c)">pendente</span>
-                    </div>
-                  </template>
-                  <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
-                </div>
 
             <!-- KPIs do dia (responsivo: quebra em 2-3 por linha dentro da coluna) -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px">
@@ -3138,6 +3159,58 @@
 
             <!-- ░░ RODAPÉ ░░ -->
             <div class="text-3 fs-11" style="text-align:center;padding:6px 0 20px"><i class="ph ph-map-pin ic-ph"></i> Maracatu Digital · Recife, PE</div>
+
+            <!-- METAS do cliente (a estrategista define) -->
+            <div class="card" style="padding:16px;margin-bottom:14px">
+              <div class="fw-600 fs-15 mb-1"><i class="ph ph-target ic-ph" style="color:#4285F4"></i> Metas do cliente</div>
+              <div class="text-3 fs-12 mb-3">Defina os objetivos que guiam o trabalho do Matheus e da Samara. A IA usa as metas + o relatório pra sugerir tarefas.</div>
+              <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+                <input class="input fs-13" style="flex:2;min-width:200px" placeholder="Objetivo (ex.: aumentar alcance)" x-model="metaForm.objetivo" @keydown.enter="addMetaSocial(relClienteObj)">
+                <input class="input fs-13" style="flex:1;min-width:120px" placeholder="Alvo (ex.: +20%)" x-model="metaForm.alvo" @keydown.enter="addMetaSocial(relClienteObj)">
+                <input type="date" class="input fs-13" style="max-width:150px" x-model="metaForm.prazo" title="Prazo (opcional)">
+                <button class="btn btn-sm btn-primary" @click="addMetaSocial(relClienteObj)"><i class="ph ph-plus ic-ph"></i> Meta</button>
+              </div>
+              <div x-show="!metasCliente(relClienteObj).length" class="text-3 fs-12" style="padding:6px 0">Nenhuma meta definida ainda.</div>
+              <template x-for="m in metasCliente(relClienteObj)" :key="'meta'+m.id">
+                <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+                  <i class="ph ph-target ic-ph" style="color:#4285F4;flex:none"></i>
+                  <div style="flex:1;min-width:0"><span class="fs-13 fw-600" x-text="m.objetivo"></span><span class="text-3 fs-12" x-show="m.alvo" x-text="' — '+m.alvo"></span><span class="text-3 fs-11" x-show="m.prazo" x-text="' · até '+m.prazo"></span></div>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="removerMetaSocial(relClienteObj,m)" style="color:var(--red)"><i class="ph ph-x ic-ph"></i></button>
+                </div>
+              </template>
+            </div>
+
+            <!-- SUGESTÕES DE TAREFAS (IA) por frente + delegar -->
+            <div class="card" style="padding:16px;margin-bottom:14px">
+              <div class="flex items-center justify-between mb-1" style="gap:8px;flex-wrap:wrap">
+                <div class="fw-600 fs-15"><i class="ph ph-sparkle ic-ph" style="color:#7c3aed"></i> Sugestões de tarefas (IA)</div>
+                <button class="btn btn-sm btn-primary" @click="gerarSugestoesIA(relClienteObj)" :disabled="sugIALoading"><i class="ph" :class="sugIALoading?'ph-spinner':'ph-magic-wand'"></i> <span x-text="sugIALoading?'Gerando…':'Gerar sugestões'"></span></button>
+              </div>
+              <div class="text-3 fs-12 mb-3">A IA lê o relatório e as metas e sugere tarefas pra cada frente. Clique em <b>Delegar</b> pra mandar a tarefa pro Matheus ou pra Samara.</div>
+              <div x-show="sugIAErro" class="fs-13" style="padding:10px;background:#FEF6F4;border:1px solid #FCE8E6;color:#EA4335;border-radius:8px;margin-bottom:10px" x-text="sugIAErro"></div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start">
+                <div>
+                  <div class="fs-13 fw-700 mb-2" style="color:#0C447C"><i class="ph ph-megaphone ic-ph"></i> Matheus — social media</div>
+                  <div x-show="!sugIA.matheus.length" class="text-3 fs-12">Sem sugestões — clique em "Gerar sugestões".</div>
+                  <template x-for="(t,i) in sugIA.matheus" :key="'sgm'+i">
+                    <div class="flex items-start gap-2" style="padding:9px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+                      <div class="fs-13" style="flex:1" x-text="t"></div>
+                      <button class="btn btn-sm" style="background:#E8F0FE;color:#1967D2;border-color:#c7dbfa;white-space:nowrap" @click="delegarTarefa(relClienteObj,t,'matheus')"><i class="ph ph-arrow-right ic-ph"></i> Delegar</button>
+                    </div>
+                  </template>
+                </div>
+                <div>
+                  <div class="fs-13 fw-700 mb-2" style="color:#26215C"><i class="ph ph-film-slate ic-ph"></i> Samara — produção</div>
+                  <div x-show="!sugIA.samara.length" class="text-3 fs-12">Sem sugestões — clique em "Gerar sugestões".</div>
+                  <template x-for="(t,i) in sugIA.samara" :key="'sgs'+i">
+                    <div class="flex items-start gap-2" style="padding:9px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px">
+                      <div class="fs-13" style="flex:1" x-text="t"></div>
+                      <button class="btn btn-sm" style="background:#EEEDFE;color:#7c3aed;border-color:#ddd6fe;white-space:nowrap" @click="delegarTarefa(relClienteObj,t,'samara')"><i class="ph ph-arrow-right ic-ph"></i> Delegar</button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
           </div>
           </template>
         </div>
@@ -5593,7 +5666,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=348"></script>
+<script src="js/app.js?v=350"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

@@ -451,6 +451,11 @@ document.addEventListener('alpine:init', () => {
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
     novaInter: { tipo: 'Ligação', texto: '', data: '' }, // form de nova interação na timeline (data: opcional, p/ reunião)
     novaTarefaForm: { titulo: '', responsavel: '', data: '', prioridade: 'Média' }, // form de nova tarefa na ficha
+    // Metas sociais + sugestões de tarefas da IA (aba Laryssa)
+    metaForm: { objetivo: '', alvo: '', prazo: '' },
+    sugIA: { matheus: [], samara: [] },
+    sugIALoading: false,
+    sugIAErro: '',
     editInter: null, editInterTexto: '', // edição de um registro do histórico (admin)
     radarAutolog: MD.get('som_radar_autolog', true), // auto-registrar ações do Radar no histórico
     TIPOS_INTER,
@@ -3165,6 +3170,46 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     sparkPath(vals, w, h) { if (!vals || vals.length < 2) return ''; const mn = Math.min(...vals), mx = Math.max(...vals), rng = (mx - mn) || 1; return vals.map((v, i) => ((i ? 'L' : 'M') + ((i / (vals.length - 1)) * w).toFixed(1) + ' ' + (h - ((v - mn) / rng) * h).toFixed(1))).join(' '); },
     // ── Tarefas / próximas ações do cliente (vive em Cliente.dados.tarefas) ──
     tarefasCliente(c) { return (c && Array.isArray(c.tarefas)) ? c.tarefas : []; },
+    // Cliente selecionado na aba Laryssa (objeto real de this.clients, com tarefas/metas).
+    get relClienteObj() { return (this.clients || []).find(c => c.id === this.relCliId) || null; },
+    metasCliente(c) { return (c && Array.isArray(c.metasSocial)) ? c.metasSocial : []; },
+    addMetaSocial(c) {
+      if (!c) return;
+      const o = (this.metaForm.objetivo || '').trim(); if (!o) return alert('Escreva o objetivo da meta.');
+      if (!Array.isArray(c.metasSocial)) c.metasSocial = [];
+      c.metasSocial.push({ id: MD.uid(), objetivo: o, alvo: (this.metaForm.alvo || '').trim(), prazo: this.metaForm.prazo || '', criadoEm: new Date().toISOString() });
+      this.metaForm = { objetivo: '', alvo: '', prazo: '' };
+      this.persistirCliente(c);
+    },
+    removerMetaSocial(c, m) { if (!confirm('Remover esta meta?')) return; c.metasSocial = (c.metasSocial || []).filter(x => x.id !== m.id); this.persistirCliente(c); },
+    async gerarSugestoesIA(c) {
+      if (!this.rel) { alert('Abra um relatório primeiro.'); return; }
+      this.sugIALoading = true; this.sugIAErro = '';
+      try {
+        this.sugIA = (await this.api('POST', '/ia/sugestoes-tarefas', { cliente: this.rel.cliente, resumo: this.rel.resumo, melhorFormato: this.rel.melhorFormato, melhores: this.rel.melhores, metas: this.metasCliente(c) })) || { matheus: [], samara: [] };
+      } catch (e) { this.sugIAErro = (e && e.message) || 'Falha ao gerar sugestões.'; }
+      this.sugIALoading = false;
+    },
+    delegarTarefa(c, titulo, frente) {
+      if (!c) return;
+      if (!Array.isArray(c.tarefas)) c.tarefas = [];
+      c.tarefas.push({ id: MD.uid(), titulo, frente, status: 'pendente', delegadaPor: (this.usuario && this.usuario.nome) || '', criadoEm: new Date().toISOString(), feedback: '', feitoPorNome: '', feitoEm: '' });
+      this.persistirCliente(c);
+      if (this.sugIA && Array.isArray(this.sugIA[frente])) this.sugIA[frente] = this.sugIA[frente].filter(t => t !== titulo);
+    },
+    // Tarefas delegadas (com frente definida) de um cliente, por frente.
+    tarefasDelegadas(c, frente) { return this.tarefasCliente(c).filter(t => t && t.frente === frente); },
+    tarefasDelegPendentes(c, frente) { return this.tarefasDelegadas(c, frente).filter(t => t.status !== 'feito'); },
+    concluirTarefaDelegada(c, t) {
+      const fb = prompt('O que você fez / qual o resultado? (obrigatório)', t.feedback || '');
+      if (fb === null) return;
+      if (!fb.trim()) { alert('O feedback é obrigatório pra concluir a tarefa.'); return; }
+      t.status = 'feito'; t.feedback = fb.trim(); t.feitoPorNome = (this.usuario && this.usuario.nome) || ''; t.feitoEm = new Date().toISOString();
+      this.persistirCliente(c);
+    },
+    removerTarefaDelegada(c, t) { if (!confirm('Remover esta tarefa?')) return; c.tarefas = (c.tarefas || []).filter(x => x.id !== t.id); this.persistirCliente(c); },
+    // Cliente em foco nas abas Matheus/Samara (objeto real).
+    get operClienteObj() { return (this.clients || []).find(c => c.id === this.operInspClienteId) || null; },
     tarefasPendentes(c) { return this.tarefasCliente(c).filter(t => t.status !== 'feito').sort((a, b) => ((a.data || '9999') < (b.data || '9999') ? -1 : 1)); },
     proxTarefa(c) { return this.tarefasPendentes(c)[0] || null; },
     addTarefaCliente(c) {
