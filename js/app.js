@@ -1539,6 +1539,7 @@ document.addEventListener('alpine:init', () => {
     samVForm: { titulo: '', cliente: '', tipo: 'Edição' },
     samRForm: { titulo: '', cliente: '', captacao: '' }, samRAberto: false,
     samGmnAberto: true, // card "Dia de Google Meu Negócio" recolhível
+    samStoriesAberto: true, // card "Stories orgânicos de hoje" recolhível
     samCForm: { cliente: '', local: '', data: '', tipo: 'Captação', prestador: '', valor: '', condPagto: 'avista', prazo: '', parcelas: [{ data: '', valor: '' }] }, samCAberto: false,
     // helpers de data/hora (America/Recife)
     _horaBR() { return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); },

@@ -2562,7 +2562,15 @@
               </div><!-- /flex esquerda (Falta · Vídeos · Roteiros · Captações · GMN) -->
               <!-- Stories orgânicos de hoje (movido pra CÁ, ao lado do "O que ainda falta") -->
               <div class="card" style="padding:16px">
-                <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div><button class="btn btn-sm" @click="samStoriesPreencherMeta()" title="Marca cada cliente com o piso da faixa"><i class="ph ph-check-square ic-ph"></i> Bater a meta</button></div>
+                <div class="flex items-center justify-between mb-1" style="gap:8px">
+                  <div class="fw-600 fs-15" style="cursor:pointer;flex:1;min-width:0" @click="samStoriesAberto=!samStoriesAberto" title="Recolher/expandir"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div>
+                  <div class="flex items-center gap-2" style="flex:none">
+                    <span class="badge fs-11 fw-700" :style="samStoriesMeta.length && samStoriesNaMeta>=samStoriesMeta.length ? 'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="samStoriesNaMeta+'/'+samStoriesMeta.length" title="clientes na meta de stories"></span>
+                    <button class="btn btn-sm" @click="samStoriesPreencherMeta()" title="Marca cada cliente com o piso da faixa"><i class="ph ph-check-square ic-ph"></i> Bater a meta</button>
+                    <button class="btn btn-icon btn-ghost btn-sm" @click="samStoriesAberto=!samStoriesAberto" :title="samStoriesAberto?'Recolher':'Expandir'"><i class="ph ic-ph" :class="samStoriesAberto?'ph-caret-up':'ph-caret-down'"></i></button>
+                  </div>
+                </div>
+                <div x-show="samStoriesAberto">
                 <div class="text-3 fs-11 mb-3">Faixa de stories/dia por cliente (cronograma semanal). Registre quantos publicou hoje.</div>
                 <template x-for="m in samStoriesMeta" :key="'ss'+m.cliente">
                   <div class="flex items-center" style="gap:10px;margin-bottom:9px">
@@ -2577,6 +2585,7 @@
                     <button class="btn btn-icon btn-sm" @click="samStoryEfetivar(m.cliente)" :disabled="!samStoryPendente(m.cliente)" style="flex:none;padding:2px 7px" :title="samStoryPendente(m.cliente)?'Efetivar a quantidade marcada':(samStoryMetaOk(m)?'Efetivado — na meta':'Nada pendente pra efetivar')" :style="samStoryPendente(m.cliente)?'background:#34A853;color:#fff;border-color:#34A853':'background:transparent;border-color:transparent;color:'+(samStoryMetaOk(m)?'#34A853':'#e5e7eb')"><i class="ph ph-check-circle" style="font-size:18px"></i></button>
                   </div>
                 </template>
+                </div>
               </div>
             </div>
           </div>
@@ -5630,7 +5639,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=372"></script>
+<script src="js/app.js?v=373"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
