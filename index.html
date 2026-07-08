@@ -2470,8 +2470,8 @@
             <!-- grid SEM x-show (armadilha Alpine: x-show zera display:grid). Cada card leva seu próprio x-show. -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px;align-items:start">
 
-            <!-- Postagens do dia (programação de cada cliente + demandas internas) — MATHEUS (movido da coluna p/ o grid) -->
-            <div class="card" style="padding:16px" x-show="operTab==='matheus'">
+            <!-- Postagens do dia — trocado de lugar com Empresas (order:2 = fica à direita) -->
+            <div class="card" style="padding:16px;order:2" x-show="operTab==='matheus'">
               <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
                 <div class="fw-600 fs-15"><i class="ph ph-megaphone ic-ph" style="color:#4285F4"></i> Postagens do dia<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
                 <div class="flex items-center gap-2">
@@ -5667,7 +5667,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=359"></script>
+<script src="js/app.js?v=360"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
