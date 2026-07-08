@@ -1535,6 +1535,7 @@ document.addEventListener('alpine:init', () => {
     // Tudo persistido no store genérico de coleções (operacoes.samara.*).
     samLoaded: false, samLoading: false,
     samVideos: [], samStories: [], samGmn: [], samRoteiros: [], samCaptacoes: [], samLog: [],
+    samStoryDraft: {}, // rascunho de quantidade por cliente (só efetiva ao clicar no check)
     samVForm: { titulo: '', cliente: '', tipo: 'Edição' },
     samRForm: { titulo: '', cliente: '', captacao: '' }, samRAberto: false,
     samCForm: { cliente: '', local: '', data: '', tipo: 'Captação', prestador: '', valor: '', condPagto: 'avista', prazo: '', parcelas: [{ data: '', valor: '' }] }, samCAberto: false,
@@ -1608,8 +1609,18 @@ document.addEventListener('alpine:init', () => {
       else { r = { cliente: nome, data: h, feitos: qtd, em: new Date().toISOString() }; this.samStories.push(r); }
       this._samSave('stories', this.samStories);
     },
-    samStoryInc(nome) { const q = this.samStoryQtd(nome) + 1; this._samStorySet(nome, q); this._samLogPush('Story publicado — ' + nome + ' (' + q + ')', 'story'); },
-    samStoryDec(nome) { const q = this.samStoryQtd(nome) - 1; if (q < 0) return; this._samStorySet(nome, q); },
+    // Rascunho: marca a quantidade sem efetivar. O que conta (meta/KPIs) continua sendo o valor SALVO (samStoryQtd).
+    samStoryDraftQtd(nome) { return (nome in this.samStoryDraft) ? this.samStoryDraft[nome] : this.samStoryQtd(nome); },
+    samStoryDraftInc(nome) { const q = this.samStoryDraftQtd(nome) + 1; this.samStoryDraft = { ...this.samStoryDraft, [nome]: q }; },
+    samStoryDraftDec(nome) { const q = this.samStoryDraftQtd(nome) - 1; if (q < 0) return; this.samStoryDraft = { ...this.samStoryDraft, [nome]: q }; },
+    samStoryPendente(nome) { return (nome in this.samStoryDraft) && this.samStoryDraft[nome] !== this.samStoryQtd(nome); }, // há marcação não efetivada
+    // Efetiva a quantidade marcada (clique no check): salva + loga; limpa o rascunho.
+    samStoryEfetivar(nome) {
+      const q = this.samStoryDraftQtd(nome), antes = this.samStoryQtd(nome);
+      this._samStorySet(nome, q);
+      const d = { ...this.samStoryDraft }; delete d[nome]; this.samStoryDraft = d;
+      if (q > antes) this._samLogPush('Stories publicados — ' + nome + ' (' + q + ')', 'story');
+    },
     samStoryMetaOk(m) { return this.samStoryQtd(m.cliente) >= (m.min || 1); }, // bateu o piso da faixa
     get samStoriesTotalHoje() { return this.samStoriesMeta.reduce((a, m) => a + this.samStoryQtd(m.cliente), 0); },
     get samStoriesNaMeta() { return this.samStoriesMeta.filter(m => this.samStoryMetaOk(m)).length; },

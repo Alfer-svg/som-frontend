@@ -2397,11 +2397,11 @@
                     <span class="fs-11" style="flex:none;min-width:74px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#6b7280'"><span class="text-3">meta</span> <b x-text="m.faixa"></b></span>
                     <div class="progress" style="flex:1;height:8px"><div :style="'width:'+Math.min(100,Math.round(samStoryQtd(m.cliente)/m.alvo*100))+'%;background:'+(samStoryMetaOk(m)?'#34A853':(samStoryQtd(m.cliente)>0?'#F9A825':'#E5E7EB'))"></div></div>
                     <div class="flex items-center" style="gap:6px;flex:none">
-                      <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDec(m.cliente)" :disabled="samStoryQtd(m.cliente)<=0" style="padding:2px 7px"><i class="ph ph-minus"></i></button>
-                      <span class="fw-700 fs-14" style="width:18px;text-align:center" x-text="samStoryQtd(m.cliente)"></span>
-                      <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryInc(m.cliente)" style="padding:2px 7px"><i class="ph ph-plus" style="color:#4285F4"></i></button>
+                      <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDraftDec(m.cliente)" :disabled="samStoryDraftQtd(m.cliente)<=0" style="padding:2px 7px"><i class="ph ph-minus"></i></button>
+                      <span class="fw-700 fs-14" style="width:18px;text-align:center" :style="samStoryPendente(m.cliente)?'color:#B45309':''" :title="samStoryPendente(m.cliente)?'Marcado (não efetivado) — clique no check pra confirmar':''" x-text="samStoryDraftQtd(m.cliente)"></span>
+                      <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDraftInc(m.cliente)" style="padding:2px 7px"><i class="ph ph-plus" style="color:#4285F4"></i></button>
                     </div>
-                    <i class="ph ph-check-circle" style="flex:none;font-size:18px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#e5e7eb'"></i>
+                    <button class="btn btn-icon btn-sm" @click="samStoryEfetivar(m.cliente)" :disabled="!samStoryPendente(m.cliente)" style="flex:none;padding:2px 7px" :title="samStoryPendente(m.cliente)?'Efetivar a quantidade marcada':(samStoryMetaOk(m)?'Efetivado — na meta':'Nada pendente pra efetivar')" :style="samStoryPendente(m.cliente)?'background:#34A853;color:#fff;border-color:#34A853':'background:transparent;border-color:transparent;color:'+(samStoryMetaOk(m)?'#34A853':'#e5e7eb')"><i class="ph ph-check-circle" style="font-size:18px"></i></button>
                   </div>
                 </template>
               </div>
@@ -5644,7 +5644,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=368"></script>
+<script src="js/app.js?v=369"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
