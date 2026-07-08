@@ -2497,11 +2497,11 @@
               </div>
             </div>
             <div x-show="matTopAberto">
-              <div class="text-3 fs-12 mb-3" style="margin-top:6px" x-show="matTop && matTop.criterio"><i class="ph ph-info ic-ph"></i> <span x-text="matTop && matTop.criterio"></span></div>
-              <div x-show="matTopLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-trophy" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Avaliando os posts dos clientes…</div></div>
-              <div x-show="!matTopLoading && matTopErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="matTopErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="carregarMelhores(true)">Tentar de novo</button></div>
-              <div x-show="!matTopLoading && matTop && !melhoresView.length" class="text-3 fs-13" style="padding:14px 0;text-align:center" x-text="operClienteFocoNome ? ('Sem posts de '+operClienteFocoNome+' com métrica neste ranking.') : 'Sem posts com métrica ainda — conecte os clientes no Meta.'"></div>
-              <template x-if="!matTopLoading && matTop && melhoresView.length">
+              <div class="text-3 fs-12 mb-3" style="margin-top:6px" x-show="!operInspClienteId && matTop && matTop.criterio"><i class="ph ph-info ic-ph"></i> <span x-text="matTop && matTop.criterio"></span></div>
+              <div x-show="melhoresLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-trophy" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Avaliando os posts dos clientes…</div></div>
+              <div x-show="!melhoresLoading && melhoresErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="melhoresErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="operInspClienteId ? carregarMelhoresFoco() : carregarMelhores(true)">Tentar de novo</button></div>
+              <div x-show="!melhoresLoading && !melhoresErro && melhoresPronto && !melhoresView.length" class="text-3 fs-13" style="padding:14px 0;text-align:center" x-text="operClienteFocoNome ? ('Sem posts de '+operClienteFocoNome+' com métrica.') : 'Sem posts com métrica ainda — conecte os clientes no Meta.'"></div>
+              <template x-if="!melhoresLoading && melhoresPronto && melhoresView.length">
                 <div style="display:flex;flex-direction:column;gap:8px">
                   <!-- fonte: melhoresView = filtro de mídia (perfil) + cliente em foco (se selecionado) -->
                   <template x-for="(p,i) in melhoresView" :key="'mtp'+p.link">
@@ -5738,7 +5738,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=391"></script>
+<script src="js/app.js?v=392"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

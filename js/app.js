@@ -520,6 +520,8 @@ document.addEventListener('alpine:init', () => {
     operInspClienteId: '', operInspConc: [], operInspNovo: '', operInspPosts: [], operInspLoading: false, operInspErro: '', operInspIA: false, operInspSemMeta: false,
     operInspSel: null, operInspAnalise: null, operInspAnaliseLoading: false, operInspAnaliseErro: '', operInspExp: {}, operInspAberto: true, matSub: 'painel',
     matTop: null, matTopLoading: false, matTopErro: '', matTopAberto: true,
+    // Melhores posts do CLIENTE EM FOCO — busca direta dele (fresh), não depende da ranking global.
+    matTopFoco: null, matTopFocoId: '', matTopFocoLoading: false, matTopFocoErro: '',
     // Relatório de Instagram (tela da Laryssa) — período navegável 7/15/30/personalizado
     relCliId: '', relIGPer: '30', relIni: '', relFim: '', rel: null, relLoading: false, relErro: '',
     SOCIAL_ROTINA, SOCIAL_ROTINA_N, // rotina do Social Media exposta ao template
@@ -831,12 +833,31 @@ document.addEventListener('alpine:init', () => {
     filtraMidiaPosts(posts) { return (Array.isArray(posts) ? posts : []).filter(p => !/VIDEO|REEL/i.test(p && (p.media_type || p.tipo || ''))); },
     // Melhores posts filtrados por mídia (perfil) E pelo cliente em foco (se houver).
     get melhoresView() {
-      const base = (this.matTop && Array.isArray(this.matTop.posts)) ? this.matTop.posts : [];
+      const foco = this.operInspClienteId;
+      // Com cliente em foco: busca DIRETA dele (matTopFoco), que não depende da
+      // ranking global (que pode vir truncada por rate-limit do Graph) — garante
+      // que o cliente selecionado sempre mostre seus posts se o IG dele lê.
+      const base = foco
+        ? ((this.matTopFoco && Array.isArray(this.matTopFoco.posts)) ? this.matTopFoco.posts : [])
+        : ((this.matTop && Array.isArray(this.matTop.posts)) ? this.matTop.posts : []);
       const porMidia = this.operTab === 'samara' ? this.filtraMidiaReels(base) : this.filtraMidiaPosts(base);
-      const foco = this.operClienteFocoNome;
-      // Com cliente em foco: TODOS os posts dele (já vêm ordenados por score).
-      // Sem foco: top 10 do ranking geral (o resto vem só pra permitir o filtro).
-      return foco ? porMidia.filter(p => (p.cliente || '') === foco) : porMidia.slice(0, 10);
+      return foco ? porMidia : porMidia.slice(0, 10);
+    },
+    // Estado do bloco "Melhores posts" — com cliente em foco olha o matTopFoco; sem foco, a ranking global.
+    get melhoresLoading() { return this.operInspClienteId ? this.matTopFocoLoading : this.matTopLoading; },
+    get melhoresErro() { return this.operInspClienteId ? this.matTopFocoErro : this.matTopErro; },
+    get melhoresPronto() { return this.operInspClienteId ? !!this.matTopFoco : !!this.matTop; },
+    // Carrega os melhores posts do cliente em foco (busca direta, fresh).
+    async carregarMelhoresFoco() {
+      const id = this.operInspClienteId;
+      this.matTopFocoErro = '';
+      if (!id) { this.matTopFoco = null; this.matTopFocoId = ''; return; }
+      this.matTopFocoLoading = true;
+      try {
+        this.matTopFoco = await this.api('GET', '/monitoramento/meta/melhores-posts?clienteId=' + id + '&limite=50');
+        this.matTopFocoId = id;
+      } catch (e) { this.matTopFoco = { posts: [] }; this.matTopFocoErro = (e && e.message) || 'Não consegui carregar os posts deste cliente.'; }
+      this.matTopFocoLoading = false;
     },
     podeVer(p) {
       if (this.papel === 'admin') return true;        // admin sempre vê tudo
@@ -1927,6 +1948,7 @@ document.addEventListener('alpine:init', () => {
       const c = (this.clients || []).find(x => x.id === this.operInspClienteId);
       this.operInspConc = (c && Array.isArray(c.concorrentes)) ? c.concorrentes.slice() : [];
       this.operInspPosts = []; this.operInspErro = ''; this.operInspIA = false;
+      this.carregarMelhoresFoco(); // melhores posts DELE (busca direta, não depende da ranking global)
       if (this.operInspClienteId) this.operInspCarrega(); // sem @s salvos, o backend descobre pela IA
     },
     async operInspCarrega(force) {
