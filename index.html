@@ -2286,8 +2286,10 @@
             </div>
           </div>
 
-          <!-- (a2+b) Agenda + "O que ainda falta hoje" lado a lado (grid) -->
+          <!-- (a2+b) [Agenda+Painel] | "O que ainda falta hoje" lado a lado (grid) -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px;align-items:start">
+          <!-- COLUNA ESQUERDA: Agenda + Painel grudados (preenche o espaço ao lado do 'falta hoje') -->
+          <div style="display:flex;flex-direction:column;gap:14px">
           <!-- (a2) Agenda — no topo do painel (pedido do Dinho) -->
           <div class="card" style="padding:16px">
             <div class="flex items-center justify-between mb-2" style="gap:8px">
@@ -2308,6 +2310,25 @@
               <button x-show="operEventosMatheus.length>6" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-6)+' na agenda completa'"></button>
             </div>
           </div>
+          <!-- (c) Painel do dia — grudado abaixo da Agenda, na mesma coluna (preenche o espaço) -->
+          <div class="card" style="padding:16px;display:flex;flex-direction:column">
+            <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
+              <div>
+                <div class="fw-600 fs-15"><i class="ph ph-gauge ic-ph" style="color:#4285F4"></i> Painel — <span x-text="operTab==='samara'?'Samara':'Matheus'"></span></div>
+                <div class="text-3 fs-12" style="text-transform:capitalize" x-text="operChkLabel"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()">Hoje</button>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
+              </div>
+            </div>
+            <div style="margin-top:auto;padding-top:16px">
+              <div class="flex items-center justify-between" style="margin-bottom:6px"><span class="fs-13 fw-700">Progresso do dia</span><span class="fw-800 fs-18" :style="'color:'+corScore(progressoDia)" x-text="progressoDia+'%'"></span></div>
+              <div class="progress" style="height:10px"><div :style="'width:'+progressoDia+'%;background:'+corScore(progressoDia)"></div></div>
+            </div>
+          </div>
+          </div><!-- /coluna esquerda (Agenda + Painel) -->
 
           <!-- (b) O que ainda falta hoje — Matheus (pulsa vermelho) + Samara (pendências de produção) -->
           <div class="card" style="padding:16px" :class="matTemPendencia ? 'pulse-red' : ''">
@@ -2354,27 +2375,6 @@
           </div>
           </div>
           <!-- /grid Agenda + O que ainda falta hoje -->
-
-          <!-- (c) Painel do dia (meia largura) — logo abaixo da Agenda -->
-          <div style="max-width:50%;margin-bottom:14px">
-            <div class="card" style="padding:16px;display:flex;flex-direction:column">
-              <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
-                <div>
-                  <div class="fw-600 fs-15"><i class="ph ph-gauge ic-ph" style="color:#4285F4"></i> Painel — <span x-text="operTab==='samara'?'Samara':'Matheus'"></span></div>
-                  <div class="text-3 fs-12" style="text-transform:capitalize" x-text="operChkLabel"></div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(-1)" title="Dia anterior"><i class="ph ph-caret-left ic-ph"></i></button>
-                  <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()">Hoje</button>
-                  <button class="btn btn-icon btn-ghost btn-sm" @click="operMudaDia(1)" title="Próximo dia"><i class="ph ph-caret-right ic-ph"></i></button>
-                </div>
-              </div>
-              <div style="margin-top:auto;padding-top:16px">
-                <div class="flex items-center justify-between" style="margin-bottom:6px"><span class="fs-13 fw-700">Progresso do dia</span><span class="fw-800 fs-18" :style="'color:'+corScore(progressoDia)" x-text="progressoDia+'%'"></span></div>
-                <div class="progress" style="height:10px"><div :style="'width:'+progressoDia+'%;background:'+corScore(progressoDia)"></div></div>
-              </div>
-            </div>
-          </div>
 
           <!-- Rotina do dia — logo abaixo do Painel, só na aba do Matheus -->
           <div class="card" x-show="operTab==='matheus'" style="padding:16px;margin-bottom:14px">
@@ -5666,7 +5666,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=351"></script>
+<script src="js/app.js?v=352"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
