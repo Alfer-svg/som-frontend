@@ -364,31 +364,26 @@ const TRAF_TAREFAS = [
 
 /* ---------- Operacional (equipe): rotina diária do Social Media (Matheus) ---------- */
 // Checklist da rotina, dividido em 3 momentos do dia. Salvo por pessoa+dia em operacoes.checklist.
+// Rotina do MATHEUS — conforme "Organização de Demandas por Pessoa" (08/07).
+// Ids preservados onde o texto se manteve (não quebra o histórico do Fichário).
 const SOCIAL_ROTINA = [
-  { id: 'manha', label: 'Início do dia', ico: '🌅', cor: '#4285F4', bg: '#F4F8FE', itens: [
-    { id: 'notif', texto: 'Verificar notificações, comentários e mensagens diretas em todas as plataformas' },
-    { id: 'dms', texto: 'Responder DMs e comentários pendentes da noite anterior' },
-    { id: 'mencoes', texto: 'Checar menções à marca (@) e marcações' },
-    { id: 'calendario', texto: 'Revisar o calendário editorial e confirmar o(s) post(s) do dia' },
-    { id: 'agendadas', texto: 'Conferir se as publicações agendadas foram/serão publicadas corretamente' },
-    { id: 'tendencias', texto: 'Dar uma olhada nas tendências e assuntos do momento (trending topics)' },
-    { id: 'noticias', texto: 'Verificar notícias do setor e dos concorrentes' },
-  ] },
   { id: 'dia', label: 'Durante o dia', ico: '☀️', cor: '#F9A825', bg: '#FEFBEF', itens: [
     { id: 'publicar', texto: 'Publicar o conteúdo do dia (feed, stories, reels, etc.)' },
+    { id: 'postsdiarios', texto: 'Publicar posts/reels diários' },
     { id: 'interagir', texto: 'Interagir com seguidores: curtir, comentar e responder em tempo real' },
     { id: 'engajar', texto: 'Engajar com contas parceiras, influenciadores e comunidade' },
-    { id: 'desempenho', texto: 'Monitorar o desempenho dos posts recentes (alcance, engajamento)' },
-    { id: 'stories', texto: 'Postar nos stories (bastidores, enquetes, novidades)' },
-    { id: 'rtm', texto: 'Reagir a oportunidades de "real time marketing" quando surgirem' },
-    { id: 'ideias', texto: 'Capturar/salvar ideias e referências de conteúdo' },
+    { id: 'rtm', texto: 'Reagir a oportunidades de "real time marketing" quando surgirem (junto com Samara/Laryssa)' },
+    { id: 'ideias', texto: 'Capturar/salvar ideias e referências de conteúdo (junto com Samara/Laryssa)' },
   ] },
   { id: 'noite', label: 'Fim do dia (tarde/noite)', ico: '🌙', cor: '#0891B2', bg: '#ECFEFF', itens: [
     { id: 'pendentes', texto: 'Responder comentários e mensagens que ficaram pendentes' },
     { id: 'agendar', texto: 'Agendar as publicações do dia seguinte' },
-    { id: 'metricas', texto: 'Registrar métricas principais do dia (crescimento, engajamento, cliques)' },
-    { id: 'retro', texto: 'Anotar o que funcionou e o que não funcionou' },
-    { id: 'semana', texto: 'Revisar o planejamento da semana e ajustar o que for preciso' },
+  ] },
+  { id: 'geral', label: 'Geral / recorrente', ico: '🔁', cor: '#7C3AED', bg: '#F5F3FF', itens: [
+    { id: 'progsemanal', texto: 'Solicitar programação semanal' },
+    { id: 'unifacol', texto: 'Colaborar com pautas UNIFACOL' },
+    { id: 'respclientes', texto: 'Responder clientes' },
+    { id: 'trafmateriais', texto: 'Colaborar com o tráfego para envio de materiais' },
   ] },
 ];
 const SOCIAL_ROTINA_N = SOCIAL_ROTINA.reduce((s, g) => s + g.itens.length, 0);

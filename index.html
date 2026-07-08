@@ -2349,7 +2349,7 @@
             <div class="card" style="padding:16px" x-show="operTab==='matheus'">
               <div class="flex items-center justify-between mb-3" style="gap:10px;flex-wrap:wrap">
                 <div>
-                  <div class="fw-600 fs-15"><i class="ph ph-megaphone ic-ph" style="color:#4285F4"></i> Postagens do dia<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
+                  <div class="fw-600 fs-15"><i class="ph ph-megaphone ic-ph" style="color:#4285F4"></i> Postagens do dia<span class="text-3 fw-500 fs-13" style="display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom" :title="operClienteFocoNome" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
                   <div class="text-3 fs-12" style="text-transform:capitalize" x-text="new Date((operChkData||_hojeStr())+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'long'})"></div>
                 </div>
                 <div class="flex items-center gap-3" style="flex-wrap:wrap">
@@ -2488,7 +2488,7 @@
           <!-- (e) Melhores posts dos clientes — abaixo do "O que ainda falta hoje", mesma coluna. COMUM às duas abas (adapta por operTab: Matheus=Posts · Samara=Reels/Vídeos). -->
           <div class="card" style="padding:16px" x-init="carregarMelhores()">
             <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
-              <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts<span class="text-3 fw-500 fs-13" x-text="operClienteFocoNome ? (' · '+operClienteFocoNome) : ' dos clientes'"></span>
+              <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts<span class="text-3 fw-500 fs-13" style="display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom" :title="operClienteFocoNome||''" x-text="operClienteFocoNome ? (' · '+operClienteFocoNome) : ' dos clientes'"></span>
                 <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
                 <span class="badge fs-10 fw-700" style="margin-left:4px;background:#F1F5F9;color:#475569">Últimos 30 dias</span>
               </div>
@@ -2548,7 +2548,7 @@
           <!-- Rotina do dia — logo abaixo do Painel (só na aba do Matheus) -->
           <div class="card" x-show="operTab==='matheus'" style="padding:16px">
             <div class="flex items-center justify-between" style="gap:8px;cursor:pointer;flex-wrap:wrap" @click="operChkAberto=!operChkAberto" title="Clique pra recolher/abrir">
-              <div class="fw-600 fs-15"><i class="ph ph-list-checks ic-ph" style="color:#34A853"></i> Rotina do dia<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
+              <div class="fw-600 fs-15"><i class="ph ph-list-checks ic-ph" style="color:#34A853"></i> Rotina do dia<span class="text-3 fw-500 fs-13" style="display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom" :title="operClienteFocoNome" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
               <div class="flex items-center gap-2">
                 <span class="badge fs-11 fw-800" x-show="operInspClienteId && operChkConcluido(operInspClienteId)" style="background:#dcfce7;color:#15803d"><i class="ph ph-check-circle"></i> concluída</span>
                 <span class="badge fs-12 fw-700" x-show="operInspClienteId" :style="operChkFeitos(operInspClienteId)>=SOCIAL_ROTINA_N?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="operChkFeitos(operInspClienteId)+'/'+SOCIAL_ROTINA_N"></span>
@@ -2909,7 +2909,7 @@
 
           <!-- Tarefas delegadas pela Laryssa (por frente da aba + cliente em foco) -->
           <div class="card" x-show="operClienteObj && tarefasDelegadas(operClienteObj, operTab).length" style="padding:16px;margin-bottom:14px;border-left:3px solid #7c3aed">
-            <div class="fw-600 fs-15 mb-2"><i class="ph ph-clipboard-text ic-ph" style="color:#7c3aed"></i> Tarefas da Laryssa<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
+            <div class="fw-600 fs-15 mb-2"><i class="ph ph-clipboard-text ic-ph" style="color:#7c3aed"></i> Tarefas da Laryssa<span class="text-3 fw-500 fs-13" style="display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom" :title="operClienteFocoNome" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
             <template x-for="t in tarefasDelegadas(operClienteObj, operTab)" :key="'td'+t.id">
               <div style="padding:10px 0;border-bottom:1px solid var(--border)">
                 <div class="flex items-start gap-2">
@@ -2929,7 +2929,7 @@
           <!-- (Samara) Recomendações da IA pro cliente em foco — Aplicar (registra no Fichário) ou Descartar (justifica + registra). No final do painel. -->
           <div class="card" x-show="operTab==='samara'" style="padding:16px;margin-bottom:14px;border-left:3px solid #4285F4">
             <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
-              <div class="fw-600 fs-15"><i class="ph ph-sparkle ic-ph" style="color:#4285F4"></i> Recomendações da IA — Samara<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
+              <div class="fw-600 fs-15"><i class="ph ph-sparkle ic-ph" style="color:#4285F4"></i> Recomendações da IA — Samara<span class="text-3 fw-500 fs-13" style="display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom" :title="operClienteFocoNome" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
               <button class="btn btn-sm btn-primary" @click="gerarSugestoesSamara()" :disabled="sugSamLoading || !operClienteObj"><i class="ph ic-ph" :class="sugSamLoading?'ph-spinner-gap ia-spin':'ph-sparkle'"></i> <span x-text="sugSamLoading?('Gerando… '+iaCrono+'s'):(sugSam.length?'Gerar de novo':'Gerar recomendações')"></span></button>
             </div>
             <div class="text-3 fs-12 mb-3">Sugestões de produção de conteúdo pro cliente em foco, com base nas metas. Aplicar ou descartar — <b>toda ação fica registrada no Fichário</b>.</div>
@@ -5739,7 +5739,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=393"></script>
+<script src="js/app.js?v=394"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
