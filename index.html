@@ -2490,6 +2490,7 @@
             <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
               <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts<span class="text-3 fw-500 fs-13" x-text="operClienteFocoNome ? (' · '+operClienteFocoNome) : ' dos clientes'"></span>
                 <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
+                <span class="badge fs-10 fw-700" style="margin-left:4px;background:#F1F5F9;color:#475569">Últimos 30 dias</span>
               </div>
               <div class="flex items-center gap-2">
                 <button class="btn btn-icon btn-ghost btn-sm" x-show="matTopAberto" @click="carregarMelhores(true)" :disabled="matTopLoading" title="Atualizar ranking"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
@@ -5738,7 +5739,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=392"></script>
+<script src="js/app.js?v=393"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
