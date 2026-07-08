@@ -2345,16 +2345,11 @@ document.addEventListener('alpine:init', () => {
     // Quando existir c.adsMetaAuto (snapshot real, futuro), ele assume no lugar do demo.
     _trafDemoSeed(s) { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) % 997; return h; },
     get trafResultadosMeta() {
+      // Integração REAL no ar (08/07): mostra só clientes com snapshot de Meta Ads
+      // (dados.adsMetaAuto). O demo saiu — sem conta/dado real, o cliente não aparece.
       return (this.clients || [])
-        .filter(c => this.fazTrafego(c) && (c.adsMetaAuto || (c.ads && c.ads.meta && c.ads.meta.ativo)))
-        .map(c => {
-          const nome = c.empresa || c.nome || '—';
-          if (c.adsMetaAuto) return { id: c.id, nome, leads: c.adsMetaAuto.leads, custoLead: c.adsMetaAuto.custoLead, gasto: c.adsMetaAuto.gasto, campanhas: c.adsMetaAuto.campanhasAtivas, dLeads: null, demo: false };
-          const h = this._trafDemoSeed(c.id);
-          const leads = 4 + (h % 28);
-          const custoLead = Math.round((8 + (h % 45)) * 100) / 100;
-          return { id: c.id, nome, leads, custoLead, gasto: Math.round(leads * custoLead * 100) / 100, campanhas: 1 + (h % 3), dLeads: (h % 9) - 4, demo: true };
-        })
+        .filter(c => this.fazTrafego(c) && c.adsMetaAuto)
+        .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', leads: c.adsMetaAuto.leads, custoLead: c.adsMetaAuto.custoLead, gasto: c.adsMetaAuto.gasto, campanhas: c.adsMetaAuto.campanhasAtivas, dLeads: null, demo: false }))
         .sort((a, b) => (Number(b.gasto) || 0) - (Number(a.gasto) || 0));
     },
     get trafCampanhasMeta() { return this.trafResultadosMeta.reduce((a, r) => a + (Number(r.campanhas) || 0), 0); },
