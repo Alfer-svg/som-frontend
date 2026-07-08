@@ -800,6 +800,20 @@ document.addEventListener('alpine:init', () => {
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
+    // ── Painel compartilhado Matheus + Samara (visão decidida pelo papel) ──
+    // colaborador = Matheus (Social Media) · conteudo = Samara (Produção) · admin/gestor = os dois.
+    get visaoPainel() {
+      if (this.ehAdmin || this.papel === 'gestor') return 'ambos';
+      if (this.papel === 'conteudo') return 'samara';
+      return 'matheus';
+    },
+    get veColunaMatheus() { return this.visaoPainel === 'matheus' || this.visaoPainel === 'ambos'; },
+    get veColunaSamara() { return this.visaoPainel === 'samara' || this.visaoPainel === 'ambos'; },
+    get painelAdmin() { return this.visaoPainel === 'ambos'; },
+    // Filtro de mídia dos cards comuns (Empresas do segmento / Melhores posts):
+    // Samara vê Reels/Vídeos; Matheus vê os demais (feed/imagem/carrossel).
+    filtraMidiaReels(posts) { return (Array.isArray(posts) ? posts : []).filter(p => /VIDEO|REEL/i.test(p && (p.media_type || p.tipo || ''))); },
+    filtraMidiaPosts(posts) { return (Array.isArray(posts) ? posts : []).filter(p => !/VIDEO|REEL/i.test(p && (p.media_type || p.tipo || ''))); },
     podeVer(p) {
       if (this.papel === 'admin') return true;        // admin sempre vê tudo
       if (p === 'pessoal') return true;               // a própria ficha é de todos
