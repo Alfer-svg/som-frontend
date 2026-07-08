@@ -2264,7 +2264,7 @@
                 <button class="btn btn-ghost btn-sm" x-show="operChkData!==_hojeStr()" @click="operHoje()" style="margin-left:2px">Hoje</button>
               </div>
               <div class="flex items-center gap-2">
-                <button class="btn btn-ghost btn-sm" @click="socialGerenciarAberto=!socialGerenciarAberto" title="Habilitar/desabilitar quais clientes o módulo atende"><i class="ph ph-sliders-horizontal ic-ph"></i> Clientes do módulo <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspClientes.length"></span></button>
+                <button class="btn btn-sm" :style="socialGerenciarAberto?'background:#E8F0FE;color:#1967D2;border-color:#c7dbfa':''" @click="socialGerenciarAberto=!socialGerenciarAberto" title="Ligar/desligar cada cliente no Matheus (desligado some de todo o módulo)"><i class="ph ph-toggle-right ic-ph"></i> Ligar/desligar clientes <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspClientes.length"></span></button>
                 <span class="badge fs-12 fw-700" :style="operResumoTrelo.atrasados?'background:#FCE8E6;color:#C5221F':'background:#E6F4EA;color:#15803d'" :title="operResumoTrelo.atrasados+' post(s) atrasado(s) no quadro'"><i class="ph ph-warning-circle"></i> <span x-text="operResumoTrelo.atrasados"></span> atrasados</span>
                 <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2" :title="operResumoTrelo.semana+' post(s) pendentes até o fim da semana'"><i class="ph ph-calendar-dots"></i> <span x-text="operResumoTrelo.semana"></span> na semana</span>
               </div>
@@ -5669,7 +5669,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=362"></script>
+<script src="js/app.js?v=363"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
