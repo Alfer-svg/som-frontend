@@ -2478,8 +2478,8 @@
           <!-- (LINHA 2 dissolvida aqui) Agenda + Registro fluem abaixo da Rotina -->
           <!-- Rotina do dia MIGROU pra LINHA 1 (logo abaixo do Painel). -->
           <!-- (b) O que ainda falta hoje (Matheus) MIGROU pro TOPO (acima do seletor de cliente, largura cheia, 2 colunas). -->
-          <!-- (e) Melhores posts dos clientes — abaixo do "O que ainda falta hoje", mesma coluna. COMUM às duas abas (adapta por operTab: Matheus=Posts · Samara=Reels/Vídeos). -->
-          <div class="card" style="padding:16px" x-init="carregarMelhores()">
+          <!-- (e) Melhores posts — LINHA 1 esquerda: só MATHEUS aqui (na Samara ele foi trocado de lugar com o Stories orgânicos, indo pro masonry). -->
+          <div class="card" style="padding:16px" x-show="operTab==='matheus'" x-init="carregarMelhores()">
             <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
               <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts<span class="text-3 fw-500 fs-13" style="display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom" :title="operClienteFocoNome||''" x-text="operClienteFocoNome ? (' · '+operClienteFocoNome) : ' dos clientes'"></span>
                 <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
@@ -2516,6 +2516,33 @@
                   </template>
                 </div>
               </template>
+            </div>
+          </div>
+          <!-- Stories orgânicos de hoje (Samara) — trocado de lugar com o Melhores posts; agora fica aqui na LINHA 1. -->
+          <div class="card" x-show="operTab==='samara'" style="padding:16px">
+            <div class="flex items-center justify-between mb-1" style="gap:8px">
+              <div class="fw-600 fs-15" style="cursor:pointer;flex:1;min-width:0" @click="samStoriesAberto=!samStoriesAberto" title="Recolher/expandir"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div>
+              <div class="flex items-center gap-2" style="flex:none">
+                <span class="badge fs-11 fw-700" :style="samStoriesMeta.length && samStoriesNaMeta>=samStoriesMeta.length ? 'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="samStoriesNaMeta+'/'+samStoriesMeta.length" title="clientes na meta de stories"></span>
+                <button class="btn btn-sm" @click="samStoriesPreencherMeta()" title="Marca cada cliente com o piso da faixa"><i class="ph ph-check-square ic-ph"></i> Bater a meta</button>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="samStoriesAberto=!samStoriesAberto" :title="samStoriesAberto?'Recolher':'Expandir'"><i class="ph ic-ph" :class="samStoriesAberto?'ph-caret-up':'ph-caret-down'"></i></button>
+              </div>
+            </div>
+            <div x-show="samStoriesAberto">
+            <div class="text-3 fs-11 mb-3">Faixa de stories/dia por cliente (cronograma semanal). Registre quantos publicou hoje.</div>
+            <template x-for="m in samStoriesMeta" :key="'ss'+m.cliente">
+              <div class="flex items-center" style="gap:10px;margin-bottom:9px">
+                <div class="fs-13 fw-600" style="width:118px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="m.cliente"></div>
+                <span class="fs-11" style="flex:none;min-width:74px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#6b7280'"><span class="text-3">meta</span> <b x-text="m.faixa"></b></span>
+                <div class="progress" style="flex:1;height:8px"><div :style="'width:'+Math.min(100,Math.round(samStoryQtd(m.cliente)/m.alvo*100))+'%;background:'+(samStoryMetaOk(m)?'#34A853':(samStoryQtd(m.cliente)>0?'#F9A825':'#E5E7EB'))"></div></div>
+                <div class="flex items-center" style="gap:6px;flex:none">
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDraftDec(m.cliente)" :disabled="samStoryDraftQtd(m.cliente)<=0" style="padding:2px 7px"><i class="ph ph-minus"></i></button>
+                  <span class="fw-700 fs-14" style="width:18px;text-align:center" :style="samStoryPendente(m.cliente)?'color:#B45309':''" :title="samStoryPendente(m.cliente)?'Marcado (não efetivado) — clique no check pra confirmar':''" x-text="samStoryDraftQtd(m.cliente)"></span>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDraftInc(m.cliente)" style="padding:2px 7px"><i class="ph ph-plus" style="color:#4285F4"></i></button>
+                </div>
+                <button class="btn btn-icon btn-sm" @click="samStoryEfetivar(m.cliente)" :disabled="!samStoryPendente(m.cliente)" style="flex:none;padding:2px 7px" :title="samStoryPendente(m.cliente)?'Efetivar a quantidade marcada':(samStoryMetaOk(m)?'Efetivado — na meta':'Nada pendente pra efetivar')" :style="samStoryPendente(m.cliente)?'background:#34A853;color:#fff;border-color:#34A853':'background:transparent;border-color:transparent;color:'+(samStoryMetaOk(m)?'#34A853':'#e5e7eb')"><i class="ph ph-check-circle" style="font-size:18px"></i></button>
+              </div>
+            </template>
             </div>
           </div>
           </div>
@@ -2832,34 +2859,46 @@
                   <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
                 </div>
               </div>
-              <!-- Stories e Registro seguem na sequência do masonry (ficam juntos; recolher o Stories continua puxando o Registro pra cima). -->
-              <!-- Stories orgânicos de hoje -->
-              <div class="card" style="padding:16px">
-                <div class="flex items-center justify-between mb-1" style="gap:8px">
-                  <div class="fw-600 fs-15" style="cursor:pointer;flex:1;min-width:0" @click="samStoriesAberto=!samStoriesAberto" title="Recolher/expandir"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div>
-                  <div class="flex items-center gap-2" style="flex:none">
-                    <span class="badge fs-11 fw-700" :style="samStoriesMeta.length && samStoriesNaMeta>=samStoriesMeta.length ? 'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="samStoriesNaMeta+'/'+samStoriesMeta.length" title="clientes na meta de stories"></span>
-                    <button class="btn btn-sm" @click="samStoriesPreencherMeta()" title="Marca cada cliente com o piso da faixa"><i class="ph ph-check-square ic-ph"></i> Bater a meta</button>
-                    <button class="btn btn-icon btn-ghost btn-sm" @click="samStoriesAberto=!samStoriesAberto" :title="samStoriesAberto?'Recolher':'Expandir'"><i class="ph ic-ph" :class="samStoriesAberto?'ph-caret-up':'ph-caret-down'"></i></button>
+              <!-- Melhores posts (Samara) — trocado de lugar com o Stories orgânicos; agora fica aqui no masonry. Instância própria da Samara (o Matheus mantém a dele na LINHA 1). -->
+              <div class="card" style="padding:16px" x-init="carregarMelhores()">
+                <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
+                  <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts<span class="text-3 fw-500 fs-13" style="display:inline-block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom" :title="operClienteFocoNome||''" x-text="operClienteFocoNome ? (' · '+operClienteFocoNome) : ' dos clientes'"></span>
+                    <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
+                    <span class="badge fs-10 fw-700" style="margin-left:4px;background:#F1F5F9;color:#475569">Últimos 30 dias</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="btn btn-icon btn-ghost btn-sm" x-show="matTopAberto" @click="carregarMelhores(true)" :disabled="matTopLoading" title="Atualizar ranking"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
+                    <button class="btn btn-icon btn-ghost btn-sm" @click="matTopAberto=!matTopAberto" :title="matTopAberto?'Recolher':'Expandir'"><i class="ph" :class="matTopAberto?'ph-caret-up':'ph-caret-down'"></i></button>
                   </div>
                 </div>
-                <div x-show="samStoriesAberto">
-                <div class="text-3 fs-11 mb-3">Faixa de stories/dia por cliente (cronograma semanal). Registre quantos publicou hoje.</div>
-                <template x-for="m in samStoriesMeta" :key="'ss'+m.cliente">
-                  <div class="flex items-center" style="gap:10px;margin-bottom:9px">
-                    <div class="fs-13 fw-600" style="width:118px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="m.cliente"></div>
-                    <span class="fs-11" style="flex:none;min-width:74px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#6b7280'"><span class="text-3">meta</span> <b x-text="m.faixa"></b></span>
-                    <div class="progress" style="flex:1;height:8px"><div :style="'width:'+Math.min(100,Math.round(samStoryQtd(m.cliente)/m.alvo*100))+'%;background:'+(samStoryMetaOk(m)?'#34A853':(samStoryQtd(m.cliente)>0?'#F9A825':'#E5E7EB'))"></div></div>
-                    <div class="flex items-center" style="gap:6px;flex:none">
-                      <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDraftDec(m.cliente)" :disabled="samStoryDraftQtd(m.cliente)<=0" style="padding:2px 7px"><i class="ph ph-minus"></i></button>
-                      <span class="fw-700 fs-14" style="width:18px;text-align:center" :style="samStoryPendente(m.cliente)?'color:#B45309':''" :title="samStoryPendente(m.cliente)?'Marcado (não efetivado) — clique no check pra confirmar':''" x-text="samStoryDraftQtd(m.cliente)"></span>
-                      <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDraftInc(m.cliente)" style="padding:2px 7px"><i class="ph ph-plus" style="color:#4285F4"></i></button>
+                <div x-show="matTopAberto">
+                  <div class="text-3 fs-12 mb-3" style="margin-top:6px" x-show="!operInspClienteId && matTop && matTop.criterio"><i class="ph ph-info ic-ph"></i> <span x-text="matTop && matTop.criterio"></span></div>
+                  <div x-show="melhoresLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-trophy" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Avaliando os posts dos clientes…</div></div>
+                  <div x-show="!melhoresLoading && melhoresErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="melhoresErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="operInspClienteId ? carregarMelhoresFoco() : carregarMelhores(true)">Tentar de novo</button></div>
+                  <div x-show="!melhoresLoading && !melhoresErro && melhoresPronto && !melhoresView.length" class="text-3 fs-13" style="padding:14px 0;text-align:center" x-text="operClienteFocoNome ? ('Sem posts de '+operClienteFocoNome+' com métrica.') : 'Sem posts com métrica ainda — conecte os clientes no Meta.'"></div>
+                  <template x-if="!melhoresLoading && melhoresPronto && melhoresView.length">
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                      <template x-for="(p,i) in melhoresView" :key="'mtpS'+p.link">
+                        <a :href="p.link" target="_blank" rel="noopener" class="flex items-center" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:8px;gap:10px" :title="'Abrir o post de '+p.cliente+' no Instagram'">
+                          <span class="fw-800 fs-16" style="width:28px;text-align:center;flex:none" :style="i===0?'color:#F59E0B':(i===1?'color:#9CA3AF':(i===2?'color:#B45309':'color:var(--text-3)'))" x-text="'#'+(i+1)"></span>
+                          <div style="width:52px;height:52px;border-radius:8px;background:var(--surface-2);overflow:hidden;flex:none" x-show="p.img"><img :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null"></div>
+                          <div style="flex:1;min-width:0">
+                            <div class="fs-13 fw-700" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.cliente"></div>
+                            <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.texto || '(sem legenda)'"></div>
+                            <div class="flex items-center gap-2" style="margin-top:3px">
+                              <span class="badge fs-11 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
+                              <span class="badge fs-11 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
+                              <span class="badge fs-11 fw-700" x-show="p.engajamentoPct!=null" style="background:#ECFEFF;color:#0891B2" x-text="p.engajamentoPct+'% engaj.'"></span>
+                              <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
+                            </div>
+                          </div>
+                        </a>
+                      </template>
                     </div>
-                    <button class="btn btn-icon btn-sm" @click="samStoryEfetivar(m.cliente)" :disabled="!samStoryPendente(m.cliente)" style="flex:none;padding:2px 7px" :title="samStoryPendente(m.cliente)?'Efetivar a quantidade marcada':(samStoryMetaOk(m)?'Efetivado — na meta':'Nada pendente pra efetivar')" :style="samStoryPendente(m.cliente)?'background:#34A853;color:#fff;border-color:#34A853':'background:transparent;border-color:transparent;color:'+(samStoryMetaOk(m)?'#34A853':'#e5e7eb')"><i class="ph ph-check-circle" style="font-size:18px"></i></button>
-                  </div>
-                </template>
+                  </template>
                 </div>
               </div>
+              <!-- Stories orgânicos MIGROU pra LINHA 1 (trocou com o Melhores). -->
               <!-- (Samara) Registro & otimizações MIGROU pra coluna direita (abaixo da Agenda), igual ao Matheus. -->
             </div><!-- /masonry-2 -->
           </div>
@@ -5708,7 +5747,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=401"></script>
+<script src="js/app.js?v=402"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
