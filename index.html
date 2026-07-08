@@ -2358,6 +2358,33 @@
           </div>
           </div><!-- /wrapper x-show dos KPIs (x-show num wrapper pra não zerar o display:grid) -->
 
+          <!-- KPIs "Produção de conteúdo" (Samara) — logo abaixo do seletor (mesma posição dos KPIs do Matheus). Wrapper leva o x-show; o grid interno mantém display:grid (armadilha Alpine). -->
+          <div x-show="operTab==='samara'" style="margin-bottom:14px">
+            <div class="fw-600 fs-13 mb-2"><i class="ph ph-film-slate ic-ph" style="color:#4285F4"></i> Produção de conteúdo</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
+              <div class="card kpi" style="background:#F4F8FE">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-device-mobile ic-ph"></i></span> Stories na meta</div>
+                <div class="kpi-value fs-22"><span x-text="samStoriesNaMeta"></span><span class="text-3 fs-15">/<span x-text="samStoriesMeta.length"></span></span></div>
+                <div class="text-3 fs-11"><span x-text="samStoriesTotalHoje"></span> stories publicados hoje</div>
+              </div>
+              <div class="card kpi" style="background:#F3FAF6">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle ic-ph"></i></span> Vídeos concluídos</div>
+                <div class="kpi-value fs-22" x-text="samKpiVideosConcl"></div>
+                <div class="text-3 fs-11">finalizados hoje</div>
+              </div>
+              <div class="card kpi" style="background:#FEFBEF">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-hammer ic-ph"></i></span> Em andamento</div>
+                <div class="kpi-value fs-22" x-text="samKpiVideosAnd"></div>
+                <div class="text-3 fs-11">vídeos sendo feitos</div>
+              </div>
+              <div class="card kpi" style="background:#FEF6F4">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-file-text ic-ph"></i></span> Roteiros prontos</div>
+                <div class="kpi-value fs-22"><span x-text="samRoteirosProntos"></span><span class="text-3 fs-15">/<span x-text="samRoteiros.length"></span></span></div>
+                <div class="text-3 fs-11">p/ captação</div>
+              </div>
+            </div>
+          </div>
+
           <!-- LINHA 1: Postagens (Matheus)/Agenda (Samara) | Painel — align START p/ o Painel NÃO esticar quando o card ao lado é comprido. -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
           <!-- LINHA 1 · célula esquerda: Matheus = Postagens do dia (trocada com a Agenda) · Samara = Agenda -->
@@ -2662,34 +2689,8 @@
           </div><!-- /coluna direita LINHA 1 (Painel + Rotina) -->
           </div><!-- /LINHA 1 (Postagens/Agenda | Painel+Rotina) -->
 
-          <!-- KPIs coloridos "Produção de conteúdo" (Samara) — logo abaixo da Agenda|Painel. Wrapper leva o x-show; o grid interno mantém display:grid (armadilha Alpine). -->
-          <div x-show="operTab==='samara'" style="margin-bottom:14px">
-            <div class="fw-600 fs-13 mb-2"><i class="ph ph-film-slate ic-ph" style="color:#4285F4"></i> Produção de conteúdo</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
-              <div class="card kpi" style="background:#F4F8FE">
-                <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-device-mobile ic-ph"></i></span> Stories na meta</div>
-                <div class="kpi-value fs-22"><span x-text="samStoriesNaMeta"></span><span class="text-3 fs-15">/<span x-text="samStoriesMeta.length"></span></span></div>
-                <div class="text-3 fs-11"><span x-text="samStoriesTotalHoje"></span> stories publicados hoje</div>
-              </div>
-              <div class="card kpi" style="background:#F3FAF6">
-                <div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle ic-ph"></i></span> Vídeos concluídos</div>
-                <div class="kpi-value fs-22" x-text="samKpiVideosConcl"></div>
-                <div class="text-3 fs-11">finalizados hoje</div>
-              </div>
-              <div class="card kpi" style="background:#FEFBEF">
-                <div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-hammer ic-ph"></i></span> Em andamento</div>
-                <div class="kpi-value fs-22" x-text="samKpiVideosAnd"></div>
-                <div class="text-3 fs-11">vídeos sendo feitos</div>
-              </div>
-              <div class="card kpi" style="background:#FEF6F4">
-                <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-file-text ic-ph"></i></span> Roteiros prontos</div>
-                <div class="kpi-value fs-22"><span x-text="samRoteirosProntos"></span><span class="text-3 fs-15">/<span x-text="samRoteiros.length"></span></span></div>
-                <div class="text-3 fs-11">p/ captação</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- (Samara) O que ainda falta hoje | Stories orgânicos de hoje — mesma linha, abaixo dos KPIs coloridos. Wrapper leva x-show; grid interno mantém display:grid. -->
+          <!-- (Samara) KPIs de produção MIGRARAM pra logo abaixo do seletor (junto dos KPIs do Matheus). -->
+          <!-- (Samara) Cards de produção no masonry, abaixo dos KPIs. Wrapper leva x-show; grid interno mantém display:grid. -->
           <div x-show="operTab==='samara'">
             <!-- Masonry 2 colunas: os cards da Samara empacotam sem deixar vão entre colunas de alturas diferentes. -->
             <div class="masonry-2">
@@ -5730,7 +5731,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=396"></script>
+<script src="js/app.js?v=397"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
