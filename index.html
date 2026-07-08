@@ -2340,6 +2340,33 @@
           </div>
           </div><!-- /LINHA 1 (Agenda | Painel) -->
 
+          <!-- KPIs coloridos "Produção de conteúdo" (Samara) — logo abaixo da Agenda|Painel. Wrapper leva o x-show; o grid interno mantém display:grid (armadilha Alpine). -->
+          <div x-show="operTab==='samara'" style="margin-bottom:14px">
+            <div class="fw-600 fs-13 mb-2"><i class="ph ph-film-slate ic-ph" style="color:#4285F4"></i> Produção de conteúdo</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
+              <div class="card kpi" style="background:#F4F8FE">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-device-mobile ic-ph"></i></span> Stories na meta</div>
+                <div class="kpi-value fs-22"><span x-text="samStoriesNaMeta"></span><span class="text-3 fs-15">/<span x-text="samStoriesMeta.length"></span></span></div>
+                <div class="text-3 fs-11"><span x-text="samStoriesTotalHoje"></span> stories publicados hoje</div>
+              </div>
+              <div class="card kpi" style="background:#F3FAF6">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle ic-ph"></i></span> Vídeos concluídos</div>
+                <div class="kpi-value fs-22" x-text="samKpiVideosConcl"></div>
+                <div class="text-3 fs-11">finalizados hoje</div>
+              </div>
+              <div class="card kpi" style="background:#FEFBEF">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-hammer ic-ph"></i></span> Em andamento</div>
+                <div class="kpi-value fs-22" x-text="samKpiVideosAnd"></div>
+                <div class="text-3 fs-11">vídeos sendo feitos</div>
+              </div>
+              <div class="card kpi" style="background:#FEF6F4">
+                <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-file-text ic-ph"></i></span> Roteiros prontos</div>
+                <div class="kpi-value fs-22"><span x-text="samRoteirosProntos"></span><span class="text-3 fs-15">/<span x-text="samRoteiros.length"></span></span></div>
+                <div class="text-3 fs-11">p/ captação</div>
+              </div>
+            </div>
+          </div>
+
           <!-- LINHA 2: O que ainda falta hoje | Rotina do dia (lado a lado) -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
           <!-- Célula ESQUERDA da LINHA 2: Empresas do mesmo segmento EM CIMA + O que ainda falta hoje EMBAIXO (empilhados). -->
@@ -2651,30 +2678,7 @@
               <!-- Coluna SAMARA (produção de conteúdo) -->
               <div x-show="operTab==='samara'" style="display:flex;flex-direction:column;gap:14px">
 
-            <!-- Produção de conteúdo (4 KPIs migrados da Samara) -->
-            <div class="fw-600 fs-13 mb-2"><i class="ph ph-film-slate ic-ph" style="color:#4285F4"></i> Produção de conteúdo</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:14px">
-              <div class="card kpi" style="background:#F4F8FE">
-                <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-device-mobile ic-ph"></i></span> Stories na meta</div>
-                <div class="kpi-value fs-22"><span x-text="samStoriesNaMeta"></span><span class="text-3 fs-15">/<span x-text="samStoriesMeta.length"></span></span></div>
-                <div class="text-3 fs-11"><span x-text="samStoriesTotalHoje"></span> stories publicados hoje</div>
-              </div>
-              <div class="card kpi" style="background:#F3FAF6">
-                <div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-check-circle ic-ph"></i></span> Vídeos concluídos</div>
-                <div class="kpi-value fs-22" x-text="samKpiVideosConcl"></div>
-                <div class="text-3 fs-11">finalizados hoje</div>
-              </div>
-              <div class="card kpi" style="background:#FEFBEF">
-                <div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-hammer ic-ph"></i></span> Em andamento</div>
-                <div class="kpi-value fs-22" x-text="samKpiVideosAnd"></div>
-                <div class="text-3 fs-11">vídeos sendo feitos</div>
-              </div>
-              <div class="card kpi" style="background:#FEF6F4">
-                <div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-file-text ic-ph"></i></span> Roteiros prontos</div>
-                <div class="kpi-value fs-22"><span x-text="samRoteirosProntos"></span><span class="text-3 fs-15">/<span x-text="samRoteiros.length"></span></span></div>
-                <div class="text-3 fs-11">p/ captação</div>
-              </div>
-            </div>
+            <!-- KPIs coloridos "Produção de conteúdo" MIGRARAM pra logo abaixo da LINHA 1 (Agenda|Painel). -->
 
             <!-- Produção de conteúdo: Vídeos, Roteiros e Captações (migrados da Samara) -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start;margin-bottom:14px">
@@ -5632,7 +5636,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=366"></script>
+<script src="js/app.js?v=367"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
