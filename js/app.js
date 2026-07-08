@@ -1531,6 +1531,10 @@ document.addEventListener('alpine:init', () => {
     },
     relCronoStop() { clearInterval(this._relCronoT); this._relCronoT = null; },
     get relCronoRestante() { return Math.max(0, 15 - this.relCrono); },
+    // Cronômetro genérico de carregamento da IA (conta os segundos até os dados chegarem) — usado em todos os pontos de IA.
+    iaCrono: 0, _iaCronoT: null,
+    iaCronoStart() { this.iaCrono = 0; clearInterval(this._iaCronoT); this._iaCronoT = setInterval(() => { this.iaCrono++; if (this.iaCrono >= 120) clearInterval(this._iaCronoT); }, 1000); },
+    iaCronoStop() { clearInterval(this._iaCronoT); this._iaCronoT = null; },
 
     // ══════════════ SAMARA — Painel do dia · Produção de Conteúdo ══════════════
     // Tudo persistido no store genérico de coleções (operacoes.samara.*).
@@ -1875,7 +1879,7 @@ document.addEventListener('alpine:init', () => {
     async operInspCarrega(force) {
       const id = this.operInspClienteId;
       if (!id) return;
-      this.operInspLoading = true; this.operInspErro = ''; this.operInspPosts = []; this.operInspSemMeta = false;
+      this.operInspLoading = true; this.operInspErro = ''; this.operInspPosts = []; this.operInspSemMeta = false; this.iaCronoStart();
       try {
         const r = await this.api('GET', '/monitoramento/meta/concorrentes/' + id + (force ? '?force=1' : ''));
         this.operInspConc = r.concorrentes && r.concorrentes.length ? r.concorrentes : this.operInspConc;
@@ -1886,7 +1890,7 @@ document.addEventListener('alpine:init', () => {
         else if (r.aviso === 'sem_conta_meta') { this.operInspSemMeta = true; this.operInspErro = 'Falta conectar o Instagram da Maracatu — é ele que abre a porta da Meta pra eu puxar os posts dos concorrentes.'; }
         else if (!this.operInspPosts.length && (r.falhas || []).length) this.operInspErro = 'Não achei: @' + r.falhas.join(', @') + ' — confira se o @ está certo e se é conta COMERCIAL (business) do Instagram.';
       } catch (e) { this.operInspErro = e.message || 'Falha ao buscar os concorrentes.'; }
-      this.operInspLoading = false;
+      this.iaCronoStop(); this.operInspLoading = false;
     },
     async operInspAddConc() {
       let h = (this.operInspNovo || '').trim().replace(/^@/, '');
@@ -1915,13 +1919,13 @@ document.addEventListener('alpine:init', () => {
     operInspAbrir(p) { this.operInspSel = p; this.operInspAnalise = null; this.operInspAnaliseErro = ''; this.operInspAnalisar(); },
     async operInspAnalisar() {
       const id = this.operInspClienteId, p = this.operInspSel; if (!id || !p) return;
-      this.operInspAnaliseLoading = true; this.operInspAnaliseErro = '';
+      this.operInspAnaliseLoading = true; this.operInspAnaliseErro = ''; this.iaCronoStart();
       try {
         this.operInspAnalise = await this.api('POST', '/monitoramento/meta/analisar-post/' + id, {
           post: { concorrente: p.concorrente, texto: p.texto, tipo: p.tipo, likes: p.likes, comentarios: p.comentarios, seguidores: p.seguidores },
         });
       } catch (e) { this.operInspAnaliseErro = (e && e.message) || 'Não consegui analisar esse post agora.'; }
-      this.operInspAnaliseLoading = false;
+      this.iaCronoStop(); this.operInspAnaliseLoading = false;
     },
 
     // Marca/desmarca um post como PUBLICADO na rede — marca do social media, independente
@@ -2381,7 +2385,7 @@ document.addEventListener('alpine:init', () => {
       if (!rascunho) return this.mostrarToast('Escreva um rascunho no campo pra IA organizar. ✍️');
       if (arr.length >= 5) return this.mostrarToast('Já são 5 tópicos — remova algum pra IA sugerir.');
       const c = (this.clients || []).find(x => x.id === this.eventoForm.clienteId);
-      this.evIaBusy[campo] = true;
+      this.evIaBusy[campo] = true; this.iaCronoStart();
       try {
         const r = await this.api('POST', '/ia/topicos-evento', {
           campo, texto: rascunho,
@@ -2395,7 +2399,7 @@ document.addEventListener('alpine:init', () => {
         this._evSet(campo, final); this.evTopBuf[campo] = '';
         this.mostrarToast(final.length ? 'Tópicos organizados pela IA. ✨' : 'A IA não achou tópicos no rascunho.');
       } catch (e) { this.mostrarToast('IA: ' + (e.message || e)); }
-      this.evIaBusy[campo] = false;
+      this.iaCronoStop(); this.evIaBusy[campo] = false;
     },
     async removerEventoAg(ev) {
       if (!ev || ev.fonte !== 'agenda') return;
@@ -3200,11 +3204,11 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     removerMetaSocial(c, m) { if (!confirm('Remover esta meta?')) return; c.metasSocial = (c.metasSocial || []).filter(x => x.id !== m.id); this.persistirCliente(c); },
     async gerarSugestoesIA(c) {
       if (!this.rel) { alert('Abra um relatório primeiro.'); return; }
-      this.sugIALoading = true; this.sugIAErro = '';
+      this.sugIALoading = true; this.sugIAErro = ''; this.iaCronoStart();
       try {
         this.sugIA = (await this.api('POST', '/ia/sugestoes-tarefas', { cliente: this.rel.cliente, resumo: this.rel.resumo, melhorFormato: this.rel.melhorFormato, melhores: this.rel.melhores, metas: this.metasCliente(c) })) || { matheus: [], samara: [] };
       } catch (e) { this.sugIAErro = (e && e.message) || 'Falha ao gerar sugestões.'; }
-      this.sugIALoading = false;
+      this.iaCronoStop(); this.sugIALoading = false;
     },
     // Registra uma AÇÃO do cliente no Fichário (via operLog, atribuída ao cliente+dia). Toda ação pra o cliente passa por aqui.
     async _registrarFichario(cliente, texto, motivo) {
@@ -3221,13 +3225,13 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     async gerarSugestoesSamara() {
       const c = this.operClienteObj;
       if (!c) { this.mostrarToast('Selecione um cliente em foco (lá em cima) primeiro.'); return; }
-      this.sugSamLoading = true; this.sugSamErro = '';
+      this.sugSamLoading = true; this.sugSamErro = ''; this.iaCronoStart();
       try {
         const r = await this.api('POST', '/ia/sugestoes-tarefas', { cliente: c.empresa || c.nome, resumo: {}, metas: this.metasCliente(c) });
         this.sugSam = (((r && r.samara) || [])).map(t => ({ id: MD.uid(), texto: String(t) }));
         if (!this.sugSam.length) this.sugSamErro = 'A IA não retornou recomendações — tente de novo.';
       } catch (e) { this.sugSamErro = (e && e.message) || 'Falha ao gerar recomendações.'; }
-      this.sugSamLoading = false;
+      this.iaCronoStop(); this.sugSamLoading = false;
     },
     // Aplicar: adota a recomendação e registra no Fichário do cliente.
     aplicarSugestaoSamara(s) {
@@ -4405,14 +4409,14 @@ ${this._docFoot()}
     async gerarIA(obj, campo, tipo) {
       const base = (obj[campo] || '').trim();
       if (!base) return alert('Escreva um rascunho no campo primeiro — a IA elabora a partir dele.');
-      obj['_iaLoad_' + campo] = true;
+      obj['_iaLoad_' + campo] = true; this.iaCronoStart();
       try {
         const r = await this.api('POST', '/ia/elaborar', { tipo, texto: base, cliente: obj.cliente || (this.progForm && this.progForm.cliente) || '', tema: obj.tema || obj.nome || '' });
         const t = (r && r.texto) || '';
         if (!t) return alert('A IA não retornou texto. Tente de novo.');
         obj['_ia_' + campo] = t;
       } catch (e) { alert('IA: ' + (e.message || 'falha ao gerar')); }
-      finally { obj['_iaLoad_' + campo] = false; }
+      finally { this.iaCronoStop(); obj['_iaLoad_' + campo] = false; }
     },
     aprovarIA(obj, campo) { if (obj['_ia_' + campo]) { obj[campo] = obj['_ia_' + campo]; delete obj['_ia_' + campo]; if (obj === this.cardRef) this.salvarCard(); } },
     descartarIA(obj, campo) { delete obj['_ia_' + campo]; },

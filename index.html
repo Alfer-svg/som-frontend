@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=246">
+  <link rel="stylesheet" href="css/styles.css?v=247">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -2647,7 +2647,7 @@
                 <button class="btn btn-ghost btn-sm" @click="operInspAddConc()" title="Adicionar empresa do segmento"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
                 <button class="btn btn-icon btn-ghost btn-sm" x-show="operInspConc.length" @click="operInspCarrega(true)" title="Buscar de novo agora"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
               </div>
-              <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px" x-text="operInspConc.length ? 'Buscando os melhores posts do segmento…' : 'A IA está descobrindo empresas do mesmo segmento…'"></div></div>
+              <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-spinner-gap ia-spin" style="font-size:22px;color:#4285F4"></i><div style="margin-top:6px" x-text="operInspConc.length ? 'Buscando os melhores posts do segmento…' : 'A IA está descobrindo empresas do mesmo segmento…'"></div><div class="fs-11 fw-700" style="margin-top:4px;color:#4285F4"><span x-text="iaCrono"></span>s</div></div>
               <div x-show="!operInspLoading && operInspErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF7E0;color:#B06000">
                 <span x-text="operInspErro"></span>
               </div>
@@ -2878,11 +2878,11 @@
           <div class="card" x-show="operTab==='samara'" style="padding:16px;margin-bottom:14px;border-left:3px solid #4285F4">
             <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
               <div class="fw-600 fs-15"><i class="ph ph-sparkle ic-ph" style="color:#4285F4"></i> Recomendações da IA — Samara<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
-              <button class="btn btn-sm btn-primary" @click="gerarSugestoesSamara()" :disabled="sugSamLoading || !operClienteObj"><i class="ph ph-sparkle ic-ph"></i> <span x-text="sugSamLoading?'Gerando…':(sugSam.length?'Gerar de novo':'Gerar recomendações')"></span></button>
+              <button class="btn btn-sm btn-primary" @click="gerarSugestoesSamara()" :disabled="sugSamLoading || !operClienteObj"><i class="ph ic-ph" :class="sugSamLoading?'ph-spinner-gap ia-spin':'ph-sparkle'"></i> <span x-text="sugSamLoading?('Gerando… '+iaCrono+'s'):(sugSam.length?'Gerar de novo':'Gerar recomendações')"></span></button>
             </div>
             <div class="text-3 fs-12 mb-3">Sugestões de produção de conteúdo pro cliente em foco, com base nas metas. Aplicar ou descartar — <b>toda ação fica registrada no Fichário</b>.</div>
             <div x-show="!operClienteObj" class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-user-focus" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente em foco lá em cima pra gerar recomendações.</div></div>
-            <div x-show="sugSamLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-sparkle" style="font-size:22px;color:#4285F4"></i><div style="margin-top:6px">A IA está montando as recomendações…</div></div>
+            <div x-show="sugSamLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-spinner-gap ia-spin" style="font-size:22px;color:#4285F4"></i><div style="margin-top:6px">A IA está montando as recomendações…</div><div class="fs-11 fw-700" style="margin-top:4px;color:#4285F4"><span x-text="iaCrono"></span>s</div></div>
             <div x-show="!sugSamLoading && sugSamErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="sugSamErro"></span></div>
             <div x-show="!sugSamLoading && operClienteObj && !sugSam.length && !sugSamErro" class="text-3 fs-12" style="padding:8px 0;text-align:center">Clique em <b>Gerar recomendações</b> pra a IA sugerir tarefas de produção pro cliente.</div>
             <template x-for="s in sugSam" :key="'sgs'+s.id">
@@ -2914,7 +2914,7 @@
                 <i class="ph ph-x" style="cursor:pointer;font-size:20px" @click="operInspSel=null"></i>
               </div>
               <div style="padding:18px">
-                <div x-show="operInspAnaliseLoading" class="text-3 fs-13" style="text-align:center;padding:26px"><i class="ph ph-sparkle" style="font-size:24px;color:#6D28D9"></i><div style="margin-top:8px">A IA está analisando esse post pro Matheus…</div></div>
+                <div x-show="operInspAnaliseLoading" class="text-3 fs-13" style="text-align:center;padding:26px"><i class="ph ph-spinner-gap ia-spin" style="font-size:24px;color:#6D28D9"></i><div style="margin-top:8px">A IA está analisando esse post pro Matheus…</div><div class="fs-11 fw-700" style="margin-top:4px;color:#6D28D9"><span x-text="iaCrono"></span>s</div></div>
                 <div x-show="!operInspAnaliseLoading && operInspAnaliseErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="operInspAnaliseErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="operInspAnalisar()">Tentar de novo</button></div>
                 <template x-if="!operInspAnaliseLoading && operInspAnalise">
                   <div style="display:flex;flex-direction:column;gap:16px">
@@ -3205,7 +3205,7 @@
             <div class="card" style="padding:16px;margin-bottom:14px">
               <div class="flex items-center justify-between mb-1" style="gap:8px;flex-wrap:wrap">
                 <div class="fw-600 fs-15"><i class="ph ph-sparkle ic-ph" style="color:#7c3aed"></i> Sugestões de tarefas (IA)</div>
-                <button class="btn btn-sm btn-primary" @click="gerarSugestoesIA(relClienteObj)" :disabled="sugIALoading"><i class="ph" :class="sugIALoading?'ph-spinner':'ph-magic-wand'"></i> <span x-text="sugIALoading?'Gerando…':'Gerar sugestões'"></span></button>
+                <button class="btn btn-sm btn-primary" @click="gerarSugestoesIA(relClienteObj)" :disabled="sugIALoading"><i class="ph" :class="sugIALoading?'ph-spinner-gap ia-spin':'ph-magic-wand'"></i> <span x-text="sugIALoading?('Gerando… '+iaCrono+'s'):'Gerar sugestões'"></span></button>
               </div>
               <div class="text-3 fs-12 mb-3">A IA lê o relatório e as metas e sugere tarefas pra cada frente. Clique em <b>Delegar</b> pra mandar a tarefa pro Matheus ou pra Samara.</div>
               <div x-show="sugIAErro" class="fs-13" style="padding:10px;background:#FEF6F4;border:1px solid #FCE8E6;color:#EA4335;border-radius:8px;margin-bottom:10px" x-text="sugIAErro"></div>
@@ -4911,12 +4911,12 @@
               <button type="button" class="btn btn-ghost btn-sm" @click="removePostProg(i)" title="Remover post">🗑</button>
             </div>
             <div style="margin-bottom:8px">
-              <div class="flex items-center justify-between" style="margin-bottom:3px"><span class="fs-12 text-3" style="font-weight:600">Descrição</span><button type="button" class="btn btn-ghost btn-sm" :disabled="!!po._iaLoad_descricao" @click="gerarIA(po,'descricao','descricao')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="po._iaLoad_descricao?'gerando…':'Gerar (IA)'"></span></button></div>
+              <div class="flex items-center justify-between" style="margin-bottom:3px"><span class="fs-12 text-3" style="font-weight:600">Descrição</span><button type="button" class="btn btn-ghost btn-sm" :disabled="!!po._iaLoad_descricao" @click="gerarIA(po,'descricao','descricao')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="po._iaLoad_descricao?('gerando… '+iaCrono+'s'):'Gerar (IA)'"></span></button></div>
               <textarea class="form-textarea" x-model="po.descricao" placeholder="Descrição do post — rascunho; a IA elabora…" style="min-height:46px"></textarea>
               <template x-if="po._ia_descricao"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="po._ia_descricao"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(po,'descricao')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(po,'descricao')">Descartar</button></div></div></template>
             </div>
             <div style="margin-bottom:2px">
-              <div class="flex items-center justify-between" style="margin-bottom:3px"><span class="fs-12 text-3" style="font-weight:600">Legenda</span><button type="button" class="btn btn-ghost btn-sm" :disabled="!!po._iaLoad_legenda" @click="gerarIA(po,'legenda','legenda')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="po._iaLoad_legenda?'gerando…':'Gerar (IA)'"></span></button></div>
+              <div class="flex items-center justify-between" style="margin-bottom:3px"><span class="fs-12 text-3" style="font-weight:600">Legenda</span><button type="button" class="btn btn-ghost btn-sm" :disabled="!!po._iaLoad_legenda" @click="gerarIA(po,'legenda','legenda')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="po._iaLoad_legenda?('gerando… '+iaCrono+'s'):'Gerar (IA)'"></span></button></div>
               <textarea class="form-textarea" x-model="po.legenda" placeholder="Legenda do post — rascunho; a IA elabora…" style="min-height:54px"></textarea>
               <template x-if="po._ia_legenda"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="po._ia_legenda"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(po,'legenda')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(po,'legenda')">Descartar</button></div></div></template>
             </div>
@@ -5158,12 +5158,12 @@
       <template x-if="cardRef&&cardRef.isPost">
         <div>
           <div class="tl-section">
-            <div class="tl-section-label" style="display:flex;justify-content:space-between;align-items:center">Descrição<button type="button" class="btn btn-ghost btn-sm" :disabled="!!cardRef._iaLoad_descricao" @click="gerarIA(cardRef,'descricao','descricao')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="cardRef._iaLoad_descricao?'gerando…':'Gerar (IA)'"></span></button></div>
+            <div class="tl-section-label" style="display:flex;justify-content:space-between;align-items:center">Descrição<button type="button" class="btn btn-ghost btn-sm" :disabled="!!cardRef._iaLoad_descricao" @click="gerarIA(cardRef,'descricao','descricao')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="cardRef._iaLoad_descricao?('gerando… '+iaCrono+'s'):'Gerar (IA)'"></span></button></div>
             <textarea class="form-textarea" x-model="cardRef.descricao" @change="salvarCard()" placeholder="Descrição do post — rascunho; a IA elabora…" style="min-height:70px"></textarea>
             <template x-if="cardRef._ia_descricao"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="cardRef._ia_descricao"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(cardRef,'descricao')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(cardRef,'descricao')">Descartar</button></div></div></template>
           </div>
           <div class="tl-section" x-show="papel!=='colaborador2'">
-            <div class="tl-section-label" style="display:flex;justify-content:space-between;align-items:center">Legenda<button type="button" class="btn btn-ghost btn-sm" :disabled="!!cardRef._iaLoad_legenda" @click="gerarIA(cardRef,'legenda','legenda')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="cardRef._iaLoad_legenda?'gerando…':'Gerar (IA)'"></span></button></div>
+            <div class="tl-section-label" style="display:flex;justify-content:space-between;align-items:center">Legenda<button type="button" class="btn btn-ghost btn-sm" :disabled="!!cardRef._iaLoad_legenda" @click="gerarIA(cardRef,'legenda','legenda')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="cardRef._iaLoad_legenda?('gerando… '+iaCrono+'s'):'Gerar (IA)'"></span></button></div>
             <textarea class="form-textarea" x-model="cardRef.legenda" @change="salvarCard()" placeholder="Legenda do post — rascunho; a IA elabora…" style="min-height:80px"></textarea>
             <template x-if="cardRef._ia_legenda"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="cardRef._ia_legenda"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(cardRef,'legenda')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(cardRef,'legenda')">Descartar</button></div></div></template>
           </div>
@@ -5480,7 +5480,7 @@
           <div class="flex items-center gap-2" x-show="evTopicos('desenvolvimento').length < 5">
             <input class="form-input fs-13" placeholder="Adicionar tópico — ou cole um rascunho e clique IA" x-model="evTopBuf.desenvolvimento" @keydown.enter.prevent="evAddTopico('desenvolvimento')">
             <button type="button" class="btn btn-ghost btn-sm" @click="evAddTopico('desenvolvimento')" title="Adicionar como tópico"><i class="ph ph-plus ic-ph"></i></button>
-            <button type="button" class="btn btn-sm" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap" @click="evIaTopicos('desenvolvimento')" :disabled="evIaBusy.desenvolvimento" title="A IA organiza o rascunho em até 5 tópicos"><i class="ph ph-magic-wand ic-ph"></i> <span x-text="evIaBusy.desenvolvimento?'…':'IA'"></span></button>
+            <button type="button" class="btn btn-sm" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap" @click="evIaTopicos('desenvolvimento')" :disabled="evIaBusy.desenvolvimento" title="A IA organiza o rascunho em até 5 tópicos"><i class="ph ic-ph" :class="evIaBusy.desenvolvimento?'ph-spinner-gap ia-spin':'ph-magic-wand'"></i> <span x-text="evIaBusy.desenvolvimento?(iaCrono+'s'):'IA'"></span></button>
           </div>
           <div class="text-3 fs-11" x-show="evTopicos('desenvolvimento').length >= 5" style="margin-top:2px">Máximo de 5 tópicos atingido.</div>
         </div>
@@ -5497,7 +5497,7 @@
           <div class="flex items-center gap-2" x-show="evTopicos('solucao').length < 5">
             <input class="form-input fs-13" placeholder="Adicionar tópico — ou cole um rascunho e clique IA" x-model="evTopBuf.solucao" @keydown.enter.prevent="evAddTopico('solucao')">
             <button type="button" class="btn btn-ghost btn-sm" @click="evAddTopico('solucao')" title="Adicionar como tópico"><i class="ph ph-plus ic-ph"></i></button>
-            <button type="button" class="btn btn-sm" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap" @click="evIaTopicos('solucao')" :disabled="evIaBusy.solucao" title="A IA organiza o rascunho em até 5 tópicos"><i class="ph ph-magic-wand ic-ph"></i> <span x-text="evIaBusy.solucao?'…':'IA'"></span></button>
+            <button type="button" class="btn btn-sm" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap" @click="evIaTopicos('solucao')" :disabled="evIaBusy.solucao" title="A IA organiza o rascunho em até 5 tópicos"><i class="ph ic-ph" :class="evIaBusy.solucao?'ph-spinner-gap ia-spin':'ph-magic-wand'"></i> <span x-text="evIaBusy.solucao?(iaCrono+'s'):'IA'"></span></button>
           </div>
           <div class="text-3 fs-11" x-show="evTopicos('solucao').length >= 5" style="margin-top:2px">Máximo de 5 tópicos atingido.</div>
         </div>
@@ -5687,7 +5687,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=378"></script>
+<script src="js/app.js?v=379"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
