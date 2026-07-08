@@ -2344,7 +2344,7 @@
           <!-- LINHA 1: Postagens (Matheus)/Agenda (Samara) | Painel — align START p/ o Painel NÃO esticar quando o card ao lado é comprido. -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
           <!-- LINHA 1 · célula esquerda: Matheus = Postagens do dia (trocada com a Agenda) · Samara = Agenda -->
-          <div>
+          <div style="display:flex;flex-direction:column;gap:14px">
             <!-- Postagens do dia (Matheus) — layout de TABELA (mantém o tamanho do card; rola na horizontal se apertar). -->
             <div class="card" style="padding:16px" x-show="operTab==='matheus'">
               <div class="flex items-center justify-between mb-3" style="gap:10px;flex-wrap:wrap">
@@ -2414,6 +2414,116 @@
                 <button x-show="operEventosMatheus.length>6" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-6)+' na agenda completa'"></button>
               </div>
             </div>
+            <!-- (LINHA 2 dissolvida aqui) Empresas + Melhores fluem abaixo da Postagens -->
+          <!-- (d) Empresas do mesmo segmento — COMUM (filtro de mídia por perfil) — MOVIDO pra CÁ (topo da célula esquerda) -->
+          <!-- Empresas do mesmo segmento: feed de posts de referência + análise por IA (popup separado, mais abaixo) -->
+          <div class="card" style="padding:16px;margin-bottom:14px">
+            <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
+              <div>
+                <div class="fw-600 fs-15"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Empresas do mesmo segmento
+                  <!-- badge do filtro de mídia ativo (Reels p/ Samara, Posts p/ Matheus, Todos p/ admin) -->
+                  <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
+                </div>
+                <div class="text-3 fs-12" style="margin-top:2px">Posts de referência do segmento do cliente — clique num post pra ver a análise da IA.</div>
+              </div>
+              <button class="btn btn-icon btn-ghost btn-sm" @click="operInspAberto=!operInspAberto" :title="operInspAberto?'Recolher o card':'Expandir o card'"><i class="ph" :class="operInspAberto?'ph-caret-up':'ph-caret-down'"></i></button>
+            </div>
+            <div x-show="operInspAberto">
+            <div x-show="!operInspClienteId" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente pra ver referências de empresas do mesmo segmento.</div></div>
+            <div x-show="operInspClienteId">
+              <!-- @s das empresas do segmento (a IA descobre ao selecionar o cliente; dá pra ajustar à mão) -->
+              <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+                <span class="badge fs-11 fw-700" x-show="operInspIA" style="background:#EDE9FE;color:#6D28D9" title="Empresas do mesmo segmento descobertas pela IA a partir do que o cliente realmente faz"><i class="ph ph-sparkle"></i> achadas pela IA</span>
+                <template x-for="h in operInspConc" :key="'oih'+h">
+                  <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D;display:inline-flex;align-items:center;gap:4px">@<span x-text="h"></span>
+                    <i class="ph ph-x" style="cursor:pointer" @click="operInspRmConc(h)" title="Remover"></i></span>
+                </template>
+                <input class="form-input" style="max-width:210px" placeholder="@empresa do segmento" x-model="operInspNovo" @keydown.enter.prevent="operInspAddConc()">
+                <button class="btn btn-ghost btn-sm" @click="operInspAddConc()" title="Adicionar empresa do segmento"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
+                <button class="btn btn-icon btn-ghost btn-sm" x-show="operInspConc.length" @click="operInspCarrega(true)" title="Buscar de novo agora"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
+              </div>
+              <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-spinner-gap ia-spin" style="font-size:22px;color:#4285F4"></i><div style="margin-top:6px" x-text="operInspConc.length ? 'Buscando os melhores posts do segmento…' : 'A IA está descobrindo empresas do mesmo segmento…'"></div><div class="fs-11 fw-700" style="margin-top:4px;color:#4285F4"><span x-text="iaCrono"></span>s</div></div>
+              <div x-show="!operInspLoading && operInspErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF7E0;color:#B06000">
+                <span x-text="operInspErro"></span>
+              </div>
+              <div x-show="!operInspLoading && !operInspErro && operInspConc.length && !operInspPosts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Nenhum post encontrado dessas empresas.</div>
+              <!-- FEED estilo Instagram: um post por vez (rola pra ver mais) -->
+              <div x-show="!operInspLoading && operInspPosts.length" style="max-height:74vh;overflow:auto;padding:2px 4px 2px 0">
+                <div style="max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:18px">
+                  <!-- fonte filtrada por perfil: Samara=Reels/Vídeos · Matheus=Posts · admin=Todos -->
+                  <template x-for="p in (operTab==='samara' ? filtraMidiaReels(operInspPosts) : filtraMidiaPosts(operInspPosts))" :key="'oip'+p.link">
+                    <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)">
+                      <div class="flex items-center gap-2" style="padding:10px 12px">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex:none" x-text="(p.concorrente||'?').slice(0,1).toUpperCase()"></div>
+                        <div style="line-height:1.15;min-width:0;flex:1">
+                          <div class="fw-700 fs-13" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="'@'+p.concorrente"></div>
+                          <div class="text-3 fs-11" x-text="operInspData(p.data)+(p.seguidores? ' · '+operInspN(p.seguidores)+' seg':'')"></div>
+                        </div>
+                        <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
+                        <a :href="p.link" target="_blank" rel="noopener" style="color:var(--blue);font-weight:800;padding:0 4px" title="Abrir no Instagram">↗</a>
+                      </div>
+                      <!-- imagem quadrada, sem tarja preta -->
+                      <div style="width:100%;aspect-ratio:1/1;background:var(--surface-2);overflow:hidden" x-show="p.img">
+                        <img :src="p.img" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy" @error="p.img=null">
+                      </div>
+                      <div style="padding:12px">
+                        <!-- ações -->
+                        <div class="flex items-center gap-2" style="margin-bottom:8px">
+                          <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
+                          <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
+                          <button class="btn btn-sm" style="margin-left:auto;background:#6D28D9;color:#fff" @click="operInspAbrir(p)"><i class="ph ph-sparkle"></i> Ver análise</button>
+                        </div>
+                        <!-- legenda: clampada com ver mais/menos -->
+                        <div class="fs-13 text-2" style="white-space:pre-wrap;word-break:break-word;overflow:hidden" :style="operInspExp[p.link] ? '' : 'display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical'" x-text="p.texto || '(sem legenda)'"></div>
+                        <button x-show="(p.texto||'').length>160" class="btn-link fs-12" style="margin-top:4px;color:var(--text-3);background:none;border:none;padding:0;cursor:pointer" @click="operInspVerMais(p)" x-text="operInspExp[p.link] ? 'ver menos' : 'ver mais'"></button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+          <!-- (b) O que ainda falta hoje (Matheus) MIGROU pro TOPO (acima do seletor de cliente, largura cheia, 2 colunas). -->
+          <!-- (e) Melhores posts dos clientes — abaixo do "O que ainda falta hoje", mesma coluna. COMUM às duas abas (adapta por operTab: Matheus=Posts · Samara=Reels/Vídeos). -->
+          <div class="card" style="padding:16px" x-init="carregarMelhores()">
+            <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
+              <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts<span class="text-3 fw-500 fs-13" x-text="operClienteFocoNome ? (' · '+operClienteFocoNome) : ' dos clientes'"></span>
+                <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="btn btn-icon btn-ghost btn-sm" x-show="matTopAberto" @click="carregarMelhores(true)" :disabled="matTopLoading" title="Atualizar ranking"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="matTopAberto=!matTopAberto" :title="matTopAberto?'Recolher':'Expandir'"><i class="ph" :class="matTopAberto?'ph-caret-up':'ph-caret-down'"></i></button>
+              </div>
+            </div>
+            <div x-show="matTopAberto">
+              <div class="text-3 fs-12 mb-3" style="margin-top:6px" x-show="matTop && matTop.criterio"><i class="ph ph-info ic-ph"></i> <span x-text="matTop && matTop.criterio"></span></div>
+              <div x-show="matTopLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-trophy" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Avaliando os posts dos clientes…</div></div>
+              <div x-show="!matTopLoading && matTopErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="matTopErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="carregarMelhores(true)">Tentar de novo</button></div>
+              <div x-show="!matTopLoading && matTop && !melhoresView.length" class="text-3 fs-13" style="padding:14px 0;text-align:center" x-text="operClienteFocoNome ? ('Sem posts de '+operClienteFocoNome+' com métrica neste ranking.') : 'Sem posts com métrica ainda — conecte os clientes no Meta.'"></div>
+              <template x-if="!matTopLoading && matTop && melhoresView.length">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <!-- fonte: melhoresView = filtro de mídia (perfil) + cliente em foco (se selecionado) -->
+                  <template x-for="(p,i) in melhoresView" :key="'mtp'+p.link">
+                    <a :href="p.link" target="_blank" rel="noopener" class="flex items-center" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:8px;gap:10px" :title="'Abrir o post de '+p.cliente+' no Instagram'">
+                      <span class="fw-800 fs-16" style="width:28px;text-align:center;flex:none" :style="i===0?'color:#F59E0B':(i===1?'color:#9CA3AF':(i===2?'color:#B45309':'color:var(--text-3)'))" x-text="'#'+(i+1)"></span>
+                      <div style="width:52px;height:52px;border-radius:8px;background:var(--surface-2);overflow:hidden;flex:none" x-show="p.img"><img :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null"></div>
+                      <div style="flex:1;min-width:0">
+                        <div class="fs-13 fw-700" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.cliente"></div>
+                        <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.texto || '(sem legenda)'"></div>
+                        <div class="flex items-center gap-2" style="margin-top:3px">
+                          <span class="badge fs-11 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
+                          <span class="badge fs-11 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
+                          <span class="badge fs-11 fw-700" x-show="p.engajamentoPct!=null" style="background:#ECFEFF;color:#0891B2" x-text="p.engajamentoPct+'% engaj.'"></span>
+                          <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
+                        </div>
+                      </div>
+                    </a>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
           </div>
           <!-- (c) Painel do dia + Rotina (Rotina LOGO ABAIXO do Painel, mesma coluna) -->
           <div style="display:flex;flex-direction:column;gap:14px">
@@ -2464,6 +2574,54 @@
                       <button type="button" class="btn btn-sm btn-ghost" @click="operChkNA(operInspClienteId,t.id)" :style="operChkItem(operInspClienteId,t.id).na?'color:#0891B2;font-weight:800':'color:var(--text-3)'" title="Não se aplica hoje (conta como resolvido)">N/A</button>
                     </div>
                   </template>
+                </div>
+              </template>
+            </div>
+          </div>
+          <!-- (LINHA 2 dissolvida aqui) Agenda + Registro fluem abaixo da Rotina -->
+          <!-- Rotina do dia MIGROU pra LINHA 1 (logo abaixo do Painel). -->
+          <!-- Agenda (Matheus) — trocada de lugar com Postagens do dia (agora fica embaixo do Painel/Rotina). -->
+          <div class="card" style="padding:16px" x-show="operTab==='matheus'">
+            <div class="flex items-center justify-between mb-2" style="gap:8px">
+              <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
+              <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar evento — o colaborador já entra vinculado"><i class="ph ph-plus ic-ph"></i> Evento</button>
+            </div>
+            <div x-show="!operEventosMatheus.length" class="text-3 fs-13" style="padding:16px 0;text-align:center"><i class="ph ph-calendar-check" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Sem eventos futuros.</div></div>
+            <div x-show="operEventosMatheus.length" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto">
+              <template x-for="ev in operEventosMatheus.slice(0,6)" :key="'oema'+ev.id">
+                <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;cursor:pointer" @click="editarEvento(ev)" title="Abrir/editar o evento">
+                  <span class="badge fs-11 fw-700" style="background:#FEF7E0;color:#B06000;flex-shrink:0;white-space:nowrap"><span x-text="ev.data.slice(8,10)+'/'+ev.data.slice(5,7)"></span><span x-show="ev.hora" x-text="' · '+ev.hora"></span></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.titulo"></div>
+                    <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.cliente"></div>
+                  </div>
+                </div>
+              </template>
+              <button x-show="operEventosMatheus.length>6" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-6)+' na agenda completa'"></button>
+            </div>
+          </div>
+          <!-- Registro & otimizações do dia (Matheus) — abaixo de Rotina/Postagens. Na Samara ele fica na coluna do Stories (acompanha o recolher). -->
+          <div class="card" style="padding:14px" x-show="operTab==='matheus'">
+            <div class="fw-600 fs-14 mb-1"><i class="ph ph-list-plus ic-ph" style="color:#0891B2"></i> Registro & otimizações do dia</div>
+            <div class="text-3 fs-11 mb-2">Otimizações/ajustes que você registra + o registro automático da produção. Fica no Fichário.</div>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+              <div class="text-3 fs-11">Registrando para: <b x-text="(operInspClientes.find(c=>c.id===operInspClienteId)||{}).empresa || 'Geral (sem cliente)'"></b></div>
+              <input class="form-input" x-model="operLogForm.alteracao" placeholder="O que foi feito? (ex.: repostei o carrossel com nova capa)" @keydown.enter="addOperLog()">
+              <input class="form-input" x-model="operLogForm.motivo" placeholder="Por quê? (opcional)" @keydown.enter="addOperLog()">
+              <button class="btn btn-sm" @click="addOperLog()" style="background:#0d9488;color:#fff;border-color:#0d9488;white-space:nowrap;align-self:flex-start"><i class="ph ph-plus ic-ph"></i> Registrar</button>
+            </div>
+            <div x-show="!operRegistroDia(operChkData).length" class="text-3 fs-12" style="padding:8px 0;text-align:center">Nada registrado neste dia ainda.</div>
+            <div style="max-height:260px;overflow:auto">
+              <template x-for="l in operRegistroDia(operChkData)" :key="'reg'+(l.auto?'a':'m')+l.id">
+                <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+                  <span class="text-3 fs-11 fw-600" style="flex-shrink:0;margin-top:2px;width:38px" :style="l.auto?'color:#4285F4':'color:#0d9488'" x-text="l.hora"></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fs-13"><span x-show="l.cliente" class="fw-700" x-text="l.cliente+' · '"></span><span x-text="l.texto"></span></div>
+                    <div class="text-3 fs-11" x-show="l.motivo" x-text="'Motivo: '+l.motivo"></div>
+                    <div class="text-3 fs-11" x-show="l.por && !l.auto" x-text="'por '+l.por"></div>
+                  </div>
+                  <span x-show="l.auto" class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4;flex-shrink:0" title="Registro automático da produção">auto</span>
+                  <button x-show="!l.auto" class="btn btn-icon btn-ghost btn-sm" @click="removerOperLog(l.id)" title="Excluir" style="color:var(--red);flex-shrink:0"><i class="ph ph-trash ic-ph"></i></button>
                 </div>
               </template>
             </div>
@@ -2746,173 +2904,6 @@
             </div><!-- /masonry-2 -->
           </div>
 
-          <!-- LINHA 2: O que ainda falta hoje | Rotina do dia (lado a lado) -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
-          <!-- Célula ESQUERDA da LINHA 2: Empresas do mesmo segmento EM CIMA + O que ainda falta hoje EMBAIXO (empilhados). -->
-          <!-- flex SEM x-show (armadilha Alpine: x-show zera display:flex). Ambos os cards são comuns. Ao recolher o Empresas (operInspAberto), o "falta hoje" sobe. -->
-          <div style="display:flex;flex-direction:column;gap:14px">
-          <!-- (d) Empresas do mesmo segmento — COMUM (filtro de mídia por perfil) — MOVIDO pra CÁ (topo da célula esquerda) -->
-          <!-- Empresas do mesmo segmento: feed de posts de referência + análise por IA (popup separado, mais abaixo) -->
-          <div class="card" style="padding:16px;margin-bottom:14px">
-            <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
-              <div>
-                <div class="fw-600 fs-15"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Empresas do mesmo segmento
-                  <!-- badge do filtro de mídia ativo (Reels p/ Samara, Posts p/ Matheus, Todos p/ admin) -->
-                  <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
-                </div>
-                <div class="text-3 fs-12" style="margin-top:2px">Posts de referência do segmento do cliente — clique num post pra ver a análise da IA.</div>
-              </div>
-              <button class="btn btn-icon btn-ghost btn-sm" @click="operInspAberto=!operInspAberto" :title="operInspAberto?'Recolher o card':'Expandir o card'"><i class="ph" :class="operInspAberto?'ph-caret-up':'ph-caret-down'"></i></button>
-            </div>
-            <div x-show="operInspAberto">
-            <div x-show="!operInspClienteId" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-binoculars" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente pra ver referências de empresas do mesmo segmento.</div></div>
-            <div x-show="operInspClienteId">
-              <!-- @s das empresas do segmento (a IA descobre ao selecionar o cliente; dá pra ajustar à mão) -->
-              <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
-                <span class="badge fs-11 fw-700" x-show="operInspIA" style="background:#EDE9FE;color:#6D28D9" title="Empresas do mesmo segmento descobertas pela IA a partir do que o cliente realmente faz"><i class="ph ph-sparkle"></i> achadas pela IA</span>
-                <template x-for="h in operInspConc" :key="'oih'+h">
-                  <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D;display:inline-flex;align-items:center;gap:4px">@<span x-text="h"></span>
-                    <i class="ph ph-x" style="cursor:pointer" @click="operInspRmConc(h)" title="Remover"></i></span>
-                </template>
-                <input class="form-input" style="max-width:210px" placeholder="@empresa do segmento" x-model="operInspNovo" @keydown.enter.prevent="operInspAddConc()">
-                <button class="btn btn-ghost btn-sm" @click="operInspAddConc()" title="Adicionar empresa do segmento"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
-                <button class="btn btn-icon btn-ghost btn-sm" x-show="operInspConc.length" @click="operInspCarrega(true)" title="Buscar de novo agora"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
-              </div>
-              <div x-show="operInspLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-spinner-gap ia-spin" style="font-size:22px;color:#4285F4"></i><div style="margin-top:6px" x-text="operInspConc.length ? 'Buscando os melhores posts do segmento…' : 'A IA está descobrindo empresas do mesmo segmento…'"></div><div class="fs-11 fw-700" style="margin-top:4px;color:#4285F4"><span x-text="iaCrono"></span>s</div></div>
-              <div x-show="!operInspLoading && operInspErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF7E0;color:#B06000">
-                <span x-text="operInspErro"></span>
-              </div>
-              <div x-show="!operInspLoading && !operInspErro && operInspConc.length && !operInspPosts.length" class="text-3 fs-13" style="padding:14px 0;text-align:center">Nenhum post encontrado dessas empresas.</div>
-              <!-- FEED estilo Instagram: um post por vez (rola pra ver mais) -->
-              <div x-show="!operInspLoading && operInspPosts.length" style="max-height:74vh;overflow:auto;padding:2px 4px 2px 0">
-                <div style="max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:18px">
-                  <!-- fonte filtrada por perfil: Samara=Reels/Vídeos · Matheus=Posts · admin=Todos -->
-                  <template x-for="p in (operTab==='samara' ? filtraMidiaReels(operInspPosts) : filtraMidiaPosts(operInspPosts))" :key="'oip'+p.link">
-                    <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)">
-                      <div class="flex items-center gap-2" style="padding:10px 12px">
-                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex:none" x-text="(p.concorrente||'?').slice(0,1).toUpperCase()"></div>
-                        <div style="line-height:1.15;min-width:0;flex:1">
-                          <div class="fw-700 fs-13" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="'@'+p.concorrente"></div>
-                          <div class="text-3 fs-11" x-text="operInspData(p.data)+(p.seguidores? ' · '+operInspN(p.seguidores)+' seg':'')"></div>
-                        </div>
-                        <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
-                        <a :href="p.link" target="_blank" rel="noopener" style="color:var(--blue);font-weight:800;padding:0 4px" title="Abrir no Instagram">↗</a>
-                      </div>
-                      <!-- imagem quadrada, sem tarja preta -->
-                      <div style="width:100%;aspect-ratio:1/1;background:var(--surface-2);overflow:hidden" x-show="p.img">
-                        <img :src="p.img" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy" @error="p.img=null">
-                      </div>
-                      <div style="padding:12px">
-                        <!-- ações -->
-                        <div class="flex items-center gap-2" style="margin-bottom:8px">
-                          <span class="badge fs-12 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
-                          <span class="badge fs-12 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
-                          <button class="btn btn-sm" style="margin-left:auto;background:#6D28D9;color:#fff" @click="operInspAbrir(p)"><i class="ph ph-sparkle"></i> Ver análise</button>
-                        </div>
-                        <!-- legenda: clampada com ver mais/menos -->
-                        <div class="fs-13 text-2" style="white-space:pre-wrap;word-break:break-word;overflow:hidden" :style="operInspExp[p.link] ? '' : 'display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical'" x-text="p.texto || '(sem legenda)'"></div>
-                        <button x-show="(p.texto||'').length>160" class="btn-link fs-12" style="margin-top:4px;color:var(--text-3);background:none;border:none;padding:0;cursor:pointer" @click="operInspVerMais(p)" x-text="operInspExp[p.link] ? 'ver menos' : 'ver mais'"></button>
-                      </div>
-                    </div>
-                  </template>
-                </div>
-              </div>
-            </div>
-            </div>
-          </div>
-          <!-- (b) O que ainda falta hoje (Matheus) MIGROU pro TOPO (acima do seletor de cliente, largura cheia, 2 colunas). -->
-          <!-- (e) Melhores posts dos clientes — abaixo do "O que ainda falta hoje", mesma coluna. COMUM às duas abas (adapta por operTab: Matheus=Posts · Samara=Reels/Vídeos). -->
-          <div class="card" style="padding:16px" x-init="carregarMelhores()">
-            <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
-              <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts<span class="text-3 fw-500 fs-13" x-text="operClienteFocoNome ? (' · '+operClienteFocoNome) : ' dos clientes'"></span>
-                <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
-              </div>
-              <div class="flex items-center gap-2">
-                <button class="btn btn-icon btn-ghost btn-sm" x-show="matTopAberto" @click="carregarMelhores(true)" :disabled="matTopLoading" title="Atualizar ranking"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
-                <button class="btn btn-icon btn-ghost btn-sm" @click="matTopAberto=!matTopAberto" :title="matTopAberto?'Recolher':'Expandir'"><i class="ph" :class="matTopAberto?'ph-caret-up':'ph-caret-down'"></i></button>
-              </div>
-            </div>
-            <div x-show="matTopAberto">
-              <div class="text-3 fs-12 mb-3" style="margin-top:6px" x-show="matTop && matTop.criterio"><i class="ph ph-info ic-ph"></i> <span x-text="matTop && matTop.criterio"></span></div>
-              <div x-show="matTopLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-trophy" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Avaliando os posts dos clientes…</div></div>
-              <div x-show="!matTopLoading && matTopErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="matTopErro"></span> <button class="btn btn-sm" style="margin-left:8px" @click="carregarMelhores(true)">Tentar de novo</button></div>
-              <div x-show="!matTopLoading && matTop && !melhoresView.length" class="text-3 fs-13" style="padding:14px 0;text-align:center" x-text="operClienteFocoNome ? ('Sem posts de '+operClienteFocoNome+' com métrica neste ranking.') : 'Sem posts com métrica ainda — conecte os clientes no Meta.'"></div>
-              <template x-if="!matTopLoading && matTop && melhoresView.length">
-                <div style="display:flex;flex-direction:column;gap:8px">
-                  <!-- fonte: melhoresView = filtro de mídia (perfil) + cliente em foco (se selecionado) -->
-                  <template x-for="(p,i) in melhoresView" :key="'mtp'+p.link">
-                    <a :href="p.link" target="_blank" rel="noopener" class="flex items-center" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:8px;gap:10px" :title="'Abrir o post de '+p.cliente+' no Instagram'">
-                      <span class="fw-800 fs-16" style="width:28px;text-align:center;flex:none" :style="i===0?'color:#F59E0B':(i===1?'color:#9CA3AF':(i===2?'color:#B45309':'color:var(--text-3)'))" x-text="'#'+(i+1)"></span>
-                      <div style="width:52px;height:52px;border-radius:8px;background:var(--surface-2);overflow:hidden;flex:none" x-show="p.img"><img :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null"></div>
-                      <div style="flex:1;min-width:0">
-                        <div class="fs-13 fw-700" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.cliente"></div>
-                        <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.texto || '(sem legenda)'"></div>
-                        <div class="flex items-center gap-2" style="margin-top:3px">
-                          <span class="badge fs-11 fw-700" style="background:#FDF2F8;color:#BE185D"><i class="ph ph-heart"></i> <span x-text="operInspN(p.likes)"></span></span>
-                          <span class="badge fs-11 fw-700" style="background:#E8F0FE;color:#1967D2"><i class="ph ph-chat-circle"></i> <span x-text="operInspN(p.comentarios)"></span></span>
-                          <span class="badge fs-11 fw-700" x-show="p.engajamentoPct!=null" style="background:#ECFEFF;color:#0891B2" x-text="p.engajamentoPct+'% engaj.'"></span>
-                          <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="operInspTipo(p.tipo)"></span>
-                        </div>
-                      </div>
-                    </a>
-                  </template>
-                </div>
-              </template>
-            </div>
-          </div>
-          </div><!-- /flex Empresas+FaltaHoje+Melhores (célula esquerda) -->
-          <!-- Célula direita da LINHA 2: Rotina EM CIMA + Postagens EMBAIXO (empilhados numa coluna flex). -->
-          <!-- flex SEM x-show (armadilha Alpine: x-show zera display:flex). Cada card interno leva seu próprio x-show. -->
-          <div style="display:flex;flex-direction:column;gap:14px">
-          <!-- Rotina do dia MIGROU pra LINHA 1 (logo abaixo do Painel). -->
-          <!-- Agenda (Matheus) — trocada de lugar com Postagens do dia (agora fica embaixo do Painel/Rotina). -->
-          <div class="card" style="padding:16px" x-show="operTab==='matheus'">
-            <div class="flex items-center justify-between mb-2" style="gap:8px">
-              <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
-              <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar evento — o colaborador já entra vinculado"><i class="ph ph-plus ic-ph"></i> Evento</button>
-            </div>
-            <div x-show="!operEventosMatheus.length" class="text-3 fs-13" style="padding:16px 0;text-align:center"><i class="ph ph-calendar-check" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Sem eventos futuros.</div></div>
-            <div x-show="operEventosMatheus.length" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto">
-              <template x-for="ev in operEventosMatheus.slice(0,6)" :key="'oema'+ev.id">
-                <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;cursor:pointer" @click="editarEvento(ev)" title="Abrir/editar o evento">
-                  <span class="badge fs-11 fw-700" style="background:#FEF7E0;color:#B06000;flex-shrink:0;white-space:nowrap"><span x-text="ev.data.slice(8,10)+'/'+ev.data.slice(5,7)"></span><span x-show="ev.hora" x-text="' · '+ev.hora"></span></span>
-                  <div style="flex:1;min-width:0">
-                    <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.titulo"></div>
-                    <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.cliente"></div>
-                  </div>
-                </div>
-              </template>
-              <button x-show="operEventosMatheus.length>6" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-6)+' na agenda completa'"></button>
-            </div>
-          </div>
-          <!-- Registro & otimizações do dia (Matheus) — abaixo de Rotina/Postagens. Na Samara ele fica na coluna do Stories (acompanha o recolher). -->
-          <div class="card" style="padding:14px" x-show="operTab==='matheus'">
-            <div class="fw-600 fs-14 mb-1"><i class="ph ph-list-plus ic-ph" style="color:#0891B2"></i> Registro & otimizações do dia</div>
-            <div class="text-3 fs-11 mb-2">Otimizações/ajustes que você registra + o registro automático da produção. Fica no Fichário.</div>
-            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
-              <div class="text-3 fs-11">Registrando para: <b x-text="(operInspClientes.find(c=>c.id===operInspClienteId)||{}).empresa || 'Geral (sem cliente)'"></b></div>
-              <input class="form-input" x-model="operLogForm.alteracao" placeholder="O que foi feito? (ex.: repostei o carrossel com nova capa)" @keydown.enter="addOperLog()">
-              <input class="form-input" x-model="operLogForm.motivo" placeholder="Por quê? (opcional)" @keydown.enter="addOperLog()">
-              <button class="btn btn-sm" @click="addOperLog()" style="background:#0d9488;color:#fff;border-color:#0d9488;white-space:nowrap;align-self:flex-start"><i class="ph ph-plus ic-ph"></i> Registrar</button>
-            </div>
-            <div x-show="!operRegistroDia(operChkData).length" class="text-3 fs-12" style="padding:8px 0;text-align:center">Nada registrado neste dia ainda.</div>
-            <div style="max-height:260px;overflow:auto">
-              <template x-for="l in operRegistroDia(operChkData)" :key="'reg'+(l.auto?'a':'m')+l.id">
-                <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
-                  <span class="text-3 fs-11 fw-600" style="flex-shrink:0;margin-top:2px;width:38px" :style="l.auto?'color:#4285F4':'color:#0d9488'" x-text="l.hora"></span>
-                  <div style="flex:1;min-width:0">
-                    <div class="fs-13"><span x-show="l.cliente" class="fw-700" x-text="l.cliente+' · '"></span><span x-text="l.texto"></span></div>
-                    <div class="text-3 fs-11" x-show="l.motivo" x-text="'Motivo: '+l.motivo"></div>
-                    <div class="text-3 fs-11" x-show="l.por && !l.auto" x-text="'por '+l.por"></div>
-                  </div>
-                  <span x-show="l.auto" class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4;flex-shrink:0" title="Registro automático da produção">auto</span>
-                  <button x-show="!l.auto" class="btn btn-icon btn-ghost btn-sm" @click="removerOperLog(l.id)" title="Excluir" style="color:var(--red);flex-shrink:0"><i class="ph ph-trash ic-ph"></i></button>
-                </div>
-              </template>
-            </div>
-          </div>
-          </div><!-- /flex Rotina+Postagens+Registro -->
-          </div><!-- /LINHA 2 (O que falta hoje | Rotina+Postagens) -->
 
 
           <!-- Tarefas delegadas pela Laryssa (por frente da aba + cliente em foco) -->
@@ -5747,7 +5738,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=390"></script>
+<script src="js/app.js?v=391"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
