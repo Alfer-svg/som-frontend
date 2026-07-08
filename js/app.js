@@ -1538,6 +1538,7 @@ document.addEventListener('alpine:init', () => {
     samStoryDraft: {}, // rascunho de quantidade por cliente (só efetiva ao clicar no check)
     samVForm: { titulo: '', cliente: '', tipo: 'Edição' },
     samRForm: { titulo: '', cliente: '', captacao: '' }, samRAberto: false,
+    samGmnAberto: true, // card "Dia de Google Meu Negócio" recolhível
     samCForm: { cliente: '', local: '', data: '', tipo: 'Captação', prestador: '', valor: '', condPagto: 'avista', prazo: '', parcelas: [{ data: '', valor: '' }] }, samCAberto: false,
     // helpers de data/hora (America/Recife)
     _horaBR() { return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); },
@@ -1646,6 +1647,8 @@ document.addEventListener('alpine:init', () => {
       this._samSave('gmn', this.samGmn);
     },
     get samGmnFeitos() { return this.samClientes.filter(c => this.samGmnVerif(c)).length; },
+    get samGmnPendentes() { return this.samClientes.filter(c => !this.samGmnVerif(c)).length; }, // faltam verificar (bolinha vermelha)
+    get samEhQuarta() { return new Date().getDay() === 3; }, // quarta = dia do GMN (pulsa)
     // estado do bloco GMN conforme o dia da semana
     get samGmnEstado() {
       const dow = new Date().getDay(); // 0 dom .. 3 qua .. 6 sáb

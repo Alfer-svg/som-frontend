@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=244">
+  <link rel="stylesheet" href="css/styles.css?v=245">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -2533,7 +2533,33 @@
                     </div>
                   </template>
                 </div>
-              </div><!-- /flex esquerda (Falta + Vídeos) -->
+              <!-- Dia de Google Meu Negócio (GMN) — abaixo de Captações. Azul; pulsa nas quartas (dia marcado); recolhível; bolinha vermelha se faltam clientes por verificar. -->
+              <div class="card" style="padding:16px;background:#EAF1FE;border:1px solid #C6DAFC" :class="samEhQuarta ? 'pulse-blue' : ''">
+                <div class="flex items-center justify-between" style="gap:8px;cursor:pointer" @click="samGmnAberto=!samGmnAberto" title="Recolher/expandir">
+                  <div class="flex items-center gap-2" style="min-width:0;flex-wrap:wrap">
+                    <div class="fw-600 fs-15"><i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i> Dia de Google Meu Negócio<span x-show="samGmnPendentes>0" style="display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;margin-left:6px;border-radius:9px;background:#EA4335;color:#fff;font-size:10px;font-weight:800;vertical-align:middle" x-text="samGmnPendentes" :title="samGmnPendentes+' cliente(s) ainda por verificar'"></span></div>
+                    <span class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4">QUARTA</span>
+                  </div>
+                  <div class="flex items-center gap-2" style="flex:none">
+                    <span class="badge fs-11 fw-700" :style="samClientes.length && samGmnFeitos>=samClientes.length ? 'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="samGmnFeitos+'/'+samClientes.length"></span>
+                    <i class="ph ic-ph" :class="samGmnAberto?'ph-caret-up':'ph-caret-down'" style="color:var(--text-3)"></i>
+                  </div>
+                </div>
+                <div x-show="samGmnAberto" style="margin-top:10px">
+                  <div class="text-3 fs-12 mb-3" x-show="samEhQuarta"><b style="color:#4285F4">Hoje é quarta</b> — verifique avaliações e atualize os posts do GMN de cada cliente.</div>
+                  <div class="text-3 fs-12 mb-3" x-show="!samEhQuarta">Verificado toda <b>quarta-feira</b>. Marque cada cliente conforme faz.</div>
+                  <template x-for="c in samClientes" :key="'sg'+c.id">
+                    <div class="flex items-center" style="gap:10px;margin-bottom:8px;cursor:pointer" @click="samToggleGmn(c)">
+                      <span style="width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid" :style="samGmnVerif(c)?'background:#34A853;border-color:#34A853;color:#fff':'border-color:#D1D5DB;color:transparent'"><i class="ph ph-check" style="font-size:13px"></i></span>
+                      <div class="fs-13 fw-600" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="samGmnVerif(c)?'color:var(--text-3)':''" x-text="c.empresa||c.nome"></div>
+                      <span class="badge fs-10 fw-600" x-show="samGmnVerif(c)" style="background:#E6F4EA;color:#15803d;flex:none"><i class="ph ph-check-circle"></i> verificado <span x-text="samGmnHora(c)"></span></span>
+                      <span class="badge fs-10 fw-600" x-show="!samGmnVerif(c)" style="background:#FEF6F4;color:#EA4335;flex:none">pendente</span>
+                    </div>
+                  </template>
+                  <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
+                </div>
+              </div>
+              </div><!-- /flex esquerda (Falta · Vídeos · Roteiros · Captações · GMN) -->
               <!-- Stories orgânicos de hoje (movido pra CÁ, ao lado do "O que ainda falta") -->
               <div class="card" style="padding:16px">
                 <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div><button class="btn btn-sm" @click="samStoriesPreencherMeta()" title="Marca cada cliente com o piso da faixa"><i class="ph ph-check-square ic-ph"></i> Bater a meta</button></div>
@@ -2814,30 +2840,7 @@
             </template>
           </div>
 
-          <!-- GMN — Google Meu Negócio: só na aba da Samara, na parte superior -->
-          <div x-show="operTab==='samara'">
-            <div x-show="samGmnEstado.modo==='azul'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#F4F8FE;border:1px solid #D2E3FC;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i>
-              <span x-show="samGmnEstado.amanha"><b>Amanhã é quarta</b> — dia de verificar e atualizar o Google Meu Negócio dos clientes.</span>
-              <span x-show="!samGmnEstado.amanha">O <b>Google Meu Negócio</b> dos clientes é verificado toda <b>quarta-feira</b>.</span>
-            </div>
-            <div x-show="samGmnEstado.modo==='vermelho'" class="card fs-13" style="padding:12px 16px;margin-bottom:14px;background:#FEF6F4;border:1px solid #FCE8E6;color:#EA4335;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <i class="ph ph-warning-circle ic-ph"></i> <span><b>O GMN da semana ficou incompleto</b> — <span x-text="samGmnEstado.feitos"></span> de <span x-text="samGmnEstado.total"></span> clientes verificados na quarta. Feche os que faltam.</span>
-            </div>
-            <div class="card" style="padding:16px;margin-bottom:14px" x-show="samGmnEstado.modo==='checklist'">
-              <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-map-pin ic-ph" style="color:#4285F4"></i> Dia de Google Meu Negócio</div><span class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4">QUARTA</span></div>
-              <div class="text-3 fs-12 mb-3">Verificar avaliações + atualizar posts · marque conforme faz.</div>
-              <template x-for="c in samClientes" :key="'sg'+c.id">
-                <div class="flex items-center" style="gap:10px;margin-bottom:8px;cursor:pointer" @click="samToggleGmn(c)">
-                  <span style="width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;border:1.5px solid" :style="samGmnVerif(c)?'background:#34A853;border-color:#34A853;color:#fff':'border-color:#D1D5DB;color:transparent'"><i class="ph ph-check" style="font-size:13px"></i></span>
-                  <div class="fs-13 fw-600" style="flex:1" x-text="c.empresa||c.nome"></div>
-                  <span class="text-3 fs-11" x-show="samGmnVerif(c)" x-text="'verificado '+samGmnHora(c)"></span>
-                  <span class="text-3 fs-11" x-show="!samGmnVerif(c)">pendente</span>
-                </div>
-              </template>
-              <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
-            </div>
-          </div>
+          <!-- GMN — Google Meu Negócio: card reformado MIGROU pra coluna esquerda da linha (abaixo de Captações). -->
 
             <!-- Empresas do mesmo segmento MIGROU pra célula esquerda da LINHA 2 (empilhado sobre o "O que falta hoje"). -->
             <!-- (e) Melhores posts dos clientes (Matheus) MIGROU pra célula esquerda da LINHA 2, abaixo do "O que ainda falta hoje". -->
@@ -5627,7 +5630,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=371"></script>
+<script src="js/app.js?v=372"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
