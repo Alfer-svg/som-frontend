@@ -1753,6 +1753,19 @@ document.addEventListener('alpine:init', () => {
       const r = this.matRotinasHoje.iniciadas ? this.matRotinasHoje.concluidas / this.matRotinasHoje.iniciadas : 1;
       return Math.round(((pub + r) / 2) * 100);
     },
+    // Progresso do dia da Samara (produção): média das frentes com itens — stories na meta, vídeos concluídos, roteiros prontos.
+    get samProgressoDia() {
+      const metas = this.samStoriesMeta || [];
+      const frentes = [];
+      frentes.push(metas.length ? metas.filter(m => this.samStoryMetaOk(m)).length / metas.length : 1);
+      const vids = this.samVideosHoje || [];
+      if (vids.length) frentes.push(vids.filter(v => v.status === 'concluido').length / vids.length);
+      const rot = this.samRoteiros || [];
+      if (rot.length) frentes.push(rot.filter(r => r.status === 'pronto').length / rot.length);
+      return Math.round((frentes.reduce((a, b) => a + b, 0) / frentes.length) * 100);
+    },
+    // Progresso mostrado no card "Painel" — segue a aba ativa.
+    get progressoDia() { return this.operTab === 'samara' ? this.samProgressoDia : this.matProgressoDia; },
     // Cor do status do post (badge).
     operStatusCor(s) { return s === 'Concluído' ? { bg: '#E6F4EA', cor: '#15803d' } : (s === 'Em Andamento' || s === 'Em andamento' ? { bg: '#E8F0FE', cor: '#1967D2' } : { bg: '#F1F0EC', cor: '#6b6b6b' }); },
     // Abre o card do post no quadro (Produção).
