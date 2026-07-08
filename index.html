@@ -2560,6 +2560,8 @@
                 </div>
               </div>
               </div><!-- /flex esquerda (Falta · Vídeos · Roteiros · Captações · GMN) -->
+              <!-- DIREITA: Stories orgânicos EM CIMA + Registro EMBAIXO (flex-column). Quando o Stories recolhe, o Registro sobe junto. -->
+              <div style="display:flex;flex-direction:column;gap:14px">
               <!-- Stories orgânicos de hoje (movido pra CÁ, ao lado do "O que ainda falta") -->
               <div class="card" style="padding:16px">
                 <div class="flex items-center justify-between mb-1" style="gap:8px">
@@ -2587,6 +2589,33 @@
                 </template>
                 </div>
               </div>
+              <!-- Registro & otimizações do dia (Samara) — abaixo do Stories, mesma coluna; acompanha o recolher do Stories -->
+              <div class="card" style="padding:14px">
+                <div class="fw-600 fs-14 mb-1"><i class="ph ph-list-plus ic-ph" style="color:#0891B2"></i> Registro & otimizações do dia</div>
+                <div class="text-3 fs-11 mb-2">Otimizações/ajustes que você registra + o registro automático da produção. Fica no Fichário.</div>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+                  <div class="text-3 fs-11">Registrando para: <b x-text="(operInspClientes.find(c=>c.id===operInspClienteId)||{}).empresa || 'Geral (sem cliente)'"></b></div>
+                  <input class="form-input" x-model="operLogForm.alteracao" placeholder="O que foi feito? (ex.: repostei o carrossel com nova capa)" @keydown.enter="addOperLog()">
+                  <input class="form-input" x-model="operLogForm.motivo" placeholder="Por quê? (opcional)" @keydown.enter="addOperLog()">
+                  <button class="btn btn-sm" @click="addOperLog()" style="background:#0d9488;color:#fff;border-color:#0d9488;white-space:nowrap;align-self:flex-start"><i class="ph ph-plus ic-ph"></i> Registrar</button>
+                </div>
+                <div x-show="!operRegistroDia(operChkData).length" class="text-3 fs-12" style="padding:8px 0;text-align:center">Nada registrado neste dia ainda.</div>
+                <div style="max-height:260px;overflow:auto">
+                  <template x-for="l in operRegistroDia(operChkData)" :key="'sreg'+(l.auto?'a':'m')+l.id">
+                    <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+                      <span class="text-3 fs-11 fw-600" style="flex-shrink:0;margin-top:2px;width:38px" :style="l.auto?'color:#4285F4':'color:#0d9488'" x-text="l.hora"></span>
+                      <div style="flex:1;min-width:0">
+                        <div class="fs-13"><span x-show="l.cliente" class="fw-700" x-text="l.cliente+' · '"></span><span x-text="l.texto"></span></div>
+                        <div class="text-3 fs-11" x-show="l.motivo" x-text="'Motivo: '+l.motivo"></div>
+                        <div class="text-3 fs-11" x-show="l.por && !l.auto" x-text="'por '+l.por"></div>
+                      </div>
+                      <span x-show="l.auto" class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4;flex-shrink:0" title="Registro automático da produção">auto</span>
+                      <button x-show="!l.auto" class="btn btn-icon btn-ghost btn-sm" @click="removerOperLog(l.id)" title="Excluir" style="color:var(--red);flex-shrink:0"><i class="ph ph-trash ic-ph"></i></button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              </div><!-- /flex direita (Stories + Registro) -->
             </div>
           </div>
 
@@ -2800,8 +2829,8 @@
               </div>
             </template>
           </div>
-          <!-- (comum às duas abas) Registro & otimizações do dia — compacto, abaixo de Rotina/Postagens -->
-          <div class="card" style="padding:14px">
+          <!-- Registro & otimizações do dia (Matheus) — abaixo de Rotina/Postagens. Na Samara ele fica na coluna do Stories (acompanha o recolher). -->
+          <div class="card" style="padding:14px" x-show="operTab==='matheus'">
             <div class="fw-600 fs-14 mb-1"><i class="ph ph-list-plus ic-ph" style="color:#0891B2"></i> Registro & otimizações do dia</div>
             <div class="text-3 fs-11 mb-2">Otimizações/ajustes que você registra + o registro automático da produção. Fica no Fichário.</div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
@@ -5639,7 +5668,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=374"></script>
+<script src="js/app.js?v=375"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
