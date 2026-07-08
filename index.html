@@ -2240,6 +2240,35 @@
                A visão é decidida pelo papel (veColunaMatheus / veColunaSamara / painelAdmin). -->
 
           <!-- ─── TOPO COMUM ─── -->
+          <!-- (Matheus) O que ainda falta hoje — NO TOPO, largura cheia, conteúdo em 2 colunas. -->
+          <div class="card" style="padding:16px;margin-bottom:14px" x-show="operTab==='matheus'" :class="matTemPendencia ? 'pulse-red' : ''">
+            <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
+            <template x-if="!matTemPendencia">
+              <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Tudo em dia! Nada pendente. 🎉</div></div>
+            </template>
+            <template x-if="matTemPendencia">
+              <div style="columns:2;column-gap:18px">
+                <template x-for="g in matPendentesDia" :key="'mpd'+g.cliente">
+                  <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);break-inside:avoid">
+                    <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-image-square ic-ph"></i></span>
+                    <div style="flex:1;min-width:0"><div class="fs-13 fw-600" x-text="g.cliente"></div><div class="text-3 fs-11" x-text="'faltam publicar '+(g.posts.length-g.feitos)+' de '+g.posts.length+' post(s)'"></div></div>
+                    <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="g.feitos+'/'+g.posts.length"></span>
+                  </div>
+                </template>
+                <div x-show="matRotinasHoje.abertas>0" class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);break-inside:avoid">
+                  <span class="kpi-ico" style="background:#DCFCE7;color:#16a34a;width:26px;height:26px;font-size:13px"><i class="ph ph-list-checks ic-ph"></i></span>
+                  <div style="flex:1"><div class="fs-13 fw-600">Rotina de clientes em aberto</div><div class="text-3 fs-11" x-text="matRotinasHoje.abertas+' rotina(s) de cliente começada(s) e não concluída(s)'"></div></div>
+                  <button class="btn btn-ghost btn-sm" @click="operChkAberto=true">Abrir</button>
+                </div>
+                <div x-show="operResumoTrelo.atrasados" class="flex items-center gap-2" style="padding:8px 0;break-inside:avoid">
+                  <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-warning-circle ic-ph"></i></span>
+                  <div style="flex:1"><div class="fs-13 fw-600">Posts atrasados no quadro</div><div class="text-3 fs-11"><span x-text="operResumoTrelo.atrasados"></span> post(s) com prazo vencido</div></div>
+                  <button class="btn btn-ghost btn-sm" @click="go('operacional'); opTab='quadro'">Ver quadro</button>
+                </div>
+              </div>
+            </template>
+          </div>
+
           <!-- (a) Cliente em foco + navegador de dia — ESTE seletor de cliente vale pra tudo abaixo -->
           <div class="card" style="padding:14px;margin-bottom:14px">
             <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
@@ -2689,33 +2718,7 @@
             </div>
             </div>
           </div>
-          <!-- (b) O que ainda falta hoje — SÓ MATHEUS (a Samara tem o dela abaixo dos KPIs coloridos, ao lado dos Stories) -->
-          <div class="card" style="padding:16px" x-show="operTab==='matheus'" :class="matTemPendencia ? 'pulse-red' : ''">
-              <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
-              <!-- Pendências do Matheus (social media) -->
-              <div>
-                <template x-if="!matTemPendencia">
-                  <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Tudo em dia! Nada pendente. 🎉</div></div>
-                </template>
-                <template x-for="g in matPendentesDia" :key="'mpd'+g.cliente">
-                  <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
-                    <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-image-square ic-ph"></i></span>
-                    <div style="flex:1;min-width:0"><div class="fs-13 fw-600" x-text="g.cliente"></div><div class="text-3 fs-11" x-text="'faltam publicar '+(g.posts.length-g.feitos)+' de '+g.posts.length+' post(s)'"></div></div>
-                    <span class="badge fs-11 fw-700" style="background:var(--surface-2);color:var(--text-2)" x-text="g.feitos+'/'+g.posts.length"></span>
-                  </div>
-                </template>
-                <div x-show="matRotinasHoje.abertas>0" class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
-                  <span class="kpi-ico" style="background:#DCFCE7;color:#16a34a;width:26px;height:26px;font-size:13px"><i class="ph ph-list-checks ic-ph"></i></span>
-                  <div style="flex:1"><div class="fs-13 fw-600">Rotina de clientes em aberto</div><div class="text-3 fs-11" x-text="matRotinasHoje.abertas+' rotina(s) de cliente começada(s) e não concluída(s)'"></div></div>
-                  <button class="btn btn-ghost btn-sm" @click="operChkAberto=true">Abrir</button>
-                </div>
-                <div x-show="operResumoTrelo.atrasados" class="flex items-center gap-2" style="padding:8px 0">
-                  <span class="kpi-ico" style="background:#FCE8E6;color:#C5221F;width:26px;height:26px;font-size:13px"><i class="ph ph-warning-circle ic-ph"></i></span>
-                  <div style="flex:1"><div class="fs-13 fw-600">Posts atrasados no quadro</div><div class="text-3 fs-11"><span x-text="operResumoTrelo.atrasados"></span> post(s) com prazo vencido</div></div>
-                  <button class="btn btn-ghost btn-sm" @click="go('operacional'); opTab='quadro'">Ver quadro</button>
-                </div>
-              </div>
-          </div>
+          <!-- (b) O que ainda falta hoje (Matheus) MIGROU pro TOPO (acima do seletor de cliente, largura cheia, 2 colunas). -->
           <!-- (e) Melhores posts dos clientes — abaixo do "O que ainda falta hoje", mesma coluna. COMUM às duas abas (adapta por operTab: Matheus=Posts · Samara=Reels/Vídeos). -->
           <div class="card" style="padding:16px" x-init="carregarMelhores()">
             <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
@@ -5687,7 +5690,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=379"></script>
+<script src="js/app.js?v=380"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
