@@ -2228,13 +2228,13 @@
         <div style="font-size:22px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-list-checks ic-ph" style="color:#4285F4"></i> Operacional</div>
         <div class="text-3" style="font-size:13px;margin-top:4px;margin-bottom:14px">Acompanhamento operacional por colaborador.</div>
         <div class="tabs">
-          <template x-for="m in [['matheus','Matheus'],['laryssa','Laryssa']]" :key="'ot'+m[0]">
-            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelIG()"><span x-text="m[1]"></span></div>
+          <template x-for="m in abasOperacional" :key="'ot'+m[0]">
+            <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelIG(); if(m[0]==='samara') carregarSamara()"><span x-text="m[1]"></span></div>
           </template>
         </div>
 
-        <!-- ════════ MATHEUS — Social Media: postagens do dia + rotina ════════ -->
-        <div x-show="operTab==='matheus'">
+        <!-- ════════ PAINEL COMPARTILHADO: aba Matheus (social) OU aba Samara (produção) ════════ -->
+        <div x-show="operTab==='matheus' || operTab==='samara'">
           <!-- ═══════ PAINEL COMPARTILHADO Matheus (social) + Samara (produção) ═══════
                Fluxo único: TOPO COMUM · COLUNAS exclusivas (por perfil) · BAIXO COMUM.
                A visão é decidida pelo papel (veColunaMatheus / veColunaSamara / painelAdmin). -->
@@ -2290,7 +2290,7 @@
           <div class="card" style="padding:16px;margin-bottom:14px" :class="matTemPendencia ? 'pulse-red' : ''">
               <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
               <!-- Pendências do Matheus (social media) -->
-              <div x-show="veColunaMatheus">
+              <div x-show="operTab==='matheus'">
                 <template x-if="!matTemPendencia">
                   <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Tudo em dia! Nada pendente. 🎉</div></div>
                 </template>
@@ -2313,7 +2313,7 @@
                 </div>
               </div>
               <!-- Pendências da Samara (produção de conteúdo) -->
-              <div x-show="veColunaSamara" :style="painelAdmin ? 'margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)' : ''">
+              <div x-show="operTab==='samara'">
                 <template x-if="samPendentesHoje.total===0">
                   <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Produção em dia! Nada pendente. 🎉</div></div>
                 </template>
@@ -2379,7 +2379,7 @@
                 <div>
                   <div class="fw-600 fs-15"><i class="ph ph-instagram-logo ic-ph" style="color:#E4405F"></i> Empresas do mesmo segmento
                     <!-- badge do filtro de mídia ativo (Reels p/ Samara, Posts p/ Matheus, Todos p/ admin) -->
-                    <span class="badge fs-10 fw-700" style="margin-left:6px" :style="painelAdmin?'background:var(--surface-2);color:var(--text-2)':((veColunaSamara&&!veColunaMatheus)?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2')" x-text="painelAdmin?'Todos':((veColunaSamara&&!veColunaMatheus)?'Reels/Vídeos':'Posts')"></span>
+                    <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
                   </div>
                   <div class="text-3 fs-12" style="margin-top:2px">Posts de referência do segmento do cliente — clique num post pra ver a análise da IA.</div>
                 </div>
@@ -2408,7 +2408,7 @@
                 <div x-show="!operInspLoading && operInspPosts.length" style="max-height:74vh;overflow:auto;padding:2px 4px 2px 0">
                   <div style="max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:18px">
                     <!-- fonte filtrada por perfil: Samara=Reels/Vídeos · Matheus=Posts · admin=Todos -->
-                    <template x-for="p in ((veColunaSamara && !veColunaMatheus) ? filtraMidiaReels(operInspPosts) : ((veColunaMatheus && !veColunaSamara) ? filtraMidiaPosts(operInspPosts) : operInspPosts))" :key="'oip'+p.link">
+                    <template x-for="p in (operTab==='samara' ? filtraMidiaReels(operInspPosts) : filtraMidiaPosts(operInspPosts))" :key="'oip'+p.link">
                       <div style="border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)">
                         <div class="flex items-center gap-2" style="padding:10px 12px">
                           <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(45deg,#F58529,#DD2A7B,#8134AF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex:none" x-text="(p.concorrente||'?').slice(0,1).toUpperCase()"></div>
@@ -2447,7 +2447,7 @@
             <div class="card" style="padding:16px;margin-bottom:14px" x-init="carregarMelhores()">
               <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:8px">
                 <div class="fw-600 fs-15"><i class="ph ph-trophy ic-ph" style="color:#F59E0B"></i> Melhores posts dos clientes
-                  <span class="badge fs-10 fw-700" style="margin-left:6px" :style="painelAdmin?'background:var(--surface-2);color:var(--text-2)':((veColunaSamara&&!veColunaMatheus)?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2')" x-text="painelAdmin?'Todos':((veColunaSamara&&!veColunaMatheus)?'Reels/Vídeos':'Posts')"></span>
+                  <span class="badge fs-10 fw-700" style="margin-left:6px" :style="operTab==='samara'?'background:#EEEDFE;color:#7c3aed':'background:#E8F0FE;color:#1967D2'" x-text="operTab==='samara'?'Reels/Vídeos':'Posts'"></span>
                 </div>
                 <div class="flex items-center gap-2">
                   <button class="btn btn-icon btn-ghost btn-sm" x-show="matTopAberto" @click="carregarMelhores(true)" :disabled="matTopLoading" title="Atualizar ranking"><i class="ph ph-arrows-clockwise ic-ph"></i></button>
@@ -2462,7 +2462,7 @@
                 <template x-if="!matTopLoading && matTop && matTop.posts.length">
                   <div style="display:flex;flex-direction:column;gap:8px">
                     <!-- fonte filtrada por perfil: Samara=Reels/Vídeos · Matheus=Posts · admin=Todos -->
-                    <template x-for="(p,i) in ((veColunaSamara && !veColunaMatheus) ? filtraMidiaReels(matTop.posts) : ((veColunaMatheus && !veColunaSamara) ? filtraMidiaPosts(matTop.posts) : matTop.posts))" :key="'mtp'+p.link">
+                    <template x-for="(p,i) in (operTab==='samara' ? filtraMidiaReels(matTop.posts) : filtraMidiaPosts(matTop.posts))" :key="'mtp'+p.link">
                       <a :href="p.link" target="_blank" rel="noopener" class="flex items-center" style="text-decoration:none;color:inherit;border:1px solid var(--border);border-radius:12px;padding:8px;gap:10px" :title="'Abrir o post de '+p.cliente+' no Instagram'">
                         <span class="fw-800 fs-16" style="width:28px;text-align:center;flex:none" :style="i===0?'color:#F59E0B':(i===1?'color:#9CA3AF':(i===2?'color:#B45309':'color:var(--text-3)'))" x-text="'#'+(i+1)"></span>
                         <div style="width:52px;height:52px;border-radius:8px;background:var(--surface-2);overflow:hidden;flex:none" x-show="p.img"><img :src="p.img" style="width:100%;height:100%;object-fit:cover" loading="lazy" @error="p.img=null"></div>
@@ -2484,11 +2484,10 @@
             </div>
 
             <!-- ─── COLUNAS (só os cards EXCLUSIVOS por perfil) ─── -->
-            <div :style="painelAdmin ? 'display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start' : ''">
+            <div>
 
               <!-- Coluna MATHEUS (social media) -->
-              <div x-show="veColunaMatheus" style="display:flex;flex-direction:column;gap:14px">
-                <div x-show="painelAdmin" style="background:#E6F1FB;color:#0C447C;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px">Matheus — social media</div>
+              <div x-show="operTab==='matheus'" style="display:flex;flex-direction:column;gap:14px">
 
                 <!-- GMN — Google Meu Negócio (só na quarta aparece o checklist) -->
                 <div x-show="samGmnEstado.modo==='azul'" class="card fs-13" style="padding:12px 16px;background:#F4F8FE;border:1px solid #D2E3FC;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -2513,8 +2512,8 @@
                   <div class="text-3 fs-11" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span x-text="samGmnFeitos"></span> de <span x-text="samClientes.length"></span> verificados · o dia só fecha verde com todos marcados.</div>
                 </div>
 
-            <!-- KPIs do dia (6 na mesma linha; rola no horizontal se a tela for estreita) -->
-            <div style="display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:10px;margin-bottom:14px;overflow-x:auto">
+            <!-- KPIs do dia (responsivo: quebra em 2-3 por linha dentro da coluna) -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px">
               <div class="card kpi" style="background:#F3F0FF"><div class="kpi-label"><span class="kpi-ico" style="background:#EDE9FE;color:#6D28D9"><i class="ph ph-megaphone-simple ic-ph"></i></span> Publicações</div><div class="kpi-value fs-22" x-text="operPostsFeitos+'/'+operPostsTotal"></div><div class="fs-12 text-3">publicadas hoje</div><div x-show="operResumoTrelo.atrasados" class="badge fs-11 fw-700" style="background:#FCE8E6;color:#C5221F;margin-top:5px;white-space:nowrap"><i class="ph ph-warning-circle"></i> <span x-text="operResumoTrelo.atrasados"></span> atrasadas</div></div>
               <div class="card kpi" style="background:#EFFdF5"><div class="kpi-label"><span class="kpi-ico" style="background:#DCFCE7;color:#15803d"><i class="ph ph-users-three ic-ph"></i></span> Clientes atendidos</div><div class="kpi-value fs-22"><span x-text="matClientesDia.atendidos"></span><span class="text-3 fw-500 fs-16">/<span x-text="matClientesDia.total"></span></span></div><div class="fs-12 text-3"><b x-text="matClientesDia.faltam"></b> faltam atender hoje</div></div>
               <div class="card kpi" style="background:#ECFEFF"><div class="kpi-label"><span class="kpi-ico" style="background:#CFFAFE;color:#0891B2"><i class="ph ph-check-circle ic-ph"></i></span> Contas trabalhadas</div><div class="kpi-value fs-22" x-text="matTrabalhados"></div><div class="fs-12 text-3">com post ou ajuste hoje</div></div>
@@ -2593,12 +2592,11 @@
               </div><!-- /Coluna MATHEUS -->
 
               <!-- Coluna SAMARA (produção de conteúdo) -->
-              <div x-show="veColunaSamara" style="display:flex;flex-direction:column;gap:14px">
-                <div x-show="painelAdmin" style="background:#EEEDFE;color:#26215C;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px">Samara — produção de conteúdo</div>
+              <div x-show="operTab==='samara'" style="display:flex;flex-direction:column;gap:14px">
 
             <!-- Produção de conteúdo (4 KPIs migrados da Samara) -->
             <div class="fw-600 fs-13 mb-2"><i class="ph ph-film-slate ic-ph" style="color:#4285F4"></i> Produção de conteúdo</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:14px">
               <div class="card kpi" style="background:#F4F8FE">
                 <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-device-mobile ic-ph"></i></span> Stories na meta</div>
                 <div class="kpi-value fs-22"><span x-text="samStoriesNaMeta"></span><span class="text-3 fs-15">/<span x-text="samStoriesMeta.length"></span></span></div>
@@ -2622,7 +2620,7 @@
             </div>
 
             <!-- Produção de conteúdo: Vídeos, Roteiros e Captações (migrados da Samara) -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px;align-items:start;margin-bottom:14px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start;margin-bottom:14px">
               <div style="display:flex;flex-direction:column;gap:14px">
                 <div class="card" style="padding:16px">
                   <div class="flex items-center justify-between mb-2"><div class="fw-600 fs-15"><i class="ph ph-video-camera ic-ph" style="color:#4285F4"></i> Vídeos de hoje</div><span class="text-3 fs-11">adiciona · inicia · conclui</span></div>
@@ -5558,7 +5556,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=342"></script>
+<script src="js/app.js?v=344"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

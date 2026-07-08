@@ -796,7 +796,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.carregarOperacoes(); this.carregarSamara(); } },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.ajustaAbaOperacional(); this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); this.carregarOperacoes(); this.carregarSamara(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.carregarOperacoes(); this.carregarSamara(); } },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -810,6 +810,15 @@ document.addEventListener('alpine:init', () => {
     get veColunaMatheus() { return this.visaoPainel === 'matheus' || this.visaoPainel === 'ambos'; },
     get veColunaSamara() { return this.visaoPainel === 'samara' || this.visaoPainel === 'ambos'; },
     get painelAdmin() { return this.visaoPainel === 'ambos'; },
+    // Abas do Operacional por papel: Matheus (social), Samara (produção), Laryssa (relatório IG).
+    // colaborador = só Matheus · conteudo = só Samara · admin/gestor = as três.
+    get abasOperacional() {
+      if (this.papel === 'conteudo') return [['samara', 'Samara']];
+      if (this.ehAdmin || this.papel === 'gestor') return [['matheus', 'Matheus'], ['samara', 'Samara'], ['laryssa', 'Laryssa']];
+      return [['matheus', 'Matheus'], ['laryssa', 'Laryssa']];
+    },
+    // Garante que a aba ativa é uma que o papel pode ver (senão cai na 1ª).
+    ajustaAbaOperacional() { const abas = this.abasOperacional; if (!abas.some(a => a[0] === this.operTab)) this.operTab = abas[0][0]; },
     // Filtro de mídia dos cards comuns (Empresas do segmento / Melhores posts):
     // Samara vê Reels/Vídeos; Matheus vê os demais (feed/imagem/carrossel).
     filtraMidiaReels(posts) { return (Array.isArray(posts) ? posts : []).filter(p => /VIDEO|REEL/i.test(p && (p.media_type || p.tipo || ''))); },
