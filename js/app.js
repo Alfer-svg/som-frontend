@@ -3676,6 +3676,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     // App Meta da Maracatu (config self-service em Configurações)
     metaApp: { configurado: false, appId: '', redirectUri: '' },
     metaAppForm: { appId: '', appSecret: '' },
+    metaSysTokenForm: '', // token do usuário do sistema (Meta Ads + Monitoramento) — admin cola aqui
     async carregarMetaApp() {
       try { this.metaApp = await this.api('GET', '/monitoramento/meta/app-config'); }
       catch { this.metaApp = { configurado: false, appId: '', redirectUri: '' }; }
@@ -3689,6 +3690,18 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         await this.carregarMetaApp();
         this.mostrarToast('App da Maracatu salvo! Agora clique em Conectar. ✅');
       } catch (e) { this.mostrarToast('Erro ao salvar: ' + (e.message || e)); }
+    },
+    // Salva o token do USUÁRIO DO SISTEMA (config.meta-system). Alimenta Monitoramento + Meta Ads.
+    // O backend valida contra a Graph antes de aceitar (systemTokenSalvar).
+    async salvarSystemToken() {
+      const t = (this.metaSysTokenForm || '').trim();
+      if (!t) return;
+      try {
+        await this.api('POST', '/monitoramento/meta/system-token', { token: t });
+        this.metaSysTokenForm = '';
+        this.mostrarToast('Token do sistema salvo e validado! ✅ Monitoramento e Meta Ads passam a usar ele.');
+        if (this.carregarMetaStatus) this.carregarMetaStatus('maracatu');
+      } catch (e) { this.mostrarToast('Token não validou na Meta: ' + (e.message || e)); }
     },
     copiar(txt) { try { navigator.clipboard.writeText(txt); this.mostrarToast('Copiado. 📋'); } catch { } },
     async desconectarMeta(clienteId) {

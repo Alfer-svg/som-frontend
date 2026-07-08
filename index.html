@@ -3941,6 +3941,16 @@
               <button class="btn btn-ghost btn-sm" x-show="metaStatus.maracatu && metaStatus.maracatu.conectado" style="color:var(--red)" @click="desconectarMeta('maracatu')"><i class="ph ph-plugs ic-ph"></i> Desconectar</button>
             </div>
           </div>
+
+          <!-- Token do USUÁRIO DO SISTEMA (admin) — alimenta Monitoramento + Meta Ads do Tráfego. Cole o token gerado no Business Manager. -->
+          <div x-show="ehAdmin" style="border-top:1px solid var(--border);margin-top:14px;padding-top:14px">
+            <div class="fw-700 fs-13 mb-1" style="color:#1877F2">Token do usuário do sistema <span class="text-3 fw-500">(avançado)</span></div>
+            <div class="text-3 fs-12 mb-2">Cole o token do <b>Usuário do Sistema</b> gerado no Business Manager da Maracatu (com <b>ads_read</b> + as permissões de monitoramento). Ele alimenta o <b>Monitoramento</b> de Instagram <b>e</b> o <b>Meta Ads</b> do Tráfego. Não expira. O sistema valida na Meta antes de aceitar.</div>
+            <div class="flex items-center gap-2" style="flex-wrap:wrap">
+              <input class="form-input" type="password" style="flex:1;min-width:240px;font-family:monospace" x-model="metaSysTokenForm" placeholder="cole o token (começa com EAA…)" autocomplete="off" @keydown.enter="salvarSystemToken()">
+              <button class="btn btn-primary btn-sm" @click="salvarSystemToken()" :disabled="!metaSysTokenForm.trim()"><i class="ph ph-check ic-ph"></i> Salvar token</button>
+            </div>
+          </div>
         </div>
 
         <!-- Usuários & Acessos -->
@@ -5698,7 +5708,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=399"></script>
+<script src="js/app.js?v=400"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
