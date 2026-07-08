@@ -2287,7 +2287,8 @@
           </div>
 
           <!-- KPIs do dia (Matheus) — logo abaixo da barra de topo -->
-          <div x-show="operTab==='matheus'" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px;overflow-x:auto">
+          <div x-show="operTab==='matheus'" style="margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;overflow-x:auto">
             <div class="card kpi" style="background:#F3F0FF"><div class="kpi-label"><span class="kpi-ico" style="background:#EDE9FE;color:#6D28D9"><i class="ph ph-megaphone-simple ic-ph"></i></span> Publicações</div><div class="kpi-value fs-22" x-text="operPostsFeitos+'/'+operPostsTotal"></div><div class="fs-12 text-3">publicadas hoje</div><div x-show="operResumoTrelo.atrasados" class="badge fs-11 fw-700" style="background:#FCE8E6;color:#C5221F;margin-top:5px;white-space:nowrap"><i class="ph ph-warning-circle"></i> <span x-text="operResumoTrelo.atrasados"></span> atrasadas</div></div>
             <div class="card kpi" style="background:#EFFdF5"><div class="kpi-label"><span class="kpi-ico" style="background:#DCFCE7;color:#15803d"><i class="ph ph-users-three ic-ph"></i></span> Clientes atendidos</div><div class="kpi-value fs-22"><span x-text="matClientesDia.atendidos"></span><span class="text-3 fw-500 fs-16">/<span x-text="matClientesDia.total"></span></span></div><div class="fs-12 text-3"><b x-text="matClientesDia.faltam"></b> faltam atender hoje</div></div>
             <div class="card kpi" style="background:#ECFEFF"><div class="kpi-label"><span class="kpi-ico" style="background:#CFFAFE;color:#0891B2"><i class="ph ph-check-circle ic-ph"></i></span> Contas trabalhadas</div><div class="kpi-value fs-22" x-text="matTrabalhados"></div><div class="fs-12 text-3">com post ou ajuste hoje</div></div>
@@ -2295,6 +2296,7 @@
             <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#0d9488"><i class="ph ph-list-plus ic-ph"></i></span> Otimizações</div><div class="kpi-value fs-22" x-text="operLogDia(operChkData||_hojeStr()).length"></div><div class="fs-12 text-3">ajustes registrados</div></div>
             <div class="card kpi" style="background:#FFF7ED"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF3C7;color:#B45309"><i class="ph ph-calendar-dots ic-ph"></i></span> Reuniões/eventos</div><div class="kpi-value fs-22" x-text="matReunioesDia.length"></div><div class="fs-12 text-3">na agenda hoje</div></div>
           </div>
+          </div><!-- /wrapper x-show dos KPIs (x-show num wrapper pra não zerar o display:grid) -->
 
           <!-- LINHA 1: Agenda | Painel (lado a lado) -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
@@ -5666,7 +5668,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=357"></script>
+<script src="js/app.js?v=358"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
