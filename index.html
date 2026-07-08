@@ -2370,6 +2370,8 @@
           <!-- (Samara) O que ainda falta hoje | Stories orgânicos de hoje — mesma linha, abaixo dos KPIs coloridos. Wrapper leva x-show; grid interno mantém display:grid. -->
           <div x-show="operTab==='samara'">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
+              <!-- ESQUERDA: O que ainda falta EM CIMA + Vídeos de hoje EMBAIXO (empilhados, mesma coluna) -->
+              <div style="display:flex;flex-direction:column;gap:14px">
               <!-- O que ainda falta hoje (Samara — produção de conteúdo) -->
               <div class="card" style="padding:16px">
                 <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
@@ -2387,6 +2389,31 @@
                   </div>
                 </template>
               </div>
+              <!-- Vídeos de hoje (movido pra CÁ: abaixo do "O que ainda falta", mesma coluna) -->
+              <div class="card" style="padding:16px">
+                <div class="flex items-center justify-between mb-2"><div class="fw-600 fs-15"><i class="ph ph-video-camera ic-ph" style="color:#4285F4"></i> Vídeos de hoje</div><span class="text-3 fs-11">adiciona · inicia · conclui</span></div>
+                <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+                  <input class="input fs-13" style="flex:1;min-width:150px" placeholder="Ex.: Reel bastidores Akio…" x-model="samVForm.titulo" @keydown.enter="samAddVideo()">
+                  <select class="input fs-13" style="max-width:130px" x-model="samVForm.cliente"><option value="">Cliente…</option><template x-for="c in samClientes" :key="'svc'+c.id"><option :value="c.empresa||c.nome" x-text="c.empresa||c.nome"></option></template></select>
+                  <select class="input fs-13" style="max-width:120px" x-model="samVForm.tipo"><template x-for="t in ['Edição','Gravação','Vídeo de IA','Motion','Outro']" :key="'svt'+t"><option :value="t" x-text="t"></option></template></select>
+                  <button class="btn btn-sm btn-primary" @click="samAddVideo()"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
+                </div>
+                <div x-show="!samVideosHoje.length" class="text-3 fs-12" style="padding:8px 0;text-align:center">Nenhum vídeo lançado hoje ainda.</div>
+                <template x-for="v in samVideosHoje" :key="'sv'+v.id">
+                  <div class="flex items-center" style="gap:10px;border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px" :style="v.status==='em_andamento'?'border-color:#F9A825;background:#FEFBEF':(v.status==='concluido'?'opacity:.7':'')">
+                    <span style="width:24px;height:24px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center" :style="v.status==='concluido'?'background:#E6F4EA;color:#34A853':(v.status==='em_andamento'?'background:#FEF7E0;color:#F9A825':'background:var(--surface-2);color:#9ca3af')"><i class="ph" :class="v.status==='concluido'?'ph-check':(v.status==='em_andamento'?'ph-dots-three':'ph-circle')"></i></span>
+                    <div style="flex:1;min-width:0">
+                      <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="v.status==='concluido'?'text-decoration:line-through':''"><span x-text="v.titulo"></span><span class="text-3 fw-400" x-show="v.cliente" x-text="' · '+v.cliente"></span></div>
+                      <div class="text-3 fs-11"><span x-text="v.tipo"></span><span x-show="v.status==='em_andamento' && v.iniEm" x-text="' · iniciado às '+v.iniEm"></span><span x-show="v.status==='concluido' && v.fimEm" x-text="' · concluído às '+v.fimEm"></span><span x-show="v.status==='nao_iniciado'"> · ainda não iniciado</span></div>
+                    </div>
+                    <template x-if="v.status==='nao_iniciado'"><button class="btn btn-sm btn-primary" @click="samIniciarVideo(v)"><i class="ph ph-play ic-ph"></i> Iniciar</button></template>
+                    <template x-if="v.status==='em_andamento'"><button class="btn btn-sm" style="background:#34A853;color:#fff;border-color:#34A853" @click="samConcluirVideo(v)"><i class="ph ph-check ic-ph"></i> Concluir</button></template>
+                    <template x-if="v.status==='concluido'"><span class="badge fs-11 fw-600" style="background:#E6F4EA;color:#34A853">concluído</span></template>
+                    <button class="btn btn-icon btn-ghost btn-sm" @click="samRemVideo(v)" title="Remover" style="color:var(--text-3)"><i class="ph ph-x ic-ph"></i></button>
+                  </div>
+                </template>
+              </div>
+              </div><!-- /flex esquerda (Falta + Vídeos) -->
               <!-- Stories orgânicos de hoje (movido pra CÁ, ao lado do "O que ainda falta") -->
               <div class="card" style="padding:16px">
                 <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div><button class="btn btn-sm" @click="samStoriesPreencherMeta()" title="Marca cada cliente com o piso da faixa"><i class="ph ph-check-square ic-ph"></i> Bater a meta</button></div>
@@ -2707,34 +2734,7 @@
 
             <!-- Produção de conteúdo: Vídeos, Roteiros e Captações (migrados da Samara) -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:start;margin-bottom:14px">
-              <div style="display:flex;flex-direction:column;gap:14px">
-                <div class="card" style="padding:16px">
-                  <div class="flex items-center justify-between mb-2"><div class="fw-600 fs-15"><i class="ph ph-video-camera ic-ph" style="color:#4285F4"></i> Vídeos de hoje</div><span class="text-3 fs-11">adiciona · inicia · conclui</span></div>
-                  <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
-                    <input class="input fs-13" style="flex:1;min-width:150px" placeholder="Ex.: Reel bastidores Akio…" x-model="samVForm.titulo" @keydown.enter="samAddVideo()">
-                    <select class="input fs-13" style="max-width:130px" x-model="samVForm.cliente"><option value="">Cliente…</option><template x-for="c in samClientes" :key="'svc'+c.id"><option :value="c.empresa||c.nome" x-text="c.empresa||c.nome"></option></template></select>
-                    <select class="input fs-13" style="max-width:120px" x-model="samVForm.tipo"><template x-for="t in ['Edição','Gravação','Vídeo de IA','Motion','Outro']" :key="'svt'+t"><option :value="t" x-text="t"></option></template></select>
-                    <button class="btn btn-sm btn-primary" @click="samAddVideo()"><i class="ph ph-plus ic-ph"></i> Adicionar</button>
-                  </div>
-                  <div x-show="!samVideosHoje.length" class="text-3 fs-12" style="padding:8px 0;text-align:center">Nenhum vídeo lançado hoje ainda.</div>
-                  <template x-for="v in samVideosHoje" :key="'sv'+v.id">
-                    <div class="flex items-center" style="gap:10px;border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px" :style="v.status==='em_andamento'?'border-color:#F9A825;background:#FEFBEF':(v.status==='concluido'?'opacity:.7':'')">
-                      <span style="width:24px;height:24px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center" :style="v.status==='concluido'?'background:#E6F4EA;color:#34A853':(v.status==='em_andamento'?'background:#FEF7E0;color:#F9A825':'background:var(--surface-2);color:#9ca3af')"><i class="ph" :class="v.status==='concluido'?'ph-check':(v.status==='em_andamento'?'ph-dots-three':'ph-circle')"></i></span>
-                      <div style="flex:1;min-width:0">
-                        <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :style="v.status==='concluido'?'text-decoration:line-through':''"><span x-text="v.titulo"></span><span class="text-3 fw-400" x-show="v.cliente" x-text="' · '+v.cliente"></span></div>
-                        <div class="text-3 fs-11"><span x-text="v.tipo"></span><span x-show="v.status==='em_andamento' && v.iniEm" x-text="' · iniciado às '+v.iniEm"></span><span x-show="v.status==='concluido' && v.fimEm" x-text="' · concluído às '+v.fimEm"></span><span x-show="v.status==='nao_iniciado'"> · ainda não iniciado</span></div>
-                      </div>
-                      <template x-if="v.status==='nao_iniciado'"><button class="btn btn-sm btn-primary" @click="samIniciarVideo(v)"><i class="ph ph-play ic-ph"></i> Iniciar</button></template>
-                      <template x-if="v.status==='em_andamento'"><button class="btn btn-sm" style="background:#34A853;color:#fff;border-color:#34A853" @click="samConcluirVideo(v)"><i class="ph ph-check ic-ph"></i> Concluir</button></template>
-                      <template x-if="v.status==='concluido'"><span class="badge fs-11 fw-600" style="background:#E6F4EA;color:#34A853">concluído</span></template>
-                      <button class="btn btn-icon btn-ghost btn-sm" @click="samRemVideo(v)" title="Remover" style="color:var(--text-3)"><i class="ph ph-x ic-ph"></i></button>
-                    </div>
-                  </template>
-                </div>
-                <!-- Stories orgânicos de hoje MIGROU pra linha própria (ao lado do "O que ainda falta"), abaixo dos KPIs coloridos. -->
-                <!-- Melhores posts (Samara) MIGROU pra célula esquerda da LINHA 2, abaixo do "O que ainda falta hoje" — comum às duas abas. -->
-              </div>
-              <div style="display:flex;flex-direction:column;gap:14px">
+              <!-- Vídeos de hoje MIGROU pra coluna esquerda (abaixo do "O que ainda falta"); Stories e Melhores também saíram. Restam Roteiros | Captações lado a lado. -->
                 <div class="card" style="padding:16px">
                   <div class="flex items-center justify-between mb-2"><div class="fw-600 fs-15"><i class="ph ph-note-pencil ic-ph" style="color:#4285F4"></i> Roteiros de captações</div><button class="btn btn-sm" @click="samRAberto=!samRAberto"><i class="ph ph-plus ic-ph"></i> Novo roteiro</button></div>
                   <div x-show="samRAberto" class="mb-3" style="border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;gap:8px">
@@ -2855,7 +2855,6 @@
                     </div>
                   </template>
                 </div>
-              </div>
             </div>
 
               </div><!-- /Coluna SAMARA -->
@@ -5644,7 +5643,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=369"></script>
+<script src="js/app.js?v=370"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
