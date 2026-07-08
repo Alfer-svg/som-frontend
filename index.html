@@ -2372,8 +2372,8 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
               <!-- ESQUERDA: O que ainda falta EM CIMA + Vídeos de hoje EMBAIXO (empilhados, mesma coluna) -->
               <div style="display:flex;flex-direction:column;gap:14px">
-              <!-- O que ainda falta hoje (Samara — produção de conteúdo) -->
-              <div class="card" style="padding:16px">
+              <!-- O que ainda falta hoje (Samara — produção de conteúdo) — pulsa vermelho enquanto houver pendência (igual Matheus) -->
+              <div class="card" style="padding:16px" :class="samPendentesHoje.total>0 ? 'pulse-red' : ''">
                 <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
                 <template x-if="samPendentesHoje.total===0">
                   <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Produção em dia! Nada pendente. 🎉</div></div>
@@ -5639,7 +5639,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=373"></script>
+<script src="js/app.js?v=374"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
