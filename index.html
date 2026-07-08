@@ -2283,6 +2283,23 @@
             </template>
           </div>
 
+          <!-- (Samara) O que ainda falta hoje — NO TOPO, largura cheia (mesmo padrão do Matheus). -->
+          <div class="card" style="padding:16px;margin-bottom:14px" x-show="operTab==='samara'" :class="samPendentesHoje.total>0 ? 'pulse-red' : ''">
+            <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
+            <template x-if="samPendentesHoje.total===0">
+              <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Produção em dia! Nada pendente. 🎉</div></div>
+            </template>
+            <template x-if="samPendentesHoje.total>0">
+              <div class="flex items-center gap-2" style="padding:8px 0">
+                <span class="kpi-ico" style="background:#EEEDFE;color:#7c3aed;width:26px;height:26px;font-size:13px"><i class="ph ph-film-slate ic-ph"></i></span>
+                <div style="flex:1;min-width:0">
+                  <div class="fs-13 fw-600">Produção de conteúdo</div>
+                  <div class="text-3 fs-11">faltam <b x-text="samPendentesHoje.stories"></b> stories · <b x-text="samPendentesHoje.videos"></b> vídeos · <b x-text="samPendentesHoje.roteiros"></b> roteiros</div>
+                </div>
+                <span class="badge fs-11 fw-700" style="background:#EEEDFE;color:#7c3aed" x-text="samPendentesHoje.total"></span>
+              </div>
+            </template>
+          </div>
           <!-- (a) Cliente em foco + navegador de dia — ESTE seletor de cliente vale pra tudo abaixo -->
           <div class="card" style="padding:14px;margin-bottom:14px">
             <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
@@ -2394,26 +2411,7 @@
                 </table>
               </div>
             </div>
-            <!-- Agenda (Samara mantém a agenda aqui na LINHA 1) -->
-            <div class="card" style="padding:16px" x-show="operTab==='samara'">
-              <div class="flex items-center justify-between mb-2" style="gap:8px">
-                <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
-                <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar evento — o colaborador já entra vinculado"><i class="ph ph-plus ic-ph"></i> Evento</button>
-              </div>
-              <div x-show="!operEventosMatheus.length" class="text-3 fs-13" style="padding:16px 0;text-align:center"><i class="ph ph-calendar-check" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Sem eventos futuros.</div></div>
-              <div x-show="operEventosMatheus.length" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto">
-                <template x-for="ev in operEventosMatheus.slice(0,6)" :key="'oemaS'+ev.id">
-                  <div class="flex items-center gap-2" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;cursor:pointer" @click="editarEvento(ev)" title="Abrir/editar o evento">
-                    <span class="badge fs-11 fw-700" style="background:#FEF7E0;color:#B06000;flex-shrink:0;white-space:nowrap"><span x-text="ev.data.slice(8,10)+'/'+ev.data.slice(5,7)"></span><span x-show="ev.hora" x-text="' · '+ev.hora"></span></span>
-                    <div style="flex:1;min-width:0">
-                      <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.titulo"></div>
-                      <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="ev.cliente"></div>
-                    </div>
-                  </div>
-                </template>
-                <button x-show="operEventosMatheus.length>6" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-6)+' na agenda completa'"></button>
-              </div>
-            </div>
+            <!-- (Samara) Agenda MIGROU pra coluna direita (abaixo de Painel/Rotina), igual ao Matheus. -->
             <!-- (LINHA 2 dissolvida aqui) Empresas + Melhores fluem abaixo da Postagens -->
           <!-- (d) Empresas do mesmo segmento — COMUM (filtro de mídia por perfil) — MOVIDO pra CÁ (topo da célula esquerda) -->
           <!-- Empresas do mesmo segmento: feed de posts de referência + análise por IA (popup separado, mais abaixo) -->
@@ -2615,8 +2613,8 @@
           </div>
           <!-- (LINHA 2 dissolvida aqui) Agenda + Registro fluem abaixo da Rotina -->
           <!-- Rotina do dia MIGROU pra LINHA 1 (logo abaixo do Painel). -->
-          <!-- Agenda (Matheus) — trocada de lugar com Postagens do dia (agora fica embaixo do Painel/Rotina). -->
-          <div class="card" style="padding:16px" x-show="operTab==='matheus'">
+          <!-- Agenda — coluna direita, abaixo de Painel/Rotina (Matheus e Samara, mesmo layout). -->
+          <div class="card" style="padding:16px" x-show="operTab==='matheus' || operTab==='samara'">
             <div class="flex items-center justify-between mb-2" style="gap:8px">
               <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
               <button class="btn btn-ghost btn-sm" @click="operNovoEvento()" title="Agendar evento — o colaborador já entra vinculado"><i class="ph ph-plus ic-ph"></i> Evento</button>
@@ -2635,8 +2633,8 @@
               <button x-show="operEventosMatheus.length>6" class="btn-link fs-12" style="color:var(--text-3);background:none;border:none;cursor:pointer;padding:2px 0;text-align:left" @click="go('agenda')" x-text="'+ '+(operEventosMatheus.length-6)+' na agenda completa'"></button>
             </div>
           </div>
-          <!-- Registro & otimizações do dia (Matheus) — abaixo de Rotina/Postagens. Na Samara ele fica na coluna do Stories (acompanha o recolher). -->
-          <div class="card" style="padding:14px" x-show="operTab==='matheus'">
+          <!-- Registro & otimizações do dia — coluna direita, abaixo da Agenda (Matheus e Samara, mesmo layout). -->
+          <div class="card" style="padding:14px" x-show="operTab==='matheus' || operTab==='samara'">
             <div class="fw-600 fs-14 mb-1"><i class="ph ph-list-plus ic-ph" style="color:#0891B2"></i> Registro & otimizações do dia</div>
             <div class="text-3 fs-11 mb-2">Otimizações/ajustes que você registra + o registro automático da produção. Fica no Fichário.</div>
             <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
@@ -2695,24 +2693,8 @@
           <div x-show="operTab==='samara'">
             <!-- Masonry 2 colunas: os cards da Samara empacotam sem deixar vão entre colunas de alturas diferentes. -->
             <div class="masonry-2">
-              <!-- O que ainda falta hoje (Samara — produção de conteúdo) — pulsa vermelho enquanto houver pendência (igual Matheus) -->
-              <div class="card" style="padding:16px" :class="samPendentesHoje.total>0 ? 'pulse-red' : ''">
-                <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
-                <template x-if="samPendentesHoje.total===0">
-                  <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Produção em dia! Nada pendente. 🎉</div></div>
-                </template>
-                <template x-if="samPendentesHoje.total>0">
-                  <div class="flex items-center gap-2" style="padding:8px 0">
-                    <span class="kpi-ico" style="background:#EEEDFE;color:#7c3aed;width:26px;height:26px;font-size:13px"><i class="ph ph-film-slate ic-ph"></i></span>
-                    <div style="flex:1;min-width:0">
-                      <div class="fs-13 fw-600">Produção de conteúdo</div>
-                      <div class="text-3 fs-11">faltam <b x-text="samPendentesHoje.stories"></b> stories · <b x-text="samPendentesHoje.videos"></b> vídeos · <b x-text="samPendentesHoje.roteiros"></b> roteiros</div>
-                    </div>
-                    <span class="badge fs-11 fw-700" style="background:#EEEDFE;color:#7c3aed" x-text="samPendentesHoje.total"></span>
-                  </div>
-                </template>
-              </div>
-              <!-- Vídeos de hoje (movido pra CÁ: abaixo do "O que ainda falta", mesma coluna) -->
+              <!-- (Samara) O que ainda falta hoje MIGROU pro TOPO (largura cheia), igual ao Matheus. -->
+              <!-- Vídeos de hoje -->
               <div class="card" style="padding:16px">
                 <div class="flex items-center justify-between mb-2"><div class="fw-600 fs-15"><i class="ph ph-video-camera ic-ph" style="color:#4285F4"></i> Vídeos de hoje</div><span class="text-3 fs-11">adiciona · inicia · conclui</span></div>
                 <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
@@ -2910,32 +2892,7 @@
                 </template>
                 </div>
               </div>
-              <!-- Registro & otimizações do dia (Samara) — abaixo do Stories, mesma coluna; acompanha o recolher do Stories -->
-              <div class="card" style="padding:14px">
-                <div class="fw-600 fs-14 mb-1"><i class="ph ph-list-plus ic-ph" style="color:#0891B2"></i> Registro & otimizações do dia</div>
-                <div class="text-3 fs-11 mb-2">Otimizações/ajustes que você registra + o registro automático da produção. Fica no Fichário.</div>
-                <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
-                  <div class="text-3 fs-11">Registrando para: <b x-text="(operInspClientes.find(c=>c.id===operInspClienteId)||{}).empresa || 'Geral (sem cliente)'"></b></div>
-                  <input class="form-input" x-model="operLogForm.alteracao" placeholder="O que foi feito? (ex.: repostei o carrossel com nova capa)" @keydown.enter="addOperLog()">
-                  <input class="form-input" x-model="operLogForm.motivo" placeholder="Por quê? (opcional)" @keydown.enter="addOperLog()">
-                  <button class="btn btn-sm" @click="addOperLog()" style="background:#0d9488;color:#fff;border-color:#0d9488;white-space:nowrap;align-self:flex-start"><i class="ph ph-plus ic-ph"></i> Registrar</button>
-                </div>
-                <div x-show="!operRegistroDia(operChkData).length" class="text-3 fs-12" style="padding:8px 0;text-align:center">Nada registrado neste dia ainda.</div>
-                <div style="max-height:260px;overflow:auto">
-                  <template x-for="l in operRegistroDia(operChkData)" :key="'sreg'+(l.auto?'a':'m')+l.id">
-                    <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
-                      <span class="text-3 fs-11 fw-600" style="flex-shrink:0;margin-top:2px;width:38px" :style="l.auto?'color:#4285F4':'color:#0d9488'" x-text="l.hora"></span>
-                      <div style="flex:1;min-width:0">
-                        <div class="fs-13"><span x-show="l.cliente" class="fw-700" x-text="l.cliente+' · '"></span><span x-text="l.texto"></span></div>
-                        <div class="text-3 fs-11" x-show="l.motivo" x-text="'Motivo: '+l.motivo"></div>
-                        <div class="text-3 fs-11" x-show="l.por && !l.auto" x-text="'por '+l.por"></div>
-                      </div>
-                      <span x-show="l.auto" class="badge fs-10 fw-600" style="background:#E8F0FE;color:#4285F4;flex-shrink:0" title="Registro automático da produção">auto</span>
-                      <button x-show="!l.auto" class="btn btn-icon btn-ghost btn-sm" @click="removerOperLog(l.id)" title="Excluir" style="color:var(--red);flex-shrink:0"><i class="ph ph-trash ic-ph"></i></button>
-                    </div>
-                  </template>
-                </div>
-              </div>
+              <!-- (Samara) Registro & otimizações MIGROU pra coluna direita (abaixo da Agenda), igual ao Matheus. -->
             </div><!-- /masonry-2 -->
           </div>
 
@@ -5773,7 +5730,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=395"></script>
+<script src="js/app.js?v=396"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
