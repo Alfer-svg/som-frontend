@@ -2398,7 +2398,8 @@
               </div>
             </div>
           </div>
-          <!-- (c) Painel do dia -->
+          <!-- (c) Painel do dia + Rotina (Rotina LOGO ABAIXO do Painel, mesma coluna) -->
+          <div style="display:flex;flex-direction:column;gap:14px">
           <div class="card" style="padding:16px;display:flex;flex-direction:column">
             <div class="flex items-center justify-between" style="flex-wrap:wrap;gap:10px">
               <div>
@@ -2416,7 +2417,42 @@
               <div class="progress" style="height:10px"><div :style="'width:'+progressoDia+'%;background:'+corScore(progressoDia)"></div></div>
             </div>
           </div>
-          </div><!-- /LINHA 1 (Postagens/Agenda | Painel) -->
+          <!-- Rotina do dia — logo abaixo do Painel (só na aba do Matheus) -->
+          <div class="card" x-show="operTab==='matheus'" style="padding:16px">
+            <div class="flex items-center justify-between" style="gap:8px;cursor:pointer;flex-wrap:wrap" @click="operChkAberto=!operChkAberto" title="Clique pra recolher/abrir">
+              <div class="fw-600 fs-15"><i class="ph ph-list-checks ic-ph" style="color:#34A853"></i> Rotina do dia<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
+              <div class="flex items-center gap-2">
+                <span class="badge fs-11 fw-800" x-show="operInspClienteId && operChkConcluido(operInspClienteId)" style="background:#dcfce7;color:#15803d"><i class="ph ph-check-circle"></i> concluída</span>
+                <span class="badge fs-12 fw-700" x-show="operInspClienteId" :style="operChkFeitos(operInspClienteId)>=SOCIAL_ROTINA_N?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="operChkFeitos(operInspClienteId)+'/'+SOCIAL_ROTINA_N"></span>
+                <i class="ph ic-ph text-3" style="font-size:19px" :class="operChkAberto?'ph-caret-up':'ph-caret-down'"></i>
+              </div>
+            </div>
+            <div x-show="operChkAberto && !operInspClienteId" class="text-3 fs-13" style="padding:16px 0;text-align:center"><i class="ph ph-user-focus" style="font-size:20px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente no card de data pra preencher a rotina dele.</div></div>
+            <div x-show="operChkAberto && operInspClienteId">
+              <template x-for="grp in SOCIAL_ROTINA" :key="'ogr'+grp.id">
+                <div style="margin-top:12px">
+                  <div class="flex items-center gap-2" style="padding:7px 10px;border-radius:8px" :style="'background:'+grp.bg">
+                    <span x-text="grp.ico"></span>
+                    <span class="fw-700 fs-13" :style="'color:'+grp.cor" x-text="grp.label"></span>
+                    <span class="text-3 fs-11" style="margin-left:auto" x-text="operChkFeitosGrupo(operInspClienteId,grp.id)+'/'+grp.itens.length"></span>
+                  </div>
+                  <template x-for="t in grp.itens" :key="'oit'+t.id">
+                    <div class="flex items-start gap-2" style="padding:9px 6px 9px 4px;border-bottom:1px solid var(--border)">
+                      <label class="flex items-start gap-2" style="cursor:pointer;flex:1;min-width:0">
+                        <input type="checkbox" :disabled="!!operChkItem(operInspClienteId,t.id).na" x-model="operChkItem(operInspClienteId,t.id).feito" @change="operChkMarcou(operInspClienteId,t.id)" style="cursor:pointer;width:17px;height:17px;margin-top:1px;flex-shrink:0;accent-color:#34A853">
+                        <span class="fs-13" style="flex:1" :style="operChkItem(operInspClienteId,t.id).na?'color:var(--text-3);font-style:italic':(operChkItem(operInspClienteId,t.id).feito?'color:var(--text-3);text-decoration:line-through':'')" x-text="t.texto"></span>
+                        <span class="badge fs-11 fw-700" x-show="operChkItem(operInspClienteId,t.id).feito && operChkItem(operInspClienteId,t.id).hora" style="background:#E6F4EA;color:#15803d;flex-shrink:0" x-text="operChkItem(operInspClienteId,t.id).hora"></span>
+                        <span class="badge fs-11 fw-700" x-show="operChkItem(operInspClienteId,t.id).na" style="background:#E5E7EB;color:#6b7280;flex-shrink:0">não se aplica</span>
+                      </label>
+                      <button type="button" class="btn btn-sm btn-ghost" @click="operChkNA(operInspClienteId,t.id)" :style="operChkItem(operInspClienteId,t.id).na?'color:#0891B2;font-weight:800':'color:var(--text-3)'" title="Não se aplica hoje (conta como resolvido)">N/A</button>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+          </div><!-- /coluna direita LINHA 1 (Painel + Rotina) -->
+          </div><!-- /LINHA 1 (Postagens/Agenda | Painel+Rotina) -->
 
           <!-- KPIs coloridos "Produção de conteúdo" (Samara) — logo abaixo da Agenda|Painel. Wrapper leva o x-show; o grid interno mantém display:grid (armadilha Alpine). -->
           <div x-show="operTab==='samara'" style="margin-bottom:14px">
@@ -2811,41 +2847,8 @@
           <!-- Célula direita da LINHA 2: Rotina EM CIMA + Postagens EMBAIXO (empilhados numa coluna flex). -->
           <!-- flex SEM x-show (armadilha Alpine: x-show zera display:flex). Cada card interno leva seu próprio x-show. -->
           <div style="display:flex;flex-direction:column;gap:14px">
-          <!-- Rotina do dia — 2º card da LINHA 2 (só na aba do Matheus) -->
-          <div class="card" x-show="operTab==='matheus'" style="padding:16px">
-            <div class="flex items-center justify-between" style="gap:8px;cursor:pointer;flex-wrap:wrap" @click="operChkAberto=!operChkAberto" title="Clique pra recolher/abrir">
-              <div class="fw-600 fs-15"><i class="ph ph-list-checks ic-ph" style="color:#34A853"></i> Rotina do dia<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
-              <div class="flex items-center gap-2">
-                <span class="badge fs-11 fw-800" x-show="operInspClienteId && operChkConcluido(operInspClienteId)" style="background:#dcfce7;color:#15803d"><i class="ph ph-check-circle"></i> concluída</span>
-                <span class="badge fs-12 fw-700" x-show="operInspClienteId" :style="operChkFeitos(operInspClienteId)>=SOCIAL_ROTINA_N?'background:#E6F4EA;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="operChkFeitos(operInspClienteId)+'/'+SOCIAL_ROTINA_N"></span>
-                <i class="ph ic-ph text-3" style="font-size:19px" :class="operChkAberto?'ph-caret-up':'ph-caret-down'"></i>
-              </div>
-            </div>
-            <div x-show="operChkAberto && !operInspClienteId" class="text-3 fs-13" style="padding:16px 0;text-align:center"><i class="ph ph-user-focus" style="font-size:20px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente no card de data pra preencher a rotina dele.</div></div>
-            <div x-show="operChkAberto && operInspClienteId">
-              <template x-for="grp in SOCIAL_ROTINA" :key="'ogr'+grp.id">
-                <div style="margin-top:12px">
-                  <div class="flex items-center gap-2" style="padding:7px 10px;border-radius:8px" :style="'background:'+grp.bg">
-                    <span x-text="grp.ico"></span>
-                    <span class="fw-700 fs-13" :style="'color:'+grp.cor" x-text="grp.label"></span>
-                    <span class="text-3 fs-11" style="margin-left:auto" x-text="operChkFeitosGrupo(operInspClienteId,grp.id)+'/'+grp.itens.length"></span>
-                  </div>
-                  <template x-for="t in grp.itens" :key="'oit'+t.id">
-                    <div class="flex items-start gap-2" style="padding:9px 6px 9px 4px;border-bottom:1px solid var(--border)">
-                      <label class="flex items-start gap-2" style="cursor:pointer;flex:1;min-width:0">
-                        <input type="checkbox" :disabled="!!operChkItem(operInspClienteId,t.id).na" x-model="operChkItem(operInspClienteId,t.id).feito" @change="operChkMarcou(operInspClienteId,t.id)" style="cursor:pointer;width:17px;height:17px;margin-top:1px;flex-shrink:0;accent-color:#34A853">
-                        <span class="fs-13" style="flex:1" :style="operChkItem(operInspClienteId,t.id).na?'color:var(--text-3);font-style:italic':(operChkItem(operInspClienteId,t.id).feito?'color:var(--text-3);text-decoration:line-through':'')" x-text="t.texto"></span>
-                        <span class="badge fs-11 fw-700" x-show="operChkItem(operInspClienteId,t.id).feito && operChkItem(operInspClienteId,t.id).hora" style="background:#E6F4EA;color:#15803d;flex-shrink:0" x-text="operChkItem(operInspClienteId,t.id).hora"></span>
-                        <span class="badge fs-11 fw-700" x-show="operChkItem(operInspClienteId,t.id).na" style="background:#E5E7EB;color:#6b7280;flex-shrink:0">não se aplica</span>
-                      </label>
-                      <button type="button" class="btn btn-sm btn-ghost" @click="operChkNA(operInspClienteId,t.id)" :style="operChkItem(operInspClienteId,t.id).na?'color:#0891B2;font-weight:800':'color:var(--text-3)'" title="Não se aplica hoje (conta como resolvido)">N/A</button>
-                    </div>
-                  </template>
-                </div>
-              </template>
-            </div>
-          </div>
-          <!-- Agenda (Matheus) — trocada de lugar com Postagens do dia (agora fica embaixo da Rotina). -->
+          <!-- Rotina do dia MIGROU pra LINHA 1 (logo abaixo do Painel). -->
+          <!-- Agenda (Matheus) — trocada de lugar com Postagens do dia (agora fica embaixo do Painel/Rotina). -->
           <div class="card" style="padding:16px" x-show="operTab==='matheus'">
             <div class="flex items-center justify-between mb-2" style="gap:8px">
               <div class="fw-600 fs-15"><i class="ph ph-calendar-dots ic-ph" style="color:#F9AB00"></i> Agenda</div>
@@ -5727,7 +5730,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=387"></script>
+<script src="js/app.js?v=388"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
