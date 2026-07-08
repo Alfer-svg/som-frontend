@@ -834,7 +834,9 @@ document.addEventListener('alpine:init', () => {
       const base = (this.matTop && Array.isArray(this.matTop.posts)) ? this.matTop.posts : [];
       const porMidia = this.operTab === 'samara' ? this.filtraMidiaReels(base) : this.filtraMidiaPosts(base);
       const foco = this.operClienteFocoNome;
-      return foco ? porMidia.filter(p => (p.cliente || '') === foco) : porMidia;
+      // Com cliente em foco: TODOS os posts dele (já vêm ordenados por score).
+      // Sem foco: top 10 do ranking geral (o resto vem só pra permitir o filtro).
+      return foco ? porMidia.filter(p => (p.cliente || '') === foco) : porMidia.slice(0, 10);
     },
     podeVer(p) {
       if (this.papel === 'admin') return true;        // admin sempre vê tudo
@@ -1485,7 +1487,9 @@ document.addEventListener('alpine:init', () => {
       if (this.matTopLoading) return;
       if (!force && this.matTop) return;
       this.matTopLoading = true; this.matTopErro = '';
-      try { this.matTop = await this.api('GET', '/monitoramento/meta/melhores-posts'); }
+      // limite alto: precisamos do ranking COMPLETO pra poder filtrar por cliente em foco
+      // (o top 10 default só traz os melhores globais e some com quase todo cliente específico).
+      try { this.matTop = await this.api('GET', '/monitoramento/meta/melhores-posts?limite=300'); }
       catch (e) { this.matTopErro = (e && e.message) || 'Não consegui carregar o ranking agora.'; }
       this.matTopLoading = false;
     },
