@@ -2367,6 +2367,47 @@
             </div>
           </div>
 
+          <!-- (Samara) O que ainda falta hoje | Stories orgânicos de hoje — mesma linha, abaixo dos KPIs coloridos. Wrapper leva x-show; grid interno mantém display:grid. -->
+          <div x-show="operTab==='samara'">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
+              <!-- O que ainda falta hoje (Samara — produção de conteúdo) -->
+              <div class="card" style="padding:16px">
+                <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
+                <template x-if="samPendentesHoje.total===0">
+                  <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Produção em dia! Nada pendente. 🎉</div></div>
+                </template>
+                <template x-if="samPendentesHoje.total>0">
+                  <div class="flex items-center gap-2" style="padding:8px 0">
+                    <span class="kpi-ico" style="background:#EEEDFE;color:#7c3aed;width:26px;height:26px;font-size:13px"><i class="ph ph-film-slate ic-ph"></i></span>
+                    <div style="flex:1;min-width:0">
+                      <div class="fs-13 fw-600">Produção de conteúdo</div>
+                      <div class="text-3 fs-11">faltam <b x-text="samPendentesHoje.stories"></b> stories · <b x-text="samPendentesHoje.videos"></b> vídeos · <b x-text="samPendentesHoje.roteiros"></b> roteiros</div>
+                    </div>
+                    <span class="badge fs-11 fw-700" style="background:#EEEDFE;color:#7c3aed" x-text="samPendentesHoje.total"></span>
+                  </div>
+                </template>
+              </div>
+              <!-- Stories orgânicos de hoje (movido pra CÁ, ao lado do "O que ainda falta") -->
+              <div class="card" style="padding:16px">
+                <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div><button class="btn btn-sm" @click="samStoriesPreencherMeta()" title="Marca cada cliente com o piso da faixa"><i class="ph ph-check-square ic-ph"></i> Bater a meta</button></div>
+                <div class="text-3 fs-11 mb-3">Faixa de stories/dia por cliente (cronograma semanal). Registre quantos publicou hoje.</div>
+                <template x-for="m in samStoriesMeta" :key="'ss'+m.cliente">
+                  <div class="flex items-center" style="gap:10px;margin-bottom:9px">
+                    <div class="fs-13 fw-600" style="width:118px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="m.cliente"></div>
+                    <span class="fs-11" style="flex:none;min-width:74px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#6b7280'"><span class="text-3">meta</span> <b x-text="m.faixa"></b></span>
+                    <div class="progress" style="flex:1;height:8px"><div :style="'width:'+Math.min(100,Math.round(samStoryQtd(m.cliente)/m.alvo*100))+'%;background:'+(samStoryMetaOk(m)?'#34A853':(samStoryQtd(m.cliente)>0?'#F9A825':'#E5E7EB'))"></div></div>
+                    <div class="flex items-center" style="gap:6px;flex:none">
+                      <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDec(m.cliente)" :disabled="samStoryQtd(m.cliente)<=0" style="padding:2px 7px"><i class="ph ph-minus"></i></button>
+                      <span class="fw-700 fs-14" style="width:18px;text-align:center" x-text="samStoryQtd(m.cliente)"></span>
+                      <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryInc(m.cliente)" style="padding:2px 7px"><i class="ph ph-plus" style="color:#4285F4"></i></button>
+                    </div>
+                    <i class="ph ph-check-circle" style="flex:none;font-size:18px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#e5e7eb'"></i>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
           <!-- LINHA 2: O que ainda falta hoje | Rotina do dia (lado a lado) -->
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
           <!-- Célula ESQUERDA da LINHA 2: Empresas do mesmo segmento EM CIMA + O que ainda falta hoje EMBAIXO (empilhados). -->
@@ -2441,11 +2482,11 @@
             </div>
             </div>
           </div>
-          <!-- (b) O que ainda falta hoje — Matheus (pulsa vermelho) + Samara (pendências de produção) — EMBAIXO do Empresas -->
-          <div class="card" style="padding:16px" :class="matTemPendencia ? 'pulse-red' : ''">
+          <!-- (b) O que ainda falta hoje — SÓ MATHEUS (a Samara tem o dela abaixo dos KPIs coloridos, ao lado dos Stories) -->
+          <div class="card" style="padding:16px" x-show="operTab==='matheus'" :class="matTemPendencia ? 'pulse-red' : ''">
               <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
               <!-- Pendências do Matheus (social media) -->
-              <div x-show="operTab==='matheus'">
+              <div>
                 <template x-if="!matTemPendencia">
                   <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Tudo em dia! Nada pendente. 🎉</div></div>
                 </template>
@@ -2466,22 +2507,6 @@
                   <div style="flex:1"><div class="fs-13 fw-600">Posts atrasados no quadro</div><div class="text-3 fs-11"><span x-text="operResumoTrelo.atrasados"></span> post(s) com prazo vencido</div></div>
                   <button class="btn btn-ghost btn-sm" @click="go('operacional'); opTab='quadro'">Ver quadro</button>
                 </div>
-              </div>
-              <!-- Pendências da Samara (produção de conteúdo) -->
-              <div x-show="operTab==='samara'">
-                <template x-if="samPendentesHoje.total===0">
-                  <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Produção em dia! Nada pendente. 🎉</div></div>
-                </template>
-                <template x-if="samPendentesHoje.total>0">
-                  <div class="flex items-center gap-2" style="padding:8px 0">
-                    <span class="kpi-ico" style="background:#EEEDFE;color:#7c3aed;width:26px;height:26px;font-size:13px"><i class="ph ph-film-slate ic-ph"></i></span>
-                    <div style="flex:1;min-width:0">
-                      <div class="fs-13 fw-600">Produção de conteúdo</div>
-                      <div class="text-3 fs-11">faltam <b x-text="samPendentesHoje.stories"></b> stories · <b x-text="samPendentesHoje.videos"></b> vídeos · <b x-text="samPendentesHoje.roteiros"></b> roteiros</div>
-                    </div>
-                    <span class="badge fs-11 fw-700" style="background:#EEEDFE;color:#7c3aed" x-text="samPendentesHoje.total"></span>
-                  </div>
-                </template>
               </div>
           </div>
           <!-- (e) Melhores posts dos clientes — abaixo do "O que ainda falta hoje", mesma coluna. COMUM às duas abas (adapta por operTab: Matheus=Posts · Samara=Reels/Vídeos). -->
@@ -2706,24 +2731,7 @@
                     </div>
                   </template>
                 </div>
-                <!-- Stories orgânicos de hoje (migrado da Samara) -->
-                <div class="card" style="padding:16px">
-                  <div class="flex items-center justify-between mb-1"><div class="fw-600 fs-15"><i class="ph ph-device-mobile-camera ic-ph" style="color:#4285F4"></i> Stories orgânicos de hoje</div><button class="btn btn-sm" @click="samStoriesPreencherMeta()" title="Marca cada cliente com o piso da faixa"><i class="ph ph-check-square ic-ph"></i> Bater a meta</button></div>
-                  <div class="text-3 fs-11 mb-3">Faixa de stories/dia por cliente (cronograma semanal). Registre quantos publicou hoje.</div>
-                  <template x-for="m in samStoriesMeta" :key="'ss'+m.cliente">
-                    <div class="flex items-center" style="gap:10px;margin-bottom:9px">
-                      <div class="fs-13 fw-600" style="width:118px;flex:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="m.cliente"></div>
-                      <span class="fs-11" style="flex:none;min-width:74px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#6b7280'"><span class="text-3">meta</span> <b x-text="m.faixa"></b></span>
-                      <div class="progress" style="flex:1;height:8px"><div :style="'width:'+Math.min(100,Math.round(samStoryQtd(m.cliente)/m.alvo*100))+'%;background:'+(samStoryMetaOk(m)?'#34A853':(samStoryQtd(m.cliente)>0?'#F9A825':'#E5E7EB'))"></div></div>
-                      <div class="flex items-center" style="gap:6px;flex:none">
-                        <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryDec(m.cliente)" :disabled="samStoryQtd(m.cliente)<=0" style="padding:2px 7px"><i class="ph ph-minus"></i></button>
-                        <span class="fw-700 fs-14" style="width:18px;text-align:center" x-text="samStoryQtd(m.cliente)"></span>
-                        <button class="btn btn-icon btn-ghost btn-sm" @click="samStoryInc(m.cliente)" style="padding:2px 7px"><i class="ph ph-plus" style="color:#4285F4"></i></button>
-                      </div>
-                      <i class="ph ph-check-circle" style="flex:none;font-size:18px" :style="samStoryMetaOk(m)?'color:#34A853':'color:#e5e7eb'"></i>
-                    </div>
-                  </template>
-                </div>
+                <!-- Stories orgânicos de hoje MIGROU pra linha própria (ao lado do "O que ainda falta"), abaixo dos KPIs coloridos. -->
                 <!-- Melhores posts (Samara) MIGROU pra célula esquerda da LINHA 2, abaixo do "O que ainda falta hoje" — comum às duas abas. -->
               </div>
               <div style="display:flex;flex-direction:column;gap:14px">
@@ -5636,7 +5644,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=367"></script>
+<script src="js/app.js?v=368"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
