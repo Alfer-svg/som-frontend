@@ -2244,7 +2244,21 @@
           <div class="card" style="padding:16px;margin-bottom:14px" x-show="operTab==='matheus'" :class="matTemPendencia ? 'pulse-red' : ''">
             <div class="fw-600 fs-15 mb-2"><i class="ph ph-hourglass-medium ic-ph" style="color:#C5221F"></i> O que ainda falta hoje</div>
             <template x-if="!matTemPendencia">
-              <div class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-confetti" style="font-size:24px;color:#16a34a"></i><div style="margin-top:6px;color:#15803d;font-weight:700">Tudo em dia! Nada pendente. 🎉</div></div>
+              <div>
+                <div style="text-align:center;padding:6px 0 12px">
+                  <i class="ph ph-confetti" style="font-size:26px;color:#16a34a"></i>
+                  <div style="margin-top:6px;color:#15803d;font-weight:800;font-size:15px">Parabéns! Tudo em dia hoje 🎉</div>
+                  <div class="text-3 fs-12" style="margin-top:2px">Nenhuma pendência. Aproveite pra melhorar os clientes:</div>
+                </div>
+                <div style="columns:2;column-gap:18px">
+                  <template x-for="d in matSugestoesLivres" :key="'sug'+d.txt">
+                    <div class="flex items-start gap-2" style="padding:7px 0;break-inside:avoid">
+                      <span class="kpi-ico" :style="'background:var(--surface-2);width:24px;height:24px;font-size:12px;flex:none;color:'+d.cor"><i class="ph ic-ph" :class="d.ico"></i></span>
+                      <div class="fs-13" style="flex:1;min-width:0" x-text="d.txt"></div>
+                    </div>
+                  </template>
+                </div>
+              </div>
             </template>
             <template x-if="matTemPendencia">
               <div style="columns:2;column-gap:18px">
@@ -5690,7 +5704,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=381"></script>
+<script src="js/app.js?v=382"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

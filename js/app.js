@@ -1462,6 +1462,23 @@ document.addEventListener('alpine:init', () => {
     },
     // Tem algo pendente hoje? (posts por publicar, rotina de cliente em aberto ou posts atrasados) — pulsa o card.
     get matTemPendencia() { return this.matPendentesDia.length > 0 || this.matRotinasHoje.abertas > 0 || this.operResumoTrelo.atrasados > 0; },
+    // Clientes LIGADOS sem post programado hoje (pra sugerir adiantar conteúdo).
+    get matClientesSemPostHoje() {
+      const comPost = new Set((this.operPostsDia || []).map(g => g.cliente));
+      return (this.operFocoClientes || []).map(c => c.empresa || c.nome).filter(n => n && !comPost.has(n));
+    },
+    // Sugestões proativas pro card "O que ainda falta" quando está tudo em dia.
+    get matSugestoesLivres() {
+      const s = [];
+      const sem = this.matClientesSemPostHoje;
+      if (sem.length) s.push({ ico: 'ph-calendar-plus', cor: '#4285F4', txt: 'Adiante conteúdo pra quem não tem post hoje: ' + sem.slice(0, 6).join(', ') + (sem.length > 6 ? (' e +' + (sem.length - 6)) : '') + '.' });
+      s.push({ ico: 'ph-chats-circle', cor: '#0891B2', txt: 'Responda comentários e DMs pendentes dos clientes.' });
+      s.push({ ico: 'ph-identification-card', cor: '#7c3aed', txt: 'Revise bio, link e destaques dos perfis.' });
+      s.push({ ico: 'ph-film-slate', cor: '#EA4335', txt: 'Planeje reels/stories da próxima semana.' });
+      s.push({ ico: 'ph-trophy', cor: '#F59E0B', txt: 'Veja os "Melhores posts" e repita o que mais engajou.' });
+      s.push({ ico: 'ph-magnifying-glass', cor: '#16a34a', txt: 'Busque referências nas "Empresas do mesmo segmento".' });
+      return s;
+    },
     get matReunioesDia() { const d = this.operChkData || this._hojeStr(); return (this.operEventosMatheus || []).filter(e => e.data === d); },
     // Ranking dos melhores posts dos clientes (backend, cache 3h). Carrega sob demanda.
     async carregarMelhores(force) {
@@ -1872,9 +1889,9 @@ document.addEventListener('alpine:init', () => {
       catch (e) { c.socialAtivo = !novo; this.mostrarToast('Não salvou — ' + (e.message || e)); }
     },
     get operInspClientes() { return (this.clients || []).filter(c => this.fazSocial(c)).slice().sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '', 'pt-BR')); },
-    // Seletor de "cliente em foco" inclui também os DESLIGADOS (marcados) — pra dar
-    // pra religar pelo interruptor ali mesmo. Só exclui os Inativos de cadastro.
-    get operFocoClientes() { return (this.clients || []).filter(c => (c.status || 'Ativo') !== 'Inativo').slice().sort((a, b) => (a.empresa || a.nome || '').localeCompare(b.empresa || b.nome || '', 'pt-BR')); },
+    // Seletor de "cliente em foco": só clientes LIGADOS (socialAtivo). Desabilitado
+    // some do seletor — pra religar, usar o painel "Ligar/desligar clientes".
+    get operFocoClientes() { return (this.clients || []).filter(c => (c.status || 'Ativo') !== 'Inativo' && c.socialAtivo !== false).slice().sort((a, b) => (a.empresa || a.nome || '').localeCompare(b.empresa || b.nome || '', 'pt-BR')); },
     // O cliente em foco está ligado no Matheus? (chave socialAtivo)
     get operFocoAtivo() { const c = (this.clients || []).find(x => x.id === this.operInspClienteId); return !!c && c.socialAtivo !== false; },
     operInspTroca() { // trocou o cliente no menu drop: a IA descobre os concorrentes e busca os posts
