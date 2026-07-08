@@ -829,6 +829,13 @@ document.addEventListener('alpine:init', () => {
     // Samara vê Reels/Vídeos; Matheus vê os demais (feed/imagem/carrossel).
     filtraMidiaReels(posts) { return (Array.isArray(posts) ? posts : []).filter(p => /VIDEO|REEL/i.test(p && (p.media_type || p.tipo || ''))); },
     filtraMidiaPosts(posts) { return (Array.isArray(posts) ? posts : []).filter(p => !/VIDEO|REEL/i.test(p && (p.media_type || p.tipo || ''))); },
+    // Melhores posts filtrados por mídia (perfil) E pelo cliente em foco (se houver).
+    get melhoresView() {
+      const base = (this.matTop && Array.isArray(this.matTop.posts)) ? this.matTop.posts : [];
+      const porMidia = this.operTab === 'samara' ? this.filtraMidiaReels(base) : this.filtraMidiaPosts(base);
+      const foco = this.operClienteFocoNome;
+      return foco ? porMidia.filter(p => (p.cliente || '') === foco) : porMidia;
+    },
     podeVer(p) {
       if (this.papel === 'admin') return true;        // admin sempre vê tudo
       if (p === 'pessoal') return true;               // a própria ficha é de todos
