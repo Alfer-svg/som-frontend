@@ -2298,8 +2298,8 @@
           </div>
           </div><!-- /wrapper x-show dos KPIs (x-show num wrapper pra não zerar o display:grid) -->
 
-          <!-- LINHA 1: Agenda | Painel (lado a lado) -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:start">
+          <!-- LINHA 1: Agenda | Painel (lado a lado) — align stretch p/ o Painel ter a MESMA altura da Agenda -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;align-items:stretch">
           <!-- (a2) Agenda -->
           <div class="card" style="padding:16px">
             <div class="flex items-center justify-between mb-2" style="gap:8px">
@@ -5691,7 +5691,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=376"></script>
+<script src="js/app.js?v=377"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
