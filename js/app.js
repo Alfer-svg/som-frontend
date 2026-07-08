@@ -456,6 +456,7 @@ document.addEventListener('alpine:init', () => {
     sugIA: { matheus: [], samara: [] },
     sugIALoading: false,
     sugIAErro: '',
+    sugSam: [], sugSamLoading: false, sugSamErro: '', // recomendações da IA p/ a Samara (cliente em foco)
     editInter: null, editInterTexto: '', // edição de um registro do histórico (admin)
     radarAutolog: MD.get('som_radar_autolog', true), // auto-registrar ações do Radar no histórico
     TIPOS_INTER,
@@ -3204,6 +3205,45 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         this.sugIA = (await this.api('POST', '/ia/sugestoes-tarefas', { cliente: this.rel.cliente, resumo: this.rel.resumo, melhorFormato: this.rel.melhorFormato, melhores: this.rel.melhores, metas: this.metasCliente(c) })) || { matheus: [], samara: [] };
       } catch (e) { this.sugIAErro = (e && e.message) || 'Falha ao gerar sugestões.'; }
       this.sugIALoading = false;
+    },
+    // Registra uma AÇÃO do cliente no Fichário (via operLog, atribuída ao cliente+dia). Toda ação pra o cliente passa por aqui.
+    async _registrarFichario(cliente, texto, motivo) {
+      this.operLog.unshift({
+        id: MD.uid(), data: this.operChkData || this._hojeStr(),
+        hora: new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }),
+        clienteId: (cliente && cliente.id) || '', cliente: (cliente && (cliente.empresa || cliente.nome)) || '',
+        alteracao: texto, motivo: (motivo || '').trim(),
+        por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString(),
+      });
+      try { await this.api('POST', '/colecoes/operacoes.log', { itens: this.operLog }); } catch (e) { }
+    },
+    // Recomendações da IA pro trabalho da Samara no cliente em foco (produção de conteúdo).
+    async gerarSugestoesSamara() {
+      const c = this.operClienteObj;
+      if (!c) { this.mostrarToast('Selecione um cliente em foco (lá em cima) primeiro.'); return; }
+      this.sugSamLoading = true; this.sugSamErro = '';
+      try {
+        const r = await this.api('POST', '/ia/sugestoes-tarefas', { cliente: c.empresa || c.nome, resumo: {}, metas: this.metasCliente(c) });
+        this.sugSam = (((r && r.samara) || [])).map(t => ({ id: MD.uid(), texto: String(t) }));
+        if (!this.sugSam.length) this.sugSamErro = 'A IA não retornou recomendações — tente de novo.';
+      } catch (e) { this.sugSamErro = (e && e.message) || 'Falha ao gerar recomendações.'; }
+      this.sugSamLoading = false;
+    },
+    // Aplicar: adota a recomendação e registra no Fichário do cliente.
+    aplicarSugestaoSamara(s) {
+      const c = this.operClienteObj; if (!c) return;
+      this._registrarFichario(c, 'Aplicou recomendação da IA (Samara): ' + s.texto, '');
+      this.sugSam = this.sugSam.filter(x => x.id !== s.id);
+      this.mostrarToast('Recomendação aplicada e registrada no Fichário. ✅');
+    },
+    // Descartar: exige justificativa e registra no Fichário do cliente.
+    descartarSugestaoSamara(s) {
+      const c = this.operClienteObj; if (!c) return;
+      const motivo = (prompt('Por que descartar esta recomendação?\n\n“' + s.texto + '”') || '').trim();
+      if (!motivo) { this.mostrarToast('Descarte cancelado — é preciso justificar o motivo.'); return; }
+      this._registrarFichario(c, 'Descartou recomendação da IA (Samara): ' + s.texto, motivo);
+      this.sugSam = this.sugSam.filter(x => x.id !== s.id);
+      this.mostrarToast('Recomendação descartada e registrada no Fichário. 🚫');
     },
     delegarTarefa(c, titulo, frente) {
       if (!c) return;

@@ -2878,6 +2878,29 @@
             </template>
           </div>
 
+          <!-- (Samara) Recomendações da IA pro cliente em foco — Aplicar (registra no Fichário) ou Descartar (justifica + registra). No final do painel. -->
+          <div class="card" x-show="operTab==='samara'" style="padding:16px;margin-bottom:14px;border-left:3px solid #4285F4">
+            <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
+              <div class="fw-600 fs-15"><i class="ph ph-sparkle ic-ph" style="color:#4285F4"></i> Recomendações da IA — Samara<span class="text-3 fw-500 fs-13" x-show="operClienteFocoNome" x-text="' · '+operClienteFocoNome"></span></div>
+              <button class="btn btn-sm btn-primary" @click="gerarSugestoesSamara()" :disabled="sugSamLoading || !operClienteObj"><i class="ph ph-sparkle ic-ph"></i> <span x-text="sugSamLoading?'Gerando…':(sugSam.length?'Gerar de novo':'Gerar recomendações')"></span></button>
+            </div>
+            <div class="text-3 fs-12 mb-3">Sugestões de produção de conteúdo pro cliente em foco, com base nas metas. Aplicar ou descartar — <b>toda ação fica registrada no Fichário</b>.</div>
+            <div x-show="!operClienteObj" class="text-3 fs-13" style="padding:14px 0;text-align:center"><i class="ph ph-user-focus" style="font-size:22px;opacity:.5"></i><div style="margin-top:6px">Escolha um cliente em foco lá em cima pra gerar recomendações.</div></div>
+            <div x-show="sugSamLoading" class="text-3 fs-13" style="padding:18px 0;text-align:center"><i class="ph ph-sparkle" style="font-size:22px;color:#4285F4"></i><div style="margin-top:6px">A IA está montando as recomendações…</div></div>
+            <div x-show="!sugSamLoading && sugSamErro" class="fs-13" style="padding:12px;border-radius:10px;background:#FEF2F2;color:#B91C1C"><span x-text="sugSamErro"></span></div>
+            <div x-show="!sugSamLoading && operClienteObj && !sugSam.length && !sugSamErro" class="text-3 fs-12" style="padding:8px 0;text-align:center">Clique em <b>Gerar recomendações</b> pra a IA sugerir tarefas de produção pro cliente.</div>
+            <template x-for="s in sugSam" :key="'sgs'+s.id">
+              <div class="flex items-start gap-2" style="padding:10px 0;border-bottom:1px solid var(--border)">
+                <i class="ph ph-lightbulb ic-ph" style="color:#F9A825;font-size:19px;flex:none;margin-top:2px"></i>
+                <div class="fs-13" style="flex:1;min-width:0" x-text="s.texto"></div>
+                <div class="flex items-center gap-2" style="flex:none">
+                  <button class="btn btn-sm" style="background:#16a34a;color:#fff;border-color:#16a34a;white-space:nowrap" @click="aplicarSugestaoSamara(s)" title="Aplicar e registrar no Fichário"><i class="ph ph-check ic-ph"></i> Aplicar</button>
+                  <button class="btn btn-sm btn-ghost" style="color:#EA4335;white-space:nowrap" @click="descartarSugestaoSamara(s)" title="Descartar (justificar) e registrar no Fichário"><i class="ph ph-x ic-ph"></i> Descartar</button>
+                </div>
+              </div>
+            </template>
+          </div>
+
           <!-- GMN — Google Meu Negócio: card reformado MIGROU pra coluna esquerda da linha (abaixo de Captações). -->
 
             <!-- Empresas do mesmo segmento MIGROU pra célula esquerda da LINHA 2 (empilhado sobre o "O que falta hoje"). -->
@@ -5668,7 +5691,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=375"></script>
+<script src="js/app.js?v=376"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
