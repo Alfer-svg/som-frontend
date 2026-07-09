@@ -2720,27 +2720,50 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       const a = d.answers || null; // onboarding novo (maracatumktdigital.com): respostas por chave data-q
       let dados;
       if (a) {
-        // ── Mapeia o briefing novo (chaves data-q) → estrutura do Cliente ──
+        // ── Mapeia os DOIS formulários (Marketing = chaves pub_/neg_/cri_…; Site = obj_/prod_/id_/tec_/cred_…)
+        //    → estrutura do Cliente. Como cada onboarding é de UM tipo só, as chaves do outro vêm undefined
+        //    e os `||` resolvem sozinhos. Regra: puxa TUDO pra campo estruturado; Notas só p/ o que não tem campo.
+        const jn = (...xs) => xs.filter(x => x && String(x).trim()).join('\n');           // junta linhas não-vazias
+        const lb = (rot, v) => (v && String(v).trim()) ? (rot + ': ' + String(v).trim()) : ''; // "Rótulo: valor"
         const b = briefingVazio();
-        b.publico = { faixaEtaria: a.pub_idade || '', escolaridade: a.pub_escolaridade || '', sexo: a.pub_sexo || '', alvo: a.pub_alvo || '' };
-        b.posicionamento = { descricao: a.neg_descricao || '', concorrentes: a.neg_concorrentes || '', percepcao: a.neg_percepcao || '', recorrencia: a.neg_recorrencia || '', cicloVenda: a.neg_fechamento || '' };
+        b.publico = { faixaEtaria: a.pub_idade || '', escolaridade: a.pub_escolaridade || '', sexo: a.pub_sexo || '',
+          alvo: jn(a.pub_alvo, a.pub_ideal, lb('Onde atende', a.pub_atende), lb('Setores', a.prod_setores)) };
+        b.posicionamento = {
+          descricao: jn(a.neg_descricao, lb('História', a.empresa_historia), lb('Quem somos', a.empresa_quem), lb('Missão', a.empresa_missao), lb('Tempo de mercado', a.empresa_tempo), lb('Transformação que gera', a.prod_transformacao), lb('Problema que resolve', a.pub_problema)),
+          concorrentes: a.neg_concorrentes || a.pub_concorrentes || '',
+          percepcao: jn(a.neg_percepcao, lb('Diferencial', a.prod_diferencial), lb('Por que escolher', a.pub_porque), lb('Números', a.cred_numeros), lb('Depoimentos', a.cred_depoimentos), lb('Certificações', a.cred_certificacoes), lb('Clientes/parceiros', a.cred_empresas)),
+          recorrencia: a.neg_recorrencia || '', cicloVenda: a.neg_fechamento || '' };
         b.historico = { gostou: a.hist_gostava || '', melhorar: a.hist_faltava || '' };
         b.transmissao = { midiasTestadas: a.est_anuncios || '', campanhas: a.est_campanhas || '' };
-        b.criativo = { linguagem: a.cri_linguagem || '', evitar: a.cri_termos_evitar || '', hashtags: a.cri_hashtags || '', inspiracoes: a.cri_inspiracao || '', datasComemorativas: a.cri_datas_gerais || '', datasSegmento: a.cri_datas_segmento || '' };
-        b.ativos = { logo: a.mat_logo_url || '', manual: a.mat_manual_url || '', drive: a.mat_fotos || '' };
-        b.palavrasChave = a.pal_chave || '';
+        b.criativo = { linguagem: jn(a.cri_linguagem, lb('Cores / identidade', a.id_cores)), evitar: a.cri_termos_evitar || a.id_evitar || '',
+          hashtags: a.cri_hashtags || '', inspiracoes: a.cri_inspiracao || a.id_referencias || '', datasComemorativas: a.cri_datas_gerais || '', datasSegmento: a.cri_datas_segmento || '' };
+        b.ativos = { logo: a.mat_logo_url || '', manual: a.mat_manual_url || '', drive: a.mat_fotos || a.tec_materiais || '' };
+        b.palavrasChave = a.pal_chave || a.tec_palavras || '';
+        // Produtos/serviços do site → itens da lista de Serviços
+        const servicos = [];
+        if (a.prod_lista) String(a.prod_lista).split(/[\n;•|]+/).map(s => s.trim().replace(/^[-*·]\s*/, '')).filter(Boolean).forEach(s => servicos.push(s));
+        // Instagram: extrai o 1º @ / link de instagram do texto livre de redes (site)
+        let instagram = '';
+        const mIg = /instagram\.com\/([\w.]+)|(@[\w.]{2,})/i.exec(a.obj_redes || '');
+        if (mIg) instagram = mIg[1] ? ('@' + mIg[1]) : mIg[2];
+        // Domínio informado (site): só usa como URL se parecer domínio (tem ponto e não é "ainda não")
+        const domTxt = String(a.tec_dominio || '').trim();
+        const domUrl = (/\./.test(domTxt) && !/ainda/i.test(domTxt)) ? domTxt : '';
         // Documentos: arquivos enviados (Cloudinary) + mailing
         const docs = [];
         (d.fileLinks || []).forEach(fl => { if (fl && fl.url) docs.push({ id: MD.uid(), nome: fl.filename || fl.name || 'Arquivo', tipo: 'Identidade visual', url: fl.url }); });
         if (a.mat_mailing_url) docs.push({ id: MD.uid(), nome: 'Mailing de clientes', tipo: 'Outro', url: a.mat_mailing_url });
+        const redes = redesVazias();
+        if (instagram) redes.instagram = { tem: true, score: 0, url: instagram.startsWith('@') ? ('https://instagram.com/' + instagram.slice(1)) : instagram };
         dados = {
-          cnpj: a.empresa_cnpj || a.empresa_documento || '', razaoSocial: a.empresa_razao || '', empresa: o.empresa, slogan: a.empresa_slogan || '',
-          cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
-          contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
-          servicos: [], redes: redesVazias(), site: { url: a.empresa_site || '', seo: 0, sgo: 0 },
-          dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
+          cnpj: a.empresa_cnpj || a.empresa_documento || '', razaoSocial: a.empresa_razao || '', empresa: o.empresa, slogan: a.empresa_slogan || a.empresa_frase || '',
+          cep: '', logradouro: a.obj_endereco || '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
+          contato: '', cargo: '', email: a.obj_email || '', whatsapp: a.obj_whatsapp || '', telefone: a.obj_telefone || '', instagram,
+          servicos, redes, site: { url: a.empresa_site || domUrl || '', seo: 0, sgo: 0 },
+          dominio: { provedor: a.tec_dominio_empresa || '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
           briefing: b, responsaveis: [], documentos: docs, mensalidade: 0, tipoCliente: 'recorrente', status: 'Ativo', desde: MD.today(),
-          notas: a.empresa_gmn ? ('Google Meu Negócio: ' + a.empresa_gmn) : '',
+          // Notas: só o que NÃO tem campo próprio na ficha (seções desejadas do site, GMN, redes em texto livre)
+          notas: jn(lb('Google Meu Negócio', a.empresa_gmn), lb('Seções desejadas no site', a.tec_conteudo), lb('Redes informadas', a.obj_redes)),
         };
       } else {
         // ── Formato antigo (fallback) ──
