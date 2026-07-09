@@ -4242,7 +4242,7 @@ ${this._docFoot()}
         const maxTs = coms.reduce((m, c) => Math.max(m, new Date(c.em).getTime() || 0), 0);
         const prev = this._chatSeen[r.id] || 0;
         // card aberto: atualiza as bolhas
-        if (this.cardModal && this.cardRef && this.cardRef.id === r.id && JSON.stringify(coms) !== JSON.stringify(this.cardRef.comentarios || [])) { this.cardRef.comentarios = coms; this.scrollChat(); }
+        if (this.cardModal && this.cardRef && this.cardRef.id === r.id) { const merged = this.mergeComs(coms, this.cardRef.comentarios); if (JSON.stringify(merged) !== JSON.stringify(this.cardRef.comentarios || [])) { this.cardRef.comentarios = merged; this.scrollChat(); } }
         // mensagem nova de OUTRA pessoa, em card onde estou envolvido, e que não está aberto
         if (this._chatBaseline && maxTs > prev) {
           const novas = coms.filter(c => (new Date(c.em).getTime() || 0) > prev && c.autor !== eu);
@@ -4255,6 +4255,14 @@ ${this._docFoot()}
         this._chatSeen[r.id] = maxTs;
       }
       this._chatBaseline = true;
+      // #1 AUTO-REFRESH DO QUADRO: reaproveita o GET /projetos que já veio (rows). Só
+      // atualiza quando NÃO há card aberto nem arrasto em curso, pra não atropelar quem
+      // está editando/arrastando. Mesma transformação do carregarProjetos.
+      if (this.page === 'operacional' && !this.cardModal && !this.dragId) {
+        let lista = (rows || []).map(x => ({ id: x.id, ...(x.dados || {}), criadoPorNome: x.criadoPorNome || null, atualizadoPorNome: x.atualizadoPorNome || null, _criadoEm: x.createdAt || null, _atualizadoEm: x.updatedAt || null }));
+        if (this.papel === 'colaborador2') { const eu = (this.usuario && this.usuario.nome) || ''; lista = lista.filter(p => p.responsavel === eu || (Array.isArray(p.membros) && p.membros.includes(eu))); }
+        this.projects = lista;
+      }
     },
     // Monitor de onboardings: avisa (som + visual) quando um briefing novo é respondido.
     // Roda pra admin e colaboradores que enxergam a fila de Onboardings.
@@ -4348,8 +4356,28 @@ ${this._docFoot()}
     toggleItemCheck(it) { it.feito = !it.feito; this.salvarCard(); },
     removeItemCheck(id) { this.cardRef.checklist = this.cardRef.checklist.filter(x => x.id !== id); this.salvarCard(); },
     checkProgresso(p) { const c = p.checklist || []; const f = c.filter(x => x.feito).length; return { feitos: f, total: c.length, pct: c.length ? Math.round(f / c.length * 100) : 0 }; },
-    addComentario() { const t = (this.novoComentario || '').trim(); if (!t) return; this.cardRef.comentarios.push({ id: MD.uid(), autor: (this.usuario && this.usuario.nome) || '—', texto: t, em: new Date().toISOString() }); this.novoComentario = ''; this.salvarCard(); this.scrollChat(); },
-    removeComentario(id) { this.cardRef.comentarios = this.cardRef.comentarios.filter(x => x.id !== id); this.salvarCard(); },
+    // União de comentários por id (servidor manda; preserva os otimistas ainda não confirmados).
+    mergeComs(server, local) { server = Array.isArray(server) ? server : []; local = Array.isArray(local) ? local : []; const ids = new Set(server.map(c => c && c.id).filter(Boolean)); return [...server, ...local.filter(c => c && c.id && !ids.has(c.id))]; },
+    addComentario() {
+      const t = (this.novoComentario || '').trim(); if (!t) return;
+      const card = this.cardRef; if (!card) return;
+      if (!Array.isArray(card.comentarios)) card.comentarios = [];
+      const c = { id: MD.uid(), autor: (this.usuario && this.usuario.nome) || '—', texto: t, em: new Date().toISOString() };
+      card.comentarios.push(c); this.novoComentario = ''; this.scrollChat(); // otimista: aparece na hora
+      if (!card.id) { this.salvarCard(); return; }
+      // Envio ATÔMICO (append no servidor) — não salva o card inteiro por cima, não apaga msg de ninguém.
+      this.api('POST', '/projetos/' + card.id + '/comentario', { id: c.id, texto: t })
+        .then(r => { if (r && r.dados && this.cardRef && this.cardRef.id === card.id) { this.cardRef.comentarios = this.mergeComs(r.dados.comentarios, this.cardRef.comentarios); this.scrollChat(); } })
+        .catch(() => { card.comentarios = card.comentarios.filter(x => x.id !== c.id); alert('Não consegui enviar a mensagem. Tenta de novo.'); });
+    },
+    removeComentario(id) {
+      const card = this.cardRef; if (!card) return;
+      card.comentarios = (card.comentarios || []).filter(x => x.id !== id); // otimista
+      if (!card.id) { this.salvarCard(); return; }
+      this.api('POST', '/projetos/' + card.id + '/comentario/remover', { comentarioId: id })
+        .then(r => { if (r && r.dados && this.cardRef && this.cardRef.id === card.id) this.cardRef.comentarios = r.dados.comentarios || []; })
+        .catch(() => {});
+    },
     horaCurta(iso) { if (!iso) return ''; try { return new Date(iso).toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } },
     scrollChat() { this.$nextTick(() => { const el = document.getElementById('chat-scroll'); if (el) el.scrollTop = el.scrollHeight; }); },
     // atualiza só as mensagens do card aberto (sensação de tempo real)
