@@ -2448,6 +2448,101 @@ document.addEventListener('alpine:init', () => {
         })
         .sort((a, b) => (Number(b.gasto) || 0) - (Number(a.gasto) || 0));
     },
+
+    // ═══════════ PAINÉIS ROBUSTOS — Google Ads & Meta Ads (Tráfego › Contas) ═══════════
+    _adsClientes(kind) { return (this.clients || []).filter(c => this.fazTrafego(c) && c[kind]); }, // kind: 'adsAuto' | 'adsMetaAuto'
+    _adsTotais(kind) {
+      const cs = this._adsClientes(kind);
+      let gasto = 0, leads = 0, cliques = 0, impressoes = 0, camp = 0, saldoTotal = 0, comSaldo = 0;
+      for (const c of cs) {
+        const a = c[kind] || {};
+        gasto += Number(a.gasto) || 0; leads += Number(a.leads) || 0; cliques += Number(a.cliques) || 0;
+        impressoes += Number(a.impressoes) || 0; camp += Number(a.campanhasAtivas) || 0;
+        if (a.saldo != null) { saldoTotal += Number(a.saldo) || 0; comSaldo++; }
+      }
+      return {
+        gasto, leads, cliques, impressoes, camp, contas: cs.length, saldoTotal, comSaldo,
+        ctr: impressoes ? Math.round((cliques / impressoes) * 1000) / 10 : 0,
+        cpc: cliques ? Math.round((gasto / cliques) * 100) / 100 : 0,
+        cpl: leads ? Math.round((gasto / leads) * 100) / 100 : 0,
+        txConv: cliques ? Math.round((leads / cliques) * 1000) / 10 : 0,
+      };
+    },
+    get gAdsTotais() { return this._adsTotais('adsAuto'); },
+    get mAdsTotais() { return this._adsTotais('adsMetaAuto'); },
+    // Série diária agregada (soma por data) para o gráfico de tendência (últimos 30 pontos)
+    _adsTrend(histKey) {
+      const map = {};
+      for (const c of (this.clients || [])) {
+        if (!this.fazTrafego(c)) continue;
+        for (const s of (Array.isArray(c[histKey]) ? c[histKey] : [])) {
+          if (!s || !s.data) continue;
+          (map[s.data] = map[s.data] || { gasto: 0, leads: 0 });
+          map[s.data].gasto += Number(s.gasto) || 0; map[s.data].leads += Number(s.leads) || 0;
+        }
+      }
+      return Object.keys(map).sort().slice(-30).map(d => ({ data: d, gasto: Math.round(map[d].gasto * 100) / 100, leads: map[d].leads }));
+    },
+    get gAdsTrend() { return this._adsTrend('adsHist'); },
+    get mAdsTrend() { return this._adsTrend('adsMetaHist'); },
+    // "points" de uma polyline SVG (área wxh) a partir de uma métrica da série (normalizada ao próprio máx.)
+    adsTrendPts(series, key, w, h) {
+      const vals = (series || []).map(s => Number(s[key]) || 0);
+      if (!vals.length) return '';
+      const max = Math.max(1, ...vals), n = vals.length;
+      return vals.map((v, i) => {
+        const x = n > 1 ? (i / (n - 1)) * w : w / 2;
+        const y = h - (v / max) * (h - 4) - 2;
+        return (Math.round(x * 10) / 10) + ',' + (Math.round(y * 10) / 10);
+      }).join(' ');
+    },
+    // Linhas da tabela META (espelha trafResultados do Google), enriquecidas + Δleads via adsMetaHist
+    get metaContasRows() {
+      const d7 = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+      return this._adsClientes('adsMetaAuto').map(c => {
+        const a = c.adsMetaAuto, h = Array.isArray(c.adsMetaHist) ? c.adsMetaHist : [];
+        const antigo = h.filter(x => x.data <= d7).slice(-1)[0];
+        return {
+          id: c.id, nome: c.empresa || c.nome || '—', leads: a.leads, custoLead: a.custoLead, gasto: a.gasto,
+          cliques: a.cliques, impressoes: a.impressoes, ctr: a.ctr, cpc: a.cpcMedio,
+          campanhasAtivas: a.campanhasAtivas, campanhas: Array.isArray(a.campanhas) ? a.campanhas : [], saldo: (a.saldo ?? null),
+          dLeads: antigo ? (Number(a.leads) || 0) - (Number(antigo.leads) || 0) : null, em: a.em || '',
+        };
+      }).sort((a, b) => (Number(b.gasto) || 0) - (Number(a.gasto) || 0));
+    },
+    // Linhas GOOGLE enriquecidas (cliques/impressões/ctr/cpc do snapshot) para o painel robusto
+    get googleContasRows() {
+      return this.trafContasRows.map(r => {
+        const c = (this.clients || []).find(x => x.id === r.id), a = c && c.adsAuto;
+        return { ...r, cliques: r.cliques ?? (a ? a.cliques : null), impressoes: r.impressoes ?? (a ? a.impressoes : null), ctr: r.ctr ?? (a ? a.ctr : null), cpc: r.cpc ?? (a ? a.cpcMedio : null) };
+      });
+    },
+    // Alertas de saldo filtrados por canal (pro badge/aviso de cada painel)
+    adsAlertasCanal(canal) {
+      const sa = this.trafSaldoAlertas;
+      const f = (l) => (l || []).filter(x => x.canal === canal);
+      return { sem: f(sa.sem), baixo: f(sa.baixo), semInfo: canal === 'Google' ? (sa.semInfo || []) : [] };
+    },
+    // Linha de KPIs (recheada) de um painel. canal: 'google' | 'meta'
+    adsKpis(canal) {
+      const t = canal === 'meta' ? this.mAdsTotais : this.gAdsTotais;
+      const cur = (v) => this.mascCur(v || 0);
+      const num = (v) => Number(v || 0).toLocaleString('pt-BR');
+      return [
+        { l: 'Gasto', v: cur(t.gasto), bg: '#F4F8FE', c: '#1967D2', i: 'ph-currency-circle-dollar' },
+        { l: 'Leads', v: num(t.leads), bg: '#F3FAF6', c: '#188038', i: 'ph-user-plus' },
+        { l: 'Custo / lead', v: t.cpl ? cur(t.cpl) : '—', bg: '#FEFBEF', c: '#B06000', i: 'ph-target' },
+        { l: 'Cliques', v: num(t.cliques), bg: '#F4F8FE', c: '#1967D2', i: 'ph-cursor-click' },
+        { l: 'Impressões', v: num(t.impressoes), bg: '#F8F7F3', c: '#5F5E5A', i: 'ph-eye' },
+        { l: 'CTR médio', v: (t.ctr || 0) + '%', bg: '#F3FAF6', c: '#188038', i: 'ph-percent' },
+        { l: 'CPC médio', v: t.cpc ? cur(t.cpc) : '—', bg: '#FEF6F4', c: '#C5221F', i: 'ph-hand-coins' },
+        { l: 'Taxa de conversão', v: (t.txConv || 0) + '%', bg: '#FEFBEF', c: '#B06000', i: 'ph-trend-up' },
+        { l: 'Campanhas ativas', v: num(t.camp), bg: '#F4F8FE', c: '#1967D2', i: 'ph-megaphone' },
+        { l: 'Contas', v: num(t.contas), bg: '#F8F7F3', c: '#5F5E5A', i: 'ph-buildings' },
+        { l: 'Saldo total', v: cur(t.saldoTotal), bg: '#F3FAF6', c: '#188038', i: 'ph-wallet' },
+      ];
+    },
+
     // Convite por WhatsApp — abre o zap do cliente com a mensagem pronta.
     conviteZapMeet() {
       const f = this.eventoForm;

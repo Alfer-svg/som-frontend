@@ -3317,9 +3317,13 @@
 
         <div class="tabs">
           <div class="tab" :class="trafTab==='rotina'?'active':''" @click="trafTab='rotina'"><i class="ph ph-check-square ic-ph"></i> Rotina do dia</div>
-          <div class="tab" :class="trafTab==='contas'?'active':''" @click="trafTab='contas'">
-            <i class="ph ph-wallet ic-ph"></i> Contas &amp; Campanhas
-            <span x-show="trafSaldoAlertas.sem.length" class="badge fs-11 fw-800" style="background:#fee2e2;color:#dc2626;margin-left:4px" x-text="trafSaldoAlertas.sem.length"></span>
+          <div class="tab" :class="trafTab==='gads'?'active':''" @click="trafTab='gads'">
+            <i class="ph ph-google-logo ic-ph" style="color:#4285F4"></i> Contas Google
+            <span x-show="adsAlertasCanal('Google').sem.length" class="badge fs-11 fw-800" style="background:#fee2e2;color:#dc2626;margin-left:4px" x-text="adsAlertasCanal('Google').sem.length"></span>
+          </div>
+          <div class="tab" :class="trafTab==='mads'?'active':''" @click="trafTab='mads'">
+            <i class="ph ph-meta-logo ic-ph" style="color:#0866FF"></i> Contas Meta
+            <span x-show="adsAlertasCanal('Meta').sem.length" class="badge fs-11 fw-800" style="background:#fee2e2;color:#dc2626;margin-left:4px" x-text="adsAlertasCanal('Meta').sem.length"></span>
           </div>
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
@@ -3574,60 +3578,51 @@
           </div>
         </div>
 
-        <!-- ─────── Aba: Contas & Campanhas (saldos + resultados) ─────── -->
-        <div x-show="trafTab==='contas'">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px">
-            <div class="card kpi" style="background:#F8F7F3">
-              <div class="kpi-label"><span class="kpi-ico" style="background:#ECEBE4;color:#5F5E5A"><i class="ph ph-car-battery ic-ph"></i></span> Saldo das contas</div>
-              <div style="display:flex;align-items:center;gap:18px;margin-top:2px;flex-wrap:wrap">
-                <div style="display:flex;align-items:center;gap:6px" title="Sem saldo (R$ 0 ou menos)">
-                  <i class="ph ph-battery-empty ic-ph" style="color:#EA4335;font-size:24px"></i>
-                  <span style="font-size:24px;font-weight:500;letter-spacing:-.5px" :style="trafSaldoAlertas.sem.length?'color:#EA4335':'color:var(--text)'" x-text="trafSaldoAlertas.sem.length"></span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px" title="Saldo baixo (menos de R$ 200)">
-                  <i class="ph ph-battery-low ic-ph" style="color:#F9A825;font-size:24px"></i>
-                  <span style="font-size:24px;font-weight:500;letter-spacing:-.5px" :style="trafSaldoAlertas.baixo.length?'color:#B06000':'color:var(--text)'" x-text="trafSaldoAlertas.baixo.length"></span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px" title="Saldo normal (R$ 200 ou mais)">
-                  <i class="ph ph-battery-full ic-ph" style="color:#34A853;font-size:24px"></i>
-                  <span style="font-size:24px;font-weight:500;letter-spacing:-.5px" :style="trafSaldoAlertas.ok.length?'color:#15803d':'color:var(--text)'" x-text="trafSaldoAlertas.ok.length"></span>
-                </div>
+        <!-- ═══════ Painel CONTAS GOOGLE (KPIs + tendência + resultados por conta) ═══════ -->
+        <div x-show="trafTab==='gads'">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:12px">
+            <template x-for="k in adsKpis('google')" :key="'gk'+k.l">
+              <div class="card kpi" :style="'background:'+k.bg">
+                <div class="kpi-label"><span class="kpi-ico" :style="'background:#fff;color:'+k.c"><i class="ph ic-ph" :class="k.i"></i></span> <span x-text="k.l"></span></div>
+                <div class="kpi-value fs-22" x-text="k.v"></div>
               </div>
+            </template>
+          </div>
+          <div class="card" style="padding:12px 14px;margin-bottom:14px" x-show="gAdsTrend.length>1">
+            <div class="flex items-center justify-between mb-1">
+              <div class="fw-600 fs-13"><i class="ph ph-chart-line ic-ph" style="color:#4285F4"></i> Tendência <span class="text-3 fs-11 fw-400" x-text="'· '+gAdsTrend.length+' dias'"></span></div>
+              <div class="flex items-center gap-3 fs-11 text-3"><span><i class="ph ph-circle-fill" style="color:#93b4f5;font-size:9px"></i> Gasto</span><span><i class="ph ph-circle-fill" style="color:#8ed0a9;font-size:9px"></i> Leads</span></div>
             </div>
-            <div class="card kpi" style="background:#F4F8FE">
-              <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-google-logo ic-ph"></i></span> Campanhas ativas <span style="font-size:10px">(Google Ads)</span></div>
-              <div class="kpi-value" x-text="trafCampanhasAtivas"></div>
-            </div>
-            <div class="card kpi" style="background:#F4F8FE" x-show="trafResultadosMeta.length">
-              <div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#0866FF"><i class="ph ph-meta-logo ic-ph"></i></span> Campanhas ativas <span style="font-size:10px">(Meta Ads)</span> <span class="badge fs-11 fw-800" x-show="trafMetaEhDemo" style="background:#fef3c7;color:#92400e;margin-left:2px">DEMO</span></div>
-              <div class="kpi-value" x-text="trafCampanhasMeta"></div>
-            </div>
+            <svg viewBox="0 0 600 82" preserveAspectRatio="none" style="width:100%;height:82px;overflow:visible">
+              <polyline :points="adsTrendPts(gAdsTrend,'gasto',600,82)" fill="none" stroke="#93b4f5" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+              <polyline :points="adsTrendPts(gAdsTrend,'leads',600,82)" fill="none" stroke="#8ed0a9" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+            </svg>
           </div>
 
-          <div class="card" style="padding:14px;margin-bottom:14px" x-show="trafSaldoAlertas.sem.length || trafSaldoAlertas.baixo.length || trafSaldoAlertas.semInfo.length">
+          <div class="card" style="padding:14px;margin-bottom:14px" x-show="adsAlertasCanal('Google').sem.length || adsAlertasCanal('Google').baixo.length || adsAlertasCanal('Google').semInfo.length">
             <div class="fw-600 fs-13 mb-2"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i> Contas precisando de atenção</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
-              <div x-show="trafSaldoAlertas.semInfo.length">
+              <div x-show="adsAlertasCanal('Google').semInfo.length">
                 <div class="fs-12 fw-700 mb-1" style="color:#6b7280">Campanha rodando, saldo não informado</div>
-                <template x-for="a in trafSaldoAlertas.semInfo" :key="'si'+a.id">
+                <template x-for="a in adsAlertasCanal('Google').semInfo" :key="'si'+a.id">
                   <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
                     <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
                     <span class="text-3 fs-11" style="white-space:nowrap">preencher na ficha</span>
                   </div>
                 </template>
               </div>
-              <div x-show="trafSaldoAlertas.sem.length">
+              <div x-show="adsAlertasCanal('Google').sem.length">
                 <div class="fs-12 fw-700 mb-1" style="color:#dc2626">Sem saldo</div>
-                <template x-for="a in trafSaldoAlertas.sem" :key="'ss'+a.canal+a.id">
+                <template x-for="a in adsAlertasCanal('Google').sem" :key="'ss'+a.canal+a.id">
                   <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
                     <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
                     <span class="fw-700" style="color:#dc2626;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
                   </div>
                 </template>
               </div>
-              <div x-show="trafSaldoAlertas.baixo.length">
+              <div x-show="adsAlertasCanal('Google').baixo.length">
                 <div class="fs-12 fw-700 mb-1" style="color:#F9A825">Saldo baixo — abaixo de R$ 200</div>
-                <template x-for="a in trafSaldoAlertas.baixo" :key="'sb'+a.canal+a.id">
+                <template x-for="a in adsAlertasCanal('Google').baixo" :key="'sb'+a.canal+a.id">
                   <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
                     <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
                     <span class="fw-700" style="color:#F9A825;white-space:nowrap" x-text="mascCur(a.saldo)"></span>
@@ -3714,31 +3709,104 @@
             </div>
           </div>
 
-          <!-- Resultados Meta Ads — tela pronta; números FICTÍCIOS até a integração real -->
-          <div class="card" style="padding:0;margin-top:14px;overflow:hidden" x-show="trafResultadosMeta.length">
-            <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-600 fs-13 flex items-center" >
-              <span><i class="ph ph-meta-logo ic-ph" style="color:#0866FF"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Meta Ads, mês corrente</span></span>
-              <span class="badge fs-11 fw-800" x-show="trafMetaEhDemo" style="background:#fef3c7;color:#92400e;margin-left:8px" title="A integração do Meta Ads ainda não foi ligada — estes números são de exemplo, só pra visualizar a tela.">⚠️ DEMO — números fictícios</span>
-            </div>
-            <div :style="'overflow-x:auto'+(trafMetaEhDemo ? ';opacity:.75' : '')">
-              <table class="table">
-                <thead><tr><th>Cliente</th><th>Leads</th><th>Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas ativas</th></tr></thead>
-                <tbody>
-                  <template x-for="r in trafResultadosMeta" :key="'meta'+r.id">
-                    <tr>
-                      <td class="fw-700" x-text="r.nome"></td>
-                      <td x-text="r.leads ?? '—'"></td>
-                      <td><span x-show="r.dLeads !== null" :style="r.dLeads>=0?'color:#15803d':'color:#b91c1c'" x-text="(r.dLeads>=0?'+':'')+r.dLeads"></span><span x-show="r.dLeads === null" class="text-3">—</span></td>
-                      <td x-text="r.custoLead != null ? mascCur(r.custoLead) : '—'"></td>
-                      <td x-text="r.gasto != null ? mascCur(r.gasto) : '—'"></td>
-                      <td x-text="r.campanhas ?? '—'"></td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-            </div>
-            <div x-show="trafMetaEhDemo" class="text-3 fs-11" style="padding:8px 14px;border-top:1px solid var(--border)">A integração já está pronta no servidor. Falta liberar a permissão <b>ads_read</b> no token do sistema da Meta (Configurações › Integrações) e compartilhar as contas de anúncio dos clientes com o Business Manager da Maracatu. Feito isso, a tabela troca sozinha pelos números reais (atualiza de hora em hora).</div>
+        </div>
+
+        <!-- ═══════ Painel CONTAS META (KPIs + tendência + resultados por conta) ═══════ -->
+        <div x-show="trafTab==='mads'">
+          <div x-show="!mAdsTotais.contas" class="card" style="padding:24px;text-align:center">
+            <i class="ph ph-meta-logo" style="font-size:30px;color:#0866FF"></i>
+            <div class="fw-600 fs-14" style="margin-top:8px">Nenhuma conta Meta com dados ainda</div>
+            <div class="text-3 fs-12" style="margin-top:4px;max-width:540px;margin:4px auto 0">Assim que o snapshot do Meta Ads rodar (system token com <b>ads_read</b> + contas de anúncio compartilhadas com o BM da Maracatu), os números reais aparecem aqui — atualizados de hora em hora.</div>
           </div>
+          <template x-if="mAdsTotais.contas">
+            <div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:12px">
+                <template x-for="k in adsKpis('meta')" :key="'mk'+k.l">
+                  <div class="card kpi" :style="'background:'+k.bg">
+                    <div class="kpi-label"><span class="kpi-ico" :style="'background:#fff;color:'+k.c"><i class="ph ic-ph" :class="k.i"></i></span> <span x-text="k.l"></span></div>
+                    <div class="kpi-value fs-22" x-text="k.v"></div>
+                  </div>
+                </template>
+              </div>
+              <div class="card" style="padding:12px 14px;margin-bottom:14px" x-show="mAdsTrend.length>1">
+                <div class="flex items-center justify-between mb-1">
+                  <div class="fw-600 fs-13"><i class="ph ph-chart-line ic-ph" style="color:#0866FF"></i> Tendência <span class="text-3 fs-11 fw-400" x-text="'· '+mAdsTrend.length+' dias'"></span></div>
+                  <div class="flex items-center gap-3 fs-11 text-3"><span><i class="ph ph-circle-fill" style="color:#93b4f5;font-size:9px"></i> Gasto</span><span><i class="ph ph-circle-fill" style="color:#8ed0a9;font-size:9px"></i> Leads</span></div>
+                </div>
+                <svg viewBox="0 0 600 82" preserveAspectRatio="none" style="width:100%;height:82px;overflow:visible">
+                  <polyline :points="adsTrendPts(mAdsTrend,'gasto',600,82)" fill="none" stroke="#93b4f5" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+                  <polyline :points="adsTrendPts(mAdsTrend,'leads',600,82)" fill="none" stroke="#8ed0a9" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
+                </svg>
+              </div>
+              <div class="card" style="padding:14px;margin-bottom:14px" x-show="adsAlertasCanal('Meta').sem.length || adsAlertasCanal('Meta').baixo.length">
+                <div class="fw-600 fs-13 mb-2"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i> Contas precisando de atenção</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+                  <div x-show="adsAlertasCanal('Meta').sem.length">
+                    <div class="fs-12 fw-700 mb-1" style="color:#dc2626">Sem saldo</div>
+                    <template x-for="a in adsAlertasCanal('Meta').sem" :key="'mss'+a.id">
+                      <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)"><span class="truncate fw-700" x-text="a.nome"></span><span class="fw-700" style="color:#dc2626;white-space:nowrap" x-text="mascCur(a.saldo)"></span></div>
+                    </template>
+                  </div>
+                  <div x-show="adsAlertasCanal('Meta').baixo.length">
+                    <div class="fs-12 fw-700 mb-1" style="color:#F9A825">Saldo baixo — abaixo de R$ 200</div>
+                    <template x-for="a in adsAlertasCanal('Meta').baixo" :key="'msb'+a.id">
+                      <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)"><span class="truncate fw-700" x-text="a.nome"></span><span class="fw-700" style="color:#F9A825;white-space:nowrap" x-text="mascCur(a.saldo)"></span></div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+              <div class="card" style="padding:0;overflow:hidden">
+                <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-600 fs-13"><i class="ph ph-meta-logo ic-ph" style="color:#0866FF"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Meta Ads, mês corrente</span></div>
+                <div style="overflow-x:auto">
+                  <table class="table">
+                    <thead><tr><th style="width:26px"></th><th>Cliente</th><th>Leads</th><th>Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Cliques</th><th>Impressões</th><th>CTR</th><th>CPC</th><th>Saldo</th><th>Campanhas</th></tr></thead>
+                    <tbody>
+                      <template x-for="r in metaContasRows" :key="'mc'+r.id">
+                        <tr>
+                          <td><button x-show="r.campanhas && r.campanhas.length" class="btn btn-icon btn-ghost btn-sm" @click="trafCampToggle('m'+r.id)" :title="trafCampAberta['m'+r.id]?'Recolher campanhas':'Ver campanhas'"><i class="ph ic-ph" :class="trafCampAberta['m'+r.id]?'ph-caret-down':'ph-caret-right'"></i></button></td>
+                          <td class="fw-700" x-text="r.nome"></td>
+                          <td x-text="r.leads ?? '—'"></td>
+                          <td><span x-show="r.dLeads!==null" :style="r.dLeads>=0?'color:#15803d':'color:#b91c1c'" x-text="(r.dLeads>=0?'+':'')+r.dLeads"></span><span x-show="r.dLeads===null" class="text-3">—</span></td>
+                          <td x-text="r.custoLead!=null?mascCur(r.custoLead):'—'"></td>
+                          <td x-text="r.gasto!=null?mascCur(r.gasto):'—'"></td>
+                          <td x-text="(r.cliques??0).toLocaleString('pt-BR')"></td>
+                          <td x-text="(r.impressoes??0).toLocaleString('pt-BR')"></td>
+                          <td x-text="(r.ctr!=null?r.ctr:0)+'%'"></td>
+                          <td x-text="r.cpc!=null?mascCur(r.cpc):'—'"></td>
+                          <td><span x-show="r.saldo!=null" style="font-weight:700;white-space:nowrap" :style="'color:'+(r.saldo<=0?'#dc2626':(r.saldo<200?'#F9A825':'#15803d'))" x-text="mascCur(r.saldo)"></span><span x-show="r.saldo==null" class="text-3">—</span></td>
+                          <td><span x-text="r.campanhasAtivas ?? '—'"></span><span class="text-3 fs-11" x-show="typeof r.campanhasAtivas==='number'"> ativas</span></td>
+                        </tr>
+                        <template x-if="trafCampAberta['m'+r.id] && r.campanhas && r.campanhas.length">
+                          <tr>
+                            <td></td>
+                            <td colspan="11" style="padding:0 0 8px 0">
+                              <table style="width:100%;font-size:12px;background:var(--surface-2);border-radius:8px">
+                                <thead><tr class="text-3"><th style="text-align:left;padding:6px 10px">Campanha</th><th style="padding:6px">Status</th><th style="padding:6px">Leads</th><th style="padding:6px">Gasto</th><th style="padding:6px">Cliques</th><th style="padding:6px">Impr.</th><th style="padding:6px">CTR</th></tr></thead>
+                                <tbody>
+                                  <template x-for="cp in r.campanhas" :key="'mcp'+r.id+cp.nome">
+                                    <tr>
+                                      <td style="padding:5px 10px" class="truncate" x-text="cp.nome"></td>
+                                      <td style="padding:5px 6px;text-align:center"><span class="badge fs-11" :style="cp.status==='ACTIVE'?'background:#dcfce7;color:#15803d':'background:var(--surface);color:var(--text-3)'" x-text="cp.status==='ACTIVE'?'ativa':(cp.status?cp.status.toLowerCase().replace(/_/g,' '):'—')"></span></td>
+                                      <td style="padding:5px 6px;text-align:center" x-text="cp.leads ?? '—'"></td>
+                                      <td style="padding:5px 6px;text-align:center" x-text="mascCur(cp.gasto)"></td>
+                                      <td style="padding:5px 6px;text-align:center" x-text="cp.cliques"></td>
+                                      <td style="padding:5px 6px;text-align:center" x-text="(cp.impressoes??0).toLocaleString('pt-BR')"></td>
+                                      <td style="padding:5px 6px;text-align:center" x-text="cp.ctr+'%'"></td>
+                                    </tr>
+                                  </template>
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        </template>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+                <div x-show="!metaContasRows.length" class="text-3 fs-12" style="padding:14px;text-align:center">Nenhum cliente com Meta Ads sincronizado.</div>
+              </div>
+            </div>
+          </template>
         </div>
 
         <!-- ─────── Aba: Indicadores do gestor (só admin) ─────── -->
@@ -5747,7 +5815,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=405"></script>
+<script src="js/app.js?v=406"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
