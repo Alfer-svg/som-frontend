@@ -546,7 +546,7 @@ document.addEventListener('alpine:init', () => {
     criDrag: null, criAlvo: null, // arrastar criativos pra reordenar (galeria do post)
     crmStages: STAGES.map(s => ({ ...s })), crmEdit: false, dragLeadId: null, dropStage: null, dragStageId: '', // CRM: colunas editáveis + drag
     ACAO_TIPOS, novaAcao: { tipo: 'Ligar', data: '', descricao: '' }, mostrarAlertas: true, // CRM: ações/follow-ups do lead + alertas
-    cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, membroDrop: false, novoItemCheck: '', // card-detalhe Trello
+    cardModal: false, cardRef: null, lightbox: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, membroDrop: false, novoItemCheck: '', // card-detalhe Trello
     historicoModal: false, historicoItens: [], historicoCardNome: '', // histórico de criação/alterações do card
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
     cloudCfg: { cloud: '', preset: '' }, uploadando: false, // storage de arquivos (Cloudinary)
@@ -4695,6 +4695,19 @@ ${this._docFoot()}
       catch (e) { alert(e.message); }
     },
     ehImagem(url) { return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url || ''); },
+    // Abre o criativo (imagem) num lightbox/popup — em vez de nova aba.
+    abrirLightbox(u) { this.lightbox = u || null; },
+    // Baixa o criativo. Cloudinary: injeta fl_attachment (força download, dispensa CORS).
+    // Outros hosts: tenta o atributo download (funciona se same-origin; senão abre em aba).
+    baixarCriativo(u) {
+      if (!u) return;
+      let url = u, nome = 'criativo';
+      try { nome = decodeURIComponent(String(u).split('?')[0].split('/').pop() || 'criativo') || 'criativo'; } catch (e) {}
+      if (/res\.cloudinary\.com\/.+?\/(image|video|raw)\/upload\//.test(u)) url = u.replace('/upload/', '/upload/fl_attachment/');
+      const a = document.createElement('a');
+      a.href = url; a.download = nome; a.target = '_blank'; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); a.remove();
+    },
     // ── Fase 3: enviar pro cliente aprovar ──
     // Monta o snapshot dos posts da semana com as imagens/legendas ATUAIS, preservando
     // as decisões já tomadas pelo cliente (status/ajuste) — casadas por tema+data.
