@@ -502,6 +502,7 @@ document.addEventListener('alpine:init', () => {
     // Filtro de período da aba Contas & Campanhas: 'mes' (snapshot instantâneo) | '7' | '15' | '30' | 'custom'
     trafContasPer: 'mes', trafContasIni: '', trafContasFim: '',
     trafContasLive: null, trafContasLoading: false, trafContasErro: '', trafCampAberta: {},
+    metaContasLive: null, metaContasLoading: false, metaContasErro: '', // consolidado Meta ao vivo (período)
     adsCliente: '', // seletor de cliente dos painéis Google/Meta ('' = todos)
     trafGerenciarAberto: false, // painel de habilitar/desabilitar clientes do tráfego
     trafCliSel: '',         // cliente selecionado no checklist (as 8 tarefas são POR CLIENTE)
@@ -2398,9 +2399,28 @@ document.addEventListener('alpine:init', () => {
     _isoDiasAtras(n) { return new Date(Date.now() - n * 864e5 - 3 * 3600e3).toISOString().slice(0, 10); },
     async trafSetPeriodo(p) {
       this.trafContasPer = p;
-      if (p === 'mes') { this.trafContasLive = null; this.trafContasErro = ''; return; }
+      if (p === 'mes') { this.trafContasLive = null; this.metaContasLive = null; this.trafContasErro = ''; this.metaContasErro = ''; return; }
       if (p === 'custom') { if (!this.trafContasIni) this.trafContasIni = this._isoDiasAtras(7); if (!this.trafContasFim) this.trafContasFim = this._isoDiasAtras(0); return; } // espera Aplicar
-      await this.carregarContasPeriodo();
+      await this._carregarAmbosPeriodo();
+    },
+    // Carrega os dois consolidados ao vivo (Google + Meta) da janela atual — ambos cacheados no back.
+    async _carregarAmbosPeriodo() { await Promise.allSettled([this.carregarContasPeriodo(), this.carregarMetaPeriodo()]); },
+    // Consolidado Meta ao vivo (período) — /meta-ads/consolidado (leve, cache 10 min)
+    async carregarMetaPeriodo() {
+      const p = this.trafContasPer;
+      let qs = '';
+      if (p === 'custom') {
+        if (!this.trafContasIni || !this.trafContasFim) return;
+        qs = '?ini=' + this.trafContasIni + '&fim=' + this.trafContasFim;
+      } else { qs = '?ini=' + this._isoDiasAtras(Number(p) - 1) + '&fim=' + this._isoDiasAtras(0); }
+      this.metaContasLoading = true; this.metaContasErro = ''; this.metaContasLive = null;
+      try {
+        const r = await this.api('GET', '/meta-ads/consolidado' + qs);
+        if (!r || r.configurado === false) this.metaContasErro = 'Meta Ads não configurado.';
+        else if (r.erro) this.metaContasErro = 'Meta: ' + r.erro;
+        else this.metaContasLive = r;
+      } catch (e) { this.metaContasErro = e.message || 'Falha ao consultar o Meta Ads.'; }
+      this.metaContasLoading = false;
     },
     async carregarContasPeriodo() {
       const p = this.trafContasPer;
@@ -2476,8 +2496,34 @@ document.addEventListener('alpine:init', () => {
         txConv: cliques ? Math.round((leads / cliques) * 1000) / 10 : 0,
       };
     },
-    get gAdsTotais() { return this._adsTotais('adsAuto'); },
-    get mAdsTotais() { return this._adsTotais('adsMetaAuto'); },
+    // Totais a partir das linhas ao vivo (consolidado por período). Saldo vem sempre
+    // do snapshot atual (não é do período). Filtra pelo cliente selecionado.
+    _totaisDeRows(rows, kind) {
+      const rs = (rows || []).filter(r => !r.erro && (!this.adsCliente || r.id === this.adsCliente));
+      let gasto = 0, leads = 0, cliques = 0, impressoes = 0, camp = 0, saldoTotal = 0, comSaldo = 0;
+      for (const r of rs) {
+        gasto += Number(r.gasto) || 0; leads += Number(r.leads) || 0; cliques += Number(r.cliques) || 0;
+        impressoes += Number(r.impressoes) || 0; camp += Number(r.campanhasAtivas) || 0;
+        const c = (this.clients || []).find(x => x.id === r.id), a = c && c[kind];
+        if (a && a.saldo != null) { saldoTotal += Number(a.saldo) || 0; comSaldo++; }
+      }
+      return {
+        gasto, leads, cliques, impressoes, camp, contas: rs.length, saldoTotal, comSaldo,
+        ctr: impressoes ? Math.round((cliques / impressoes) * 1000) / 10 : 0,
+        cpc: cliques ? Math.round((gasto / cliques) * 100) / 100 : 0,
+        cpl: leads ? Math.round((gasto / leads) * 100) / 100 : 0,
+        txConv: cliques ? Math.round((leads / cliques) * 1000) / 10 : 0,
+      };
+    },
+    // Totais: 'mes' usa snapshot; períodos usam o consolidado ao vivo (rows).
+    get gAdsTotais() {
+      if (this.trafContasPer === 'mes') return this._adsTotais('adsAuto');
+      return this._totaisDeRows((this.trafContasLive && this.trafContasLive.rows) || [], 'adsAuto');
+    },
+    get mAdsTotais() {
+      if (this.trafContasPer === 'mes') return this._adsTotais('adsMetaAuto');
+      return this._totaisDeRows((this.metaContasLive && this.metaContasLive.rows) || [], 'adsMetaAuto');
+    },
     // Série diária agregada (soma por data) para o gráfico de tendência (últimos 30 pontos)
     _adsTrend(histKey) {
       const map = {};
@@ -2507,6 +2553,14 @@ document.addEventListener('alpine:init', () => {
     },
     // Linhas da tabela META (espelha trafResultados do Google), enriquecidas + Δleads via adsMetaHist
     get metaContasRows() {
+      // Períodos (≠ mês): consolidado ao vivo (leve — sem campanhas/saldo do período; saldo do snapshot)
+      if (this.trafContasPer !== 'mes') {
+        const rows = ((this.metaContasLive && this.metaContasLive.rows) || []).filter(r => !r.erro && (!this.adsCliente || r.id === this.adsCliente));
+        return rows.map(r => {
+          const c = (this.clients || []).find(x => x.id === r.id), a = c && c.adsMetaAuto;
+          return { ...r, cpc: r.cpcMedio ?? r.cpc ?? null, saldo: a ? (a.saldo ?? null) : null, dLeads: null, campanhas: Array.isArray(r.campanhas) ? r.campanhas : [] };
+        }).sort((a, b) => (Number(b.gasto) || 0) - (Number(a.gasto) || 0));
+      }
       const d7 = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
       return this._adsClientes('adsMetaAuto').map(c => {
         const a = c.adsMetaAuto, h = Array.isArray(c.adsMetaHist) ? c.adsMetaHist : [];

@@ -3580,13 +3580,31 @@
 
         <!-- ═══════ Painel CONTAS GOOGLE (KPIs + tendência + resultados por conta) ═══════ -->
         <div x-show="trafTab==='gads'">
-          <div class="flex items-center gap-2" style="margin-bottom:12px;flex-wrap:wrap">
-            <span class="text-3 fs-12"><i class="ph ph-funnel ic-ph"></i> Cliente</span>
-            <select class="form-select" style="max-width:300px;font-weight:600" x-model="adsCliente">
-              <option value="">Todos os clientes</option>
-              <template x-for="c in adsClientesLista" :key="'acg'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
-            </select>
-            <button x-show="adsCliente" class="btn btn-ghost btn-sm" @click="adsCliente=''" title="Ver todos"><i class="ph ph-x ic-ph"></i> limpar</button>
+          <div class="card" style="padding:10px 12px;margin-bottom:12px">
+            <div class="flex items-center gap-2" style="flex-wrap:wrap">
+              <span class="text-3 fs-12"><i class="ph ph-funnel ic-ph"></i> Cliente</span>
+              <select class="form-select fs-13" style="max-width:240px;font-weight:600" x-model="adsCliente">
+                <option value="">Todos os clientes</option>
+                <template x-for="c in adsClientesLista" :key="'acg'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+              </select>
+              <span class="text-3 fs-12" style="margin-left:8px"><i class="ph ph-calendar-blank ic-ph"></i> Período</span>
+              <template x-for="pp in [['mes','Mês'],['7','7d'],['15','15d'],['30','30d']]" :key="'gper'+pp[0]">
+                <button class="btn btn-sm" :style="trafContasPer===pp[0]?'background:#2563eb;color:#fff;border-color:#2563eb':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo(pp[0])" x-text="pp[1]"></button>
+              </template>
+              <button class="btn btn-sm" :style="trafContasPer==='custom'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Intervalo</button>
+              <span x-show="trafContasLoading||metaContasLoading" class="text-3 fs-12"><i class="ph ph-circle-notch ic-ph"></i> consultando…</span>
+            </div>
+            <div x-show="trafContasPer==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:8px">
+              <span class="text-3 fs-12">De</span><input type="date" class="form-input fs-12" style="max-width:150px" x-model="trafContasIni">
+              <span class="text-3 fs-12">até</span><input type="date" class="form-input fs-12" style="max-width:150px" x-model="trafContasFim">
+              <button class="btn btn-sm btn-primary" @click="_carregarAmbosPeriodo()"><i class="ph ph-magnifying-glass ic-ph"></i> Aplicar</button>
+            </div>
+            <div class="text-3 fs-11" style="margin-top:6px">
+              <span x-show="trafContasPer==='mes'">Mês corrente · snapshot (atualiza de hora em hora)</span>
+              <span x-show="trafContasPer!=='mes' && trafContasErro" style="color:#dc2626" x-text="'Google: '+trafContasErro"></span>
+              <span x-show="trafContasPer!=='mes' && metaContasErro" style="color:#dc2626;margin-left:8px" x-text="metaContasErro"></span>
+              <span x-show="trafContasPer!=='mes' && !trafContasErro && (trafContasLive||metaContasLive)">Janela ao vivo · Google + Meta consultados no período</span>
+            </div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:12px">
             <template x-for="k in adsKpis('google')" :key="'gk'+k.l">
@@ -3641,31 +3659,7 @@
           </div>
 
           <div class="card" style="padding:0;overflow:hidden">
-            <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
-              <div class="flex items-center justify-between mb-2" style="gap:8px;flex-wrap:wrap">
-                <div class="fw-600 fs-13"><i class="ph ph-google-logo ic-ph" style="color:#2563eb"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Google Ads</span></div>
-                <!-- Seletor de período: 7/15/30 dias + intervalo x→x -->
-                <div class="flex items-center gap-2" style="flex-wrap:wrap">
-                  <template x-for="p in [['mes','Mês'],['7','7 dias'],['15','15 dias'],['30','30 dias']]" :key="'per'+p[0]">
-                    <button class="btn btn-sm" :style="trafContasPer===p[0]?'background:#2563eb;color:#fff;border-color:#2563eb':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo(p[0])" x-text="p[1]"></button>
-                  </template>
-                  <button class="btn btn-sm" :style="trafContasPer==='custom'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Período</button>
-                </div>
-              </div>
-              <!-- Intervalo personalizado -->
-              <div x-show="trafContasPer==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:4px">
-                <span class="text-3 fs-12">De</span>
-                <input type="date" class="form-input fs-12" style="max-width:160px" x-model="trafContasIni">
-                <span class="text-3 fs-12">até</span>
-                <input type="date" class="form-input fs-12" style="max-width:160px" x-model="trafContasFim">
-                <button class="btn btn-sm btn-primary" @click="carregarContasPeriodo()"><i class="ph ph-magnifying-glass ic-ph"></i> Aplicar</button>
-              </div>
-              <div class="text-3 fs-11" style="margin-top:6px">
-                <span x-show="trafContasPer==='mes'">Mês corrente · snapshot automático (atualiza de hora em hora)</span>
-                <span x-show="trafContasPer!=='mes' && trafContasLive" x-text="'Janela: '+ (trafContasLive.ini||'') +' a '+ (trafContasLive.fim||'') +' · consulta ao vivo no Google Ads'"></span>
-                <span x-show="trafContasPer!=='mes' && !trafContasLive && !trafContasLoading" x-text="trafContasErro || (trafContasPer==='custom' ? 'Escolha o intervalo e clique Aplicar.' : '')"></span>
-              </div>
-            </div>
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-600 fs-13"><i class="ph ph-google-logo ic-ph" style="color:#2563eb"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Google Ads</span> <span class="text-3 fs-11 fw-400" x-show="trafContasPer!=='mes'" x-text="'· '+trafPerLabel()"></span></div>
             <div style="overflow-x:auto">
               <div x-show="trafContasLoading" class="text-3 fs-13" style="padding:18px;text-align:center"><i class="ph ph-circle-notch ic-ph" style="font-size:20px"></i><div style="margin-top:6px">Consultando o Google Ads no período…</div></div>
               <table class="table" x-show="!trafContasLoading">
@@ -3721,15 +3715,32 @@
 
         <!-- ═══════ Painel CONTAS META (KPIs + tendência + resultados por conta) ═══════ -->
         <div x-show="trafTab==='mads'">
-          <div class="flex items-center gap-2" style="margin-bottom:12px;flex-wrap:wrap">
-            <span class="text-3 fs-12"><i class="ph ph-funnel ic-ph"></i> Cliente</span>
-            <select class="form-select" style="max-width:300px;font-weight:600" x-model="adsCliente">
-              <option value="">Todos os clientes</option>
-              <template x-for="c in adsClientesLista" :key="'acm'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
-            </select>
-            <button x-show="adsCliente" class="btn btn-ghost btn-sm" @click="adsCliente=''" title="Ver todos"><i class="ph ph-x ic-ph"></i> limpar</button>
+          <div class="card" style="padding:10px 12px;margin-bottom:12px">
+            <div class="flex items-center gap-2" style="flex-wrap:wrap">
+              <span class="text-3 fs-12"><i class="ph ph-funnel ic-ph"></i> Cliente</span>
+              <select class="form-select fs-13" style="max-width:240px;font-weight:600" x-model="adsCliente">
+                <option value="">Todos os clientes</option>
+                <template x-for="c in adsClientesLista" :key="'acm'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+              </select>
+              <span class="text-3 fs-12" style="margin-left:8px"><i class="ph ph-calendar-blank ic-ph"></i> Período</span>
+              <template x-for="pp in [['mes','Mês'],['7','7d'],['15','15d'],['30','30d']]" :key="'mper'+pp[0]">
+                <button class="btn btn-sm" :style="trafContasPer===pp[0]?'background:#0866FF;color:#fff;border-color:#0866FF':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo(pp[0])" x-text="pp[1]"></button>
+              </template>
+              <button class="btn btn-sm" :style="trafContasPer==='custom'?'background:#0866FF;color:#fff;border-color:#0866FF':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Intervalo</button>
+              <span x-show="trafContasLoading||metaContasLoading" class="text-3 fs-12"><i class="ph ph-circle-notch ic-ph"></i> consultando…</span>
+            </div>
+            <div x-show="trafContasPer==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:8px">
+              <span class="text-3 fs-12">De</span><input type="date" class="form-input fs-12" style="max-width:150px" x-model="trafContasIni">
+              <span class="text-3 fs-12">até</span><input type="date" class="form-input fs-12" style="max-width:150px" x-model="trafContasFim">
+              <button class="btn btn-sm btn-primary" @click="_carregarAmbosPeriodo()"><i class="ph ph-magnifying-glass ic-ph"></i> Aplicar</button>
+            </div>
+            <div class="text-3 fs-11" style="margin-top:6px">
+              <span x-show="trafContasPer==='mes'">Mês corrente · snapshot (atualiza de hora em hora)</span>
+              <span x-show="trafContasPer!=='mes' && metaContasErro" style="color:#dc2626" x-text="metaContasErro"></span>
+              <span x-show="trafContasPer!=='mes' && !metaContasErro && metaContasLive">Janela ao vivo · consulta ao Meta no período (detalhe por campanha só no Mês)</span>
+            </div>
           </div>
-          <div x-show="!mAdsTotais.contas" class="card" style="padding:24px;text-align:center">
+          <div x-show="!mAdsTotais.contas && !metaContasLoading" class="card" style="padding:24px;text-align:center">
             <i class="ph ph-meta-logo" style="font-size:30px;color:#0866FF"></i>
             <div class="fw-600 fs-14" style="margin-top:8px" x-text="adsCliente ? 'Este cliente não tem dados de Meta Ads' : 'Nenhuma conta Meta com dados ainda'"></div>
             <div x-show="adsCliente" class="text-3 fs-12" style="margin-top:4px">Sem veiculação/conta no Meta para este cliente. Veja em <b>Todos os clientes</b> ou escolha outro.</div>
@@ -5832,7 +5843,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=407"></script>
+<script src="js/app.js?v=408"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
