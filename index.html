@@ -3580,6 +3580,14 @@
 
         <!-- ═══════ Painel CONTAS GOOGLE (KPIs + tendência + resultados por conta) ═══════ -->
         <div x-show="trafTab==='gads'">
+          <div class="flex items-center gap-2" style="margin-bottom:12px;flex-wrap:wrap">
+            <span class="text-3 fs-12"><i class="ph ph-funnel ic-ph"></i> Cliente</span>
+            <select class="form-select" style="max-width:300px;font-weight:600" x-model="adsCliente">
+              <option value="">Todos os clientes</option>
+              <template x-for="c in adsClientesLista" :key="'acg'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+            </select>
+            <button x-show="adsCliente" class="btn btn-ghost btn-sm" @click="adsCliente=''" title="Ver todos"><i class="ph ph-x ic-ph"></i> limpar</button>
+          </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:12px">
             <template x-for="k in adsKpis('google')" :key="'gk'+k.l">
               <div class="card kpi" :style="'background:'+k.bg">
@@ -3713,10 +3721,19 @@
 
         <!-- ═══════ Painel CONTAS META (KPIs + tendência + resultados por conta) ═══════ -->
         <div x-show="trafTab==='mads'">
+          <div class="flex items-center gap-2" style="margin-bottom:12px;flex-wrap:wrap">
+            <span class="text-3 fs-12"><i class="ph ph-funnel ic-ph"></i> Cliente</span>
+            <select class="form-select" style="max-width:300px;font-weight:600" x-model="adsCliente">
+              <option value="">Todos os clientes</option>
+              <template x-for="c in adsClientesLista" :key="'acm'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+            </select>
+            <button x-show="adsCliente" class="btn btn-ghost btn-sm" @click="adsCliente=''" title="Ver todos"><i class="ph ph-x ic-ph"></i> limpar</button>
+          </div>
           <div x-show="!mAdsTotais.contas" class="card" style="padding:24px;text-align:center">
             <i class="ph ph-meta-logo" style="font-size:30px;color:#0866FF"></i>
-            <div class="fw-600 fs-14" style="margin-top:8px">Nenhuma conta Meta com dados ainda</div>
-            <div class="text-3 fs-12" style="margin-top:4px;max-width:540px;margin:4px auto 0">Assim que o snapshot do Meta Ads rodar (system token com <b>ads_read</b> + contas de anúncio compartilhadas com o BM da Maracatu), os números reais aparecem aqui — atualizados de hora em hora.</div>
+            <div class="fw-600 fs-14" style="margin-top:8px" x-text="adsCliente ? 'Este cliente não tem dados de Meta Ads' : 'Nenhuma conta Meta com dados ainda'"></div>
+            <div x-show="adsCliente" class="text-3 fs-12" style="margin-top:4px">Sem veiculação/conta no Meta para este cliente. Veja em <b>Todos os clientes</b> ou escolha outro.</div>
+            <div x-show="!adsCliente" class="text-3 fs-12" style="margin-top:4px;max-width:540px;margin:4px auto 0">Assim que o snapshot do Meta Ads rodar (system token com <b>ads_read</b> + contas de anúncio compartilhadas com o BM da Maracatu), os números reais aparecem aqui — atualizados de hora em hora.</div>
           </div>
           <template x-if="mAdsTotais.contas">
             <div>
@@ -5815,7 +5832,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=406"></script>
+<script src="js/app.js?v=407"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

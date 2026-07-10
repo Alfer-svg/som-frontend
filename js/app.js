@@ -502,6 +502,7 @@ document.addEventListener('alpine:init', () => {
     // Filtro de período da aba Contas & Campanhas: 'mes' (snapshot instantâneo) | '7' | '15' | '30' | 'custom'
     trafContasPer: 'mes', trafContasIni: '', trafContasFim: '',
     trafContasLive: null, trafContasLoading: false, trafContasErro: '', trafCampAberta: {},
+    adsCliente: '', // seletor de cliente dos painéis Google/Meta ('' = todos)
     trafGerenciarAberto: false, // painel de habilitar/desabilitar clientes do tráfego
     trafCliSel: '',         // cliente selecionado no checklist (as 8 tarefas são POR CLIENTE)
     trafChecklists: [],     // coleção trafego.checklist — um doc por dia+cliente
@@ -2422,7 +2423,8 @@ document.addEventListener('alpine:init', () => {
     // Linhas da tabela: snapshot (mês) ou consolidado ao vivo (7/15/30/custom).
     // Anexa o SALDO atual da conta (do snapshot) — é "de agora", vale em qualquer período.
     get trafContasRows() {
-      const base = this.trafContasPer === 'mes' ? this.trafResultados : ((this.trafContasLive && this.trafContasLive.rows) || []);
+      const base = (this.trafContasPer === 'mes' ? this.trafResultados : ((this.trafContasLive && this.trafContasLive.rows) || []))
+        .filter(r => !this.adsCliente || r.id === this.adsCliente);
       return base.map(r => {
         const c = (this.clients || []).find(x => x.id === r.id);
         const a = c && c.adsAuto;
@@ -2435,7 +2437,7 @@ document.addEventListener('alpine:init', () => {
     get trafResultados() {
       const d7 = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
       return (this.clients || [])
-        .filter(c => this.fazTrafego(c) && c.adsAuto)
+        .filter(c => this.fazTrafego(c) && c.adsAuto && (!this.adsCliente || c.id === this.adsCliente))
         .map(c => {
           const h = Array.isArray(c.adsHist) ? c.adsHist : [];
           const antigo = h.filter(x => x.data <= d7).slice(-1)[0];
@@ -2450,7 +2452,13 @@ document.addEventListener('alpine:init', () => {
     },
 
     // ═══════════ PAINÉIS ROBUSTOS — Google Ads & Meta Ads (Tráfego › Contas) ═══════════
-    _adsClientes(kind) { return (this.clients || []).filter(c => this.fazTrafego(c) && c[kind]); }, // kind: 'adsAuto' | 'adsMetaAuto'
+    _adsClientes(kind) { return (this.clients || []).filter(c => this.fazTrafego(c) && c[kind] && (!this.adsCliente || c.id === this.adsCliente)); }, // kind: 'adsAuto' | 'adsMetaAuto'
+    // Lista do seletor: clientes de tráfego com algum dado de ads (Google OU Meta), ordenados
+    get adsClientesLista() {
+      return (this.clients || []).filter(c => this.fazTrafego(c) && (c.adsAuto || c.adsMetaAuto))
+        .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—' }))
+        .sort((a, b) => a.nome.localeCompare(b.nome));
+    },
     _adsTotais(kind) {
       const cs = this._adsClientes(kind);
       let gasto = 0, leads = 0, cliques = 0, impressoes = 0, camp = 0, saldoTotal = 0, comSaldo = 0;
@@ -2475,6 +2483,7 @@ document.addEventListener('alpine:init', () => {
       const map = {};
       for (const c of (this.clients || [])) {
         if (!this.fazTrafego(c)) continue;
+        if (this.adsCliente && c.id !== this.adsCliente) continue;
         for (const s of (Array.isArray(c[histKey]) ? c[histKey] : [])) {
           if (!s || !s.data) continue;
           (map[s.data] = map[s.data] || { gasto: 0, leads: 0 });
