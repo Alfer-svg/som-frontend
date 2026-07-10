@@ -4159,6 +4159,7 @@ ${this._docFoot()}
       f._cobrando = 'email';
       try {
         await this.api('POST', '/cobranca/email', { financeId: f.id, numero: this.numLancamento(f), email, cliente: f.cliente, valor: +f.valor, vencimento: f.vencimento, descricao: f.descricao, boletoUrl: f.boletoUrl || '', linhaDigitavel: f.linhaDigitavel || '', pix: f.pix || '' });
+        f.emailEnviado = true; this.persist('finance', this.finance); // liga a chave "enviado por e-mail" automaticamente
         alert('Cobrança enviada por e-mail para ' + email + '.');
       } catch (err) { alert('Não foi possível enviar o e-mail: ' + err.message + '\n\n(Falta a chave Resend da Maracatu — deixamos pro final.)'); }
       finally { f._cobrando = ''; }
@@ -4174,6 +4175,8 @@ ${this._docFoot()}
       if (f.boletoUrl) linhas.push('', 'Boleto: ' + f.boletoUrl);
       window.open(this.waLink(num) + '?text=' + encodeURIComponent(linhas.join('\n')), '_blank');
     },
+    // Chave manual "enviado por e-mail" do card (liga/desliga e salva)
+    toggleEmailEnviado(f) { f.emailEnviado = !f.emailEnviado; this.persist('finance', this.finance); },
     // ── helpers do card de lançamento (estilo SIAGO) ──
     finStatus(f) {
       if (f.status === 'pago') return { label: 'Pago', style: 'background:#dcfce7;color:#16a34a' };
