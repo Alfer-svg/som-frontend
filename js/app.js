@@ -4177,6 +4177,26 @@ ${this._docFoot()}
     },
     // Chave manual "enviado por e-mail" do card (liga/desliga e salva)
     toggleEmailEnviado(f) { f.emailEnviado = !f.emailEnviado; this.persist('finance', this.finance); },
+    // Enviar fatura pelo SEU e-mail: abre o app de e-mail (mailto) com destinatário,
+    // assunto e corpo prontos — boleto Nº X, pagamento em Y, referente a Z.
+    enviarFaturaEmail(f) {
+      const auto = this._contatoCliente(f).email;
+      const email = (f.emailCobranca || auto || prompt('E-mail do cliente:', '') || '').trim();
+      if (!email) return;
+      if (email !== f.emailCobranca) { f.emailCobranca = email; this.persist('finance', this.finance); }
+      const num = this.numLancamento(f);
+      const linhas = [
+        'Olá!',
+        '',
+        'Você está recebendo o boleto Nº ' + num + ', no valor de ' + MD.fmtCur(f.valor) + ', para pagamento até ' + MD.fmtDate(f.vencimento) + ', referente a: ' + (f.descricao || 'serviços prestados') + '.',
+      ];
+      if (f.linhaDigitavel) linhas.push('', 'Linha digitável do boleto:', f.linhaDigitavel);
+      if (f.pix) linhas.push('', 'Pix copia e cola:', f.pix);
+      if (f.boletoUrl) linhas.push('', 'Boleto (PDF): ' + f.boletoUrl);
+      linhas.push('', 'Qualquer dúvida, é só responder este e-mail.', '', 'Atenciosamente,', EMPRESA.nome);
+      const assunto = 'Fatura ' + num + ' — ' + EMPRESA.nome + ' (vencimento ' + MD.fmtDate(f.vencimento) + ')';
+      window.location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(assunto) + '&body=' + encodeURIComponent(linhas.join('\n'));
+    },
     // ── helpers do card de lançamento (estilo SIAGO) ──
     finStatus(f) {
       if (f.status === 'pago') return { label: 'Pago', style: 'background:#dcfce7;color:#16a34a' };
