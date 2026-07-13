@@ -4786,13 +4786,13 @@ ${this._docFoot()}
       const f = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
       return f(ini) + ' a ' + f(fim);
     },
-    // ── IA (Claude): elabora descrição/legenda a partir do rascunho; guarda a sugestão em _ia_<campo> pra aprovação. ──
+    // ── IA (Claude): EXECUTA o pedido escrito no campo (descrição/legenda) e devolve o conteúdo pronto; guarda em _ia_<campo> pra aprovação. ──
     async gerarIA(obj, campo, tipo) {
       const base = (obj[campo] || '').trim();
-      if (!base) return alert('Escreva um rascunho no campo primeiro — a IA elabora a partir dele.');
+      if (!base) return alert('Escreva no campo o que você quer — a IA executa o pedido (ex.: "roteiro de reel com 3 cenas sobre…").');
       obj['_iaLoad_' + campo] = true; this.iaCronoStart();
       try {
-        const r = await this.api('POST', '/ia/elaborar', { tipo, texto: base, cliente: obj.cliente || (this.progForm && this.progForm.cliente) || '', tema: obj.tema || obj.nome || '' });
+        const r = await this.api('POST', '/ia/elaborar', { tipo, texto: base, cliente: obj.cliente || (this.progForm && this.progForm.cliente) || '', tema: obj.tema || obj.nome || '', tipoPost: obj.tipoPost || '' });
         const t = (r && r.texto) || '';
         if (!t) return alert('A IA não retornou texto. Tente de novo.');
         obj['_ia_' + campo] = t;
