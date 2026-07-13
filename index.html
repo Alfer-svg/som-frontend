@@ -1278,8 +1278,19 @@
           </template>
           <div x-show="!buscaCards.length" class="fs-12 text-3" style="padding:8px">Nada encontrado.</div>
         </div>
+        <!-- Colunas arquivadas deste quadro (só no modo editar): restaurar volta a coluna com os cards arquivados junto -->
+        <div x-show="opTab==='quadro' && boardEdit && colsArquivadas.length" class="card flex items-center gap-2" style="margin-bottom:12px;padding:8px 10px;flex-wrap:wrap" x-cloak>
+          <span class="fs-12 text-3"><i class="ph ph-archive ic-ph"></i> Colunas arquivadas:</span>
+          <template x-for="col in colsArquivadas" :key="'arq'+col.nome">
+            <span class="badge flex items-center gap-2" style="background:#eef1f6;color:#3b4252;padding:5px 9px">
+              <span class="dot" :style="'background:'+(col.cor||'#8a8ba3')"></span>
+              <span class="fw-600" x-text="col.nome"></span>
+              <button class="btn btn-ghost btn-sm" @click="restaurarColuna(col)" title="Restaurar a coluna com seus cards" style="padding:1px 6px"><i class="ph ph-arrow-counter-clockwise"></i> restaurar</button>
+            </span>
+          </template>
+        </div>
         <div class="kanban" x-show="opTab==='quadro'">
-          <template x-for="col in boardAtual.colunas" :key="col.nome">
+          <template x-for="col in colsVisiveis" :key="col.nome">
             <div class="kanban-col" :class="(dropCol===col.nome?'drop-on':'')+(dragColNome===col.nome?' col-dragging':'')"
                  :style="boardSel==='trafego' ? 'background:#F8F5FF;border:1px solid #E9E2FA' : ''"
                  @dragover.prevent="dropCol=col.nome" @dragleave="if(dropCol===col.nome)dropCol=null" @drop.prevent="dragColNome ? onDropColuna(col.nome) : onDropProjeto(col.nome)">
@@ -1288,6 +1299,7 @@
                   <button class="btn btn-icon btn-ghost btn-sm" @click="moverColuna(col,-1)" title="Mover para a esquerda">‹</button>
                   <button class="btn btn-icon btn-ghost btn-sm" @click="moverColuna(col,1)" title="Mover para a direita">›</button>
                   <button class="btn btn-icon btn-ghost btn-sm" @click="renomearColuna(col)" title="Renomear coluna"><i class="ph ph-pencil-simple"></i></button>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="arquivarColuna(col)" title="Arquivar coluna (com os cards) — dá pra restaurar depois"><i class="ph ph-archive"></i></button>
                   <button class="btn btn-icon btn-ghost btn-sm" @click="removerColuna(col)" title="Remover coluna">🗑</button>
                 </span></template>
               </div>
@@ -5845,7 +5857,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=410"></script>
+<script src="js/app.js?v=411"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

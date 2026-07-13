@@ -4345,21 +4345,51 @@ ${this._docFoot()}
       for (const p of this.projetosDoBoard(b.id)) { p.boardId = outro.id; try { await this.salvarProjetoApi(p); } catch { } }
       this.boards = this.boards.filter(x => x.id !== b.id); this.boardSel = outro.id; this.boardEdit = false; this.salvarBoards();
     },
-    addColuna() { const b = this.boardAtual; const nome = (prompt('Nome da nova coluna:', 'Nova coluna') || '').trim(); if (!nome) return; if (b.colunas.some(c => c.nome === nome)) return alert('Já existe uma coluna com esse nome.'); b.colunas.push({ nome, cor: '#8a8ba3' }); this.salvarBoards(); },
+    // Colunas do quadro atual: visíveis (no kanban) × arquivadas (faixa do modo editar).
+    get colsVisiveis() { return (this.boardAtual.colunas || []).filter(c => !c.arquivada); },
+    get colsArquivadas() { return (this.boardAtual.colunas || []).filter(c => c.arquivada); },
+    // Cards da coluna IGNORANDO a busca (operações de coluna não podem depender do filtro digitado).
+    _cardsDaColuna(nome, incluirArquivados) { return this.projects.filter(p => this.projBoardId(p) === this.boardSel && (p.status || 'A Fazer') === nome && (incluirArquivados || !p.arquivado)); },
+    addColuna() {
+      const b = this.boardAtual; const nome = (prompt('Nome da nova coluna:', 'Nova coluna') || '').trim(); if (!nome) return;
+      const arq = b.colunas.find(c => c.nome === nome && c.arquivada);
+      if (arq) { if (confirm('Existe uma coluna ARQUIVADA com esse nome. Restaurar ela (com os cards)?')) this.restaurarColuna(arq); return; }
+      if (b.colunas.some(c => c.nome === nome)) return alert('Já existe uma coluna com esse nome.'); b.colunas.push({ nome, cor: '#8a8ba3' }); this.salvarBoards();
+    },
     async renomearColuna(col) {
       const b = this.boardAtual; const nome = (prompt('Nome da coluna:', col.nome) || '').trim(); if (!nome || nome === col.nome) return;
       if (b.colunas.some(c => c.nome === nome)) return alert('Já existe uma coluna com esse nome.');
-      const antigos = this.projetosDoBoardStatus(col.nome); col.nome = nome; this.salvarBoards();
-      for (const p of antigos) { p.status = nome; try { await this.salvarProjetoApi(p); } catch { } } // migra os cards
+      const antigos = this._cardsDaColuna(col.nome, true); col.nome = nome; this.salvarBoards();
+      for (const p of antigos) { p.status = nome; try { await this.salvarProjetoApi(p); } catch { } } // migra os cards (inclusive arquivados)
     },
     async removerColuna(col) {
-      const b = this.boardAtual; if (b.colunas.length <= 1) return alert('O quadro precisa de ao menos uma coluna.');
-      const cards = this.projetosDoBoardStatus(col.nome), primeira = b.colunas.find(c => c.nome !== col.nome);
-      if (!confirm('Remover a coluna "' + col.nome + '"?' + (cards.length ? (' Os ' + cards.length + ' cards vão pra "' + primeira.nome + '".') : ''))) return;
+      const b = this.boardAtual; if (this.colsVisiveis.length <= 1) return alert('O quadro precisa de ao menos uma coluna.');
+      const cards = this._cardsDaColuna(col.nome, true), vivos = cards.filter(p => !p.arquivado), primeira = this.colsVisiveis.find(c => c.nome !== col.nome);
+      if (!confirm('Remover a coluna "' + col.nome + '"?' + (vivos.length ? (' Os ' + vivos.length + ' cards vão pra "' + primeira.nome + '".') : ''))) return;
       for (const p of cards) { p.status = primeira.nome; try { await this.salvarProjetoApi(p); } catch { } }
       b.colunas = b.colunas.filter(c => c.nome !== col.nome); this.salvarBoards();
     },
-    moverColuna(col, dir) { const b = this.boardAtual, i = b.colunas.indexOf(col), j = i + dir; if (j < 0 || j >= b.colunas.length) return; b.colunas.splice(i, 1); b.colunas.splice(j, 0, col); this.salvarBoards(); },
+    // Arquivar coluna (estilo Trello): some do quadro junto com os cards; restaurável no modo "editar colunas".
+    async arquivarColuna(col) {
+      if (this.colsVisiveis.length <= 1) return alert('O quadro precisa de ao menos uma coluna visível.');
+      const cards = this._cardsDaColuna(col.nome);
+      if (!confirm('Arquivar a coluna "' + col.nome + '"' + (cards.length ? (' com seus ' + cards.length + ' card(s)') : '') + '? Dá pra restaurar depois em "editar colunas".')) return;
+      col.arquivada = true; this.salvarBoards();
+      for (const p of cards) { p.arquivado = true; p.arqComColuna = true; try { await this.salvarProjetoApi(p); } catch { } }
+    },
+    // Restaurar: a coluna volta pro quadro e desarquiva SÓ os cards que foram arquivados junto com ela
+    // (arqComColuna) — card arquivado individualmente antes continua arquivado.
+    async restaurarColuna(col) {
+      delete col.arquivada; this.salvarBoards();
+      const cards = this.projects.filter(p => this.projBoardId(p) === this.boardSel && (p.status || 'A Fazer') === col.nome && p.arquivado && p.arqComColuna);
+      for (const p of cards) { p.arquivado = false; delete p.arqComColuna; try { await this.salvarProjetoApi(p); } catch { } }
+    },
+    moverColuna(col, dir) {
+      const b = this.boardAtual, i = b.colunas.indexOf(col);
+      let j = i + dir; while (j >= 0 && j < b.colunas.length && b.colunas[j].arquivada) j += dir; // pula as arquivadas (invisíveis)
+      if (j < 0 || j >= b.colunas.length) return;
+      b.colunas.splice(i, 1); b.colunas.splice(j, 0, col); this.salvarBoards();
+    },
     projStatusInfo(s) { return PROJ_STATUS.find(x => x.id === s) || PROJ_STATUS[0]; },
     // ── Trello: etiquetas + arrastar ──
     labelCor(key) { const l = TRELLO_LABELS.find(x => x.key === key); return l ? l.cor : '#b3b9c4'; },
@@ -4956,13 +4986,13 @@ ${this._docFoot()}
     layoutStatusLabel(s) { return ({ RASCUNHO: 'Rascunho', APROVADO_GESTAO: 'Aprovado pela gestão', ENVIADO: 'Enviado ao cliente', APROVADO_CLIENTE: 'Aprovado pelo cliente', AJUSTE: 'Ajuste solicitado' })[s] || s; },
     layoutStatusCor(s) { return ({ RASCUNHO: '#8a8ba3', APROVADO_GESTAO: '#2563eb', ENVIADO: '#d97706', APROVADO_CLIENTE: '#16a34a', AJUSTE: '#dc2626' })[s] || '#8a8ba3'; },
     imprimirLayout() { window.print(); },
-    novoProjeto(status) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; const col = status || (this.boardAtual.colunas[0] && this.boardAtual.colunas[0].nome) || 'A Fazer'; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status: col, boardId: this.boardSel || 'geral', prazo: '', progresso: 0, notas: '', labels: [] }; this.modal = 'project'; },
+    novoProjeto(status) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; const col = status || (this.colsVisiveis[0] && this.colsVisiveis[0].nome) || 'A Fazer'; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status: col, boardId: this.boardSel || 'geral', prazo: '', progresso: 0, notas: '', labels: [] }; this.modal = 'project'; },
     editarProjeto(p) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { ...p, labels: Array.isArray(p.labels) ? [...p.labels] : [] }; this.modal = 'project'; },
     // + Criativo: cria um card de criativo (igual ao da programação) direto no quadro e já abre pra preencher.
     // Sem dropdown de modelo — já é o card de designer (isPost, com tipo/tema/legenda/criativos).
     async novoCriativo(status) {
       if (!this.equipe.length) this.carregarEquipe();
-      const col = status || (this.boardAtual && this.boardAtual.colunas[0] && this.boardAtual.colunas[0].nome) || 'A Fazer';
+      const col = status || (this.colsVisiveis[0] && this.colsVisiveis[0].nome) || 'A Fazer';
       const novo = {
         id: '', nome: 'Novo criativo', cliente: '', servico: 'Criação de Conteúdo',
         responsavel: '', status: col, boardId: this.boardSel || 'geral', prazo: '', prazoEntrega: '', progresso: 0, notas: '',
@@ -5002,7 +5032,7 @@ ${this._docFoot()}
       ];
       const novo = {
         id: '', nome: 'Nova tarefa de tráfego', cliente: '', servico: 'ADS / Tráfego Pago',
-        responsavel: (gestor && gestor.nome) || '', status: (board.colunas[0] && board.colunas[0].nome) || 'A Fazer',
+        responsavel: (gestor && gestor.nome) || '', status: ((board.colunas.find(c => !c.arquivada) || board.colunas[0] || {}).nome) || 'A Fazer',
         boardId: board.id, prazo: '', prazoEntrega: '', progresso: 0, notas: '',
         avulso: true, area: '🎯 Tráfego Pago', descricao: '',
         labels: [], membros: [], checklist: DEMANDAS.map(t => ({ id: MD.uid(), texto: t, feito: false })),
