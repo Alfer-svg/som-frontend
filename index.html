@@ -4567,25 +4567,37 @@
 
 <!-- MODELOS DE LANÇAMENTO (despesas fixas do mês — lança vários de uma vez) -->
 <div class="modal-backdrop pagemode" x-show="modal==='finModelos'" x-cloak>
-  <div class="modal" style="max-width:880px">
+  <div class="modal" style="max-width:1160px">
     <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title"><i class="ph ph-stack ic-ph"></i> Modelos de lançamento</div></div>
     <div class="modal-body">
       <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-bottom:10px">
         <div class="form-group" style="margin:0"><label class="form-label">Vencimento dos lançamentos</label><input class="form-input" type="date" x-model="finModVenc"></div>
+        <div class="form-group" style="margin:0"><label class="form-label">Filtrar por natureza</label>
+          <select class="form-select" x-model="finModFiltro"><option value="">Todas</option><option value="fixa">Só fixas</option><option value="variavel">Só variáveis</option></select></div>
         <span style="flex:1"></span>
         <button class="btn btn-ghost btn-sm" @click="finModMarcarTodos(true)">marcar todos</button>
         <button class="btn btn-ghost btn-sm" @click="finModMarcarTodos(false)">desmarcar todos</button>
       </div>
-      <div class="text-3 fs-12" style="margin-bottom:10px">Marque o que vai lançar no mês, ajuste os valores (ficam guardados pro próximo lançamento) e clique em <b>Lançar</b>. Modelo que já tem lançamento igual no mês do vencimento é <b>pulado</b> — não duplica. Edite nome/categoria à vontade: a lista é compartilhada com a equipe.</div>
+      <div class="text-3 fs-12" style="margin-bottom:8px">Marque o que vai lançar no mês, ajuste os valores (ficam guardados pro próximo lançamento) e clique em <b>Lançar</b>. Modelo que já tem lançamento igual no mês do vencimento é <b>pulado</b> — não duplica. A lista é compartilhada com a equipe. <b>Fixa</b> = mesmo valor todo mês · <b>Variável</b> = muda a cada mês.</div>
+      <!-- resumo: quantos fixos/variáveis marcados e o total previsto -->
+      <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-bottom:10px">
+        <span class="badge" style="background:#E8F0FE;color:#1967D2">Fixas: <b x-text="finModResumo.fixas"></b></span>
+        <span class="badge" style="background:#FEF7E0;color:#B06000">Variáveis: <b x-text="finModResumo.variaveis"></b></span>
+        <span class="badge" style="background:var(--accent-soft);color:var(--text)">Selecionados: <b x-text="finModSelN"></b></span>
+        <span class="badge" style="background:#E6F4EA;color:#137333">Total previsto: <b x-text="fmtCur(finModResumo.total)"></b></span>
+      </div>
       <div style="max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:10px">
-        <table class="table">
-          <thead><tr><th style="width:34px"></th><th>Descrição</th><th style="width:150px">Categoria</th><th style="width:110px">Tipo</th><th style="width:130px">Valor (R$)</th><th style="width:44px"></th></tr></thead>
+        <table class="table" style="min-width:1060px">
+          <thead><tr><th style="width:34px"></th><th style="min-width:210px">Descrição</th><th style="width:132px">Categoria</th><th style="width:118px">Natureza</th><th style="width:120px">Recorrência</th><th style="width:170px">Fornecedor</th><th style="width:96px">Tipo</th><th style="width:118px">Valor (R$)</th><th style="width:40px"></th></tr></thead>
           <tbody>
-            <template x-for="m in finModelos" :key="m.id">
+            <template x-for="m in finModelosFiltrados" :key="m.id">
               <tr>
                 <td><input type="checkbox" :checked="!!finModSel[m.id]" @change="finModSel[m.id]=$event.target.checked"></td>
                 <td><input class="form-input" style="padding:6px 9px" x-model="m.nome" @change="salvarFinModelos()" placeholder="descrição do lançamento"></td>
-                <td><select class="form-select" style="padding:6px 9px" x-model="m.categoria" @change="salvarFinModelos()"><option>Mensalidade</option><option>Mídia/ADS</option><option>Projeto pontual</option><option>Salários</option><option>Ferramentas</option><option>Impostos</option><option>Infra</option><option>Outros</option></select></td>
+                <td><select class="form-select" style="padding:6px 9px" x-model="m.categoria" @change="salvarFinModelos()"><option>Mensalidade</option><option>Mídia/ADS</option><option>Projeto pontual</option><option>Salários</option><option>Ferramentas</option><option>Impostos</option><option>Infra</option><option>Serviços</option><option>Outros</option></select></td>
+                <td><select class="form-select" style="padding:6px 9px" x-model="m.natureza" @change="salvarFinModelos()"><option value="fixa">Fixa</option><option value="variavel">Variável</option></select></td>
+                <td><select class="form-select" style="padding:6px 9px" x-model="m.recorrencia" @change="salvarFinModelos()"><template x-for="r in FIN_RECORRENCIAS" :key="r"><option x-text="r"></option></template></select></td>
+                <td><input class="form-input" style="padding:6px 9px" list="forn-modelos" x-model="m.fornecedor" @change="salvarFinModelos()" placeholder="—"></td>
                 <td><select class="form-select" style="padding:6px 9px" x-model="m.tipo" @change="salvarFinModelos()"><option value="despesa">Despesa</option><option value="receita">Receita</option></select></td>
                 <td><input class="form-input" style="padding:6px 9px" type="number" min="0" step="0.01" x-model="m.valor" @change="salvarFinModelos()"></td>
                 <td><button class="btn btn-icon btn-ghost btn-sm" @click="removerFinModelo(m)" title="Excluir modelo">🗑</button></td>
@@ -4593,7 +4605,9 @@
             </template>
           </tbody>
         </table>
+        <datalist id="forn-modelos"><template x-for="fo in fornecedoresOrd" :key="fo.id"><option :value="fo.nome"></option></template></datalist>
         <div x-show="!finModelos.length" class="text-3 fs-13" style="padding:16px;text-align:center">Nenhum modelo ainda — clique em “+ novo modelo”.</div>
+        <div x-show="finModelos.length && !finModelosFiltrados.length" class="text-3 fs-13" style="padding:16px;text-align:center">Nenhum modelo nesse filtro.</div>
       </div>
     </div>
     <div class="modal-foot">
@@ -5898,7 +5912,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=413"></script>
+<script src="js/app.js?v=414"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

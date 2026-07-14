@@ -138,24 +138,56 @@ const TRELLO_LABELS = [
   { key: 'sky', cor: '#00c2e0' }, { key: 'lime', cor: '#51e898' }, { key: 'pink', cor: '#ff78cb' },
 ];
 const FIN_CATEGORIAS = ['Mensalidade', 'Mídia/ADS', 'Projeto pontual', 'Salários', 'Ferramentas', 'Impostos', 'Infra', 'Outros'];
-// Modelos de lançamento do Financeiro (despesas fixas do mês) — compartilhados em /config ui.finModelos.
+// Modelos de lançamento do Financeiro — compartilhados em /config ui.finModelos.
 // Seed veio da planilha "ORÇAMENTO MARACATU" do Dinho (13/07/2026), SEM os valores (a pedido dele).
-const FIN_MODELOS_SEED = () => [
-  ['FOLHA DE PAGAMENTO', 'Salários'], ['ALIMENTAÇÃO', 'Outros'], ['TRANSPORTE', 'Outros'],
-  ['RETIRADA LAURA', 'Salários'], ['RETIRADA DINHO', 'Salários'], ['RETIRADA DIOGO', 'Salários'],
-  ['ALUGUEL 1/2', 'Infra'], ['CONDOMINIO 1/2', 'Infra'], ['CONTADOR 1/3', 'Outros'],
-  ['IPTU', 'Impostos'], ['CIM', 'Impostos'], ['BANCO DE IMAGEM', 'Ferramentas'],
-  ['ENERGIA', 'Infra'], ['SITE', 'Ferramentas'], ['PJs', 'Salários'],
-  ['MATERIAL DE ESCRITÓRIO', 'Infra'], ['INTERNET', 'Infra'], ['SISTEMA', 'Ferramentas'],
-  ['CLAUDE', 'Ferramentas'], ['CANVA', 'Ferramentas'], ['CHATGPT', 'Ferramentas'],
-  ['RELATÓRIO', 'Ferramentas'], ['EMAIL', 'Ferramentas'], ['SIMPLES', 'Impostos'],
-  ['FGTS', 'Impostos'], ['TIM AGENCIA', 'Infra'], ['INSS', 'Impostos'],
-  ['ACORDO IMPOSTOS', 'Impostos'], ['FUNDO CAPITAL DE GIRO', 'Outros'],
-  ['DESPESAS COM UBER', 'Outros'], ['DESPESAS DE MARKETING', 'Mídia/ADS'],
-  ['LIMPEZA', 'Infra'], ['VEO3', 'Ferramentas'], ['ALUGUEL CAFETEIRA', 'Infra'],
-  ['CUSTOS FIXOS FILMAGEM COM PJ (Martur, HEP, Corpo Livre e Mediar)', 'Salários'],
-  ['FÉRIAS: SAMARA', 'Salários'], ['OUTROS', 'Outros'],
-].map(([nome, categoria]) => ({ id: MD.uid(), nome, categoria, tipo: 'despesa', valor: 0 }));
+// Cada modelo carrega: categoria, natureza (fixa=mesmo valor todo mês / variável), recorrência e fornecedor.
+const FIN_NATUREZAS = ['fixa', 'variavel'];
+const FIN_RECORRENCIAS = ['Mensal', 'Trimestral', 'Semestral', 'Anual', 'Único'];
+// [nome, categoria, natureza, recorrência, fornecedor] — fornecedor só nos SaaS de nome óbvio; resto o Dinho preenche.
+const FIN_MODELOS_DEF = [
+  ['FOLHA DE PAGAMENTO', 'Salários', 'variavel', 'Mensal', ''],
+  ['ALIMENTAÇÃO', 'Outros', 'variavel', 'Mensal', ''],
+  ['TRANSPORTE', 'Outros', 'variavel', 'Mensal', ''],
+  ['RETIRADA LAURA', 'Salários', 'fixa', 'Mensal', ''],
+  ['RETIRADA DINHO', 'Salários', 'fixa', 'Mensal', ''],
+  ['RETIRADA DIOGO', 'Salários', 'fixa', 'Mensal', ''],
+  ['ALUGUEL 1/2', 'Infra', 'fixa', 'Mensal', ''],
+  ['CONDOMINIO 1/2', 'Infra', 'fixa', 'Mensal', ''],
+  ['CONTADOR 1/3', 'Serviços', 'fixa', 'Mensal', ''],
+  ['IPTU', 'Impostos', 'fixa', 'Anual', 'Prefeitura'],
+  ['CIM', 'Impostos', 'fixa', 'Mensal', ''],
+  ['BANCO DE IMAGEM', 'Ferramentas', 'fixa', 'Mensal', ''],
+  ['ENERGIA', 'Infra', 'variavel', 'Mensal', 'Neoenergia'],
+  ['SITE', 'Ferramentas', 'fixa', 'Mensal', ''],
+  ['PJs', 'Salários', 'fixa', 'Mensal', ''],
+  ['MATERIAL DE ESCRITÓRIO', 'Infra', 'variavel', 'Mensal', ''],
+  ['INTERNET', 'Infra', 'fixa', 'Mensal', ''],
+  ['SISTEMA', 'Ferramentas', 'fixa', 'Mensal', ''],
+  ['CLAUDE', 'Ferramentas', 'fixa', 'Mensal', 'Anthropic'],
+  ['CANVA', 'Ferramentas', 'fixa', 'Mensal', 'Canva'],
+  ['CHATGPT', 'Ferramentas', 'fixa', 'Mensal', 'OpenAI'],
+  ['RELATÓRIO', 'Ferramentas', 'fixa', 'Mensal', ''],
+  ['EMAIL', 'Ferramentas', 'fixa', 'Mensal', ''],
+  ['SIMPLES', 'Impostos', 'variavel', 'Mensal', 'Receita Federal'],
+  ['FGTS', 'Impostos', 'variavel', 'Mensal', 'Caixa'],
+  ['TIM AGENCIA', 'Infra', 'fixa', 'Mensal', 'TIM'],
+  ['INSS', 'Impostos', 'variavel', 'Mensal', 'Receita Federal'],
+  ['ACORDO IMPOSTOS', 'Impostos', 'fixa', 'Mensal', ''],
+  ['FUNDO CAPITAL DE GIRO', 'Outros', 'variavel', 'Mensal', ''],
+  ['DESPESAS COM UBER', 'Outros', 'variavel', 'Mensal', 'Uber'],
+  ['DESPESAS DE MARKETING', 'Mídia/ADS', 'variavel', 'Mensal', ''],
+  ['LIMPEZA', 'Serviços', 'fixa', 'Mensal', ''],
+  ['VEO3', 'Ferramentas', 'fixa', 'Mensal', 'Google'],
+  ['ALUGUEL CAFETEIRA', 'Infra', 'fixa', 'Mensal', ''],
+  ['CUSTOS FIXOS FILMAGEM COM PJ (Martur, HEP, Corpo Livre e Mediar)', 'Salários', 'fixa', 'Mensal', ''],
+  ['FÉRIAS: SAMARA', 'Salários', 'variavel', 'Único', ''],
+  ['OUTROS', 'Outros', 'variavel', 'Mensal', ''],
+];
+// mapa nome(normalizado) → metadados, p/ semear E migrar os 37 já salvos sem natureza/recorrência.
+const FIN_MODELO_META = Object.fromEntries(FIN_MODELOS_DEF.map(([nome, categoria, natureza, recorrencia, fornecedor]) =>
+  [nome.trim().toUpperCase(), { categoria, natureza, recorrencia, fornecedor }]));
+const FIN_MODELOS_SEED = () => FIN_MODELOS_DEF.map(([nome, categoria, natureza, recorrencia, fornecedor]) =>
+  ({ id: MD.uid(), nome, categoria, tipo: 'despesa', natureza, recorrencia, fornecedor, valor: 0 }));
 const FORN_CATEGORIAS = ['Ferramentas/SaaS', 'Mídia/ADS', 'Terceirizados', 'Infra/Hospedagem', 'Impostos', 'Serviços', 'Outros'];
 // Orçamentos (propostas comerciais) — status do funil de proposta.
 const ORC_STATUS = [
@@ -468,7 +500,7 @@ document.addEventListener('alpine:init', () => {
     page: 'dashboard',
     comOpen: true, // grupo "Comercial" (CRM + Clientes) aberto na barra lateral
     finOpen: false, // grupo "Financeiro" (Lançamentos + Fornecedores)
-    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, FORN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, CONDICOES_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
+    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, FIN_NATUREZAS, FIN_RECORRENCIAS, FORN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, CONDICOES_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
     monitorFull: false, // ficha do cliente em tela cheia (abre ao selecionar; radar do cliente no topo)
@@ -610,7 +642,7 @@ document.addEventListener('alpine:init', () => {
     clients: [], leads: [], proposals: [], contracts: [], finance: [], projects: [], catalogo: [], fornecedores: [],
     propostaEnvio: null,
     finTab: 'lancamentos',  // Financeiro: 'lancamentos' | 'fornecedores'
-    finModelos: [], _finModelosOk: false, finModVenc: '', finModSel: {}, // modelos de lançamento (despesas fixas do mês)
+    finModelos: [], _finModelosOk: false, finModVenc: '', finModSel: {}, finModFiltro: '', // modelos de lançamento (fixas/variáveis)
     finMes: new Date().getMonth(), finAno: new Date().getFullYear(), // mês/ano selecionado no Financeiro
     fornForm: {},
 
@@ -4101,6 +4133,20 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         this._finModelosOk = true;
       } catch { if (!Array.isArray(this.finModelos)) this.finModelos = []; this._finModelosOk = false; }
       if (this._finModelosOk && !this.finModelos.length) { this.finModelos = FIN_MODELOS_SEED(); this.salvarFinModelos(); } // seed da planilha na 1ª vez
+      else if (this._finModelosOk) this._migrarFinModelos();
+    },
+    // Backfill: os 37 modelos semeados antes só tinham nome/categoria/tipo/valor. Completa
+    // natureza/recorrência/fornecedor pelos metadados (casa por nome) — quem não casa fica fixa/Mensal.
+    _migrarFinModelos() {
+      let mudou = false;
+      this.finModelos.forEach(m => {
+        if (m.natureza && m.recorrencia && m.fornecedor !== undefined) return;
+        const meta = FIN_MODELO_META[(m.nome || '').trim().toUpperCase()] || {};
+        if (!m.natureza) { m.natureza = meta.natureza || 'fixa'; mudou = true; }
+        if (!m.recorrencia) { m.recorrencia = meta.recorrencia || 'Mensal'; mudou = true; }
+        if (m.fornecedor === undefined) { m.fornecedor = meta.fornecedor || ''; mudou = true; }
+      });
+      if (mudou) this.salvarFinModelos();
     },
     salvarFinModelos() { if (!this._finModelosOk) return; try { this.api('PUT', '/config/ui.finModelos', { valor: JSON.stringify(this.finModelos) }); } catch (e) { } },
     async abrirFinModelos() {
@@ -4109,8 +4155,20 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       this.finModSel = {}; this.finModelos.forEach(m => { this.finModSel[m.id] = true; });
     },
     get finModSelN() { return this.finModelos.filter(m => this.finModSel[m.id]).length; },
-    finModMarcarTodos(on) { this.finModelos.forEach(m => { this.finModSel[m.id] = on; }); },
-    addFinModelo() { const m = { id: MD.uid(), nome: '', categoria: 'Outros', tipo: 'despesa', valor: 0 }; this.finModelos.push(m); this.finModSel[m.id] = true; },
+    get finModelosFiltrados() { return this.finModFiltro ? this.finModelos.filter(m => (m.natureza || 'fixa') === this.finModFiltro) : this.finModelos; },
+    // resumo dos SELECIONADOS: quantas fixas/variáveis e o total previsto (soma dos valores).
+    get finModResumo() {
+      const sel = this.finModelos.filter(m => this.finModSel[m.id]);
+      return {
+        fixas: sel.filter(m => (m.natureza || 'fixa') === 'fixa').length,
+        variaveis: sel.filter(m => m.natureza === 'variavel').length,
+        total: sel.reduce((a, m) => a + (+m.valor || 0), 0),
+      };
+    },
+    // "marcar/desmarcar todos" respeita o filtro ativo (só mexe no que está visível).
+    finModMarcarTodos(on) { this.finModelosFiltrados.forEach(m => { this.finModSel[m.id] = on; }); },
+    addFinModelo() { const m = { id: MD.uid(), nome: '', categoria: 'Outros', tipo: 'despesa', natureza: 'fixa', recorrencia: 'Mensal', fornecedor: '', valor: 0 }; this.finModelos.push(m); this.finModSel[m.id] = true; },
+    natLabel(n) { return n === 'variavel' ? 'Variável' : 'Fixa'; },
     removerFinModelo(m) { if (!confirm('Excluir o modelo "' + (m.nome || 'sem nome') + '"?')) return; this.finModelos = this.finModelos.filter(x => x.id !== m.id); delete this.finModSel[m.id]; this.salvarFinModelos(); },
     // Cria os lançamentos selecionados no vencimento escolhido. Anti-duplicata: pula quem já
     // tem lançamento com a MESMA descrição (e tipo) no MESMO mês do vencimento.
@@ -4122,7 +4180,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       for (const m of sel) {
         const dup = this.finance.some(f => (f.tipo || 'despesa') === (m.tipo || 'despesa') && (f.descricao || '').trim().toLowerCase() === m.nome.trim().toLowerCase() && String(f.vencimento || f.data || '').slice(0, 7) === mes);
         if (dup) { pulados.push(m.nome); continue; }
-        this.finance.unshift({ id: MD.uid(), tipo: m.tipo || 'despesa', descricao: m.nome.trim(), valor: +m.valor || 0, categoria: m.categoria || 'Outros', cliente: '', fornecedor: m.fornecedor || '', emailCobranca: '', whatsappCobranca: '', obs: '', status: 'pendente', vencimento: venc, data: venc });
+        this.finance.unshift({ id: MD.uid(), tipo: m.tipo || 'despesa', descricao: m.nome.trim(), valor: +m.valor || 0, categoria: m.categoria || 'Outros', natureza: m.natureza || 'fixa', recorrencia: m.recorrencia || 'Mensal', cliente: '', fornecedor: m.fornecedor || '', emailCobranca: '', whatsappCobranca: '', obs: '', status: 'pendente', vencimento: venc, data: venc });
         criados++;
       }
       this.persist('finance', this.finance);
