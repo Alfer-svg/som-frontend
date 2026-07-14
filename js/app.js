@@ -187,7 +187,7 @@ const FIN_MODELOS_DEF = [
 const FIN_MODELO_META = Object.fromEntries(FIN_MODELOS_DEF.map(([nome, categoria, natureza, recorrencia, fornecedor]) =>
   [nome.trim().toUpperCase(), { categoria, natureza, recorrencia, fornecedor }]));
 const FIN_MODELOS_SEED = () => FIN_MODELOS_DEF.map(([nome, categoria, natureza, recorrencia, fornecedor]) =>
-  ({ id: MD.uid(), nome, categoria, tipo: 'despesa', natureza, recorrencia, fornecedor, valor: 0 }));
+  ({ id: MD.uid(), nome, categoria, tipo: 'despesa', natureza, recorrencia, fornecedor, diaVenc: null, valor: 0 }));
 const FORN_CATEGORIAS = ['Ferramentas/SaaS', 'Mídia/ADS', 'Terceirizados', 'Infra/Hospedagem', 'Impostos', 'Serviços', 'Outros'];
 // Orçamentos (propostas comerciais) — status do funil de proposta.
 const ORC_STATUS = [
@@ -4143,11 +4143,12 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     _migrarFinModelos() {
       let mudou = false;
       this.finModelos.forEach(m => {
-        if (m.natureza && m.recorrencia && m.fornecedor !== undefined) return;
+        if (m.natureza && m.recorrencia && m.fornecedor !== undefined && m.diaVenc !== undefined) return;
         const meta = FIN_MODELO_META[(m.nome || '').trim().toUpperCase()] || {};
         if (!m.natureza) { m.natureza = meta.natureza || 'fixa'; mudou = true; }
         if (!m.recorrencia) { m.recorrencia = meta.recorrencia || 'Mensal'; mudou = true; }
         if (m.fornecedor === undefined) { m.fornecedor = meta.fornecedor || ''; mudou = true; }
+        if (m.diaVenc === undefined) { m.diaVenc = null; mudou = true; }
       });
       if (mudou) this.salvarFinModelos();
     },
@@ -4170,17 +4171,28 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
     // "marcar/desmarcar todos" respeita o filtro ativo (só mexe no que está visível).
     finModMarcarTodos(on) { this.finModelosFiltrados.forEach(m => { this.finModSel[m.id] = on; }); },
-    addFinModelo() { const m = { id: MD.uid(), nome: '', categoria: 'Outros', tipo: 'despesa', natureza: 'fixa', recorrencia: 'Mensal', fornecedor: '', valor: 0 }; this.finModelos.push(m); this.finModSel[m.id] = true; },
+    addFinModelo() { const m = { id: MD.uid(), nome: '', categoria: 'Outros', tipo: 'despesa', natureza: 'fixa', recorrencia: 'Mensal', fornecedor: '', diaVenc: null, valor: 0 }; this.finModelos.push(m); this.finModSel[m.id] = true; },
     natLabel(n) { return n === 'variavel' ? 'Variável' : 'Fixa'; },
+    // Vencimento efetivo de um modelo: mês/ano do vencimento padrão do topo + o DIA próprio do modelo
+    // (limitado ao último dia do mês). Sem dia próprio → usa o vencimento padrão inteiro.
+    _vencDoModelo(m, base) {
+      const dia = parseInt(m.diaVenc, 10);
+      if (!dia || dia < 1) return base;
+      const ano = +base.slice(0, 4), mes = +base.slice(5, 7);
+      const ultimo = new Date(ano, mes, 0).getDate();
+      const d = Math.min(dia, ultimo);
+      return base.slice(0, 7) + '-' + String(d).padStart(2, '0');
+    },
     removerFinModelo(m) { if (!confirm('Excluir o modelo "' + (m.nome || 'sem nome') + '"?')) return; this.finModelos = this.finModelos.filter(x => x.id !== m.id); delete this.finModSel[m.id]; this.salvarFinModelos(); },
     // Cria os lançamentos selecionados no vencimento escolhido. Anti-duplicata: pula quem já
     // tem lançamento com a MESMA descrição (e tipo) no MESMO mês do vencimento.
     lancarFinModelos() {
-      const venc = this.finModVenc || MD.today(); const mes = venc.slice(0, 7);
+      const base = this.finModVenc || MD.today(); const mes = base.slice(0, 7);
       const sel = this.finModelos.filter(m => this.finModSel[m.id] && (m.nome || '').trim());
       if (!sel.length) return alert('Selecione ao menos um modelo.');
       let criados = 0; const pulados = [];
       for (const m of sel) {
+        const venc = this._vencDoModelo(m, base); // cada modelo no seu dia de vencimento
         const dup = this.finance.some(f => (f.tipo || 'despesa') === (m.tipo || 'despesa') && (f.descricao || '').trim().toLowerCase() === m.nome.trim().toLowerCase() && String(f.vencimento || f.data || '').slice(0, 7) === mes);
         if (dup) { pulados.push(m.nome); continue; }
         this.finance.unshift({ id: MD.uid(), tipo: m.tipo || 'despesa', descricao: m.nome.trim(), valor: +m.valor || 0, categoria: m.categoria || 'Outros', natureza: m.natureza || 'fixa', recorrencia: m.recorrencia || 'Mensal', cliente: '', fornecedor: m.fornecedor || '', emailCobranca: '', whatsappCobranca: '', obs: '', status: 'pendente', vencimento: venc, data: venc });
@@ -4190,7 +4202,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       this.salvarFinModelos(); // guarda os últimos valores digitados pro mês que vem
       this.modal = null;
       // navega o Financeiro pro mês lançado, pra ele VER o resultado na hora
-      this.finAno = +venc.slice(0, 4); this.finMes = +venc.slice(5, 7) - 1;
+      this.finAno = +base.slice(0, 4); this.finMes = +base.slice(5, 7) - 1;
       this.mostrarToast(criados + ' lançamento(s) criado(s) em ' + mes.split('-').reverse().join('/') + (pulados.length ? (' · ' + pulados.length + ' pulado(s) — já existiam no mês') : '') + '.');
     },
 

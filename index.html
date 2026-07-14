@@ -4574,7 +4574,7 @@
     <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title"><i class="ph ph-stack ic-ph"></i> Modelos de lançamento</div></div>
     <div class="modal-body">
       <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-bottom:10px">
-        <div class="form-group" style="margin:0"><label class="form-label">Vencimento dos lançamentos</label><input class="form-input" type="date" x-model="finModVenc"></div>
+        <div class="form-group" style="margin:0"><label class="form-label">Mês / vencimento padrão <span class="hq" data-tip="Define o MÊS dos lançamentos. Cada modelo pode ter o próprio dia (coluna Dia venc.); quem não tiver usa a data inteira daqui.">?</span></label><input class="form-input" type="date" x-model="finModVenc"></div>
         <div class="form-group" style="margin:0"><label class="form-label">Filtrar por natureza</label>
           <select class="form-select" x-model="finModFiltro"><option value="">Todas</option><option value="fixa">Só fixas</option><option value="variavel">Só variáveis</option></select></div>
         <span style="flex:1"></span>
@@ -4590,8 +4590,8 @@
         <span class="badge" style="background:#E6F4EA;color:#137333">Total previsto: <b x-text="fmtCur(finModResumo.total)"></b></span>
       </div>
       <div style="max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:10px">
-        <table class="table" style="min-width:1060px">
-          <thead><tr><th style="width:34px"></th><th style="min-width:210px">Descrição</th><th style="width:132px">Categoria</th><th style="width:118px">Natureza</th><th style="width:120px">Recorrência</th><th style="width:170px">Fornecedor</th><th style="width:96px">Tipo</th><th style="width:118px">Valor (R$)</th><th style="width:40px"></th></tr></thead>
+        <table class="table" style="min-width:1130px">
+          <thead><tr><th style="width:34px"></th><th style="min-width:200px">Descrição</th><th style="width:128px">Categoria</th><th style="width:112px">Natureza</th><th style="width:116px">Recorrência</th><th style="width:84px">Dia venc.</th><th style="width:162px">Fornecedor</th><th style="width:92px">Tipo</th><th style="width:112px">Valor (R$)</th><th style="width:40px"></th></tr></thead>
           <tbody>
             <template x-for="m in finModelosFiltrados" :key="m.id">
               <tr>
@@ -4600,6 +4600,7 @@
                 <td><select class="form-select" style="padding:6px 9px" x-model="m.categoria" @change="salvarFinModelos()"><option>Mensalidade</option><option>Mídia/ADS</option><option>Projeto pontual</option><option>Salários</option><option>Ferramentas</option><option>Impostos</option><option>Infra</option><option>Serviços</option><option>Outros</option></select></td>
                 <td><select class="form-select" style="padding:6px 9px" x-model="m.natureza" @change="salvarFinModelos()"><option value="fixa">Fixa</option><option value="variavel">Variável</option></select></td>
                 <td><select class="form-select" style="padding:6px 9px" x-model="m.recorrencia" @change="salvarFinModelos()"><template x-for="r in FIN_RECORRENCIAS" :key="r"><option x-text="r"></option></template></select></td>
+                <td><input class="form-input" style="padding:6px 9px;text-align:center" type="number" min="1" max="31" x-model="m.diaVenc" @change="salvarFinModelos()" placeholder="—" title="Dia do mês em que vence (1 a 31). Vazio = usa o vencimento padrão do topo."></td>
                 <td><input class="form-input" style="padding:6px 9px" list="forn-modelos" x-model="m.fornecedor" @change="salvarFinModelos()" placeholder="—"></td>
                 <td><select class="form-select" style="padding:6px 9px" x-model="m.tipo" @change="salvarFinModelos()"><option value="despesa">Despesa</option><option value="receita">Receita</option></select></td>
                 <td><input class="form-input" style="padding:6px 9px" type="number" min="0" step="0.01" x-model="m.valor" @change="salvarFinModelos()"></td>
@@ -5915,7 +5916,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=415"></script>
+<script src="js/app.js?v=416"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
