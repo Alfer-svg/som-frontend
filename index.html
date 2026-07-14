@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=247">
+  <link rel="stylesheet" href="css/styles.css?v=248">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -1008,22 +1008,80 @@
 
         <!-- ── LANÇAMENTOS ── -->
         <div x-show="finTab==='lancamentos'">
-          <div class="flex gap-2 mb-3">
-            <button class="btn btn-primary" @click="novoLancamento('receita')">+ Receita</button>
-            <button class="btn btn-ghost" @click="novoLancamento('despesa')">+ Despesa</button>
+          <div class="flex gap-2 mb-3" style="flex-wrap:wrap;align-items:center">
+            <button class="btn btn-primary" @click="novoLancamento('receita')"><i class="ph ph-plus ic-ph"></i> Receita</button>
+            <button class="btn btn-ghost" @click="novoLancamento('despesa')"><i class="ph ph-plus ic-ph"></i> Despesa</button>
+            <span style="flex:1"></span>
+            <div class="fin-search"><i class="ph ph-magnifying-glass"></i><input placeholder="Buscar descrição, cliente, fornecedor…" x-model="busca"></div>
           </div>
-          <!-- abas por mês (Jan–Dez) + ano -->
-          <div class="flex items-center gap-2 mb-2" style="flex-wrap:nowrap">
-            <button class="btn btn-ghost btn-icon btn-sm" @click="finMesAnterior()" title="Mês anterior"><i class="ph ph-caret-left ic-ph"></i></button>
-            <div class="fichario" style="flex:1;margin-bottom:0">
-              <template x-for="(m,i) in MESES_CURTOS" :key="i">
-                <div class="fichario-tab" :class="finMes===i?'active':''" @click="finMes=i" x-text="m.toLowerCase()"></div>
+
+          <!-- barra de filtros: período + tipo/status/categoria/natureza + ordenação -->
+          <div class="card" style="padding:12px 14px;margin-bottom:12px">
+            <div class="flex items-center gap-2" style="flex-wrap:wrap">
+              <div class="seg">
+                <button :class="finPerTipo==='mes'&&!finSoAFaturar?'on':''" @click="finSetPeriodo('mes')">Mês</button>
+                <button :class="finPerTipo==='trimestre'&&!finSoAFaturar?'on':''" @click="finSetPeriodo('trimestre')">Trimestre</button>
+                <button :class="finPerTipo==='ano'&&!finSoAFaturar?'on':''" @click="finSetPeriodo('ano')">Ano</button>
+                <button :class="finPerTipo==='custom'&&!finSoAFaturar?'on':''" @click="finSetPeriodo('custom')">Período</button>
+              </div>
+              <!-- navegador do MÊS -->
+              <template x-if="finPerTipo==='mes' && !finSoAFaturar">
+                <div class="flex items-center gap-2" style="flex:1;min-width:220px">
+                  <button class="btn btn-ghost btn-icon btn-sm" @click="finMesAnterior()" title="Mês anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                  <div class="fichario" style="flex:1;margin-bottom:0">
+                    <template x-for="(m,i) in MESES_CURTOS" :key="i"><div class="fichario-tab" :class="finMes===i?'active':''" @click="finMes=i" x-text="m.toLowerCase()"></div></template>
+                  </div>
+                  <button class="btn btn-ghost btn-icon btn-sm" @click="finMesProximo()" title="Próximo mês"><i class="ph ph-caret-right ic-ph"></i></button>
+                  <span class="fw-700 fs-13" style="white-space:nowrap;min-width:42px;text-align:center" x-text="finAno"></span>
+                </div>
+              </template>
+              <!-- navegador do TRIMESTRE -->
+              <template x-if="finPerTipo==='trimestre' && !finSoAFaturar">
+                <div class="flex items-center gap-2">
+                  <button class="btn btn-ghost btn-icon btn-sm" @click="finAno--" title="Ano anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                  <div class="seg"><template x-for="i in [0,1,2,3]" :key="i"><button :class="finTri===i?'on':''" @click="finTri=i" x-text="finTriLabel(i)"></button></template></div>
+                  <span class="fw-700 fs-14" style="min-width:42px;text-align:center" x-text="finAno"></span>
+                  <button class="btn btn-ghost btn-icon btn-sm" @click="finAno++" title="Próximo ano"><i class="ph ph-caret-right ic-ph"></i></button>
+                </div>
+              </template>
+              <!-- navegador do ANO -->
+              <template x-if="finPerTipo==='ano' && !finSoAFaturar">
+                <div class="flex items-center gap-2">
+                  <button class="btn btn-ghost btn-icon btn-sm" @click="finAno--" title="Ano anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+                  <span class="fw-800 fs-18" style="min-width:60px;text-align:center" x-text="finAno"></span>
+                  <button class="btn btn-ghost btn-icon btn-sm" @click="finAno++" title="Próximo ano"><i class="ph ph-caret-right ic-ph"></i></button>
+                </div>
+              </template>
+              <!-- PERÍODO personalizado -->
+              <template x-if="finPerTipo==='custom' && !finSoAFaturar">
+                <div class="flex items-center gap-2"><input type="date" class="form-input" style="width:auto;padding:7px 10px" x-model="finDe"><span class="text-3 fs-12">até</span><input type="date" class="form-input" style="width:auto;padding:7px 10px" x-model="finAte"></div>
+              </template>
+              <!-- filtro especial "A faturar" (vindo do KPI) -->
+              <template x-if="finSoAFaturar">
+                <span class="badge flex items-center gap-2" style="background:#DFF3F8;color:#0891B2;padding:6px 10px;font-weight:700"><i class="ph ph-receipt"></i> Só a faturar <button @click="finSoAFaturar=false" style="border:0;background:transparent;color:#0891B2;cursor:pointer;font-weight:800">✕</button></span>
               </template>
             </div>
-            <button class="btn btn-ghost btn-icon btn-sm" @click="finMesProximo()" title="Próximo mês"><i class="ph ph-caret-right ic-ph"></i></button>
-            <span class="fw-700 fs-13" style="white-space:nowrap;min-width:42px;text-align:center" x-text="finAno"></span>
+            <!-- linha 2: filtros -->
+            <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:10px">
+              <select class="form-select fin-fsel" x-model="finFTipo" title="Tipo"><option value="">Receita + despesa</option><option value="receita">Só receitas</option><option value="despesa">Só despesas</option></select>
+              <select class="form-select fin-fsel" x-model="finFStatus" title="Status"><option value="">Qualquer status</option><option value="pendente">A vencer</option><option value="vencido">Vencidos</option><option value="pago">Pagos / recebidos</option></select>
+              <select class="form-select fin-fsel" x-model="finFCategoria" title="Categoria"><option value="">Todas categorias</option><template x-for="c in finCategoriasUsadas" :key="c"><option x-text="c"></option></template></select>
+              <select class="form-select fin-fsel" x-model="finFNatureza" x-show="finFTipo!=='receita'" title="Natureza (despesa)"><option value="">Fixa + variável</option><option value="fixa">Só fixas</option><option value="variavel">Só variáveis</option></select>
+              <span style="flex:1"></span>
+              <select class="form-select fin-fsel" x-model="finOrder" title="Ordenar"><option value="venc-asc">Vencimento ↑</option><option value="venc-desc">Vencimento ↓</option><option value="valor-desc">Maior valor</option><option value="valor-asc">Menor valor</option></select>
+              <button class="btn btn-ghost btn-sm" x-show="finFiltrosAtivos" @click="limparFinFiltros()" title="Limpar filtros"><i class="ph ph-x ic-ph"></i> Limpar</button>
+            </div>
           </div>
-          <template x-if="financeFiltrado.length===0"><div class="card empty">Sem lançamentos em <span x-text="finMesLabel"></span>. Use o + Receita/Despesa ou troque o mês.</div></template>
+
+          <!-- faixa de resumo do que está listado (respeita os filtros) -->
+          <div class="fin-resumo">
+            <div><div class="r-lab">Lançamentos · <span x-text="finSoAFaturar?'a faturar':finPeriodoRange.label"></span></div><div class="r-val" x-text="finResumoFiltro.qtd"></div></div>
+            <div><div class="r-lab">Receitas</div><div class="r-val text-green" x-text="'+'+fmtCur(finResumoFiltro.receitas)"></div></div>
+            <div><div class="r-lab">Despesas</div><div class="r-val text-red" x-text="'-'+fmtCur(finResumoFiltro.despesas)"></div></div>
+            <div><div class="r-lab">Saldo</div><div class="r-val" :class="finResumoFiltro.saldo>=0?'text-green':'text-red'" x-text="fmtCur(finResumoFiltro.saldo)"></div></div>
+            <div><div class="r-lab">A receber / a pagar</div><div class="r-val fs-15"><span class="text-green" x-text="fmtCur(finResumoFiltro.aReceber)"></span> <span class="text-3">/</span> <span class="text-red" x-text="fmtCur(finResumoFiltro.aPagar)"></span></div><div class="fs-11" style="color:#b91c1c;margin-top:1px" x-show="finResumoFiltro.vencidos" x-text="finResumoFiltro.vencidos+' vencido(s)'"></div></div>
+          </div>
+          <template x-if="financeFiltrado.length===0"><div class="card empty">Nenhum lançamento com esses filtros. Ajuste o período/filtros ou use + Receita / + Despesa.</div></template>
           <!-- cards de lançamento (estilo SIAGO) -->
           <div x-show="financeFiltrado.length">
             <template x-for="f in financeFiltrado" :key="f.id">
@@ -5916,7 +5974,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=416"></script>
+<script src="js/app.js?v=417"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

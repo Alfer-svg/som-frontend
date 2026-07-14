@@ -644,6 +644,9 @@ document.addEventListener('alpine:init', () => {
     finTab: 'lancamentos',  // Financeiro: 'lancamentos' | 'fornecedores'
     finModelos: [], _finModelosOk: false, finModVenc: '', finModSel: {}, finModFiltro: '', // modelos de lançamento (fixas/variáveis)
     finMes: new Date().getMonth(), finAno: new Date().getFullYear(), // mês/ano selecionado no Financeiro
+    // filtros da aba Lançamentos: período (mês/trimestre/ano/personalizado) + tipo/status/categoria/natureza + ordenação
+    finPerTipo: 'mes', finTri: Math.floor(new Date().getMonth() / 3), finDe: '', finAte: '',
+    finFTipo: '', finFStatus: '', finFCategoria: '', finFNatureza: '', finOrder: 'venc-asc',
     fornForm: {},
 
     // modais
@@ -4102,7 +4105,45 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     finSoAFaturar: false,
     get finAFaturar() { return this.finance.filter(f => f.tipo === 'receita' && f.status !== 'pago' && !f.boletoId); },
     get finAFaturarTotal() { return this.finAFaturar.reduce((a, f) => a + (+f.valor || 0), 0); },
-    get financeFiltrado() { const q = this.busca.toLowerCase(); return (this.finSoAFaturar ? this.finAFaturar : [...this.finance].filter(f => this._finNoMes(f))).sort((a, b) => (a.vencimento || a.data || '').localeCompare(b.vencimento || b.data || '')).filter(f => !q || ((f.descricao || '') + ' ' + (f.cliente || '') + ' ' + (f.categoria || '') + ' ' + (f.tipo || '')).toLowerCase().includes(q)); },
+    // Status efetivo do lançamento (pra badge e filtro): pago / vencido / pendente (no prazo).
+    finStatusKey(f) { if (f.status === 'pago') return 'pago'; if (f.vencimento && f.vencimento < MD.today()) return 'vencido'; return 'pendente'; },
+    // Intervalo {ini,fim,label} do período escolhido (mês / trimestre / ano / personalizado).
+    get finPeriodoRange() {
+      const p2 = n => String(n).padStart(2, '0');
+      if (this.finPerTipo === 'ano') return { ini: this.finAno + '-01-01', fim: this.finAno + '-12-31', label: 'ano de ' + this.finAno };
+      if (this.finPerTipo === 'trimestre') { const m0 = this.finTri * 3; const ini = `${this.finAno}-${p2(m0 + 1)}-01`; const ult = new Date(this.finAno, m0 + 3, 0).getDate(); const fim = `${this.finAno}-${p2(m0 + 3)}-${p2(ult)}`; return { ini, fim, label: (this.finTri + 1) + 'º trim. ' + this.finAno }; }
+      if (this.finPerTipo === 'custom') { const ini = this.finDe || '0000-01-01', fim = this.finAte || '9999-12-31'; return { ini, fim, label: (this.finDe ? this.fmtDate(this.finDe) : '…') + ' a ' + (this.finAte ? this.fmtDate(this.finAte) : '…') }; }
+      const ult = new Date(this.finAno, this.finMes + 1, 0).getDate(); // mês (default)
+      return { ini: `${this.finAno}-${p2(this.finMes + 1)}-01`, fim: `${this.finAno}-${p2(this.finMes + 1)}-${p2(ult)}`, label: this.finMesLabel };
+    },
+    _finNoPeriodo(f) { const d = String(f.vencimento || f.data || '').slice(0, 10); if (!d) return false; const r = this.finPeriodoRange; return d >= r.ini && d <= r.fim; },
+    // categorias que realmente aparecem nos lançamentos (para o dropdown de filtro)
+    get finCategoriasUsadas() { return [...new Set(this.finance.map(f => f.categoria).filter(Boolean))].sort(); },
+    get finFiltrosAtivos() { return !!(this.finFTipo || this.finFStatus || this.finFCategoria || this.finFNatureza || this.busca.trim() || this.finPerTipo === 'custom'); },
+    limparFinFiltros() { this.finFTipo = ''; this.finFStatus = ''; this.finFCategoria = ''; this.finFNatureza = ''; this.busca = ''; this.finSoAFaturar = false; },
+    get financeFiltrado() {
+      const q = this.busca.toLowerCase().trim();
+      let arr = this.finSoAFaturar ? [...this.finAFaturar] : this.finance.filter(f => this._finNoPeriodo(f));
+      if (this.finFTipo) arr = arr.filter(f => f.tipo === this.finFTipo);
+      if (this.finFStatus) arr = arr.filter(f => this.finStatusKey(f) === this.finFStatus);
+      if (this.finFCategoria) arr = arr.filter(f => f.categoria === this.finFCategoria);
+      if (this.finFNatureza) arr = arr.filter(f => f.tipo === 'despesa' && (f.natureza || 'fixa') === this.finFNatureza);
+      if (q) arr = arr.filter(f => ((f.descricao || '') + ' ' + (f.cliente || '') + ' ' + (f.fornecedor || '') + ' ' + (f.categoria || '') + ' ' + (f.tipo || '')).toLowerCase().includes(q));
+      const cmp = { 'venc-asc': (a, b) => (a.vencimento || a.data || '').localeCompare(b.vencimento || b.data || ''), 'venc-desc': (a, b) => (b.vencimento || b.data || '').localeCompare(a.vencimento || a.data || ''), 'valor-desc': (a, b) => (+b.valor || 0) - (+a.valor || 0), 'valor-asc': (a, b) => (+a.valor || 0) - (+b.valor || 0) }[this.finOrder] || (() => 0);
+      return [...arr].sort(cmp);
+    },
+    // Totais do que está listado agora (respeita TODOS os filtros) — pra faixa de resumo.
+    get finResumoFiltro() {
+      const arr = this.financeFiltrado;
+      const rec = arr.filter(f => f.tipo === 'receita'), desp = arr.filter(f => f.tipo === 'despesa');
+      const soma = l => l.reduce((a, f) => a + (+f.valor || 0), 0);
+      const receitas = soma(rec), despesas = soma(desp);
+      return { qtd: arr.length, receitas, despesas, saldo: receitas - despesas,
+        aReceber: soma(rec.filter(f => f.status !== 'pago')), aPagar: soma(desp.filter(f => f.status !== 'pago' && f.liberado !== false)),
+        vencidos: arr.filter(f => this.finStatusKey(f) === 'vencido').length };
+    },
+    finTriLabel(i) { return (i + 1) + 'º tri'; },
+    finSetPeriodo(t) { this.finPerTipo = t; this.finSoAFaturar = false; },
     novoLancamento(tipo = 'receita') { this.editing = { id: '', tipo, descricao: '', valor: 0, categoria: tipo === 'receita' ? 'Mensalidade' : 'Ferramentas', cliente: '', fornecedor: '', emailCobranca: '', whatsappCobranca: '', obs: '', status: 'pendente', vencimento: MD.today(), data: MD.today() }; this.modal = 'finance'; },
     editarLancamento(f) { this.editing = { ...f }; this.modal = 'finance'; },
     salvarLancamento() {
