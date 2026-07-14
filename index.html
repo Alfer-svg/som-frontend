@@ -984,6 +984,9 @@
           </div>
           <div class="card kpi" style="background:#F3FAF6"><div class="kpi-label"><span class="kpi-ico" style="background:#E6F4EA;color:#34A853"><i class="ph ph-wallet ic-ph"></i></span> Receita · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" x-text="fmtCur(receitaMes)"></div></div>
           <div class="card kpi" style="background:#FEF6F4"><div class="kpi-label"><span class="kpi-ico" style="background:#FCE8E6;color:#EA4335"><i class="ph ph-arrow-up-right ic-ph"></i></span> Despesa · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" x-text="fmtCur(despesaMes)"></div></div>
+          <div class="card kpi" style="background:#FBF9FE"><div class="kpi-label"><span class="kpi-ico" style="background:#EDE7FA;color:#6D4FC2"><i class="ph ph-chart-pie-slice ic-ph"></i></span> Fixa / Variável · <span x-text="finMesLabel"></span></div>
+            <div class="flex items-center gap-2" style="margin-top:4px"><div><div class="fs-11 text-3">Fixa</div><div class="fw-800 fs-17" style="color:#1967D2" x-text="fmtCur(despesaFixaMes)"></div></div><div style="color:var(--text-3)">/</div><div><div class="fs-11 text-3">Variável</div><div class="fw-800 fs-17" style="color:#B06000" x-text="fmtCur(despesaVariavelMes)"></div></div></div>
+            <div class="text-3 fs-11" style="margin-top:3px" x-text="despesaMes ? (Math.round(despesaFixaMes/despesaMes*100)+'% fixa') : 'sem despesas no mês'"></div></div>
           <div class="card kpi" style="background:#FEFBEF"><div class="kpi-label"><span class="kpi-ico" style="background:#FEF7E0;color:#F9A825"><i class="ph ph-scales ic-ph"></i></span> Saldo · <span x-text="finMesLabel"></span></div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
           <div class="card kpi" style="background:#F4F8FE"><div class="kpi-label"><span class="kpi-ico" style="background:#E8F0FE;color:#4285F4"><i class="ph ph-swap ic-ph"></i></span> A receber / A pagar (mês)</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
         </div>
@@ -5912,7 +5915,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=414"></script>
+<script src="js/app.js?v=415"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

@@ -3110,6 +3110,9 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     _finNoMes(f) { return String(f.vencimento || f.data || '').slice(0, 7) === this.finMesKey; }, // por vencimento
     get receitaMes() { return this.finance.filter(f => f.tipo === 'receita' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
     get despesaMes() { return this.finance.filter(f => f.tipo === 'despesa' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
+    // Quebra da despesa do mês por natureza. Lançamento sem `natureza` (anterior à v414) conta como FIXA (default do modelo).
+    get despesaFixaMes()     { return this.finance.filter(f => f.tipo === 'despesa' && this._finNoMes(f) && (f.natureza || 'fixa') !== 'variavel').reduce((a, f) => a + (+f.valor || 0), 0); },
+    get despesaVariavelMes() { return this.finance.filter(f => f.tipo === 'despesa' && this._finNoMes(f) && f.natureza === 'variavel').reduce((a, f) => a + (+f.valor || 0), 0); },
     get saldoMes()   { return this.receitaMes - this.despesaMes; },
     get aReceber()   { return this.finance.filter(f => f.tipo === 'receita' && f.status !== 'pago' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
     get aPagar()     { return this.finance.filter(f => f.tipo === 'despesa' && f.status !== 'pago' && f.liberado !== false && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
