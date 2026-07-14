@@ -257,6 +257,7 @@
       <button class="btn btn-primary" x-show="page==='orcamentos'" @click="novoOrcamento()">+ Orçamento</button>
       <button class="btn btn-primary" x-show="page==='servicos'" @click="novoServico()">+ Serviço</button>
       <button class="btn btn-primary" x-show="page==='contratos'" @click="novoContrato()">+ Contrato</button>
+      <button class="btn btn-ghost" x-show="page==='financeiro'" @click="abrirFinModelos()" title="Lançamentos pré-cadastrados (despesas fixas do mês) — lança vários de uma vez"><i class="ph ph-stack ic-ph"></i> Modelos</button>
       <button class="btn btn-primary" x-show="page==='financeiro'" @click="novoLancamento('receita')">+ Lançamento</button>
       <button class="btn btn-ghost" x-show="page==='operacional' && opTab!=='quadro' && papel!=='colaborador2'" @click="abrirProgramacao()" title="Programação semanal de posts (redes sociais)">+ Programação</button>
       <button class="btn btn-ghost" x-show="page==='operacional' && opTab==='quadro'" @click="novoCriativo()" title="Cria um card de criativo (designer) direto no quadro — igual ao da programação"><i class="ph ph-image ic-ph"></i> + Criativo</button>
@@ -4564,6 +4565,46 @@
   </div>
 </div>
 
+<!-- MODELOS DE LANÇAMENTO (despesas fixas do mês — lança vários de uma vez) -->
+<div class="modal-backdrop pagemode" x-show="modal==='finModelos'" x-cloak>
+  <div class="modal" style="max-width:880px">
+    <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title"><i class="ph ph-stack ic-ph"></i> Modelos de lançamento</div></div>
+    <div class="modal-body">
+      <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-bottom:10px">
+        <div class="form-group" style="margin:0"><label class="form-label">Vencimento dos lançamentos</label><input class="form-input" type="date" x-model="finModVenc"></div>
+        <span style="flex:1"></span>
+        <button class="btn btn-ghost btn-sm" @click="finModMarcarTodos(true)">marcar todos</button>
+        <button class="btn btn-ghost btn-sm" @click="finModMarcarTodos(false)">desmarcar todos</button>
+      </div>
+      <div class="text-3 fs-12" style="margin-bottom:10px">Marque o que vai lançar no mês, ajuste os valores (ficam guardados pro próximo lançamento) e clique em <b>Lançar</b>. Modelo que já tem lançamento igual no mês do vencimento é <b>pulado</b> — não duplica. Edite nome/categoria à vontade: a lista é compartilhada com a equipe.</div>
+      <div style="max-height:52vh;overflow:auto;border:1px solid var(--border);border-radius:10px">
+        <table class="table">
+          <thead><tr><th style="width:34px"></th><th>Descrição</th><th style="width:150px">Categoria</th><th style="width:110px">Tipo</th><th style="width:130px">Valor (R$)</th><th style="width:44px"></th></tr></thead>
+          <tbody>
+            <template x-for="m in finModelos" :key="m.id">
+              <tr>
+                <td><input type="checkbox" :checked="!!finModSel[m.id]" @change="finModSel[m.id]=$event.target.checked"></td>
+                <td><input class="form-input" style="padding:6px 9px" x-model="m.nome" @change="salvarFinModelos()" placeholder="descrição do lançamento"></td>
+                <td><select class="form-select" style="padding:6px 9px" x-model="m.categoria" @change="salvarFinModelos()"><option>Mensalidade</option><option>Mídia/ADS</option><option>Projeto pontual</option><option>Salários</option><option>Ferramentas</option><option>Impostos</option><option>Infra</option><option>Outros</option></select></td>
+                <td><select class="form-select" style="padding:6px 9px" x-model="m.tipo" @change="salvarFinModelos()"><option value="despesa">Despesa</option><option value="receita">Receita</option></select></td>
+                <td><input class="form-input" style="padding:6px 9px" type="number" min="0" step="0.01" x-model="m.valor" @change="salvarFinModelos()"></td>
+                <td><button class="btn btn-icon btn-ghost btn-sm" @click="removerFinModelo(m)" title="Excluir modelo">🗑</button></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <div x-show="!finModelos.length" class="text-3 fs-13" style="padding:16px;text-align:center">Nenhum modelo ainda — clique em “+ novo modelo”.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="addFinModelo()"><i class="ph ph-plus ic-ph"></i> novo modelo</button>
+      <span style="flex:1"></span>
+      <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
+      <button class="btn btn-primary" :disabled="!finModSelN" @click="lancarFinModelos()"><span x-text="'Lançar selecionados ('+finModSelN+')'"></span></button>
+    </div>
+  </div>
+</div>
+
 <!-- ALTERAR VENCIMENTO -->
 <div class="modal-backdrop" x-show="modal==='venc'" x-cloak>
   <div class="modal" style="max-width:440px">
@@ -5857,7 +5898,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=412"></script>
+<script src="js/app.js?v=413"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

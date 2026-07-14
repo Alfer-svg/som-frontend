@@ -138,6 +138,24 @@ const TRELLO_LABELS = [
   { key: 'sky', cor: '#00c2e0' }, { key: 'lime', cor: '#51e898' }, { key: 'pink', cor: '#ff78cb' },
 ];
 const FIN_CATEGORIAS = ['Mensalidade', 'Mídia/ADS', 'Projeto pontual', 'Salários', 'Ferramentas', 'Impostos', 'Infra', 'Outros'];
+// Modelos de lançamento do Financeiro (despesas fixas do mês) — compartilhados em /config ui.finModelos.
+// Seed veio da planilha "ORÇAMENTO MARACATU" do Dinho (13/07/2026), SEM os valores (a pedido dele).
+const FIN_MODELOS_SEED = () => [
+  ['FOLHA DE PAGAMENTO', 'Salários'], ['ALIMENTAÇÃO', 'Outros'], ['TRANSPORTE', 'Outros'],
+  ['RETIRADA LAURA', 'Salários'], ['RETIRADA DINHO', 'Salários'], ['RETIRADA DIOGO', 'Salários'],
+  ['ALUGUEL 1/2', 'Infra'], ['CONDOMINIO 1/2', 'Infra'], ['CONTADOR 1/3', 'Outros'],
+  ['IPTU', 'Impostos'], ['CIM', 'Impostos'], ['BANCO DE IMAGEM', 'Ferramentas'],
+  ['ENERGIA', 'Infra'], ['SITE', 'Ferramentas'], ['PJs', 'Salários'],
+  ['MATERIAL DE ESCRITÓRIO', 'Infra'], ['INTERNET', 'Infra'], ['SISTEMA', 'Ferramentas'],
+  ['CLAUDE', 'Ferramentas'], ['CANVA', 'Ferramentas'], ['CHATGPT', 'Ferramentas'],
+  ['RELATÓRIO', 'Ferramentas'], ['EMAIL', 'Ferramentas'], ['SIMPLES', 'Impostos'],
+  ['FGTS', 'Impostos'], ['TIM AGENCIA', 'Infra'], ['INSS', 'Impostos'],
+  ['ACORDO IMPOSTOS', 'Impostos'], ['FUNDO CAPITAL DE GIRO', 'Outros'],
+  ['DESPESAS COM UBER', 'Outros'], ['DESPESAS DE MARKETING', 'Mídia/ADS'],
+  ['LIMPEZA', 'Infra'], ['VEO3', 'Ferramentas'], ['ALUGUEL CAFETEIRA', 'Infra'],
+  ['CUSTOS FIXOS FILMAGEM COM PJ (Martur, HEP, Corpo Livre e Mediar)', 'Salários'],
+  ['FÉRIAS: SAMARA', 'Salários'], ['OUTROS', 'Outros'],
+].map(([nome, categoria]) => ({ id: MD.uid(), nome, categoria, tipo: 'despesa', valor: 0 }));
 const FORN_CATEGORIAS = ['Ferramentas/SaaS', 'Mídia/ADS', 'Terceirizados', 'Infra/Hospedagem', 'Impostos', 'Serviços', 'Outros'];
 // Orçamentos (propostas comerciais) — status do funil de proposta.
 const ORC_STATUS = [
@@ -592,6 +610,7 @@ document.addEventListener('alpine:init', () => {
     clients: [], leads: [], proposals: [], contracts: [], finance: [], projects: [], catalogo: [], fornecedores: [],
     propostaEnvio: null,
     finTab: 'lancamentos',  // Financeiro: 'lancamentos' | 'fornecedores'
+    finModelos: [], _finModelosOk: false, finModVenc: '', finModSel: {}, // modelos de lançamento (despesas fixas do mês)
     finMes: new Date().getMonth(), finAno: new Date().getFullYear(), // mês/ano selecionado no Financeiro
     fornForm: {},
 
@@ -4072,6 +4091,47 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       this.persist('finance', this.finance); this.modal = null;
     },
     excluirLancamento(f) { if (!confirm('Excluir este lançamento?')) return; this.finance = this.finance.filter(x => x.id !== f.id); this.persist('finance', this.finance); this.modal = null; },
+
+    // ── MODELOS DE LANÇAMENTO (despesas fixas do mês) — compartilhados em /config ui.finModelos ──
+    async carregarFinModelos() {
+      // _finModelosOk = a lista veio MESMO do servidor; nunca persistir fallback de GET falho (lição dos boards 02/07).
+      try {
+        const r = await this.api('GET', '/config/ui.finModelos');
+        this.finModelos = (r && r.valor) ? JSON.parse(r.valor) : [];
+        this._finModelosOk = true;
+      } catch { if (!Array.isArray(this.finModelos)) this.finModelos = []; this._finModelosOk = false; }
+      if (this._finModelosOk && !this.finModelos.length) { this.finModelos = FIN_MODELOS_SEED(); this.salvarFinModelos(); } // seed da planilha na 1ª vez
+    },
+    salvarFinModelos() { if (!this._finModelosOk) return; try { this.api('PUT', '/config/ui.finModelos', { valor: JSON.stringify(this.finModelos) }); } catch (e) { } },
+    async abrirFinModelos() {
+      this.finModVenc = MD.today(); this.modal = 'finModelos';
+      await this.carregarFinModelos();
+      this.finModSel = {}; this.finModelos.forEach(m => { this.finModSel[m.id] = true; });
+    },
+    get finModSelN() { return this.finModelos.filter(m => this.finModSel[m.id]).length; },
+    finModMarcarTodos(on) { this.finModelos.forEach(m => { this.finModSel[m.id] = on; }); },
+    addFinModelo() { const m = { id: MD.uid(), nome: '', categoria: 'Outros', tipo: 'despesa', valor: 0 }; this.finModelos.push(m); this.finModSel[m.id] = true; },
+    removerFinModelo(m) { if (!confirm('Excluir o modelo "' + (m.nome || 'sem nome') + '"?')) return; this.finModelos = this.finModelos.filter(x => x.id !== m.id); delete this.finModSel[m.id]; this.salvarFinModelos(); },
+    // Cria os lançamentos selecionados no vencimento escolhido. Anti-duplicata: pula quem já
+    // tem lançamento com a MESMA descrição (e tipo) no MESMO mês do vencimento.
+    lancarFinModelos() {
+      const venc = this.finModVenc || MD.today(); const mes = venc.slice(0, 7);
+      const sel = this.finModelos.filter(m => this.finModSel[m.id] && (m.nome || '').trim());
+      if (!sel.length) return alert('Selecione ao menos um modelo.');
+      let criados = 0; const pulados = [];
+      for (const m of sel) {
+        const dup = this.finance.some(f => (f.tipo || 'despesa') === (m.tipo || 'despesa') && (f.descricao || '').trim().toLowerCase() === m.nome.trim().toLowerCase() && String(f.vencimento || f.data || '').slice(0, 7) === mes);
+        if (dup) { pulados.push(m.nome); continue; }
+        this.finance.unshift({ id: MD.uid(), tipo: m.tipo || 'despesa', descricao: m.nome.trim(), valor: +m.valor || 0, categoria: m.categoria || 'Outros', cliente: '', fornecedor: m.fornecedor || '', emailCobranca: '', whatsappCobranca: '', obs: '', status: 'pendente', vencimento: venc, data: venc });
+        criados++;
+      }
+      this.persist('finance', this.finance);
+      this.salvarFinModelos(); // guarda os últimos valores digitados pro mês que vem
+      this.modal = null;
+      // navega o Financeiro pro mês lançado, pra ele VER o resultado na hora
+      this.finAno = +venc.slice(0, 4); this.finMes = +venc.slice(5, 7) - 1;
+      this.mostrarToast(criados + ' lançamento(s) criado(s) em ' + mes.split('-').reverse().join('/') + (pulados.length ? (' · ' + pulados.length + ' pulado(s) — já existiam no mês') : '') + '.');
+    },
 
     // ───────────────── FORNECEDORES (despesas) ─────────────────
     get fornecedoresOrd() { const q = this.busca.toLowerCase(); return [...this.fornecedores].sort((a, b) => (a.nome || '').localeCompare(b.nome || '')).filter(f => !q || ((f.nome || '') + ' ' + (f.categoria || '') + ' ' + (f.cnpjCpf || '')).toLowerCase().includes(q)); },
