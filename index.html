@@ -1518,6 +1518,7 @@
                   <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Ligação'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-phone ic-ph"></i> Registrar contato</button>
                   <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Reunião'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-calendar-plus ic-ph"></i> Registrar reunião</button>
                   <button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><i class="ph ph-pencil-simple ic-ph"></i> Editar cliente</button>
+                  <button class="btn btn-ghost btn-sm" x-show="ehAdmin" @click="abrirPortalCliente(monitorCliente)" title="Criar/gerenciar o acesso do cliente à Área do Cliente (app)"><i class="ph ph-identification-card ic-ph" style="color:#E0742A"></i> Portal do cliente</button>
                   <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
                 </div>
               </div>
@@ -6258,6 +6259,48 @@
 </div>
 
 <!-- ACESSO (cofre) -->
+<!-- MODAL: Portal do cliente (acesso do cliente à Área do Cliente / app) -->
+<div class="modal-backdrop" x-show="portalModal" x-cloak>
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><div class="modal-title"><i class="ph ph-identification-card ic-ph" style="color:#E0742A"></i> Portal do cliente</div><button class="btn btn-icon btn-ghost" @click="portalModal=false">✕</button></div>
+    <div class="modal-body">
+      <div class="text-3 fs-13" style="margin-bottom:12px">Acesso do cliente <b x-text="portalForm.empresa"></b> à Área do Cliente (app). Ele entra por e-mail e senha e só vê os dados dele.</div>
+
+      <!-- link do app -->
+      <div class="card" style="padding:10px 12px;margin-bottom:14px;background:var(--surface-2);display:flex;align-items:center;gap:8px">
+        <span class="fs-12" style="flex:1;word-break:break-all;font-family:monospace" x-text="portalLink"></span>
+        <button class="btn btn-icon btn-ghost btn-sm" @click="navigator.clipboard.writeText(portalLink); mostrarToast('Link copiado.')" title="Copiar link"><i class="ph ph-copy ic-ph"></i></button>
+      </div>
+
+      <!-- acessos existentes -->
+      <template x-if="portalAcessos.length">
+        <div style="margin-bottom:14px">
+          <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:6px">Acessos deste cliente</div>
+          <template x-for="a in portalAcessos" :key="a.id">
+            <div class="flex items-center gap-2" style="padding:7px 0;border-top:1px solid var(--border)">
+              <div style="flex:1;min-width:0"><div class="fw-700 fs-13" x-text="a.email"></div><div class="text-3 fs-11" x-text="(a.nome?a.nome+' · ':'')+(a.lastSeen?('último acesso '+fmtDataHora(a.lastSeen)):'nunca entrou')"></div></div>
+              <button class="btn btn-icon btn-ghost btn-sm" @click="removerPortalAcesso(a)" title="Remover acesso" style="color:#B91C1C"><i class="ph ph-trash ic-ph"></i></button>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- criar / resetar -->
+      <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:8px">Criar / resetar acesso</div>
+      <div class="form-group" style="margin-bottom:10px"><label class="form-label">E-mail do cliente *</label><input class="form-input" type="email" x-model="portalForm.email" placeholder="contato@empresa.com" autocomplete="off"></div>
+      <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group" style="margin:0"><label class="form-label">Nome do contato</label><input class="form-input" x-model="portalForm.nome" placeholder="Ex.: Kaline"></div>
+        <div class="form-group" style="margin:0"><label class="form-label">Senha (mín. 6)</label><input class="form-input" x-model="portalForm.senha" placeholder="senha do 1º acesso" autocomplete="off"></div>
+      </div>
+      <div class="text-3 fs-11" style="margin-top:6px">Se o e-mail já existir, a senha (quando preenchida) reseta o acesso.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="portalModal=false">Fechar</button>
+      <button class="btn btn-primary" @click="salvarPortalAcesso()"><i class="ph ph-check ic-ph"></i> Salvar acesso</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Nova/Editar senha do COFRE GLOBAL da agência (Info/Status › Senhas) -->
 <div class="modal-backdrop" x-show="csModal" x-cloak>
   <div class="modal" style="max-width:460px">
@@ -6349,7 +6392,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=426"></script>
+<script src="js/app.js?v=427"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

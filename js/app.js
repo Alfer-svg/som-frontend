@@ -648,6 +648,8 @@ document.addEventListener('alpine:init', () => {
     // Info / Status do sistema (admin): aba Status (saúde dos serviços) + aba Senhas (cofre global da agência)
     infoAba: 'status', infoData: null, infoLoading: false, infoErro: '',
     csLista: [], csLoading: false, csErro: '', csModal: false, csForm: {}, csRevelar: {}, // cofre-senhas global (≠ cred* por-cliente)
+    // Portal do cliente (Área do Cliente / app): admin gerencia o login do cliente
+    portalModal: false, portalForm: {}, portalAcessos: [], portalLink: 'https://alfer-svg.github.io/som-frontend/cliente.html',
     onboardings: [], onbModal: false, onbSel: {},
     onbLink: 'https://maracatumktdigital.com/onboarding',          // formulário de MARKETING (endereço Maracatu)
     onbLinkSite: 'https://maracatumktdigital.com/onboarding-site', // formulário de SITE (endereço Maracatu)
@@ -4084,6 +4086,34 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     csEhApiKey(s) { return /\bsem\s+(login de usu[áa]rio|senha pr[óo]pria)\b/i.test(s.observacoes || ''); },
     csTemSenhaReal(s) { return !String(s.senha || '').toUpperCase().includes('PREENCHER'); },
     csPendente(s) { return !this.csEhGoogle(s) && !this.csEhApiKey(s) && !this.csTemSenhaReal(s); },
+
+    // ── Portal do cliente (admin cria/gerencia o acesso do cliente ao app) ──
+    async abrirPortalCliente(c) {
+      this.portalForm = { clienteId: c.id, empresa: c.empresa || c.nome || '—', email: '', nome: '', senha: '' };
+      this.portalAcessos = [];
+      this.portalModal = true;
+      await this.carregarPortalAcessos(c.id);
+    },
+    async carregarPortalAcessos(clienteId) {
+      try { this.portalAcessos = (await this.api('GET', '/cliente-portal/admin/acessos?clienteId=' + clienteId)) || []; }
+      catch (e) { this.portalAcessos = []; }
+    },
+    async salvarPortalAcesso() {
+      const f = this.portalForm;
+      if (!(f.email || '').includes('@')) return alert('Informe um e-mail válido.');
+      if (f.senha && String(f.senha).length < 6) return alert('A senha precisa de ao menos 6 caracteres.');
+      try {
+        await this.api('POST', '/cliente-portal/admin/acesso', { clienteId: f.clienteId, email: f.email, nome: f.nome, senha: f.senha });
+        this.mostrarToast('Acesso do cliente salvo. 🔑');
+        f.senha = ''; f.email = ''; f.nome = '';
+        await this.carregarPortalAcessos(f.clienteId);
+      } catch (e) { alert((e && e.message) || 'Erro ao salvar acesso.'); }
+    },
+    async removerPortalAcesso(a) {
+      if (!confirm('Remover o acesso "' + a.email + '"? O cliente não entra mais.')) return;
+      try { await this.api('POST', '/cliente-portal/admin/acesso/remover', { id: a.id }); await this.carregarPortalAcessos(this.portalForm.clienteId); }
+      catch (e) { alert((e && e.message) || 'Erro.'); }
+    },
     async salvarCliente() {
       const e = this.editing;
       if (!e.empresa) return alert('Informe o nome/empresa do cliente.');
