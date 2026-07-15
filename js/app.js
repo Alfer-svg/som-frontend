@@ -4035,7 +4035,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
     infoDetalheExtra(it) {
       const e = it.extra || {};
-      if (e.diasRestantes != null) return 'Vence em ' + e.diasRestantes + ' dia(s)' + (e.vence ? ' (' + this.fmtDate(e.vence) + ')' : '');
+      if (e.vence) return 'até ' + this.fmtDate(e.vence); // complementa o "vence em X dias" do detalhe, sem repetir
       return null;
     },
 
