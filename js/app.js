@@ -5106,7 +5106,8 @@ ${this._docFoot()}
     // Tudo puxado dos dados reais do SOM; sem cadastro novo.
     get pnlDataTitulo() { const d = new Date(); const s = d.toLocaleDateString('pt-BR', { timeZone: 'America/Recife', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }); return s.charAt(0).toUpperCase() + s.slice(1); },
     get pnlSaudacao() { const h = +new Date().toLocaleString('en-US', { timeZone: 'America/Recife', hour: '2-digit', hour12: false }); return h < 12 ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite'); },
-    get pnlEquipe() { return (this.equipe || []).slice(0, 8); },
+    // Só quem realmente ENXERGA o Operacional (respeita permissões customizadas).
+    get pnlEquipe() { return (this.equipe || []).filter(m => this.permsDoPapel(m.papel).includes('operacoes')).slice(0, 8); },
     // ── KPIs do topo ──
     get pnlPostsHoje() { return this.operPostsTotal; },
     get pnlPostsHojeClientes() { return this.operPostsDia.filter(g => g.cliente !== '— Interno').length; },
