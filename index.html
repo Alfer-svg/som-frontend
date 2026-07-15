@@ -1211,237 +1211,9 @@
 
         <!-- toggle de vista: Quadro | Programação semanal | Layouts -->
         <div class="fichario" style="margin-bottom:14px">
-          <div class="fichario-tab" :class="opTab==='painel'?'active':''" @click="opTab='painel'" x-show="papel!=='colaborador2'">Painel</div>
           <div class="fichario-tab" :class="opTab==='quadro'?'active':''" @click="opTab='quadro'">Quadro</div>
           <div class="fichario-tab" :class="opTab==='semana'?'active':''" @click="opTab='semana'" x-show="papel!=='colaborador2'">Programação</div>
           <div class="fichario-tab" :class="opTab==='layouts'?'active':''" @click="opTab='layouts'; carregarLayouts()" x-show="papel!=='colaborador2'">Layouts</div>
-        </div>
-
-        <!-- ═══════════ PAINEL DA EQUIPE ═══════════ -->
-        <div x-show="opTab==='painel'" x-cloak>
-          <!-- Header -->
-          <div class="flex items-center justify-between gap-3 mb-2" style="flex-wrap:wrap">
-            <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">SOM · Operacional · Painel da equipe</div>
-            <div class="flex items-center gap-2" style="flex-wrap:wrap">
-              <template x-for="m in pnlEquipe" :key="'pe'+m.id">
-                <span class="flex items-center gap-2" style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 4px">
-                  <span :style="'width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:9px;flex:none;'+(fotoDe(m.nome)?('background-image:url('+fotoDe(m.nome)+');background-size:cover;color:transparent'):('background:'+avatarBg(m.nome)+';color:'+avatarFg(m.nome)))" x-text="fotoDe(m.nome)?'':iniciais(m.nome)"></span>
-                  <span class="fs-12 fw-700" style="color:var(--text-2)" x-text="(m.nome||'').split(' ')[0]"></span>
-                </span>
-              </template>
-            </div>
-          </div>
-          <div class="fw-800" style="font-size:26px;line-height:1.1;color:#2A2822"><span x-text="pnlSaudacao"></span>, <span style="color:#E0742A">equipe</span> 👋</div>
-          <div class="text-3 fs-13" style="margin-top:4px;margin-bottom:18px" x-text="pnlDataTitulo + ' · painel único: os três veem a mesma tela ao abrir o Operacional.'"></div>
-
-          <!-- KPIs -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px">
-            <div class="card" style="padding:14px 16px">
-              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Posts para hoje</div>
-              <div class="fw-800" style="font-size:28px;line-height:1.1;color:#2A2822;margin-top:6px" x-text="pnlPostsHoje"></div>
-              <div class="text-3 fs-12" style="margin-top:4px" x-text="'em '+pnlPostsHojeClientes+' cliente'+(pnlPostsHojeClientes===1?'':'s')"></div>
-            </div>
-            <div class="card" style="padding:14px 16px">
-              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Posts atrasados</div>
-              <div class="fw-800" style="font-size:28px;line-height:1.1;margin-top:6px" :style="'color:'+(pnlPostsAtrasados>0?'#C0392E':'#C4C1B7')" x-text="pnlPostsAtrasados"></div>
-              <div class="text-3 fs-12" style="margin-top:4px" x-text="pnlAtrasadoMaisAntigo ? ('o mais antigo desde '+fmtDate(pnlAtrasadoMaisAntigo)) : 'nenhum atrasado'"></div>
-            </div>
-            <div class="card" style="padding:14px 16px">
-              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Prontos p/ aprovação</div>
-              <div class="fw-800" style="font-size:28px;line-height:1.1;margin-top:6px" :style="'color:'+(pnlProntos>0?'#1A7A43':'#C4C1B7')" x-text="pnlProntos"></div>
-              <div class="text-3 fs-12" style="margin-top:4px">aguardando publicação</div>
-            </div>
-            <div class="card" style="padding:14px 16px">
-              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Reuniões · 7 dias</div>
-              <div class="fw-800" style="font-size:28px;line-height:1.1;color:#2A2822;margin-top:6px" x-text="pnlReunioes7.length"></div>
-              <div class="text-3 fs-12" style="margin-top:4px" x-text="pnlProxReuniao ? ('próxima: '+pnlBadgeDia(pnlProxReuniao.data).sub.toLowerCase()+' '+(pnlProxReuniao.hora||'')) : 'nenhuma agendada'"></div>
-            </div>
-            <div class="card" style="padding:14px 16px">
-              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Gravações · 7 dias</div>
-              <div class="fw-800" style="font-size:28px;line-height:1.1;color:#2A2822;margin-top:6px" x-text="pnlGravacoes7.length"></div>
-              <div class="text-3 fs-12" style="margin-top:4px" x-text="pnlGravacoesAConfirmar ? (pnlGravacoesAConfirmar+' aguarda confirmação') : 'todas confirmadas'"></div>
-            </div>
-            <div class="card" style="padding:14px 16px">
-              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Clientes ativos</div>
-              <div class="fw-800" style="font-size:28px;line-height:1.1;color:#2A2822;margin-top:6px" x-text="pnlClientesAtivos"></div>
-              <div class="text-3 fs-12" style="margin-top:4px" x-text="pnlClientesAtencao ? (pnlClientesAtencao+' precisam de atenção') : 'todos saudáveis'"></div>
-            </div>
-          </div>
-
-          <!-- Grade 2 colunas -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px">
-
-            <!-- AGENDA · Reuniões -->
-            <div class="card" style="padding:18px">
-              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Agenda</div>
-              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Reuniões dos próximos dias</div>
-              <template x-if="!pnlReunioesLista.length"><div class="text-3 fs-13" style="padding:6px 0">Nenhuma reunião agendada nos próximos dias.</div></template>
-              <template x-for="(e,i) in pnlReunioesLista" :key="'pr'+i">
-                <div class="flex items-center gap-3" style="padding:10px 0" :style="i>0?'border-top:1px solid var(--border)':''">
-                  <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0;background:var(--surface-2)">
-                    <div class="fw-800 fs-15" style="color:#2A2822" x-text="pnlBadgeDia(e.data).dia"></div>
-                    <div style="font-size:9px;letter-spacing:.03em;font-weight:800;color:#9ca3af" x-text="pnlBadgeDia(e.data).sub + (e.hora?(' '+e.hora):'')"></div>
-                  </div>
-                  <div style="flex:1;min-width:0">
-                    <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="e.titulo + (e.cliente?(' · '+e.cliente):'')"></div>
-                    <div class="text-3 fs-12" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="e.nota || '—'"></div>
-                  </div>
-                  <div class="flex items-center" style="flex:none;gap:-6px">
-                    <template x-for="m in (e.membros||[]).slice(0,3)" :key="'prm'+m">
-                      <span :style="'width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex:none;margin-left:-6px;border:2px solid var(--surface);'+(fotoDe(m)?('background-image:url('+fotoDe(m)+');background-size:cover;color:transparent'):('background:'+avatarBg(m)+';color:'+avatarFg(m)))" x-text="fotoDe(m)?'':iniciais(m)" :title="m"></span>
-                    </template>
-                  </div>
-                </div>
-              </template>
-            </div>
-
-            <!-- CAPTAÇÃO · Gravações -->
-            <div class="card" style="padding:18px">
-              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Captação</div>
-              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Gravações agendadas</div>
-              <template x-if="!pnlGravacoesLista.length"><div class="text-3 fs-13" style="padding:6px 0">Nenhuma gravação marcada.</div></template>
-              <template x-for="(c,i) in pnlGravacoesLista" :key="'pg'+c.id">
-                <div class="flex items-center gap-3" style="padding:10px 0" :style="i>0?'border-top:1px solid var(--border)':''">
-                  <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0;background:var(--surface-2)">
-                    <div class="fw-800 fs-15" style="color:#2A2822" x-text="pnlBadgeDia(c.data).dia"></div>
-                    <div style="font-size:9px;letter-spacing:.03em;font-weight:800;color:#9ca3af" x-text="pnlBadgeDia(c.data).sub"></div>
-                  </div>
-                  <div style="flex:1;min-width:0">
-                    <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="(c.tipo||'Captação')+' · '+c.cliente"></div>
-                    <div class="text-3 fs-12" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="[c.local, c.prestador].filter(Boolean).join(' · ') || '—'"></div>
-                  </div>
-                  <span class="fw-800" :style="'font-size:11px;padding:3px 10px;border-radius:20px;flex:none;background:'+pnlGravacaoBadge(c).bg+';color:'+pnlGravacaoBadge(c).cor" x-text="pnlGravacaoBadge(c).t"></span>
-                </div>
-              </template>
-            </div>
-
-            <!-- RELACIONAMENTO · Aniversários -->
-            <div class="card" style="padding:18px">
-              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Relacionamento</div>
-              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Aniversários · próximos 30 dias</div>
-              <template x-if="!pnlAniversarios.length"><div class="text-3 fs-13" style="padding:6px 0">Nenhum aniversário nos próximos 30 dias.</div></template>
-              <template x-for="(a,i) in pnlAniversarios" :key="'pa'+i">
-                <div class="flex items-center gap-3" style="padding:10px 0" :style="i>0?'border-top:1px solid var(--border)':''">
-                  <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0;background:var(--surface-2)">
-                    <div class="fw-800 fs-15" style="color:#2A2822" x-text="pnlBadgeData(a.quando).dia"></div>
-                    <div style="font-size:9px;letter-spacing:.03em;font-weight:800;color:#9ca3af" x-text="pnlBadgeData(a.quando).mes"></div>
-                  </div>
-                  <div style="flex:1;min-width:0">
-                    <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="a.tipo==='parceria' ? (a.nome+' · '+a.anos+' ano'+(a.anos===1?'':'s')+' de parceria') : (a.nome+' · '+a.cliente)"></div>
-                    <div class="text-3 fs-12" x-text="a.tipo==='parceria' ? 'Aniversário de parceria' : 'Aniversário do contato'"></div>
-                  </div>
-                  <template x-if="a.tipo==='aniversario'">
-                    <a :href="a.r && a.r.whatsapp ? ('https://wa.me/55'+String(a.r.whatsapp).replace(/\D/g,'')+'?text='+encodeURIComponent(msgAniversario(a.r))) : '#'" target="_blank" rel="noopener" class="fw-700" style="font-size:11px;padding:4px 11px;border-radius:20px;flex:none;background:#FDECE0;color:#C05A1E;text-decoration:none">enviar mensagem</a>
-                  </template>
-                  <template x-if="a.tipo==='parceria'">
-                    <span class="fw-800" style="font-size:11px;padding:3px 10px;border-radius:20px;flex:none;background:#E8F6EC;color:#1A7A43">parceria</span>
-                  </template>
-                </div>
-              </template>
-            </div>
-
-            <!-- OPORTUNIDADES · Datas comemorativas -->
-            <div class="card" style="padding:18px">
-              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Oportunidades de pauta</div>
-              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Datas comemorativas · próximos 7 dias</div>
-              <template x-if="!pnlComemorativas.length"><div class="text-3 fs-13" style="padding:6px 0">Nenhuma data comemorativa nos próximos 7 dias.</div></template>
-              <template x-for="(d,i) in pnlComemorativas" :key="'pc'+d.md">
-                <div class="flex items-center gap-3" style="padding:10px 0" :style="i>0?'border-top:1px solid var(--border)':''">
-                  <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0;background:var(--surface-2)">
-                    <div class="fw-800 fs-15" style="color:#2A2822" x-text="pnlBadgeData(d.quando).dia"></div>
-                    <div style="font-size:9px;letter-spacing:.03em;font-weight:800;color:#9ca3af" x-text="pnlBadgeData(d.quando).mes"></div>
-                  </div>
-                  <div style="flex:1;min-width:0">
-                    <div class="fw-700 fs-14" style="color:#2A2822" x-text="d.nome"></div>
-                    <div class="text-3 fs-12" x-text="d.dias===0?'Hoje':(d.dias===1?'Amanhã':('em '+d.dias+' dias'))"></div>
-                  </div>
-                </div>
-              </template>
-            </div>
-
-            <!-- ENGAJAMENTO · Destaques IG -->
-            <div class="card" style="padding:18px">
-              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Engajamento</div>
-              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Destaques da semana no Instagram</div>
-              <template x-if="melhoresLoading && !pnlDestaques.length"><div class="text-3 fs-13" style="padding:6px 0">Carregando posts…</div></template>
-              <template x-if="!melhoresLoading && !pnlDestaques.length"><div class="text-3 fs-13" style="padding:6px 0">Sem posts com métrica ainda — conecte os clientes no Meta.</div></template>
-              <template x-for="(p,i) in pnlDestaques" :key="'pd'+i">
-                <a :href="p.link||'#'" target="_blank" rel="noopener" class="flex items-center gap-3" style="padding:10px 0;text-decoration:none;color:inherit" :style="i>0?'border-top:1px solid var(--border)':''">
-                  <span class="fw-800 fs-16" style="width:26px;text-align:center;flex:none" :style="i===0?'color:#F59E0B':(i===1?'color:#9CA3AF':'color:#B45309')" x-text="'#'+(i+1)"></span>
-                  <div style="flex:1;min-width:0">
-                    <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.cliente"></div>
-                    <div class="text-3 fs-12" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="'❤ '+operInspN(p.likes)+' · 💬 '+operInspN(p.comentarios)+(p.engajamentoPct!=null?(' · '+p.engajamentoPct+'% engaj.'):'')"></div>
-                  </div>
-                  <span x-show="i===0" class="fw-800" style="font-size:11px;padding:3px 10px;border-radius:20px;flex:none;background:#E8F6EC;color:#1A7A43">melhor da semana</span>
-                </a>
-              </template>
-            </div>
-
-            <!-- PRODUÇÃO · Carga por pessoa -->
-            <div class="card" style="padding:18px">
-              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Produção</div>
-              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Carga do dia por pessoa</div>
-              <template x-if="!pnlCarga.length"><div class="text-3 fs-13" style="padding:6px 0">Ninguém com posts atribuídos.</div></template>
-              <div x-show="pnlCarga.length">
-                <div class="flex items-center" style="gap:10px;padding-bottom:6px">
-                  <div style="flex:1"></div>
-                  <div class="fw-800 fs-10" style="width:42px;text-align:center;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3)">Hoje</div>
-                  <div class="fw-800 fs-10" style="width:42px;text-align:center;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3)">Atras.</div>
-                  <div class="fw-800 fs-10" style="width:52px;text-align:center;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3)">Prontos</div>
-                </div>
-                <template x-for="c in pnlCarga" :key="'pcg'+c.ref">
-                  <div class="flex items-center" style="gap:10px;padding:9px 0;border-top:1px solid var(--border)">
-                    <span :style="'width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex:none;'+(fotoDe(c.nome)?('background-image:url('+fotoDe(c.nome)+');background-size:cover;color:transparent'):('background:'+avatarBg(c.nome)+';color:'+avatarFg(c.nome)))" x-text="fotoDe(c.nome)?'':iniciais(c.nome)"></span>
-                    <div style="flex:1;min-width:0">
-                      <div class="fw-700 fs-13" style="color:#2A2822" x-text="c.nome"></div>
-                      <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-show="c.fila" x-text="(c.fila?(c.fila.cliente?(c.fila.cliente+' · '):'')+(c.fila.tema||c.fila.nome||''):'')"></div>
-                    </div>
-                    <div class="fw-700 fs-14" style="width:42px;text-align:center;color:#2A2822" x-text="c.hoje"></div>
-                    <div class="fw-700 fs-14" style="width:42px;text-align:center" :style="'color:'+(c.atras>0?'#C0392E':'#C4C1B7')" x-text="c.atras"></div>
-                    <div class="fw-700 fs-14" style="width:52px;text-align:center;color:#1A7A43" x-text="c.prontos"></div>
-                  </div>
-                </template>
-              </div>
-              <!-- Satisfação média -->
-              <div class="flex items-center gap-3" style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
-                <div class="fw-800" style="font-size:24px;line-height:1;color:#2A2822"><span x-text="pnlSatisfacao.media!=null ? pnlSatisfacao.media.toLocaleString('pt-BR') : '—'"></span><span class="text-3 fs-12" style="font-weight:600"> / 5</span></div>
-                <div style="flex:1">
-                  <div class="fw-700 fs-13" style="color:#2A2822">Satisfação média nas reuniões do mês</div>
-                  <div class="text-3 fs-12" x-text="pnlSatisfacao.n ? (pnlSatisfacao.n+' reunião(ões) avaliada(s)') : 'sem avaliações este mês'"></div>
-                </div>
-                <span x-show="pnlSatisfacao.media!=null && pnlSatisfacao.media>=4" class="fw-800" style="font-size:11px;padding:3px 10px;border-radius:20px;background:#E8F6EC;color:#1A7A43">saudável</span>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- HOJE · Pauta do dia (full-width) -->
-          <div class="card" style="padding:18px;margin-top:16px">
-            <div class="flex items-center justify-between gap-2" style="flex-wrap:wrap;margin-bottom:12px">
-              <div>
-                <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A">Hoje</div>
-                <div class="fw-800 fs-16" style="color:#2A2822">Pauta do dia da equipe</div>
-              </div>
-              <span class="fw-700 fs-11" style="color:var(--text-3);background:var(--surface-2);padding:4px 10px;border-radius:20px">atrasados primeiro</span>
-            </div>
-            <template x-if="!pnlPautaDia.length"><div class="text-3 fs-13" style="padding:6px 0">Nada na pauta de hoje. 🎉</div></template>
-            <template x-for="(item,i) in pnlPautaDia" :key="'pp'+item.p.id">
-              <div class="flex items-center gap-3" style="padding:12px 0;cursor:pointer" :style="i>0?'border-top:1px solid var(--border)':''" @click="pnlAbrir(item.p)">
-                <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0" :style="item.atrasado?'background:#FBE6E5':'background:var(--surface-2)'">
-                  <div class="fw-800 fs-15" :style="item.atrasado?'color:#C0392E':'color:#2A2822'" x-text="pnlBadgeData(item.p.prazo).dia"></div>
-                  <div style="font-size:9px;letter-spacing:.03em;font-weight:800" :style="item.atrasado?'color:#C0392E':'color:#9ca3af'" x-text="pnlBadgeData(item.p.prazo).mes"></div>
-                </div>
-                <div style="flex:1;min-width:0">
-                  <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="(item.p.cliente?(item.p.cliente+' · '):'')+(item.p.tema||item.p.nome||'Post')"></div>
-                  <div class="text-3 fs-12" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="item.atrasado ? ('Atrasado há '+Math.abs(diasAte(item.p.prazo))+' dias') : (formatoPost(item.p).label)"></div>
-                </div>
-                <span x-show="pnlResp(item.p)" :style="'width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex:none;'+(fotoDe(pnlResp(item.p))?('background-image:url('+fotoDe(pnlResp(item.p))+');background-size:cover;color:transparent'):('background:'+avatarBg(pnlResp(item.p))+';color:'+avatarFg(pnlResp(item.p))))" x-text="fotoDe(pnlResp(item.p))?'':iniciais(pnlResp(item.p))" :title="pnlResp(item.p)"></span>
-                <span class="fw-800" :style="'font-size:11px;padding:3px 10px;border-radius:20px;flex:none;background:'+pnlPautaBadge(item).bg+';color:'+pnlPautaBadge(item).cor" x-text="pnlPautaBadge(item).t"></span>
-              </div>
-            </template>
-          </div>
-
-          <p class="text-3 fs-11" style="margin-top:16px">Painel único da equipe — tudo puxado do SOM em tempo real. Reuniões e gravações vêm da Agenda e do fluxo de captações; aniversários da ficha dos contatos; destaques do Instagram do monitoramento.</p>
         </div>
 
         <!-- ===== LAYOUTS DA SEMANA (por cliente) ===== -->
@@ -2540,6 +2312,233 @@
           <template x-for="m in abasOperacional" :key="'ot'+m[0]">
             <div class="tab" :class="operTab===m[0]?'active':''" @click="operTab=m[0]; if(m[0]==='laryssa') carregarRelIG(); if(m[0]==='samara') carregarSamara()"><span x-text="m[1]"></span></div>
           </template>
+        </div>
+
+        <!-- ═══════════ PAINEL DA EQUIPE ═══════════ -->
+        <div x-show="operTab==='painel'" x-cloak>
+          <!-- Header -->
+          <div class="flex items-center justify-between gap-3 mb-2" style="flex-wrap:wrap">
+            <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)">SOM · Operacional · Painel da equipe</div>
+            <div class="flex items-center gap-2" style="flex-wrap:wrap">
+              <template x-for="m in pnlEquipe" :key="'pe'+m.id">
+                <span class="flex items-center gap-2" style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 4px">
+                  <span :style="'width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:9px;flex:none;'+(fotoDe(m.nome)?('background-image:url('+fotoDe(m.nome)+');background-size:cover;color:transparent'):('background:'+avatarBg(m.nome)+';color:'+avatarFg(m.nome)))" x-text="fotoDe(m.nome)?'':iniciais(m.nome)"></span>
+                  <span class="fs-12 fw-700" style="color:var(--text-2)" x-text="(m.nome||'').split(' ')[0]"></span>
+                </span>
+              </template>
+            </div>
+          </div>
+          <div class="fw-800" style="font-size:26px;line-height:1.1;color:#2A2822"><span x-text="pnlSaudacao"></span>, <span style="color:#E0742A">equipe</span> 👋</div>
+          <div class="text-3 fs-13" style="margin-top:4px;margin-bottom:18px" x-text="pnlDataTitulo"></div>
+
+          <!-- KPIs -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px">
+            <div class="card" style="padding:14px 16px">
+              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Posts para hoje</div>
+              <div class="fw-800" style="font-size:28px;line-height:1.1;color:#2A2822;margin-top:6px" x-text="pnlPostsHoje"></div>
+              <div class="text-3 fs-12" style="margin-top:4px" x-text="'em '+pnlPostsHojeClientes+' cliente'+(pnlPostsHojeClientes===1?'':'s')"></div>
+            </div>
+            <div class="card" style="padding:14px 16px">
+              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Posts atrasados</div>
+              <div class="fw-800" style="font-size:28px;line-height:1.1;margin-top:6px" :style="'color:'+(pnlPostsAtrasados>0?'#C0392E':'#C4C1B7')" x-text="pnlPostsAtrasados"></div>
+              <div class="text-3 fs-12" style="margin-top:4px" x-text="pnlAtrasadoMaisAntigo ? ('o mais antigo desde '+fmtDate(pnlAtrasadoMaisAntigo)) : 'nenhum atrasado'"></div>
+            </div>
+            <div class="card" style="padding:14px 16px">
+              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Prontos p/ aprovação</div>
+              <div class="fw-800" style="font-size:28px;line-height:1.1;margin-top:6px" :style="'color:'+(pnlProntos>0?'#1A7A43':'#C4C1B7')" x-text="pnlProntos"></div>
+              <div class="text-3 fs-12" style="margin-top:4px">aguardando publicação</div>
+            </div>
+            <div class="card" style="padding:14px 16px">
+              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Reuniões · 7 dias</div>
+              <div class="fw-800" style="font-size:28px;line-height:1.1;color:#2A2822;margin-top:6px" x-text="pnlReunioes7.length"></div>
+              <div class="text-3 fs-12" style="margin-top:4px" x-text="pnlProxReuniao ? ('próxima: '+pnlBadgeDia(pnlProxReuniao.data).sub.toLowerCase()+' '+(pnlProxReuniao.hora||'')) : 'nenhuma agendada'"></div>
+            </div>
+            <div class="card" style="padding:14px 16px">
+              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Gravações · 7 dias</div>
+              <div class="fw-800" style="font-size:28px;line-height:1.1;color:#2A2822;margin-top:6px" x-text="pnlGravacoes7.length"></div>
+              <div class="text-3 fs-12" style="margin-top:4px" x-text="pnlGravacoesAConfirmar ? (pnlGravacoesAConfirmar+' aguarda confirmação') : 'todas confirmadas'"></div>
+            </div>
+            <div class="card" style="padding:14px 16px">
+              <div class="fw-700 fs-10" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3)">Clientes ativos</div>
+              <div class="fw-800" style="font-size:28px;line-height:1.1;color:#2A2822;margin-top:6px" x-text="pnlClientesAtivos"></div>
+              <div class="text-3 fs-12" style="margin-top:4px" x-text="pnlClientesAtencao ? (pnlClientesAtencao+' precisam de atenção') : 'todos saudáveis'"></div>
+            </div>
+          </div>
+
+          <!-- Grade 2 colunas -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px">
+
+            <!-- AGENDA · Reuniões -->
+            <div class="card" style="padding:18px">
+              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Agenda</div>
+              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Reuniões dos próximos dias</div>
+              <template x-if="!pnlReunioesLista.length"><div class="text-3 fs-13" style="padding:6px 0">Nenhuma reunião agendada nos próximos dias.</div></template>
+              <template x-for="(e,i) in pnlReunioesLista" :key="'pr'+i">
+                <div class="flex items-center gap-3" style="padding:10px 0" :style="i>0?'border-top:1px solid var(--border)':''">
+                  <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0;background:var(--surface-2)">
+                    <div class="fw-800 fs-15" style="color:#2A2822" x-text="pnlBadgeDia(e.data).dia"></div>
+                    <div style="font-size:9px;letter-spacing:.03em;font-weight:800;color:#9ca3af" x-text="pnlBadgeDia(e.data).sub + (e.hora?(' '+e.hora):'')"></div>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="e.titulo + (e.cliente?(' · '+e.cliente):'')"></div>
+                    <div class="text-3 fs-12" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="e.nota || '—'"></div>
+                  </div>
+                  <div class="flex items-center" style="flex:none;gap:-6px">
+                    <template x-for="m in (e.membros||[]).slice(0,3)" :key="'prm'+m">
+                      <span :style="'width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex:none;margin-left:-6px;border:2px solid var(--surface);'+(fotoDe(m)?('background-image:url('+fotoDe(m)+');background-size:cover;color:transparent'):('background:'+avatarBg(m)+';color:'+avatarFg(m)))" x-text="fotoDe(m)?'':iniciais(m)" :title="m"></span>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- CAPTAÇÃO · Gravações -->
+            <div class="card" style="padding:18px">
+              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Captação</div>
+              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Gravações agendadas</div>
+              <template x-if="!pnlGravacoesLista.length"><div class="text-3 fs-13" style="padding:6px 0">Nenhuma gravação marcada.</div></template>
+              <template x-for="(c,i) in pnlGravacoesLista" :key="'pg'+c.id">
+                <div class="flex items-center gap-3" style="padding:10px 0" :style="i>0?'border-top:1px solid var(--border)':''">
+                  <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0;background:var(--surface-2)">
+                    <div class="fw-800 fs-15" style="color:#2A2822" x-text="pnlBadgeDia(c.data).dia"></div>
+                    <div style="font-size:9px;letter-spacing:.03em;font-weight:800;color:#9ca3af" x-text="pnlBadgeDia(c.data).sub"></div>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="(c.tipo||'Captação')+' · '+c.cliente"></div>
+                    <div class="text-3 fs-12" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="[c.local, c.prestador].filter(Boolean).join(' · ') || '—'"></div>
+                  </div>
+                  <span class="fw-800" :style="'font-size:11px;padding:3px 10px;border-radius:20px;flex:none;background:'+pnlGravacaoBadge(c).bg+';color:'+pnlGravacaoBadge(c).cor" x-text="pnlGravacaoBadge(c).t"></span>
+                </div>
+              </template>
+            </div>
+
+            <!-- RELACIONAMENTO · Aniversários -->
+            <div class="card" style="padding:18px">
+              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Relacionamento</div>
+              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Aniversários · próximos 30 dias</div>
+              <template x-if="!pnlAniversarios.length"><div class="text-3 fs-13" style="padding:6px 0">Nenhum aniversário nos próximos 30 dias.</div></template>
+              <template x-for="(a,i) in pnlAniversarios" :key="'pa'+i">
+                <div class="flex items-center gap-3" style="padding:10px 0" :style="i>0?'border-top:1px solid var(--border)':''">
+                  <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0;background:var(--surface-2)">
+                    <div class="fw-800 fs-15" style="color:#2A2822" x-text="pnlBadgeData(a.quando).dia"></div>
+                    <div style="font-size:9px;letter-spacing:.03em;font-weight:800;color:#9ca3af" x-text="pnlBadgeData(a.quando).mes"></div>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="a.tipo==='parceria' ? (a.nome+' · '+a.anos+' ano'+(a.anos===1?'':'s')+' de parceria') : (a.nome+' · '+a.cliente)"></div>
+                    <div class="text-3 fs-12" x-text="a.tipo==='parceria' ? 'Aniversário de parceria' : 'Aniversário do contato'"></div>
+                  </div>
+                  <template x-if="a.tipo==='aniversario'">
+                    <a :href="a.r && a.r.whatsapp ? ('https://wa.me/55'+String(a.r.whatsapp).replace(/\D/g,'')+'?text='+encodeURIComponent(msgAniversario(a.r))) : '#'" target="_blank" rel="noopener" class="fw-700" style="font-size:11px;padding:4px 11px;border-radius:20px;flex:none;background:#FDECE0;color:#C05A1E;text-decoration:none">enviar mensagem</a>
+                  </template>
+                  <template x-if="a.tipo==='parceria'">
+                    <span class="fw-800" style="font-size:11px;padding:3px 10px;border-radius:20px;flex:none;background:#E8F6EC;color:#1A7A43">parceria</span>
+                  </template>
+                </div>
+              </template>
+            </div>
+
+            <!-- OPORTUNIDADES · Datas comemorativas -->
+            <div class="card" style="padding:18px">
+              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Oportunidades de pauta</div>
+              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Datas comemorativas · próximos 7 dias</div>
+              <template x-if="!pnlComemorativas.length"><div class="text-3 fs-13" style="padding:6px 0">Nenhuma data comemorativa nos próximos 7 dias.</div></template>
+              <template x-for="(d,i) in pnlComemorativas" :key="'pc'+d.md">
+                <div class="flex items-center gap-3" style="padding:10px 0" :style="i>0?'border-top:1px solid var(--border)':''">
+                  <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0;background:var(--surface-2)">
+                    <div class="fw-800 fs-15" style="color:#2A2822" x-text="pnlBadgeData(d.quando).dia"></div>
+                    <div style="font-size:9px;letter-spacing:.03em;font-weight:800;color:#9ca3af" x-text="pnlBadgeData(d.quando).mes"></div>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div class="fw-700 fs-14" style="color:#2A2822" x-text="d.nome"></div>
+                    <div class="text-3 fs-12" x-text="d.dias===0?'Hoje':(d.dias===1?'Amanhã':('em '+d.dias+' dias'))"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- ENGAJAMENTO · Destaques IG -->
+            <div class="card" style="padding:18px">
+              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Engajamento</div>
+              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Destaques da semana no Instagram</div>
+              <template x-if="melhoresLoading && !pnlDestaques.length"><div class="text-3 fs-13" style="padding:6px 0">Carregando posts…</div></template>
+              <template x-if="!melhoresLoading && !pnlDestaques.length"><div class="text-3 fs-13" style="padding:6px 0">Sem posts com métrica ainda — conecte os clientes no Meta.</div></template>
+              <template x-for="(p,i) in pnlDestaques" :key="'pd'+i">
+                <a :href="p.link||'#'" target="_blank" rel="noopener" class="flex items-center gap-3" style="padding:10px 0;text-decoration:none;color:inherit" :style="i>0?'border-top:1px solid var(--border)':''">
+                  <span class="fw-800 fs-16" style="width:26px;text-align:center;flex:none" :style="i===0?'color:#F59E0B':(i===1?'color:#9CA3AF':'color:#B45309')" x-text="'#'+(i+1)"></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="p.cliente"></div>
+                    <div class="text-3 fs-12" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="'❤ '+operInspN(p.likes)+' · 💬 '+operInspN(p.comentarios)+(p.engajamentoPct!=null?(' · '+p.engajamentoPct+'% engaj.'):'')"></div>
+                  </div>
+                  <span x-show="i===0" class="fw-800" style="font-size:11px;padding:3px 10px;border-radius:20px;flex:none;background:#E8F6EC;color:#1A7A43">melhor da semana</span>
+                </a>
+              </template>
+            </div>
+
+            <!-- PRODUÇÃO · Carga por pessoa -->
+            <div class="card" style="padding:18px">
+              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Produção</div>
+              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Carga do dia por pessoa</div>
+              <template x-if="!pnlCarga.length"><div class="text-3 fs-13" style="padding:6px 0">Ninguém com posts atribuídos.</div></template>
+              <div x-show="pnlCarga.length">
+                <div class="flex items-center" style="gap:10px;padding-bottom:6px">
+                  <div style="flex:1"></div>
+                  <div class="fw-800 fs-10" style="width:42px;text-align:center;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3)">Hoje</div>
+                  <div class="fw-800 fs-10" style="width:42px;text-align:center;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3)">Atras.</div>
+                  <div class="fw-800 fs-10" style="width:52px;text-align:center;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3)">Prontos</div>
+                </div>
+                <template x-for="c in pnlCarga" :key="'pcg'+c.ref">
+                  <div class="flex items-center" style="gap:10px;padding:9px 0;border-top:1px solid var(--border)">
+                    <span :style="'width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex:none;'+(fotoDe(c.nome)?('background-image:url('+fotoDe(c.nome)+');background-size:cover;color:transparent'):('background:'+avatarBg(c.nome)+';color:'+avatarFg(c.nome)))" x-text="fotoDe(c.nome)?'':iniciais(c.nome)"></span>
+                    <div style="flex:1;min-width:0">
+                      <div class="fw-700 fs-13" style="color:#2A2822" x-text="c.nome"></div>
+                      <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-show="c.fila" x-text="(c.fila?(c.fila.cliente?(c.fila.cliente+' · '):'')+(c.fila.tema||c.fila.nome||''):'')"></div>
+                    </div>
+                    <div class="fw-700 fs-14" style="width:42px;text-align:center;color:#2A2822" x-text="c.hoje"></div>
+                    <div class="fw-700 fs-14" style="width:42px;text-align:center" :style="'color:'+(c.atras>0?'#C0392E':'#C4C1B7')" x-text="c.atras"></div>
+                    <div class="fw-700 fs-14" style="width:52px;text-align:center;color:#1A7A43" x-text="c.prontos"></div>
+                  </div>
+                </template>
+              </div>
+              <!-- Satisfação média -->
+              <div class="flex items-center gap-3" style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
+                <div class="fw-800" style="font-size:24px;line-height:1;color:#2A2822"><span x-text="pnlSatisfacao.media!=null ? pnlSatisfacao.media.toLocaleString('pt-BR') : '—'"></span><span class="text-3 fs-12" style="font-weight:600"> / 5</span></div>
+                <div style="flex:1">
+                  <div class="fw-700 fs-13" style="color:#2A2822">Satisfação média nas reuniões do mês</div>
+                  <div class="text-3 fs-12" x-text="pnlSatisfacao.n ? (pnlSatisfacao.n+' reunião(ões) avaliada(s)') : 'sem avaliações este mês'"></div>
+                </div>
+                <span x-show="pnlSatisfacao.media!=null && pnlSatisfacao.media>=4" class="fw-800" style="font-size:11px;padding:3px 10px;border-radius:20px;background:#E8F6EC;color:#1A7A43">saudável</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- HOJE · Pauta do dia (full-width) -->
+          <div class="card" style="padding:18px;margin-top:16px">
+            <div class="flex items-center justify-between gap-2" style="flex-wrap:wrap;margin-bottom:12px">
+              <div>
+                <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A">Hoje</div>
+                <div class="fw-800 fs-16" style="color:#2A2822">Pauta do dia da equipe</div>
+              </div>
+              <span class="fw-700 fs-11" style="color:var(--text-3);background:var(--surface-2);padding:4px 10px;border-radius:20px">atrasados primeiro</span>
+            </div>
+            <template x-if="!pnlPautaDia.length"><div class="text-3 fs-13" style="padding:6px 0">Nada na pauta de hoje. 🎉</div></template>
+            <template x-for="(item,i) in pnlPautaDia" :key="'pp'+item.p.id">
+              <div class="flex items-center gap-3" style="padding:12px 0;cursor:pointer" :style="i>0?'border-top:1px solid var(--border)':''" @click="pnlAbrir(item.p)">
+                <div style="width:44px;text-align:center;flex:none;border-radius:9px;padding:5px 0" :style="item.atrasado?'background:#FBE6E5':'background:var(--surface-2)'">
+                  <div class="fw-800 fs-15" :style="item.atrasado?'color:#C0392E':'color:#2A2822'" x-text="pnlBadgeData(item.p.prazo).dia"></div>
+                  <div style="font-size:9px;letter-spacing:.03em;font-weight:800" :style="item.atrasado?'color:#C0392E':'color:#9ca3af'" x-text="pnlBadgeData(item.p.prazo).mes"></div>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div class="fw-700 fs-14" style="color:#2A2822;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="(item.p.cliente?(item.p.cliente+' · '):'')+(item.p.tema||item.p.nome||'Post')"></div>
+                  <div class="text-3 fs-12" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-text="item.atrasado ? ('Atrasado há '+Math.abs(diasAte(item.p.prazo))+' dias') : (formatoPost(item.p).label)"></div>
+                </div>
+                <span x-show="pnlResp(item.p)" :style="'width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex:none;'+(fotoDe(pnlResp(item.p))?('background-image:url('+fotoDe(pnlResp(item.p))+');background-size:cover;color:transparent'):('background:'+avatarBg(pnlResp(item.p))+';color:'+avatarFg(pnlResp(item.p))))" x-text="fotoDe(pnlResp(item.p))?'':iniciais(pnlResp(item.p))" :title="pnlResp(item.p)"></span>
+                <span class="fw-800" :style="'font-size:11px;padding:3px 10px;border-radius:20px;flex:none;background:'+pnlPautaBadge(item).bg+';color:'+pnlPautaBadge(item).cor" x-text="pnlPautaBadge(item).t"></span>
+              </div>
+            </template>
+          </div>
+
+          <p class="text-3 fs-11" style="margin-top:16px">Painel único da equipe — tudo puxado do SOM em tempo real. Reuniões e gravações vêm da Agenda e do fluxo de captações; aniversários da ficha dos contatos; destaques do Instagram do monitoramento.</p>
         </div>
 
         <!-- ════════ PAINEL COMPARTILHADO: aba Matheus (social) OU aba Samara (produção) ════════ -->
@@ -6372,7 +6371,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=423"></script>
+<script src="js/app.js?v=424"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

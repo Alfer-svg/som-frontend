@@ -895,7 +895,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); this.opTab = this.papel === 'colaborador2' ? 'quadro' : 'painel'; this.ajustaAbaOperacional(); this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); this.carregarOperacoes(); this.carregarSamara(); if (!this.matTop) this.carregarMelhores(); } if (p === 'infostatus') { this.infoAba = 'status'; this.carregarInfoStatus(); this.carregarCofreSenhas(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.carregarOperacoes(); this.carregarSamara(); } },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.ajustaAbaOperacional(); this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); this.carregarOperacoes(); this.carregarSamara(); } if (p === 'infostatus') { this.infoAba = 'status'; this.carregarInfoStatus(); this.carregarCofreSenhas(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.operTab = 'painel'; this.carregarProjetos(); this.carregarEquipe(); this.carregarPresenca(); this.carregarSamara(); this.carregarOperacoes(); if (!this.matTop) this.carregarMelhores(); } },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -912,9 +912,9 @@ document.addEventListener('alpine:init', () => {
     // Abas do Operacional por papel: Matheus (social), Samara (produção), Laryssa (relatório IG).
     // colaborador = só Matheus · conteudo = só Samara · admin/gestor = as três.
     get abasOperacional() {
-      if (this.papel === 'conteudo') return [['samara', 'Samara']];
-      if (this.ehAdmin || this.papel === 'gestor') return [['matheus', 'Matheus'], ['samara', 'Samara'], ['laryssa', 'Laryssa']];
-      return [['matheus', 'Matheus'], ['laryssa', 'Laryssa']];
+      if (this.papel === 'conteudo') return [['painel', 'Painel'], ['samara', 'Samara']];
+      if (this.ehAdmin || this.papel === 'gestor') return [['painel', 'Painel'], ['matheus', 'Matheus'], ['samara', 'Samara'], ['laryssa', 'Laryssa']];
+      return [['painel', 'Painel'], ['matheus', 'Matheus'], ['laryssa', 'Laryssa']];
     },
     // Garante que a aba ativa é uma que o papel pode ver (senão cai na 1ª).
     ajustaAbaOperacional() { const abas = this.abasOperacional; if (!abas.some(a => a[0] === this.operTab)) this.operTab = abas[0][0]; },
@@ -5184,8 +5184,8 @@ ${this._docFoot()}
     },
     // Avatar do responsável de um projeto/post (1º membro, senão responsavel).
     pnlResp(p) { const ms = (Array.isArray(p.membros) && p.membros.length) ? p.membros : (p.responsavel ? [p.responsavel] : []); return ms[0] || ''; },
-    // Abre o card do post/projeto no quadro (reusa o fluxo existente).
-    pnlAbrir(p) { this.opTab = 'quadro'; this.$nextTick(() => this.abrirCard(p)); },
+    // Abre o card do post/projeto no quadro da Produção (reusa o fluxo existente).
+    pnlAbrir(p) { this.go('operacional'); this.opTab = 'quadro'; this.$nextTick(() => this.abrirCard(p)); },
     toggleConcluido(p) { this.moverProjeto(p, p.status === 'Concluído' ? 'A Fazer' : 'Concluído'); },
     // Altera a data do post direto pelo card do quadro (sem abrir o modal) e persiste.
     async alterarPrazo(p, val) { p.prazo = val || ''; try { await this.salvarProjetoApi(p); } catch (e) { alert(e.message || 'Falha ao salvar a data.'); } },
