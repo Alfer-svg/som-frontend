@@ -629,6 +629,9 @@ document.addEventListener('alpine:init', () => {
     comPerTipo: 'semana', comPerOff: 0, // período do painel comercial: 'dia'|'semana'|'mes' + deslocamento (0=atual)
     credenciais: [], credModal: false, credForm: {}, credItemModo: '', revelar: {}, // cofre de acessos (credItemModo: dropdown do tipo, '__outro__' = livre)
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
+    // Info / Status do sistema (admin): aba Status (saúde dos serviços) + aba Senhas (cofre global da agência)
+    infoAba: 'status', infoData: null, infoLoading: false, infoErro: '',
+    csLista: [], csLoading: false, csErro: '', csModal: false, csForm: {}, csRevelar: {}, // cofre-senhas global (≠ cred* por-cliente)
     onboardings: [], onbModal: false, onbSel: {},
     onbLink: 'https://maracatumktdigital.com/onboarding',          // formulário de MARKETING (endereço Maracatu)
     onbLinkSite: 'https://maracatumktdigital.com/onboarding-site', // formulário de SITE (endereço Maracatu)
@@ -876,7 +879,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.ajustaAbaOperacional(); this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); this.carregarOperacoes(); this.carregarSamara(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.carregarOperacoes(); this.carregarSamara(); } },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.ajustaAbaOperacional(); this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); this.carregarOperacoes(); this.carregarSamara(); } if (p === 'infostatus') { this.infoAba = 'status'; this.carregarInfoStatus(); this.carregarCofreSenhas(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.carregarOperacoes(); this.carregarSamara(); } },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -4010,6 +4013,61 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     editarCredencial(c) { this.credForm = { ...c, senha: '' }; this.credItemModo = ITENS_CRED.includes(c.item) ? c.item : '__outro__'; this.credModal = true; },
     async salvarCredencial() { const f = this.credForm; if (!f.clienteId && this.monitorCliente) f.clienteId = this.monitorCliente.id; if (!f.item) return alert('Informe o item.'); try { await this.api('POST', '/credenciais', f); await this.carregarCredenciais(f.clienteId); this.credModal = false; } catch (e) { alert(e.message); } },
     async excluirCredencial(c) { if (!confirm('Excluir o acesso "' + (c.item || '') + '"?')) return; try { await this.api('DELETE', '/credenciais/' + c.id); await this.carregarCredenciais(c.clienteId); } catch (e) { alert(e.message); } },
+
+    // ── Info / Status do sistema (admin) ──────────────────────────────────
+    // Aba Status: saúde ao vivo dos serviços (GET /infra/status).
+    async carregarInfoStatus() {
+      this.infoLoading = true; this.infoErro = '';
+      try { this.infoData = await this.api('GET', '/infra/status'); }
+      catch (e) { this.infoErro = (e && e.message) || 'Erro ao carregar o status dos serviços'; }
+      this.infoLoading = false;
+    },
+    get infoCategorias() { const its = (this.infoData && this.infoData.itens) || []; return [...new Set(its.map(i => i.categoria))]; },
+    infoItensDaCat(cat) { return ((this.infoData && this.infoData.itens) || []).filter(i => i.categoria === cat); },
+    infoVisual(st) {
+      const m = {
+        ok:     { rotulo: 'OK',       cor: '#166534', bg: '#DCFCE7', bd: '#86EFAC', ico: 'ph-check-circle' },
+        alerta: { rotulo: 'Atenção',  cor: '#92400E', bg: '#FEF3C7', bd: '#FCD34D', ico: 'ph-warning' },
+        erro:   { rotulo: 'Problema', cor: '#B91C1C', bg: '#FEE2E2', bd: '#FCA5A5', ico: 'ph-x-circle' },
+        manual: { rotulo: 'Manual',   cor: '#374151', bg: '#F3F4F6', bd: '#E0DDD8', ico: 'ph-info' },
+      };
+      return m[st] || m.manual;
+    },
+    infoDetalheExtra(it) {
+      const e = it.extra || {};
+      if (e.diasRestantes != null) return 'Vence em ' + e.diasRestantes + ' dia(s)' + (e.vence ? ' (' + this.fmtDate(e.vence) + ')' : '');
+      return null;
+    },
+
+    // Aba Senhas: cofre GLOBAL da agência (/cofre-senhas). Só admin (guard no backend).
+    async carregarCofreSenhas() {
+      this.csLoading = true; this.csErro = '';
+      try { this.csLista = (await this.api('GET', '/cofre-senhas')) || []; }
+      catch (e) { this.csErro = (e && e.message) || 'Erro ao carregar o cofre'; }
+      this.csLoading = false;
+    },
+    novaCofreSenha() { this.csForm = { id: '', servico: '', descricao: '', login: '', senha: '', url: '', observacoes: '' }; this.csModal = true; },
+    editarCofreSenha(s) { this.csForm = { ...s, senha: '' }; this.csModal = true; }, // senha em branco = mantém
+    async salvarCofreSenha() {
+      const f = this.csForm;
+      if (!(f.servico || '').trim()) return alert('Informe o serviço.');
+      if (!f.id && !f.senha) return alert('Informe a senha.');
+      try {
+        if (f.id) await this.api('PUT', '/cofre-senhas/' + f.id, f);
+        else await this.api('POST', '/cofre-senhas', f);
+        this.csModal = false; await this.carregarCofreSenhas();
+      } catch (e) { alert((e && e.message) || 'Erro ao salvar'); }
+    },
+    async excluirCofreSenha(s) {
+      if (!confirm('Excluir a senha do serviço "' + s.servico + '"? Essa ação não tem volta.')) return;
+      try { await this.api('DELETE', '/cofre-senhas/' + s.id); await this.carregarCofreSenhas(); }
+      catch (e) { alert((e && e.message) || 'Erro ao excluir'); }
+    },
+    // Serviço acessado por login Google (SSO) ou por API key não é "senha pendente".
+    csEhGoogle(s) { return /\blogin\s+(com|via|pelo|do|no)\s+google\b/i.test(s.observacoes || ''); },
+    csEhApiKey(s) { return /\bsem\s+(login de usu[áa]rio|senha pr[óo]pria)\b/i.test(s.observacoes || ''); },
+    csTemSenhaReal(s) { return !String(s.senha || '').toUpperCase().includes('PREENCHER'); },
+    csPendente(s) { return !this.csEhGoogle(s) && !this.csEhApiKey(s) && !this.csTemSenhaReal(s); },
     async salvarCliente() {
       const e = this.editing;
       if (!e.empresa) return alert('Informe o nome/empresa do cliente.');
