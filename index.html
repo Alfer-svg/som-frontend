@@ -4133,57 +4133,53 @@
 
         <!-- ABA STATUS -->
         <div x-show="infoAba==='status'">
-          <div class="flex justify-end mb-3">
+          <div class="flex items-center justify-between mb-3 gap-2" style="flex-wrap:wrap">
+            <div class="text-3 fs-12" x-show="infoData" x-text="'Última verificação: '+fmtDataHora(infoData&&infoData.geradoEm)"></div>
+            <div style="flex:1"></div>
             <button class="btn btn-sm" style="background:#F9A825;color:#1A1C1E;border-color:#F9A825" @click="carregarInfoStatus()" :disabled="infoLoading">
               <i class="ph ic-ph" :class="infoLoading?'ph-spinner-gap ia-spin':'ph-arrows-clockwise'"></i> <span x-text="infoLoading?'Verificando…':'Verificar agora'"></span>
             </button>
           </div>
 
-          <div x-show="infoErro" class="mb-3" style="background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;border-radius:10px;padding:10px 14px;font-size:13px"><i class="ph ph-warning-circle ic-ph"></i> <span x-text="infoErro"></span></div>
+          <div x-show="infoErro" class="mb-3" style="background:#FBE6E5;color:#C0392E;border:1px solid #F3B7B3;border-radius:10px;padding:10px 14px;font-size:13px"><i class="ph ph-warning-circle ic-ph"></i> <span x-text="infoErro"></span></div>
 
-          <!-- Resumo geral -->
+          <!-- Placar: 4 números (No ar / Atenção / Problema / Manual) -->
           <template x-if="infoData">
-            <div class="mb-4" style="border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"
-              :style="infoData.resumo.erro>0?'background:#FEF2F2;border:1px solid #FCA5A5':(infoData.resumo.alerta>0?'background:#FFFBEB;border:1px solid #FCD34D':'background:#F0FDF4;border:1px solid #86EFAC')">
-              <i class="ph ic-ph" style="font-size:20px" :class="infoData.resumo.erro>0?'ph-x-circle':(infoData.resumo.alerta>0?'ph-warning':'ph-shield-check')" :style="'color:'+(infoData.resumo.erro>0?'#B91C1C':(infoData.resumo.alerta>0?'#92400E':'#166534'))"></i>
-              <span class="fw-600 fs-13" style="color:#333" x-text="infoData.resumo.erro>0?'Há serviço(s) com problema — veja abaixo':(infoData.resumo.alerta>0?'Tudo no ar, mas há item(ns) pra ficar de olho':'Todos os serviços monitorados estão no ar')"></span>
-              <div class="flex items-center gap-2" style="margin-left:auto;font-size:11px">
-                <span class="badge fw-700" style="background:#DCFCE7;color:#166534" x-text="infoData.resumo.ok+' OK'"></span>
-                <span x-show="infoData.resumo.alerta>0" class="badge fw-700" style="background:#FEF3C7;color:#92400E" x-text="infoData.resumo.alerta+' atenção'"></span>
-                <span x-show="infoData.resumo.erro>0" class="badge fw-700" style="background:#FEE2E2;color:#B91C1C" x-text="infoData.resumo.erro+' problema'"></span>
-                <span x-show="infoData.resumo.manual>0" class="badge fw-700" style="background:#F3F4F6;color:#374151" x-text="infoData.resumo.manual+' manual'"></span>
-              </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px">
+              <template x-for="t in [{n:infoData.resumo.ok,l:'No ar',c:'#1A7A43'},{n:infoData.resumo.alerta,l:'Atenção',c:'#B06A00'},{n:infoData.resumo.erro,l:'Problema',c:'#C0392E'},{n:infoData.resumo.manual,l:'Manual',c:'#6F6D64'}]" :key="'tile'+t.l">
+                <div class="card" style="padding:14px 16px">
+                  <div class="fw-800" style="font-size:26px;line-height:1" :style="'color:'+(t.n>0?t.c:'#C4C1B7')" x-text="t.n"></div>
+                  <div class="fw-700 fs-11" style="text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-top:7px" x-text="t.l"></div>
+                </div>
+              </template>
             </div>
           </template>
 
           <div x-show="infoLoading && !infoData" class="text-3" style="text-align:center;padding:40px"><i class="ph ph-spinner-gap ia-spin ic-ph" style="font-size:24px"></i></div>
 
           <!-- Itens por categoria -->
-          <div style="display:grid;gap:24px">
+          <div style="display:grid;gap:22px">
             <template x-for="cat in infoCategorias" :key="'ic'+cat">
               <div>
-                <div class="flex items-center gap-2" style="margin-bottom:10px">
+                <div class="flex items-center gap-2" style="margin-bottom:9px">
                   <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.07em;color:var(--text-3)" x-text="cat"></div>
                   <div style="flex:1;height:1px;background:var(--border)"></div>
                   <div class="fs-11 text-3" x-text="infoItensDaCat(cat).length + (infoItensDaCat(cat).length===1?' serviço':' serviços')"></div>
                 </div>
-                <div class="card" style="padding:4px 6px">
+                <div class="card" style="padding:0;overflow:hidden">
                   <template x-for="(it,idx) in infoItensDaCat(cat)" :key="'ii'+it.id">
-                    <div class="flex items-start gap-3" style="padding:14px 12px" :style="idx>0?'border-top:1px solid var(--border)':''">
-                      <span style="width:36px;height:36px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px" :style="'background:'+infoVisual(it.status).bg">
-                        <i class="ph ic-ph" style="font-size:18px" :class="infoVisual(it.status).ico" :style="'color:'+infoVisual(it.status).cor"></i>
-                      </span>
-                      <div style="flex:1;min-width:0">
-                        <div class="flex items-center gap-2" style="flex-wrap:wrap;line-height:1.35">
-                          <span class="fw-700 fs-14" style="color:#2E2D28" x-text="it.nome"></span>
-                          <span x-show="it.critico" class="badge fs-10 fw-700" style="background:#FEF3E2;color:#92400E">crítico</span>
+                    <div :style="'display:grid;grid-template-columns:12px 1fr auto;gap:13px;align-items:center;padding:15px 17px;'+(idx>0?'border-top:1px solid var(--border)':'')">
+                      <span :style="'width:10px;height:10px;border-radius:50%;background:'+infoVisual(it.status).dot"></span>
+                      <div style="min-width:0">
+                        <div class="flex items-center gap-2" style="flex-wrap:wrap;line-height:1.3">
+                          <span class="fw-700 fs-14" style="color:#2A2822" x-text="it.nome"></span>
+                          <span x-show="it.critico" class="fw-800" style="font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:#A6742A">crítico</span>
                         </div>
-                        <div class="fs-13 text-2" style="margin-top:4px;line-height:1.5" x-text="it.detalhe"></div>
-                        <div class="fs-12 text-3" style="margin-top:3px;display:inline-flex;align-items:center;gap:4px" x-show="infoDetalheExtra(it)"><i class="ph ph-calendar-blank ic-ph" style="font-size:12px"></i> <span x-text="infoDetalheExtra(it)"></span></div>
+                        <div class="fs-13" style="color:var(--text-3);margin-top:3px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :title="infoDetalheLinha(it)" x-text="infoDetalheLinha(it)"></div>
                       </div>
-                      <div class="flex items-center gap-2" style="flex:none;margin-top:6px">
-                        <span x-show="it.latenciaMs!=null" class="text-3 fs-11" x-text="it.latenciaMs+'ms'"></span>
-                        <span class="badge fs-11 fw-700" :style="'background:'+infoVisual(it.status).bg+';color:'+infoVisual(it.status).cor+';border:1px solid '+infoVisual(it.status).bd" x-text="infoVisual(it.status).rotulo"></span>
+                      <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+                        <span class="fw-800" :style="'font-size:11px;letter-spacing:.03em;padding:3px 10px;border-radius:20px;background:'+infoVisual(it.status).bg+';color:'+infoVisual(it.status).cor" x-text="infoVisual(it.status).rotulo"></span>
+                        <span x-show="it.latenciaMs!=null" class="fs-11" style="color:var(--text-3)" x-text="it.latenciaMs+' ms'"></span>
                       </div>
                     </div>
                   </template>
@@ -4192,7 +4188,7 @@
             </template>
           </div>
 
-          <p x-show="infoData" class="text-3 fs-11" style="margin-top:16px" x-text="'Última verificação: '+fmtDataHora(infoData&&infoData.geradoEm)+'. Itens “manual” dependem de conferência no painel do fornecedor.'"></p>
+          <p x-show="infoData" class="text-3 fs-11" style="margin-top:16px">Itens “manual” dependem de conferência no painel do fornecedor.</p>
         </div>
 
         <!-- ABA SENHAS (cofre global da agência) -->
@@ -6148,7 +6144,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=421"></script>
+<script src="js/app.js?v=422"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

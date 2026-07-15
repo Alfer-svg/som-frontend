@@ -4026,17 +4026,17 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     infoItensDaCat(cat) { return ((this.infoData && this.infoData.itens) || []).filter(i => i.categoria === cat); },
     infoVisual(st) {
       const m = {
-        ok:     { rotulo: 'OK',       cor: '#166534', bg: '#DCFCE7', bd: '#86EFAC', ico: 'ph-check-circle' },
-        alerta: { rotulo: 'Atenção',  cor: '#92400E', bg: '#FEF3C7', bd: '#FCD34D', ico: 'ph-warning' },
-        erro:   { rotulo: 'Problema', cor: '#B91C1C', bg: '#FEE2E2', bd: '#FCA5A5', ico: 'ph-x-circle' },
-        manual: { rotulo: 'Manual',   cor: '#374151', bg: '#F3F4F6', bd: '#E0DDD8', ico: 'ph-info' },
+        ok:     { rotulo: 'OK',       cor: '#1A7A43', bg: '#E8F6EC', bd: '#BFE6CB', dot: '#1F9D57', ico: 'ph-check-circle' },
+        alerta: { rotulo: 'Atenção',  cor: '#B06A00', bg: '#FCF1D8', bd: '#F3D89A', dot: '#E08A00', ico: 'ph-warning' },
+        erro:   { rotulo: 'Problema', cor: '#C0392E', bg: '#FBE6E5', bd: '#F3B7B3', dot: '#D6453F', ico: 'ph-x-circle' },
+        manual: { rotulo: 'Manual',   cor: '#6F6D64', bg: '#F0EDE6', bd: '#E2DED4', dot: '#9A988F', ico: 'ph-info' },
       };
       return m[st] || m.manual;
     },
-    infoDetalheExtra(it) {
+    // Detalhe em UMA linha só (data do vencimento junta no fim) — mantém as linhas de altura igual.
+    infoDetalheLinha(it) {
       const e = it.extra || {};
-      if (e.vence) return 'até ' + this.fmtDate(e.vence); // complementa o "vence em X dias" do detalhe, sem repetir
-      return null;
+      return it.detalhe + (e.vence ? ' (' + this.fmtDate(e.vence) + ')' : '');
     },
 
     // Aba Senhas: cofre GLOBAL da agência (/cofre-senhas). Só admin (guard no backend).
