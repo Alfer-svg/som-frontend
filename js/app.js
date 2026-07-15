@@ -355,6 +355,22 @@ const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => 
 const TIPOS_DOC = ['Contrato', 'Proposta', 'Apresentação', 'Relatório', 'Briefing', 'Identidade visual', 'Outro'];
 const TIPOS_INTER = [['Ligação', '📞'], ['WhatsApp', '💬'], ['E-mail', '✉️'], ['Reunião', '🤝'], ['Visita', '📍'], ['Nota', '📝']];
 const TIPOS_POST = ['Estático', 'Carrossel', 'Animação', 'Vídeo'];
+// Calendário fixo de datas comemorativas do marketing brasileiro (MM-DD → nome).
+// Usado no Painel da equipe (Oportunidades de pauta) — cruza a data com o segmento.
+const DATAS_COMEMORATIVAS = [
+  ['01-09', 'Dia do Fico'], ['02-14', 'Dia dos Namorados (EUA/Valentine)'], ['03-08', 'Dia da Mulher'],
+  ['03-15', 'Dia do Consumidor'], ['04-07', 'Dia Mundial da Saúde'], ['04-19', 'Dia do Índio'],
+  ['04-21', 'Tiradentes'], ['04-22', 'Descobrimento do Brasil'], ['05-01', 'Dia do Trabalhador'],
+  ['05-11', 'Dia das Mães'], ['06-05', 'Dia do Meio Ambiente'], ['06-12', 'Dia dos Namorados'],
+  ['06-24', 'São João'], ['07-15', 'Dia do Homem'], ['07-17', 'Dia Mundial do Emoji'],
+  ['07-19', 'Dia Nacional do Futebol'], ['07-20', 'Dia do Amigo'], ['07-22', 'Dia Mundial do Cérebro'],
+  ['07-25', 'Dia do Motorista'], ['08-11', 'Dia do Estudante'], ['08-10', 'Dia dos Pais'],
+  ['08-22', 'Dia do Folclore'], ['09-07', 'Independência'], ['09-15', 'Dia do Cliente'],
+  ['09-21', 'Dia da Árvore'], ['10-01', 'Dia do Idoso'], ['10-12', 'Dia das Crianças'],
+  ['10-15', 'Dia do Professor'], ['10-31', 'Halloween'], ['11-02', 'Finados'],
+  ['11-15', 'Proclamação da República'], ['11-20', 'Consciência Negra'], ['11-28', 'Black Friday'],
+  ['12-25', 'Natal'], ['12-31', 'Réveillon'],
+];
 // Paleta de cores BEM distintas pras bolinhas (avatares) — uma cor por membro,
 // pra diferenciar a equipe (antes a cor vinha do papel = todos iguais). Texto branco.
 const AVATAR_CORES = ['#E11D48', '#F97316', '#0EA5E9', '#16A34A', '#7C3AED', '#DB2777', '#0D9488', '#CA8A04', '#2563EB', '#65A30D', '#9333EA', '#0891B2', '#DC2626', '#059669', '#4F46E5', '#C026D3'];
@@ -879,7 +895,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.ajustaAbaOperacional(); this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); this.carregarOperacoes(); this.carregarSamara(); } if (p === 'infostatus') { this.infoAba = 'status'; this.carregarInfoStatus(); this.carregarCofreSenhas(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.carregarOperacoes(); this.carregarSamara(); } },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); this.opTab = this.papel === 'colaborador2' ? 'quadro' : 'painel'; this.ajustaAbaOperacional(); this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); this.carregarOperacoes(); this.carregarSamara(); if (!this.matTop) this.carregarMelhores(); } if (p === 'infostatus') { this.infoAba = 'status'; this.carregarInfoStatus(); this.carregarCofreSenhas(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.carregarOperacoes(); this.carregarSamara(); } },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -5084,6 +5100,92 @@ ${this._docFoot()}
     },
     progFeitos(arr) { return arr.filter(p => p.status === 'Concluído').length; },
     prazoNaSemana(p) { const s = this.semanaAtual; return p.prazo && p.prazo >= s.ini && p.prazo <= s.fim; },
+
+    // ══════════ PAINEL DA EQUIPE (aba inicial do Operacional) ══════════
+    // Painel único que os três (Matheus/Samara/Laryssa) veem ao abrir o Operacional.
+    // Tudo puxado dos dados reais do SOM; sem cadastro novo.
+    get pnlDataTitulo() { const d = new Date(); const s = d.toLocaleDateString('pt-BR', { timeZone: 'America/Recife', weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }); return s.charAt(0).toUpperCase() + s.slice(1); },
+    get pnlSaudacao() { const h = +new Date().toLocaleString('en-US', { timeZone: 'America/Recife', hour: '2-digit', hour12: false }); return h < 12 ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite'); },
+    get pnlEquipe() { return (this.equipe || []).slice(0, 8); },
+    // ── KPIs do topo ──
+    get pnlPostsHoje() { return this.operPostsTotal; },
+    get pnlPostsHojeClientes() { return this.operPostsDia.filter(g => g.cliente !== '— Interno').length; },
+    get pnlPostsAtrasados() { return this.operResumoTrelo.atrasados; },
+    get pnlAtrasadoMaisAntigo() { const h = this._hojeStr(); const at = (this.projects || []).filter(p => p.isPost && !p.arquivado && p.status !== 'Concluído' && p.prazo && String(p.prazo).slice(0, 10) < h); if (!at.length) return null; return at.reduce((a, p) => { const d = String(p.prazo).slice(0, 10); return d < a ? d : a; }, '9999-99-99'); },
+    get pnlProntos() { return (this.projects || []).filter(p => p.isPost && !p.arquivado && p.status === 'Concluído' && !p.publicado).length; },
+    get pnlReunioes7() { return this.agAgendados.filter(e => e.tipo === 'Reunião' && this.diasAte(e.data) >= 0 && this.diasAte(e.data) <= 7).sort((a, b) => this._agKey(a).localeCompare(this._agKey(b))); },
+    get pnlProxReuniao() { return this.pnlReunioes7[0] || null; },
+    get pnlGravacoes7() { return (this.samCaptacoesOrd || []).filter(c => !c.concluida && this.diasAte(c.data) >= 0 && this.diasAte(c.data) <= 7); },
+    get pnlGravacoesAConfirmar() { return this.pnlGravacoes7.filter(c => c.status !== 'confirmada').length; },
+    get pnlClientesAtivosArr() { return (this.clients || []).filter(c => c.status !== 'Inativo' && this.clienteTipo(c) === 'recorrente'); },
+    get pnlClientesAtivos() { return this.clientesAtivos; },
+    get pnlClientesAtencao() { return this.pnlClientesAtivosArr.filter(c => c.socialAtivo !== false && this.saudeCliente(c).sinal === '🔴').length; },
+    // ── Reuniões dos próximos dias (lista) ──
+    get pnlReunioesLista() { return this.agAgendados.filter(e => e.tipo === 'Reunião' && this.diasAte(e.data) >= 0 && this.diasAte(e.data) <= 14).sort((a, b) => this._agKey(a).localeCompare(this._agKey(b))).slice(0, 4); },
+    // ── Gravações agendadas (captações) ──
+    get pnlGravacoesLista() { return (this.samCaptacoesOrd || []).filter(c => !c.concluida && this.diasAte(c.data) >= 0).slice(0, 4); },
+    pnlGravacaoBadge(c) { return c.status === 'confirmada' ? { t: 'confirmada', cor: '#1A7A43', bg: '#E8F6EC' } : { t: 'confirmar', cor: '#C0392E', bg: '#FBE6E5' }; },
+    // ── Aniversários (contatos + parceria) ──
+    get pnlAniversarios() {
+      const out = [];
+      for (const c of (this.clients || [])) {
+        if ((c.status || 'Ativo') === 'Inativo') continue;
+        const nome = c.empresa || c.nome || '—';
+        for (const r of (c.responsaveis || [])) {
+          if (!r || !r.nascimento) continue;
+          const d = this.diasAniver(r.nascimento);
+          if (d == null || d > 30) continue;
+          out.push({ tipo: 'aniversario', dias: d, quando: r.nascimento, nome: r.nome || 'Contato', cliente: nome, r, cliObj: c });
+        }
+        if (c.desde) { const dp = this.diasAniver(c.desde); const anos = this.idadeDe(c.desde); if (dp != null && dp <= 30 && anos >= 1) out.push({ tipo: 'parceria', dias: dp, quando: c.desde, nome, cliente: '', anos }); }
+      }
+      return out.sort((a, b) => a.dias - b.dias).slice(0, 5);
+    },
+    pnlBadgeData(iso) { if (!iso) return { dia: '--', mes: '' }; const [, m, d] = String(iso).slice(0, 10).split('-'); const nomes = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']; const hojeMD = this._hojeStr().slice(5); const md = String(iso).slice(5, 10); return { dia: d, mes: md === hojeMD ? 'HOJE' : (nomes[(+m) - 1] || '') }; },
+    _dowAbrev(iso) { const d = new Date(String(iso).slice(0, 10) + 'T12:00:00'); if (isNaN(d.getTime())) return ''; return ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'][d.getDay()] || ''; },
+    pnlBadgeDia(iso) { const md = String(iso).slice(5, 10); const hoje = this._hojeStr().slice(5); const d = String(iso).slice(8, 10); return { dia: d, sub: md === hoje ? 'HOJE' : this._dowAbrev(iso) }; },
+    // ── Datas comemorativas (próximos 7 dias) ──
+    get pnlComemorativas() {
+      return DATAS_COMEMORATIVAS.map(([md, nome]) => ({ md, nome, dias: this.diasAniver('2000-' + md) }))
+        .filter(x => x.dias != null && x.dias <= 7)
+        .sort((a, b) => a.dias - b.dias)
+        .map(x => ({ ...x, quando: this._hojeStr().slice(0, 4) + '-' + x.md }));
+    },
+    // ── Engajamento: destaques da semana no Instagram ──
+    get pnlDestaques() { const base = (this.matTop && Array.isArray(this.matTop.posts)) ? this.matTop.posts : []; return base.slice(0, 3); },
+    // ── Carga do dia por pessoa ──
+    get pnlCarga() {
+      const h = this._hojeStr();
+      return this.progPorMembro().map(g => {
+        const hoje = g.projetos.filter(p => String(p.prazo || '').slice(0, 10) === h && p.status !== 'Concluído').length;
+        const atras = g.projetos.filter(p => p.status !== 'Concluído' && p.prazo && String(p.prazo).slice(0, 10) < h).length;
+        const prontos = this.progFeitos(g.projetos);
+        const fila = this.progOrdena(g.projetos).find(p => p.status !== 'Concluído') || null;
+        return { nome: g.nome, ref: g.ref, hoje, atras, prontos, fila };
+      }).sort((a, b) => b.atras - a.atras);
+    },
+    // ── Satisfação média das reuniões do mês ──
+    get pnlSatisfacao() { const mes = this._hojeStr().slice(0, 7); const notas = this.agAgendados.filter(e => e.satisfacao > 0 && e.data.slice(0, 7) === mes).map(e => e.satisfacao); if (!notas.length) return { media: null, n: 0 }; return { media: Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 10) / 10, n: notas.length }; },
+    // ── Pauta do dia da equipe (atrasados primeiro) ──
+    get pnlPautaDia() {
+      const h = this._hojeStr();
+      const posts = (this.projects || []).filter(p => p.isPost && !p.arquivado && p.prazo && String(p.prazo).slice(0, 10) <= h && (String(p.prazo).slice(0, 10) === h || p.status !== 'Concluído'));
+      return posts.map(p => ({ p, atrasado: String(p.prazo).slice(0, 10) < h && p.status !== 'Concluído' }))
+        .sort((a, b) => (a.atrasado === b.atrasado) ? String(a.p.prazo).localeCompare(String(b.p.prazo)) : (a.atrasado ? -1 : 1))
+        .slice(0, 8);
+    },
+    pnlPautaBadge(item) {
+      const p = item.p;
+      if (item.atrasado) return { t: 'atrasado', cor: '#C0392E', bg: '#FBE6E5' };
+      if (p.publicado) return { t: 'publicado', cor: '#1A7A43', bg: '#E8F6EC' };
+      if (p.status === 'Concluído') return { t: 'pronto', cor: '#1A7A43', bg: '#E8F6EC' };
+      if (/aguard|bloque|cliente/i.test(String(p.descricao || '') + String(p.legenda || ''))) return { t: 'em produção', cor: '#B06A00', bg: '#FCF1D8' };
+      return { t: 'em produção', cor: '#B06A00', bg: '#FCF1D8' };
+    },
+    // Avatar do responsável de um projeto/post (1º membro, senão responsavel).
+    pnlResp(p) { const ms = (Array.isArray(p.membros) && p.membros.length) ? p.membros : (p.responsavel ? [p.responsavel] : []); return ms[0] || ''; },
+    // Abre o card do post/projeto no quadro (reusa o fluxo existente).
+    pnlAbrir(p) { this.opTab = 'quadro'; this.$nextTick(() => this.abrirCard(p)); },
     toggleConcluido(p) { this.moverProjeto(p, p.status === 'Concluído' ? 'A Fazer' : 'Concluído'); },
     // Altera a data do post direto pelo card do quadro (sem abrir o modal) e persiste.
     async alterarPrazo(p, val) { p.prazo = val || ''; try { await this.salvarProjetoApi(p); } catch (e) { alert(e.message || 'Falha ao salvar a data.'); } },
