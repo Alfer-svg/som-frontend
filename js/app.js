@@ -1692,7 +1692,7 @@ document.addEventListener('alpine:init', () => {
     samRForm: { titulo: '', cliente: '', captacao: '' }, samRAberto: false,
     samGmnAberto: true, // card "Dia de Google Meu Negócio" recolhível
     samStoriesAberto: true, // card "Stories orgânicos de hoje" recolhível
-    samCForm: { cliente: '', local: '', data: '', tipo: 'Captação', prestador: '', valor: '', condPagto: 'avista', prazo: '', parcelas: [{ data: '', valor: '' }] }, samCAberto: false,
+    samCForm: { cliente: '', local: '', data: '', tipo: 'Captação', prestador: '', valor: '', condPagto: 'avista', adiantPct: 50, prazo: '', parcelas: [{ data: '', valor: '' }] }, samCAberto: false,
     // helpers de data/hora (America/Recife)
     _horaBR() { return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); },
     _semanaISO(d) { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const dn = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - dn); const ano = t.getUTCFullYear(); const jan1 = new Date(Date.UTC(ano, 0, 1)); const sem = Math.ceil((((t - jan1) / 86400000) + 1) / 7); return ano + '-W' + String(sem).padStart(2, '0'); },
@@ -1847,20 +1847,36 @@ document.addEventListener('alpine:init', () => {
       const valor = Number(f.valor) || 0;
       const capId = MD.uid();
       const finIds = [];
-      // Ao agendar: gera lançamento(s) de DESPESA no Financeiro, TRAVADO (liberado:false) até concluir o serviço.
+      // Ao agendar: gera lançamento(s) de DESPESA no Financeiro. Regra da trava:
+      //  · saldo/parcela/à vista → TRAVADO (liberado:false) até concluir o serviço;
+      //  · entrada adiantada → JÁ LIBERADA (liberado:true, adiantado:true) — é paga na frente, não trava.
       if (valor > 0 && f.prestador) {
-        const parc = f.condPagto === 'parcelado'
-          ? (f.parcelas || []).filter(p => p.data && Number(p.valor) > 0).map(p => ({ data: p.data, valor: Number(p.valor) }))
-          : [{ data: f.prazo || f.data, valor }];
-        const n = parc.length || 1;
-        (parc.length ? parc : [{ data: f.prazo || f.data, valor }]).forEach((p, i) => {
+        let lancs; // {sufixo, valor, vencimento, liberado, adiantado}
+        if (f.condPagto === 'parcelado') {
+          const parc = (f.parcelas || []).filter(p => p.data && Number(p.valor) > 0);
+          const n = parc.length || 1;
+          lancs = (parc.length ? parc : [{ data: f.prazo || f.data, valor }]).map((p, i) => ({
+            sufixo: n > 1 ? ' (' + (i + 1) + '/' + n + ')' : '', valor: Number(p.valor) || 0,
+            vencimento: p.data || f.data, liberado: false, adiantado: false,
+          }));
+        } else if (f.condPagto === 'adiantado') {
+          const pct = Math.min(99, Math.max(1, Math.round(Number(f.adiantPct) || 50)));
+          const entrada = Math.round(valor * pct) / 100; // pct% do valor, 2 casas
+          lancs = [
+            { sufixo: ' (entrada ' + pct + '%)', valor: entrada, vencimento: this._hojeStr(), liberado: true, adiantado: true },
+            { sufixo: ' (saldo ' + (100 - pct) + '%)', valor: Math.round((valor - entrada) * 100) / 100, vencimento: f.prazo || f.data, liberado: false, adiantado: false },
+          ];
+        } else { // à vista
+          lancs = [{ sufixo: '', valor, vencimento: f.prazo || f.data, liberado: false, adiantado: false }];
+        }
+        lancs.forEach((l) => {
           const fid = MD.uid(); finIds.push(fid);
           this.finance.push({
             id: fid, tipo: 'despesa',
-            descricao: 'Captação — ' + f.cliente.trim() + (f.tipo ? ' · ' + f.tipo : '') + (n > 1 ? ' (' + (i + 1) + '/' + n + ')' : ''),
-            valor: p.valor, categoria: 'Projeto pontual', fornecedor: f.prestador, cliente: '',
-            status: 'pendente', liberado: false, origem: 'captacao', captacaoId: capId,
-            vencimento: p.data, data: this._hojeStr(),
+            descricao: 'Captação — ' + f.cliente.trim() + (f.tipo ? ' · ' + f.tipo : '') + l.sufixo,
+            valor: l.valor, categoria: 'Projeto pontual', fornecedor: f.prestador, cliente: '',
+            status: 'pendente', liberado: l.liberado, adiantado: l.adiantado, origem: 'captacao', captacaoId: capId,
+            vencimento: l.vencimento, data: this._hojeStr(),
           });
         });
         this.persist('finance', this.finance);
@@ -1868,12 +1884,13 @@ document.addEventListener('alpine:init', () => {
       this.samCaptacoes.push({
         id: capId, cliente: f.cliente.trim(), local: f.local || '', data: f.data, tipo: f.tipo || 'Captação',
         prestador: f.prestador || '', valor, condPagto: f.condPagto || 'avista',
+        adiantPct: f.condPagto === 'adiantado' ? Math.min(99, Math.max(1, Math.round(Number(f.adiantPct) || 50))) : 0,
         prazo: f.prazo || '', parcelas: f.condPagto === 'parcelado' ? (f.parcelas || []).filter(p => p.data && Number(p.valor) > 0) : [],
         status: 'a_confirmar', concluida: false, finIds, por: (this.usuario && this.usuario.nome) || '',
       });
-      this.samCForm = { cliente: '', local: '', data: '', tipo: 'Captação', prestador: '', valor: '', condPagto: 'avista', prazo: '', parcelas: [{ data: '', valor: '' }] };
+      this.samCForm = { cliente: '', local: '', data: '', tipo: 'Captação', prestador: '', valor: '', condPagto: 'avista', adiantPct: 50, prazo: '', parcelas: [{ data: '', valor: '' }] };
       this.samCAberto = false; this._samSave('captacoes', this.samCaptacoes);
-      this.mostrarToast(finIds.length ? 'Captação marcada + despesa lançada no Financeiro (travada até concluir). 💰' : 'Captação marcada.');
+      this.mostrarToast(finIds.length ? (f.condPagto === 'adiantado' ? 'Captação marcada + entrada liberada e saldo travado no Financeiro. 💰' : 'Captação marcada + despesa lançada no Financeiro (travada até concluir). 💰') : 'Captação marcada.');
     },
     samToggleCaptacao(c) { c.status = c.status === 'confirmada' ? 'a_confirmar' : 'confirmada'; this._samSave('captacoes', this.samCaptacoes); },
     // Concluir o serviço → LIBERA o pagamento no Financeiro (liberado:true nos lançamentos ligados)
@@ -1886,11 +1903,11 @@ document.addEventListener('alpine:init', () => {
       this._samLogPush('Serviço concluído — ' + c.cliente + (liberou ? ' · pagamento liberado no Financeiro' : ''), 'captacao');
       this.mostrarToast(liberou ? 'Serviço concluído — pagamento liberado no Financeiro. ✅' : 'Serviço concluído. ✅');
     },
-    // Reabrir (desfazer conclusão) → volta a travar o pagamento (só nos ainda não pagos)
+    // Reabrir (desfazer conclusão) → volta a travar o pagamento (só nos ainda não pagos E que não são entrada adiantada)
     samReabrirCaptacao(c) {
       c.concluida = false; c.concluidoEm = '';
       let travou = 0;
-      (this.finance || []).forEach(f => { if (f.captacaoId === c.id && f.status !== 'pago') { f.liberado = false; travou++; } });
+      (this.finance || []).forEach(f => { if (f.captacaoId === c.id && f.status !== 'pago' && !f.adiantado) { f.liberado = false; travou++; } });
       if (travou) this.persist('finance', this.finance);
       this._samSave('captacoes', this.samCaptacoes);
     },

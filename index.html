@@ -2851,11 +2851,21 @@
                     <div class="flex items-center gap-2" style="flex-wrap:wrap">
                       <span class="text-3 fs-11">pagamento</span>
                       <button class="btn btn-sm" :style="samCForm.condPagto==='avista'?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="samCForm.condPagto='avista'">À vista</button>
+                      <button class="btn btn-sm" :style="samCForm.condPagto==='adiantado'?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="samCForm.condPagto='adiantado'">Entrada + saldo</button>
                       <button class="btn btn-sm" :style="samCForm.condPagto==='parcelado'?'background:#4285F4;color:#fff;border-color:#4285F4':'background:var(--surface-2);color:var(--text-2)'" @click="samCForm.condPagto='parcelado'">Parcelado</button>
                     </div>
                     <!-- À vista: 1 prazo -->
                     <div x-show="samCForm.condPagto==='avista'" class="flex items-center gap-2" style="flex-wrap:wrap">
                       <label class="text-3 fs-11">prazo de pagamento <input type="date" class="input fs-12" style="max-width:150px" x-model="samCForm.prazo"></label>
+                    </div>
+                    <!-- Entrada + saldo: % adiantado (liberado já) + saldo travado até concluir -->
+                    <div x-show="samCForm.condPagto==='adiantado'" class="flex items-center gap-2" style="flex-wrap:wrap">
+                      <label class="text-3 fs-11">entrada <input type="number" min="1" max="99" step="1" class="input fs-12" style="max-width:64px" x-model="samCForm.adiantPct">%</label>
+                      <label class="text-3 fs-11">prazo do saldo <input type="date" class="input fs-12" style="max-width:150px" x-model="samCForm.prazo"></label>
+                      <span class="text-3 fs-11" x-show="(Number(samCForm.valor)||0)>0">
+                        entrada <b style="color:#15803d" x-text="'R$ '+(Math.round((Number(samCForm.valor)||0)*Math.min(99,Math.max(1,Math.round(Number(samCForm.adiantPct)||50))))/100).toLocaleString('pt-BR')"></b>
+                        (liberada) · saldo <b style="color:#B06000" x-text="'R$ '+(((Number(samCForm.valor)||0)-Math.round((Number(samCForm.valor)||0)*Math.min(99,Math.max(1,Math.round(Number(samCForm.adiantPct)||50))))/100)).toLocaleString('pt-BR')"></b> (trava)
+                      </span>
                     </div>
                     <!-- Parcelado: várias datas + valores -->
                     <div x-show="samCForm.condPagto==='parcelado'" style="display:grid;gap:6px">
@@ -2884,7 +2894,7 @@
                         </div>
                         <div style="flex:1;min-width:0">
                           <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span x-text="c.cliente"></span><span class="text-3 fw-400" x-show="c.local" x-text="' — '+c.local"></span></div>
-                          <div class="text-3 fs-11"><span x-text="c.tipo"></span><span x-show="c.prestador" x-text="' · 🎬 '+c.prestador"></span><span x-show="c.valor" x-text="' · R$ '+(Number(c.valor)||0).toLocaleString('pt-BR')"></span><span x-show="c.valor" x-text="' · '+(c.condPagto==='parcelado'?((c.parcelas||[]).length+'× parcelado'):'à vista')"></span></div>
+                          <div class="text-3 fs-11"><span x-text="c.tipo"></span><span x-show="c.prestador" x-text="' · 🎬 '+c.prestador"></span><span x-show="c.valor" x-text="' · R$ '+(Number(c.valor)||0).toLocaleString('pt-BR')"></span><span x-show="c.valor" x-text="' · '+(c.condPagto==='parcelado'?((c.parcelas||[]).length+'× parcelado'):(c.condPagto==='adiantado'?((c.adiantPct||50)+'% entrada + saldo'):'à vista'))"></span></div>
                         </div>
                         <button class="badge fs-10 fw-600" style="cursor:pointer;flex:none" :style="c.status==='confirmada'?'background:#E6F4EA;color:#34A853':'background:#FEF7E0;color:#B06000'" @click="samToggleCaptacao(c)" x-text="c.status==='confirmada'?'confirmada':'a confirmar'"></button>
                         <button class="btn btn-icon btn-ghost btn-sm" @click="samRemCaptacao(c)" title="Remover" style="color:var(--text-3);flex:none"><i class="ph ph-x ic-ph"></i></button>
@@ -2892,7 +2902,8 @@
                       <!-- pagamento + concluir -->
                       <div class="flex items-center justify-between" style="gap:8px;margin-top:8px;flex-wrap:wrap">
                         <div class="fs-11" x-show="c.valor">
-                          <template x-if="!c.concluida"><span style="color:#B06000"><i class="ph ph-lock-simple"></i> pagamento trava até concluir o serviço</span></template>
+                          <template x-if="!c.concluida && c.condPagto==='adiantado'"><span style="color:#B06000"><i class="ph ph-lock-simple"></i> entrada liberada · saldo trava até concluir o serviço</span></template>
+                          <template x-if="!c.concluida && c.condPagto!=='adiantado'"><span style="color:#B06000"><i class="ph ph-lock-simple"></i> pagamento trava até concluir o serviço</span></template>
                           <template x-if="c.concluida"><span style="color:#15803d"><i class="ph ph-lock-simple-open"></i> pagamento liberado no Financeiro</span></template>
                         </div>
                         <div style="flex:1" x-show="!c.valor"></div>
@@ -5974,7 +5985,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=418"></script>
+<script src="js/app.js?v=419"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
