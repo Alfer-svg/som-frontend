@@ -2474,37 +2474,15 @@
               </template>
             </div>
 
-            <!-- PRODUÇÃO · Carga por pessoa -->
+            <!-- SATISFAÇÃO · média das reuniões do mês -->
             <div class="card" style="padding:18px">
-              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Produção</div>
-              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:12px">Carga do dia por pessoa</div>
-              <template x-if="!pnlCarga.length"><div class="text-3 fs-13" style="padding:6px 0">Ninguém com posts atribuídos.</div></template>
-              <div x-show="pnlCarga.length">
-                <div class="flex items-center" style="gap:10px;padding-bottom:6px">
-                  <div style="flex:1"></div>
-                  <div class="fw-800 fs-10" style="width:42px;text-align:center;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3)">Hoje</div>
-                  <div class="fw-800 fs-10" style="width:42px;text-align:center;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3)">Atras.</div>
-                  <div class="fw-800 fs-10" style="width:52px;text-align:center;text-transform:uppercase;letter-spacing:.03em;color:var(--text-3)">Prontos</div>
-                </div>
-                <template x-for="c in pnlCarga" :key="'pcg'+c.ref">
-                  <div class="flex items-center" style="gap:10px;padding:9px 0;border-top:1px solid var(--border)">
-                    <span :style="'width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;flex:none;'+(fotoDe(c.nome)?('background-image:url('+fotoDe(c.nome)+');background-size:cover;color:transparent'):('background:'+avatarBg(c.nome)+';color:'+avatarFg(c.nome)))" x-text="fotoDe(c.nome)?'':iniciais(c.nome)"></span>
-                    <div style="flex:1;min-width:0">
-                      <div class="fw-700 fs-13" style="color:#2A2822" x-text="c.nome"></div>
-                      <div class="text-3 fs-11" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" x-show="c.fila" x-text="(c.fila?(c.fila.cliente?(c.fila.cliente+' · '):'')+(c.fila.tema||c.fila.nome||''):'')"></div>
-                    </div>
-                    <div class="fw-700 fs-14" style="width:42px;text-align:center;color:#2A2822" x-text="c.hoje"></div>
-                    <div class="fw-700 fs-14" style="width:42px;text-align:center" :style="'color:'+(c.atras>0?'#C0392E':'#C4C1B7')" x-text="c.atras"></div>
-                    <div class="fw-700 fs-14" style="width:52px;text-align:center;color:#1A7A43" x-text="c.prontos"></div>
-                  </div>
-                </template>
-              </div>
-              <!-- Satisfação média -->
-              <div class="flex items-center gap-3" style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--border)">
-                <div class="fw-800" style="font-size:24px;line-height:1;color:#2A2822"><span x-text="pnlSatisfacao.media!=null ? pnlSatisfacao.media.toLocaleString('pt-BR') : '—'"></span><span class="text-3 fs-12" style="font-weight:600"> / 5</span></div>
+              <div class="fw-800 fs-11" style="text-transform:uppercase;letter-spacing:.06em;color:#E0742A;margin-bottom:2px">Satisfação</div>
+              <div class="fw-800 fs-16" style="color:#2A2822;margin-bottom:14px">Reuniões do mês</div>
+              <div class="flex items-center gap-3">
+                <div class="fw-800" style="font-size:34px;line-height:1;color:#2A2822"><span x-text="pnlSatisfacao.media!=null ? pnlSatisfacao.media.toLocaleString('pt-BR') : '—'"></span><span class="text-3 fs-14" style="font-weight:600"> / 5</span></div>
                 <div style="flex:1">
-                  <div class="fw-700 fs-13" style="color:#2A2822">Satisfação média nas reuniões do mês</div>
-                  <div class="text-3 fs-12" x-text="pnlSatisfacao.n ? (pnlSatisfacao.n+' reunião(ões) avaliada(s)') : 'sem avaliações este mês'"></div>
+                  <div class="fw-700 fs-13" style="color:#2A2822">Satisfação média das reuniões</div>
+                  <div class="text-3 fs-12" x-text="pnlSatisfacao.n ? (pnlSatisfacao.n+' reunião(ões) avaliada(s) este mês') : 'sem avaliações este mês'"></div>
                 </div>
                 <span x-show="pnlSatisfacao.media!=null && pnlSatisfacao.media>=4" class="fw-800" style="font-size:11px;padding:3px 10px;border-radius:20px;background:#E8F6EC;color:#1A7A43">saudável</span>
               </div>
@@ -6371,7 +6349,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=425"></script>
+<script src="js/app.js?v=426"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
