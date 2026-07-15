@@ -4719,7 +4719,7 @@
 <!-- CLIENTE -->
 <div class="modal-backdrop pagemode" x-show="modal==='client'" x-cloak>
   <div class="modal">
-    <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div></div>
+    <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" x-show="ehAdmin && editing.id" @click="abrirPortalCliente(editing)" title="Criar/gerenciar o acesso do cliente à Área do Cliente (app)"><i class="ph ph-identification-card ic-ph" style="color:#E0742A"></i> Portal do cliente</button></div>
     <div class="modal-body" style="display:block">
       <!-- Tipo de cliente — sempre à vista, editável a qualquer momento -->
       <div class="card" style="padding:10px 12px;margin-bottom:12px;background:rgba(0,0,0,.02)">
@@ -6392,7 +6392,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=427"></script>
+<script src="js/app.js?v=428"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
