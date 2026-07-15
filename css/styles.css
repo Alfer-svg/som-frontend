@@ -212,13 +212,13 @@ a { color: inherit; text-decoration: none; }
 .tab.active { color: var(--text); border-bottom-color: var(--red); }
 
 /* ---------- Modal ---------- */
-.modal-backdrop { position: fixed; inset: 0; background: rgba(20,18,31,.45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 50; overflow-y: auto; }
+.modal-backdrop { position: fixed; inset: 0; background: rgba(20,18,31,.45); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 200; overflow-y: auto; } /* acima da ficha full (120) e do pagemode (150): diálogo sempre por cima */
 .modal { background: var(--surface); border-radius: 16px; width: 100%; max-width: 560px; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
 /* Detalhe em TELA CHEIA — abre como uma PÁGINA: cabeçalho fixo (igual topbar) +
    conteúdo num cartão centralizado sobre o fundo + barra de ações fixa no rodapé.
    --col = largura da coluna central; os cabeçalho/rodapé ficam largura-total mas
    com o conteúdo alinhado a essa coluna via padding calculado. */
-.modal-backdrop.pagemode { --col: 880px; background: var(--bg); padding: 0; z-index: 60; display: block; }
+.modal-backdrop.pagemode { --col: 880px; background: var(--bg); padding: 0; z-index: 150; display: block; } /* tela-página: acima da ficha full, abaixo dos diálogos */
 .modal-backdrop.pagemode > .modal {
   max-width: none; width: 100%; min-height: 100vh; border-radius: 0; box-shadow: none;
   background: transparent; display: flex; flex-direction: column;
