@@ -1130,8 +1130,8 @@ document.addEventListener('alpine:init', () => {
       return dias;
     },
     get agProximos() { const h = this._hojeStr(); return this.agAgendados.filter(e => e.data >= h).sort((a, b) => this._agKey(a).localeCompare(this._agKey(b))).slice(0, 8); },
-    novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '', membros: [], desenvolvimento: '', solucao: '', satisfacao: 0, satisfacaoJust: '' }; this.eventoModal = true; },
-    editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, hora: ev.hora || '', tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '', link: ev.link || '', membros: Array.isArray(ev.membros) ? ev.membros.slice() : [], desenvolvimento: ev.desenvolvimento || '', solucao: ev.solucao || '', satisfacao: +ev.satisfacao || 0, satisfacaoJust: ev.satisfacaoJust || '' }; this.eventoModal = true; },
+    novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '', membros: [], desenvolvimento: '', solucao: '', satisfacao: 0, satisfacaoJust: '' }; this._evResetBuf(); this.eventoModal = true; },
+    editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, hora: ev.hora || '', tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '', link: ev.link || '', membros: Array.isArray(ev.membros) ? ev.membros.slice() : [], desenvolvimento: ev.desenvolvimento || '', solucao: ev.solucao || '', satisfacao: +ev.satisfacao || 0, satisfacaoJust: ev.satisfacaoJust || '' }; this._evResetBuf(); this.eventoModal = true; },
     // Escala de satisfação do cliente no evento (1=😡 … 5=😁).
     SATISFACOES: [[1, '😡', '#dc2626'], [2, '😕', '#f97316'], [3, '😐', '#eab308'], [4, '🙂', '#84cc16'], [5, '😁', '#16a34a']],
     satisfacaoEmoji(n) { const x = (this.SATISFACOES || []).find(s => s[0] === +n); return x ? x[1] : ''; },
@@ -1456,6 +1456,7 @@ document.addEventListener('alpine:init', () => {
     },
     operNovoEvento() { // Matheus agenda evento SEM a trava de papel do novoEvento() — já entra como colaborador
       this.eventoForm = { id: '', clienteId: '', data: this.operChkData || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '', membros: [this.operNomeMatheus], desenvolvimento: '', solucao: '', satisfacao: 0, satisfacaoJust: '' };
+      this._evResetBuf();
       this.eventoModal = true;
     },
     // Log de otimizações/ajustes do Matheus (mesma ideia do Tráfego) — arquiva no Fichário.
@@ -2673,6 +2674,8 @@ document.addEventListener('alpine:init', () => {
       window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
     },
     async salvarEvento() {
+      // Texto digitado no campo de tópico e não adicionado com +/Enter vira tópico ao salvar (senão se perdia)
+      this.evAddTopico('desenvolvimento'); this.evAddTopico('solucao');
       const f = this.eventoForm;
       if (!f.clienteId) return alert('Escolha o cliente.');
       if (!f.data) return alert('Escolha a data.');
@@ -2689,6 +2692,7 @@ document.addEventListener('alpine:init', () => {
     // ── Registro do evento em tópicos (até 5) — desenvolvimento/solução ──
     // Guardado como string com \n (compatível com o resto); a UI edita como lista.
     evTopicos(campo) { return String(this.eventoForm[campo] || '').split('\n').map(s => s.trim()).filter(Boolean); },
+    _evResetBuf() { this.evTopBuf = { desenvolvimento: '', solucao: '' }; }, // buffer é global — zerar ao abrir o modal pra não vazar entre eventos
     _evSet(campo, arr) { this.eventoForm[campo] = arr.slice(0, 5).join('\n'); },
     evAddTopico(campo) {
       const v = (this.evTopBuf[campo] || '').trim(); if (!v) return;
