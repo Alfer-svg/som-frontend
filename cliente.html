@@ -98,12 +98,12 @@
 
       <!-- ───── INÍCIO (leitura do dia pela IA) ───── -->
       <div x-show="aba==='inicio'" style="padding:8px 16px">
-        <div style="font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px" x-text="saudacao()+', '+(cliente.nome||cliente.empresa||'')+' 👋'"></div>
+        <div style="font-size:20px;font-weight:500;letter-spacing:-.3px;margin-bottom:2px;color:var(--ink)" x-text="saudacao()+', '+(cliente.nome||cliente.empresa||'')"></div>
         <div class="muted" style="font-size:13px;margin-bottom:16px" x-text="hojeExtenso()"></div>
 
         <!-- Leitura do dia (IA) -->
         <div class="hero" style="position:relative;overflow:hidden;margin-bottom:16px">
-          <div class="row" style="gap:7px;position:relative;margin-top:2px"><span style="font-size:15px">✨</span><span class="sec-label">Leitura do dia · por IA</span></div>
+          <div class="row" style="gap:8px;position:relative;margin-top:2px"><span style="width:16px;height:16px;border-radius:50%;flex:none;background:conic-gradient(#4285F4,#EA4335,#F9A825,#34A853,#4285F4)"></span><span class="sec-label">Leitura do dia · equipe Maracatu</span></div>
           <template x-if="anLoading && !analise.headline"><div style="color:var(--mut);font-size:14px;margin-top:14px">Preparando sua leitura do dia…</div></template>
           <template x-if="analise.headline">
             <div style="position:relative">
@@ -111,7 +111,7 @@
               <div style="font-size:14px;color:var(--mut);line-height:1.65;margin-top:10px" x-text="analise.texto"></div>
               <div style="margin-top:14px;display:grid;gap:8px">
                 <template x-for="(dd,i) in (analise.destaques||[])" :key="'an'+i">
-                  <div style="font-size:13.5px;border-radius:12px;padding:10px 12px;line-height:1.45" :style="destaqueTint(i)" x-text="dd"></div>
+                  <div style="font-size:13.5px;border-radius:12px;padding:10px 12px;line-height:1.45;display:flex;gap:9px;align-items:flex-start" :style="destaqueTint(i)"><span :style="'flex:none;width:7px;height:7px;border-radius:50%;margin-top:6px;background:'+destaqueDot(i)"></span><span x-text="dd"></span></div>
                 </template>
               </div>
               <button class="btn btn-amber" style="width:100%;margin-top:15px" @click="aba='resultados'; if(!res.cliente) carregarResultados()"><span x-text="analise.convite||'Ver meus resultados'"></span> →</button>
@@ -412,6 +412,7 @@
       async carregarAnalise(){ this.anLoading=true; try{ this.analise=await this.api('GET','/cliente-portal/analise')||{}; }catch(e){} this.anLoading=false; },
       saudacao(){ const h=new Date().getHours(); return h<12?'Bom dia':(h<18?'Boa tarde':'Boa noite'); },
       destaqueTint(i){ const t=[['#F4F8FE','#174EA6'],['#F3FAF6','#12693B'],['#FEFBEF','#8A5A00']]; const c=t[i%3]; return 'background:'+c[0]+';color:'+c[1]; },
+      destaqueDot(i){ return ['#4285F4','#34A853','#F9A825'][i%3]; },
       hojeExtenso(){ try{ const s=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}); return s.charAt(0).toUpperCase()+s.slice(1); }catch(e){ return ''; } },
       // ── aprovações ──
       async carregarAprovacoes(){ this.apLoading=true; try{ this.ap=await this.api('GET','/cliente-portal/aprovacoes'); }catch(e){} this.apLoading=false; },
