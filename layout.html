@@ -23,7 +23,7 @@
 
     /* ---------- CAPA ---------- */
     .capa{ position:relative; background:#0b0b0c; color:#fff; min-height:520px; display:flex; flex-direction:column; justify-content:flex-end;
-      background-repeat:no-repeat; background-size:auto 82%; background-position:right center; overflow:hidden; }
+      background-repeat:no-repeat; background-image:url('assets/alvo.png'); background-size:auto 82%; background-position:right 40px center; overflow:hidden; }
     .capa::before{ content:""; position:absolute; inset:0; background:
       linear-gradient(90deg, rgba(11,11,12,.96) 30%, rgba(11,11,12,.55) 70%, rgba(11,11,12,.25)); }
     .capa .rings{ position:absolute; left:-140px; bottom:-160px; width:460px; height:460px; border-radius:50%;
@@ -81,7 +81,7 @@
     .adjbox textarea:focus{ outline:none; border-color:var(--amber); }
     .adjbox .send{ margin-top:8px; background:#141414; color:#fff; border:0; border-radius:10px; padding:11px 18px; font-weight:700; cursor:pointer; }
 
-    .divisor{ height:160px; background:#0b0b0c center/cover no-repeat; margin:6px 0 26px; position:relative; }
+    .divisor{ height:160px; background:#0b0b0c; background-image:url('assets/alvo.png'); background-repeat:no-repeat; background-size:auto 240%; background-position:right 90px center; margin:6px 0 26px; position:relative; overflow:hidden; }
     .divisor::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(11,11,12,.6), rgba(11,11,12,.15)); }
 
     .pdfcard{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 20px; margin-bottom:22px; }
@@ -234,8 +234,8 @@
       }
 
       var capa = document.getElementById('capa');
-      var im = new Image(); im.onload=function(){ capa.style.backgroundImage="url('assets/capa.jpg')"; }; im.src='assets/capa.jpg';
-      var dv = document.getElementById('divisor'); var im2=new Image(); im2.onload=function(){ dv.style.backgroundImage="url('assets/divisor.jpg')"; show('divisor'); }; im2.src='assets/divisor.jpg';
+      var im = new Image(); im.onload=function(){ capa.style.backgroundImage="url('assets/alvo.png')"; }; im.src='assets/alvo.png';
+      var dv = document.getElementById('divisor'); var im2=new Image(); im2.onload=function(){ show('divisor'); }; im2.src='assets/alvo.png';
 
       var posts = L.posts || [];
       document.getElementById('posts').innerHTML = posts.length
