@@ -184,6 +184,11 @@
       var imgs = imagensDe(p);
       var carrossel = ehCarrossel(p);
       var tipoLabel = carrossel ? 'Carrossel' : 'Peça única';
+      // "Formato" reflete o tipo escolhido no card (tipoPost): Vídeo / Animação; senão Feed.
+      var _tp = String(p.tipoPost || '').toLowerCase();
+      var ehVideo = /reel|v[íi]deo|video/.test(_tp);
+      var formatoLabel = p.formato ? p.formato : (ehVideo ? 'Vídeo' : (/anima/.test(_tp) ? 'Animação' : 'Feed'));
+      var formatoIco = ehVideo ? '🎬' : '📱';
       var si = statusInfo(p.status);
 
       var arte;
@@ -202,7 +207,7 @@
 
       var meta = '<div class="meta">'
         + '<span class="it"><span class="ic">📅</span><b>'+esc(dia(p.prazo))+'</b></span>'
-        + '<span class="it"><span class="ic">📱</span>Formato: <b>'+esc(p.formato||'Feed')+'</b></span>'
+        + '<span class="it"><span class="ic">'+formatoIco+'</span>Formato: <b>'+esc(formatoLabel)+'</b></span>'
         + '<span class="it"><span class="ic">🖼️</span>Tipo: <b>'+tipoLabel+'</b></span>'
         + '<span class="it"><span class="ic">⏱️</span>Status: <span class="st '+si.cls+'">'+si.txt+'</span></span>'
         + '</div>';
