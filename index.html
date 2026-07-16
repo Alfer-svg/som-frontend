@@ -4427,13 +4427,13 @@
                 </div>
                 <div style="display:flex;flex-direction:column;gap:2px;min-width:190px">
                   <span class="text-3 fs-10" style="text-transform:uppercase;letter-spacing:.05em">Login</span>
-                  <template x-if="s.login"><span class="fs-13" style="font-family:monospace;color:#333" x-text="s.login"></span></template>
+                  <template x-if="s.login"><span class="flex items-center gap-1"><span class="fs-13" style="font-family:monospace;color:#333" x-text="s.login"></span><button class="btn btn-icon btn-ghost btn-sm" @click="navigator.clipboard.writeText(s.login||'')" title="Copiar login"><i class="ph ph-copy ic-ph"></i></button></span></template>
                   <template x-if="!s.login"><span class="text-3 fs-13">—</span></template>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:2px;min-width:160px">
                   <span class="text-3 fs-10" style="text-transform:uppercase;letter-spacing:.05em">Senha</span>
                   <div class="flex items-center gap-1">
-                  <template x-if="csEhGoogle(s) && !csTemSenhaReal(s)"><span class="badge fs-11 fw-600" style="background:#DCFCE7;color:#166534">Login via Google</span></template>
+                  <template x-if="csEhGoogle(s) && !csTemSenhaReal(s)"><span class="badge fs-11 fw-600" style="background:#DCFCE7;color:#166534;display:inline-flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M45 24c0-1.6-.1-3.1-.4-4.6H24v9.3h11.8c-.5 2.7-2 5-4.3 6.6v5.5h7C42.6 37 45 31 45 24z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-7-5.5c-2 1.3-4.5 2.1-7.5 2.1-5.8 0-10.7-3.9-12.4-9.2H4.3v5.7C7.9 41 15.3 46 24 46z"/><path fill="#FBBC05" d="M11.6 28.1c-.5-1.3-.7-2.7-.7-4.1s.3-2.8.7-4.1v-5.7H4.3C2.8 17.1 2 20.4 2 24s.8 6.9 2.3 9.8l7.3-5.7z"/><path fill="#EA4335" d="M24 10.7c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.3 2 7.9 7 4.3 14.2l7.3 5.7C13.3 14.6 18.2 10.7 24 10.7z"/></svg>Login via Google</span></template>
                   <template x-if="csEhApiKey(s) && !csTemSenhaReal(s)"><span class="badge fs-11 fw-600" style="background:#DCFCE7;color:#166534"><i class="ph ph-key ic-ph"></i> API key</span></template>
                   <template x-if="!(csEhGoogle(s)&&!csTemSenhaReal(s)) && !(csEhApiKey(s)&&!csTemSenhaReal(s))">
                     <span class="flex items-center gap-1">
