@@ -92,6 +92,52 @@
         <button class="btn btn-ghost" style="padding:8px 12px;font-size:12px;flex:none" @click="sair()">Sair</button>
       </div>
 
+      <!-- ───── INÍCIO (leitura do dia pela IA) ───── -->
+      <div x-show="aba==='inicio'" style="padding:8px 16px">
+        <div style="font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px" x-text="saudacao()+', '+(cliente.nome||cliente.empresa||'')+' 👋'"></div>
+        <div class="muted" style="font-size:13px;margin-bottom:16px" x-text="hojeExtenso()"></div>
+
+        <!-- Leitura do dia (IA) -->
+        <div class="hero" style="position:relative;overflow:hidden;margin-bottom:16px">
+          <div style="position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#3a3733,transparent 70%)"></div>
+          <div class="row" style="gap:7px;position:relative"><span style="font-size:15px">✨</span><span class="sec-label" style="color:#C9A24B">Leitura do dia · por IA</span></div>
+          <template x-if="anLoading && !analise.headline"><div style="color:#B9B4AA;font-size:14px;margin-top:14px">Preparando sua leitura do dia…</div></template>
+          <template x-if="analise.headline">
+            <div style="position:relative">
+              <div style="font-size:20px;font-weight:800;line-height:1.25;margin-top:12px" x-text="analise.headline"></div>
+              <div style="font-size:14px;color:#CFCBC2;line-height:1.6;margin-top:10px" x-text="analise.texto"></div>
+              <div style="margin-top:14px;display:grid;gap:7px">
+                <template x-for="(dd,i) in (analise.destaques||[])" :key="'an'+i">
+                  <div style="font-size:13.5px;color:#EDEAE3;background:rgba(255,255,255,.06);border-radius:10px;padding:8px 11px" x-text="dd"></div>
+                </template>
+              </div>
+              <button class="btn" style="background:#fff;color:#1C1A17;width:100%;margin-top:15px" @click="aba='resultados'; if(!res.cliente) carregarResultados()"><span x-text="analise.convite||'Ver meus resultados'"></span> →</button>
+            </div>
+          </template>
+        </div>
+
+        <!-- atalhos -->
+        <div class="sec-label" style="color:var(--mut)">Atalhos</div>
+        <div style="display:grid;gap:10px;margin-top:8px">
+          <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer" @click="aba='conteudo'">
+            <div style="width:40px;height:40px;border-radius:12px;background:var(--bluebg);display:flex;align-items:center;justify-content:center;flex:none"><span style="font-size:19px">🗓️</span></div>
+            <div style="flex:1"><div style="font-weight:800;font-size:14px">Seu conteúdo da semana</div><div class="muted" style="font-size:12px" x-text="(ap&&ap.disponivel)?(ap.status==='APROVADO_CLIENTE'?'Você já aprovou ✓':'Tem conteúdo pra você aprovar'):'Nada pendente agora'"></div></div>
+            <span x-show="ap&&ap.disponivel&&ap.status!=='APROVADO_CLIENTE'" class="pill" style="background:var(--ambbg);color:var(--amb)">aprovar</span>
+            <span style="color:var(--mut2)">›</span>
+          </div>
+          <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer" @click="aba='resultados'; if(!res.cliente) carregarResultados()">
+            <div style="width:40px;height:40px;border-radius:12px;background:var(--grnbg);display:flex;align-items:center;justify-content:center;flex:none"><span style="font-size:19px">📈</span></div>
+            <div style="flex:1"><div style="font-weight:800;font-size:14px">Seus resultados</div><div class="muted" style="font-size:12px">Redes e tráfego, por dentro</div></div>
+            <span style="color:var(--mut2)">›</span>
+          </div>
+          <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer" @click="aba='agenda'; if(!agLoaded) carregarAgenda()">
+            <div style="width:40px;height:40px;border-radius:12px;background:#F1EDE5;display:flex;align-items:center;justify-content:center;flex:none"><span style="font-size:19px">📅</span></div>
+            <div style="flex:1"><div style="font-weight:800;font-size:14px">Próximas ações</div><div class="muted" style="font-size:12px">Reuniões e gravações</div></div>
+            <span style="color:var(--mut2)">›</span>
+          </div>
+        </div>
+      </div>
+
       <!-- ───── CONTEÚDO (aprovar) ───── -->
       <div x-show="aba==='conteudo'" style="padding:8px 16px">
         <div class="sec-label">Conteúdo</div>
@@ -308,6 +354,9 @@
 
       <!-- tabbar -->
       <div class="tabbar"><div class="tabbar-in">
+        <div class="tab" :class="aba==='inicio'?'on':''" @click="aba='inicio'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span>Início</span>
+        </div>
         <div class="tab" :class="aba==='conteudo'?'on':''" @click="aba='conteudo'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m9 12 2 2 4-4"/></svg><span>Conteúdo</span>
         </div>
@@ -330,12 +379,13 @@
       LOGO,
       token: localStorage.getItem('cliente_token') || '',
       cliente: JSON.parse(localStorage.getItem('cliente_info')||'{}'),
-      aba:'conteudo', rTab:'engaj',
+      aba:'inicio', rTab:'engaj',
+      analise:{}, anLoading:false,
       lgEmail:'', lgSenha:'', lgErro:'', lgLoading:false,
       ap:null, apLoading:false, apAcao:false, ajusteAberto:false, ajusteTxt:'',
       res:{}, resLoading:false, eng:{}, traf:{},
       ag:{}, agLoading:false, agLoaded:false,
-      init(){ if(this.token) this.carregarAprovacoes(); },
+      init(){ if(this.token){ this.aba='inicio'; this.carregarAnalise(); this.carregarAprovacoes(); } },
       async api(method, path, body){
         const h={'Content-Type':'application/json'}; if(this.token) h['Authorization']='Bearer '+this.token;
         const r=await fetch(API+path,{method,headers:h,body:body!=null?JSON.stringify(body):undefined});
@@ -350,11 +400,15 @@
           const d=await this.api('POST','/cliente-portal/login',{email:this.lgEmail,senha:this.lgSenha});
           this.token=d.token; this.cliente=d.cliente;
           localStorage.setItem('cliente_token',d.token); localStorage.setItem('cliente_info',JSON.stringify(d.cliente));
-          this.aba='conteudo'; this.carregarAprovacoes();
+          this.aba='inicio'; this.carregarAnalise(); this.carregarAprovacoes();
         }catch(e){ this.lgErro=(e.message||'Não foi possível entrar.'); }
         this.lgLoading=false;
       },
       sair(){ this.token=''; localStorage.removeItem('cliente_token'); localStorage.removeItem('cliente_info'); this.ap=null; this.res={}; this.ag={}; this.agLoaded=false; },
+      // ── leitura do dia (IA) ──
+      async carregarAnalise(){ this.anLoading=true; try{ this.analise=await this.api('GET','/cliente-portal/analise')||{}; }catch(e){} this.anLoading=false; },
+      saudacao(){ const h=new Date().getHours(); return h<12?'Bom dia':(h<18?'Boa tarde':'Boa noite'); },
+      hojeExtenso(){ try{ const s=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}); return s.charAt(0).toUpperCase()+s.slice(1); }catch(e){ return ''; } },
       // ── aprovações ──
       async carregarAprovacoes(){ this.apLoading=true; try{ this.ap=await this.api('GET','/cliente-portal/aprovacoes'); }catch(e){} this.apLoading=false; },
       async aprovar(){ if(!confirm('Aprovar o conteúdo desta semana?')) return; this.apAcao=true; try{ await this.api('POST','/cliente-portal/aprovacoes/'+this.ap.id+'/aprovar',{nome:this.cliente.nome||''}); await this.carregarAprovacoes(); }catch(e){ alert(e.message); } this.apAcao=false; },
