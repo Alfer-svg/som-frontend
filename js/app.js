@@ -4089,10 +4089,35 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
 
     // ── Portal do cliente (admin cria/gerencia o acesso do cliente ao app) ──
     async abrirPortalCliente(c) {
-      this.portalForm = { clienteId: c.id, empresa: c.empresa || c.nome || '—', email: '', nome: '', senha: '' };
+      this.portalForm = { clienteId: c.id, empresa: c.empresa || c.nome || '—', email: '', nome: '', senha: '', logo: c.logo || '' };
       this.portalAcessos = [];
       this.portalModal = true;
       await this.carregarPortalAcessos(c.id);
+    },
+    // Logo/marca do cliente (aparece na bolinha do app do cliente). Redimensiona no navegador.
+    lerLogoCliente(ev) {
+      const f = ev.target.files && ev.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const N = 220, cv = document.createElement('canvas'); cv.width = N; cv.height = N;
+          const ctx = cv.getContext('2d');
+          const s = Math.min(img.width, img.height), sx = (img.width - s) / 2, sy = (img.height - s) / 2;
+          ctx.drawImage(img, sx, sy, s, s, 0, 0, N, N);
+          this.salvarLogoCliente(cv.toDataURL('image/jpeg', 0.82));
+        };
+        img.src = e.target.result;
+      };
+      r.readAsDataURL(f);
+    },
+    async salvarLogoCliente(dataUri) {
+      try {
+        const r = await this.api('POST', '/cliente-portal/admin/logo', { clienteId: this.portalForm.clienteId, logo: dataUri || '' });
+        this.portalForm.logo = r.logo || '';
+        const c = (this.clients || []).find(x => x.id === this.portalForm.clienteId); if (c) c.logo = this.portalForm.logo;
+        this.mostrarToast('Marca do cliente atualizada. 🎨');
+      } catch (e) { alert((e && e.message) || 'Erro ao salvar a marca.'); }
     },
     async carregarPortalAcessos(clienteId) {
       try { this.portalAcessos = (await this.api('GET', '/cliente-portal/admin/acessos?clienteId=' + clienteId)) || []; }

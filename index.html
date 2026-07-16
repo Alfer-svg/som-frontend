@@ -6266,6 +6266,17 @@
     <div class="modal-body">
       <div class="text-3 fs-13" style="margin-bottom:12px">Acesso do cliente <b x-text="portalForm.empresa"></b> à Área do Cliente (app). Ele entra por e-mail e senha e só vê os dados dele.</div>
 
+      <!-- marca do cliente (bolinha do app) -->
+      <div class="flex items-center gap-3" style="margin-bottom:14px;padding:10px 12px;background:var(--surface-2);border-radius:12px">
+        <div style="width:52px;height:52px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff;overflow:hidden;border:2px solid #fff" :style="portalForm.logo?('background-image:url('+portalForm.logo+');background-size:cover;background-position:center'):'background:#E0742A'"><span x-show="!portalForm.logo" x-text="(portalForm.empresa||'?').slice(0,2).toUpperCase()"></span></div>
+        <div style="flex:1;min-width:0">
+          <div class="fw-700 fs-13">Marca do cliente</div>
+          <div class="text-3 fs-11">Aparece na bolinha do app. Sem logo, mostra as iniciais.</div>
+        </div>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;flex:none"><i class="ph ph-upload-simple ic-ph"></i> <span x-text="portalForm.logo?'Trocar':'Subir logo'"></span><input type="file" accept="image/*" @change="lerLogoCliente($event)" style="display:none"></label>
+        <button class="btn btn-icon btn-ghost btn-sm" x-show="portalForm.logo" @click="salvarLogoCliente('')" title="Remover logo" style="color:#B91C1C"><i class="ph ph-trash ic-ph"></i></button>
+      </div>
+
       <!-- link do app -->
       <div class="card" style="padding:10px 12px;margin-bottom:14px;background:var(--surface-2);display:flex;align-items:center;gap:8px">
         <span class="fs-12" style="flex:1;word-break:break-all;font-family:monospace" x-text="portalLink"></span>
@@ -6392,7 +6403,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=428"></script>
+<script src="js/app.js?v=429"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
