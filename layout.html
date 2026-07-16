@@ -82,8 +82,9 @@
     .adjbox textarea:focus{ outline:none; border-color:var(--amber); }
     .adjbox .send{ margin-top:8px; background:#141414; color:#fff; border:0; border-radius:10px; padding:11px 18px; font-weight:700; cursor:pointer; }
 
-    .divisor{ height:160px; background:#0b0b0c center/cover no-repeat; margin:6px 0 26px; position:relative; }
-    .divisor::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(11,11,12,.6), rgba(11,11,12,.15)); }
+    .divisor{ height:160px; background:#0b0b0c; margin:6px 0 26px; position:relative; overflow:hidden; }
+    .divisor::after{ content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(90deg, rgba(11,11,12,.55), rgba(11,11,12,0) 60%); }
+    .divisor .ring-art{ position:absolute; right:56px; top:50%; transform:translateY(-50%); width:236px; height:236px; z-index:2; pointer-events:none; }
 
     .pdfcard{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 20px; margin-bottom:22px; }
     .pdfcard .sec{ font-size:12px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--ink2); margin-bottom:12px; }
@@ -146,7 +147,7 @@
         </div>
       </div>
 
-      <div class="divisor" id="divisor" x-hide></div>
+      <div class="divisor" id="divisor"><img class="ring-art" src="assets/rings.svg" alt="" aria-hidden="true"></div>
       <div class="foot"><b>MARACATU</b> digital intelligence</div>
     </div>
 
@@ -236,7 +237,7 @@
       }
 
       /* capa: fundo escuro sólido + alvo em SVG nítido (assets/rings.svg no markup) — sem o JPG antigo pixelado */
-      var dv = document.getElementById('divisor'); var im2=new Image(); im2.onload=function(){ dv.style.backgroundImage="url('assets/divisor.jpg')"; show('divisor'); }; im2.src='assets/divisor.jpg';
+      /* divisor: mesmo alvo SVG nítido no rodapé — sem o JPG antigo */
 
       var posts = L.posts || [];
       document.getElementById('posts').innerHTML = posts.length
