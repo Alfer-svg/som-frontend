@@ -4908,12 +4908,19 @@
       </div>
       <div @click="secCli=secCli==='docs'?'':'docs'" class="accH"><span><i class="ph ph-paperclip ic-ph"></i> Documentos</span><span class="accX" x-text="secCli==='docs'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='docs'">
-      <div style="grid-column:1/-1" class="text-3 fs-12">Links — contrato, proposta, apresentação…</div>
+      <div style="grid-column:1/-1" class="text-3 fs-12">Cole um link ou anexe um arquivo — contrato, proposta, apresentação…</div>
       <template x-for="(d,i) in (editing.documentos||[])" :key="d.id">
         <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;grid-template-columns:160px 1fr;gap:8px">
           <div class="form-group" style="margin:0"><label class="form-label">Tipo <span class="hq" data-tip="Tipo do registro.">?</span></label><select class="form-select" x-model="d.tipo"><template x-for="t in TIPOS_DOC" :key="t"><option :value="t" x-text="t"></option></template></select></div>
           <div class="form-group" style="margin:0"><label class="form-label">Nome <span class="hq" data-tip="Nome.">?</span></label><input class="form-input" x-model="d.nome" placeholder="Ex.: Contrato 2026"></div>
-          <div class="form-group" style="grid-column:1/-1;margin:0"><label class="form-label">Link <span class="hq" data-tip="Endereço/URL.">?</span></label><input class="form-input" x-model="d.url" placeholder="https://"></div>
+          <div class="form-group" style="grid-column:1/-1;margin:0">
+            <label class="form-label">Link ou arquivo <span class="hq" data-tip="Cole um link (Drive, etc.) OU anexe um arquivo do computador (PDF, Word, Excel, imagem…).">?</span></label>
+            <div class="flex gap-2 items-center">
+              <input class="form-input" style="flex:1" x-model="d.url" placeholder="https:// ou anexe →">
+              <label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><i class="ph ph-upload-simple ic-ph"></i> <span x-text="uploadando?'enviando…':'anexar arquivo'"></span><input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.zip,.rar,image/*" @change="uploadDocumento($event, d)" style="display:none"></label>
+            </div>
+            <a x-show="d.url" :href="d.url" target="_blank" class="btn btn-ghost btn-sm" style="margin-top:4px"><i class="ph ph-arrow-square-out ic-ph"></i> abrir</a>
+          </div>
           <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeDocumento(i)"><i class="ph ph-trash ic-ph"></i> remover</button></div>
         </div>
       </template>
@@ -6403,7 +6410,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=429"></script>
+<script src="js/app.js?v=430"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
