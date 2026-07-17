@@ -4748,13 +4748,19 @@ ${this._docFoot()}
       if (!r.ok) throw new Error('Falha no upload (' + r.status + ')');
       const d = await r.json(); return d.secure_url;
     },
-    // sobe um arquivo e seta a URL em obj[campo] (usa Cloudinary; sem config, avisa)
+    // Sobe um arquivo e seta a URL em obj[campo] (Cloudinary /auto/upload = qualquer tipo:
+    // imagem, PDF, etc.). Carrega a config do cloud sob demanda (telas de edição não carregam sozinhas).
     async uploadParaCampo(e, obj, campo, persistir) {
       const file = e.target.files && e.target.files[0]; if (!file) return;
+      if (!this.cloudOk) await this.carregarCloud();
       if (!this.cloudOk) { alert('Configure o Cloudinary primeiro (Pessoal › Armazenamento de arquivos).'); e.target.value = ''; return; }
       this.uploadando = true;
-      try { const url = await this.uploadArquivo(file); if (url) { obj[campo] = url; if (persistir) await persistir(); } }
-      catch (err) { alert(err.message); } finally { this.uploadando = false; e.target.value = ''; }
+      try {
+        const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', this.cloudCfg.preset);
+        const r = await fetch('https://api.cloudinary.com/v1_1/' + this.cloudCfg.cloud + '/auto/upload', { method: 'POST', body: fd });
+        if (!r.ok) throw new Error('Falha no upload (' + r.status + ')');
+        const j = await r.json(); if (j.secure_url) { obj[campo] = j.secure_url; if (persistir) await persistir(); }
+      } catch (err) { alert(err.message); } finally { this.uploadando = false; e.target.value = ''; }
     },
     // Anexa um ARQUIVO ao documento do cliente (sobe pro Cloudinary e preenche a URL).
     // Usa /auto/upload pra aceitar qualquer tipo (PDF, docx, xlsx, zip, imagem…), não só imagem.

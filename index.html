@@ -4900,10 +4900,22 @@
 
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Palavras-chave <span class="text-3">(separadas por vírgula)</span> <span class="hq" data-tip="Palavras-chave do cliente, separadas por vírgula.">?</span></label><textarea class="form-textarea" x-model="editing.briefing.palavrasChave"></textarea></div>
 
-      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Materiais visuais (links — não subir arquivo)</div>
-      <div class="form-group"><label class="form-label">Logo (link) <span class="hq" data-tip="Link para o arquivo do logo.">?</span></label><input class="form-input" x-model="editing.briefing.ativos.logo" placeholder="https://"></div>
-      <div class="form-group"><label class="form-label">Manual de marca (link) <span class="hq" data-tip="Link para o manual/brandbook da marca.">?</span></label><input class="form-input" x-model="editing.briefing.ativos.manual" placeholder="https://"></div>
-      <div class="form-group"><label class="form-label">Drive de fotos/vídeos (link) <span class="hq" data-tip="Link para a pasta de fotos e vídeos.">?</span></label><input class="form-input" x-model="editing.briefing.ativos.drive" placeholder="https://"></div>
+      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Materiais visuais (cole um link ou anexe um arquivo)</div>
+      <div class="form-group">
+        <label class="form-label">Logo <span class="hq" data-tip="Link OU arquivo do logo.">?</span></label>
+        <div class="flex gap-2 items-center"><input class="form-input" style="flex:1" x-model="editing.briefing.ativos.logo" placeholder="https:// ou anexe →"><label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><i class="ph ph-upload-simple ic-ph"></i> <span x-text="uploadando?'…':'anexar'"></span><input type="file" accept="image/*,.pdf,.svg,.ai,.eps,.zip" @change="uploadParaCampo($event, editing.briefing.ativos, 'logo')" style="display:none"></label></div>
+        <a x-show="editing.briefing.ativos.logo" :href="editing.briefing.ativos.logo" target="_blank" class="fs-11" style="color:#3B82F6;display:inline-block;margin-top:4px">abrir ↗</a>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Manual de marca <span class="hq" data-tip="Link OU arquivo do manual/brandbook.">?</span></label>
+        <div class="flex gap-2 items-center"><input class="form-input" style="flex:1" x-model="editing.briefing.ativos.manual" placeholder="https:// ou anexe →"><label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><i class="ph ph-upload-simple ic-ph"></i> <span x-text="uploadando?'…':'anexar'"></span><input type="file" accept=".pdf,image/*,.ai,.eps,.zip" @change="uploadParaCampo($event, editing.briefing.ativos, 'manual')" style="display:none"></label></div>
+        <a x-show="editing.briefing.ativos.manual" :href="editing.briefing.ativos.manual" target="_blank" class="fs-11" style="color:#3B82F6;display:inline-block;margin-top:4px">abrir ↗</a>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Drive de fotos/vídeos <span class="hq" data-tip="Link da pasta OU anexe um arquivo (zip, imagem…).">?</span></label>
+        <div class="flex gap-2 items-center"><input class="form-input" style="flex:1" x-model="editing.briefing.ativos.drive" placeholder="https:// ou anexe →"><label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><i class="ph ph-upload-simple ic-ph"></i> <span x-text="uploadando?'…':'anexar'"></span><input type="file" accept="image/*,video/*,.pdf,.zip" @change="uploadParaCampo($event, editing.briefing.ativos, 'drive')" style="display:none"></label></div>
+        <a x-show="editing.briefing.ativos.drive" :href="editing.briefing.ativos.drive" target="_blank" class="fs-11" style="color:#3B82F6;display:inline-block;margin-top:4px">abrir ↗</a>
+      </div>
 
       </div>
       <div @click="secCli=secCli==='docs'?'':'docs'" class="accH"><span><i class="ph ph-paperclip ic-ph"></i> Documentos</span><span class="accX" x-text="secCli==='docs'?'▾':'▸'"></span></div>
@@ -6410,7 +6422,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=430"></script>
+<script src="js/app.js?v=431"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
