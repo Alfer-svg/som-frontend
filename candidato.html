@@ -336,11 +336,11 @@
   .foto-btns button.ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
   .foto-btns button:disabled{opacity:.5;cursor:default}
   /* proteções pós-login */
-  #wmark{position:fixed;inset:0;pointer-events:none;z-index:41;display:none}
   #alertaCap{position:fixed;top:0;left:0;right:0;z-index:9998;background:var(--red);color:#fff;font-size:12.5px;font-weight:700;text-align:center;padding:11px 16px;transform:translateY(-100%);transition:.25s;line-height:1.35}
   #alertaCap.on{transform:translateY(0)}
   #protegido{position:fixed;inset:0;z-index:9997;background:rgba(246,247,249,.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center}
   #protegido.on{display:flex} #protegido span{font-size:15px;font-weight:700;color:var(--mut)}
+  #badgeAdmin{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;background:var(--ink);color:#fff;font-size:12px;font-weight:700;padding:8px 15px;border-radius:99px;box-shadow:0 8px 22px -6px rgba(0,0,0,.45)}
 
 </style>
 </head>
@@ -378,7 +378,6 @@
     <div class="lg-foot">&#128274; Ambiente privado &middot; dados operados pela Maracatu Digital</div>
   </div>
 </div>
-<div id="wmark"></div>
 <div id="alertaCap">Conteúdo confidencial — dados sensíveis da campanha. Este acesso é identificado e registrado.</div>
 <div id="protegido"><span>Conteúdo protegido</span></div>
 <div id="painelRoot">
@@ -980,14 +979,7 @@
     ligarProtecao(); iniciarSessao();
     if(window.__replay) setTimeout(window.__replay,60);
   }
-  function marca(){
-    var quem=(info.nome||'Candidato')+'   '+(info.email||'')+'   '+new Date().toLocaleDateString('pt-BR');
-    quem=quem.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    var svg="<svg xmlns='http://www.w3.org/2000/svg' width='350' height='195'><text x='8' y='102' transform='rotate(-22 175 96)' font-family='sans-serif' font-size='12.5' fill='#111' fill-opacity='0.08'>"+quem+"</text></svg>";
-    var w=id('wmark'); w.style.display='block'; w.style.backgroundImage="url(\"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)+"\")"; w.style.backgroundRepeat='repeat';
-  }
   function ligarProtecao(){
-    marca();
     document.addEventListener('keyup',function(e){ if(token&&e.key==='PrintScreen')capturaDetectada('printscreen'); });
     document.addEventListener('keydown',function(e){ if(token&&e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].indexOf(e.code)>=0)capturaDetectada('tela-mac'); });
     document.addEventListener('visibilitychange',function(){ if(token)proteger(document.hidden); });
@@ -998,6 +990,19 @@
   function proteger(on){ id('protegido').classList.toggle('on',!!on); }
   function iniciarSessao(){ logAt('abriu:painel'); if(hbTimer)clearInterval(hbTimer); hbTimer=setInterval(function(){ if(token&&document.visibilityState==='visible')apiPost('/cliente-portal/heartbeat').catch(function(){}); },30000); }
   function logAt(acao){ if(!token)return; apiPost('/cliente-portal/atividade',{acao:acao}).catch(function(){}); }
+  // modo ADMIN: a equipe (logada no SOM, mesma origem) abre candidato.html?cliente=<id>
+  async function abrirComoAdmin(clienteId,somTok){
+    try{
+      var r=await fetch(API+'/cliente-portal/admin/painel-candidato/'+clienteId,{headers:{'Authorization':'Bearer '+somTok}});
+      if(!r.ok)throw new Error('sem acesso');
+      var d=await r.json();
+      info={nome:(d.candidato||{}).nome||'Candidato',email:''};
+      id('loginScreen').style.display='none';
+      if(window.__setCand)window.__setCand(d.candidato);
+      var b=document.createElement('div'); b.id='badgeAdmin'; b.textContent='Visão da equipe · '+(info.nome); document.body.appendChild(b);
+      if(window.__replay)setTimeout(window.__replay,60);
+    }catch(e){ id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
+  }
   window.__sair=function(){ try{if(token)apiPost('/cliente-portal/logout');}catch(e){} if(hbTimer)clearInterval(hbTimer); localStorage.removeItem('cand_token'); localStorage.removeItem('cand_info'); location.reload(); };
 
   document.addEventListener('DOMContentLoaded',function(){
@@ -1006,6 +1011,8 @@
     id('btnRefazer').addEventListener('click',refazer);
     id('btnEntrar').addEventListener('click',entrar);
     id('btnVoltar').addEventListener('click',voltar);
+    var qs=new URLSearchParams(location.search),cli=qs.get('cliente'),somTok=localStorage.getItem('som_token');
+    if(cli&&somTok){ abrirComoAdmin(cli,somTok); return; }
     if(token) abrirPainel();
   });
 })();
