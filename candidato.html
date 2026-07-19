@@ -55,7 +55,7 @@
   /* análise IA */
   .ia{background:linear-gradient(180deg,#fff,var(--blsoft));border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
   .ia .lab{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:8px}
-  .ia .logo{width:20px;height:20px;border-radius:50%;background:conic-gradient(var(--blue),var(--red),var(--amb2),var(--grn),var(--blue));flex:none}
+  .ia .logo{width:22px;height:22px;flex:none;display:inline-block}
   .ia h2{font-size:clamp(17px,2.2vw,21px);font-weight:700;letter-spacing:-.02em;margin:8px 0 7px;line-height:1.15;max-width:66ch}
   .ia p{font-size:13.5px;line-height:1.6;color:#3c4043;max-width:82ch}
   .ia .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -216,6 +216,23 @@
   .cen-topo .c{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
   .cen-topo .c .k{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut2);font-weight:700}
   .cen-topo .c .v{font-size:12.5px;font-weight:700;margin-top:3px;color:var(--ink)}
+
+  /* botões de ação (suporte + relatório) */
+  .acoes{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:15px}
+  .btn-acao{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;padding:10px 16px;border-radius:11px;text-decoration:none;transition:.15s;border:1px solid transparent;cursor:pointer}
+  .btn-acao.zap{background:var(--grn);color:#fff;box-shadow:0 8px 18px -8px rgba(52,168,83,.6)} .btn-acao.zap:hover{background:#2c9247}
+  .btn-acao.rel{background:var(--bluebg);color:var(--blue);border-color:#cfe0fd} .btn-acao.rel:hover{background:#dce9fd}
+  /* FAB de suporte flutuante */
+  .fab-suporte{position:fixed;right:18px;bottom:18px;z-index:60;width:56px;height:56px;border-radius:50%;background:var(--grn);color:#fff;display:grid;place-items:center;font-size:24px;text-decoration:none;box-shadow:0 12px 28px -8px rgba(52,168,83,.7);transition:.18s}
+  .fab-suporte:hover{transform:scale(1.06)}
+  .fab-suporte::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--grn);z-index:-1;animation:ping 2.4s cubic-bezier(0,0,.2,1) infinite}
+  @media(max-width:520px){.fab-suporte{width:52px;height:52px;font-size:22px;right:14px;bottom:14px}}
+  /* saudação de boas-vindas */
+  .saudacao{position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-30px);z-index:70;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px -12px rgba(60,64,67,.4);padding:13px 22px 15px;display:flex;flex-direction:column;gap:2px;text-align:center;opacity:0;transition:.4s cubic-bezier(.2,.8,.2,1);pointer-events:none;max-width:90vw;overflow:hidden}
+  .saudacao.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .saudacao b{font-size:15px} .saudacao span{font-size:12px;color:var(--mut)}
+  .saudacao .bar4{position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--blue) 0 25%,var(--red) 25% 50%,var(--amb2) 50% 75%,var(--grn) 75% 100%)}
+  @media (prefers-reduced-motion:reduce){.fab-suporte::after{animation:none}.saudacao{transition:none}}
   .reveal{opacity:0;transform:translateY(12px);animation:rise .6s cubic-bezier(.2,.8,.2,1) forwards}
   @keyframes rise{to{opacity:1;transform:none}}
 
@@ -292,6 +309,8 @@
   </div>
 </div>
 <div id="painelRoot">
+<div class="saudacao" id="saudacao"><div class="bar4"></div><b>Bem-vinda, <span id="saudNome">Marina</span>! 👋</b><span>Aqui está o resumo da sua campanha hoje.</span></div>
+<a class="fab-suporte" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20de%20suporte%20dedicado%20da%20Maracatu." target="_blank" rel="noopener" aria-label="Suporte no WhatsApp">💬</a>
 <div class="wrap"><div class="app">
 
   <!-- HEADER -->
@@ -454,15 +473,20 @@
   <div class="row even">
     <div class="panel reveal" style="animation-delay:.47s"><div class="p-head"><h3><span class="dot"></span>Próximos da campanha</h3></div><div id="eventos"></div></div>
     <div class="panel reveal" style="animation-delay:.50s;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px">
-      <div style="width:40px;height:40px;border-radius:50%;background:conic-gradient(var(--blue),var(--red),var(--amb2),var(--grn),var(--blue))"></div>
+      <div class="foot-bombo" style="width:46px;height:46px"></div>
       <div style="font-size:14px;font-weight:700">Operado de ponta a ponta pela Maracatu Digital</div>
       <div style="font-size:12px;color:var(--mut);max-width:38ch;line-height:1.5">Estratégia, criação, tráfego e monitoramento — a agência cuida de tudo pra você focar na rua.</div>
+      <div class="acoes">
+        <a class="btn-acao zap" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20falar%20com%20a%20Maracatu." target="_blank" rel="noopener">💬 Falar com a Maracatu</a>
+        <a class="btn-acao rel" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Gostaria%20de%20receber%20o%20relat%C3%B3rio%20da%20minha%20campanha." target="_blank" rel="noopener">📊 Pedir relatório</a>
+      </div>
     </div>
   </div>
 
   <div class="foot">Painel exclusivo do candidato · dados operados pela <b>Maracatu Digital</b> · <span id="stamp"></span></div>
 </div></div>
 </div>
+<script>window.__autoSaudar=false;</script>
 <script>
 
 (function(){
@@ -475,19 +499,19 @@
   const DATA={
     '7d':{indice:68,alcance:72400,alcDelta:9,apoiadores:48200,apoDelta:1240,apoPct:2.6,engaj:8.1,contatos:640,
       mom:[41,44,43,49,52,58,63],momL:['S1','S2','S3','S4','S5','S6','S7'],
-      regioes:[['Zona Norte',84],['Centro',77],['Zona Oeste',63],['Zona Sul',58],['Reg. Metrop.',46]],
+      regioes:[['Reg. Metropolitana',84],['Zona da Mata',72],['Agreste',63],['Sertão',52],['S. Francisco',44]],
       pautas:[['Saúde',33],['Segurança',27],['Emprego',20],['Educação',13],['Mobilidade',7]],
       advs:[['Você',72400],['Adv. Costa',61200],['Adv. Lima',44800]],
       heat:[92,70,64,48,54,34,27,18,22,50]},
     '30d':{indice:72,alcance:284500,alcDelta:23,apoiadores:48200,apoDelta:6400,apoPct:15.3,engaj:7.8,contatos:3140,
       mom:[52,55,51,60,64,69,72,78,81,85,90,96],momL:['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10','S11','S12'],
-      regioes:[['Zona Norte',82],['Centro',74],['Zona Oeste',61],['Zona Sul',55],['Reg. Metrop.',48]],
+      regioes:[['Reg. Metropolitana',82],['Zona da Mata',70],['Agreste',61],['Sertão',54],['S. Francisco',46]],
       pautas:[['Saúde',34],['Segurança',28],['Emprego',19],['Educação',12],['Mobilidade',7]],
       advs:[['Você',284500],['Adv. Costa',210300],['Adv. Lima',156800]],
       heat:[100,78,72,55,64,40,33,22,28,58]},
     'camp':{indice:74,alcance:1240000,alcDelta:90,apoiadores:48200,apoDelta:22800,apoPct:89.7,engaj:7.4,contatos:11800,
       mom:[22,28,26,34,40,44,49,55,58,66,71,77,83,88,94,100],momL:['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'],
-      regioes:[['Zona Norte',79],['Centro',72],['Zona Oeste',66],['Zona Sul',60],['Reg. Metrop.',54]],
+      regioes:[['Reg. Metropolitana',79],['Zona da Mata',71],['Agreste',66],['Sertão',58],['S. Francisco',50]],
       pautas:[['Saúde',31],['Segurança',26],['Emprego',22],['Educação',14],['Mobilidade',7]],
       advs:[['Você',1240000],['Adv. Costa',980000],['Adv. Lima',720000]],
       heat:[96,74,70,60,72,52,44,34,40,70]}
@@ -757,6 +781,14 @@
   $$('.tile').forEach(t=>{const lb=t.querySelector('.lbl');if(!lb)return;const tip=KTIP[lb.textContent.trim().toLowerCase()];if(tip)t.appendChild(mkInfo(tip,false));});
   const cdc=$('#cdCard');if(cdc)cdc.querySelector('.lead .t').appendChild(mkInfo('Contagem regressiva do período eleitoral: início em 16/08, propaganda de rua até 03/10 e eleição em 04/10/2026. Fonte: TSE.',true));
 
+  // ===== bombo da Maracatu (4 cores + aro + baquetas) no lugar da bola =====
+  function bomboSVG(){return '<svg viewBox="0 0 40 40" width="100%" height="100%" style="display:block"><g stroke="#C79A5A" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="8" x2="26" y2="29"/><line x1="35" y1="8" x2="14" y2="29"/></g><circle cx="20" cy="20" r="13" fill="#3c4043"/><path d="M20 20 L30.5 20 A10.5 10.5 0 0 1 20 30.5 Z" fill="#4285F4"/><path d="M20 20 L20 30.5 A10.5 10.5 0 0 1 9.5 20 Z" fill="#EA4335"/><path d="M20 20 L9.5 20 A10.5 10.5 0 0 1 20 9.5 Z" fill="#F9A825"/><path d="M20 20 L20 9.5 A10.5 10.5 0 0 1 30.5 20 Z" fill="#34A853"/><circle cx="20" cy="20" r="10.5" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1"/><circle cx="20" cy="20" r="2" fill="#fff" opacity=".9"/></svg>';}
+  $$('.ia .logo, .foot-bombo, .lg-logo').forEach(el=>{el.innerHTML=bomboSVG();});
+
+  // ===== saudação de boas-vindas =====
+  window.__saudar=function(nome){var s=document.getElementById('saudacao');if(!s)return;if(nome){var sn=document.getElementById('saudNome');if(sn)sn.textContent=String(nome).trim().split(/\s+/)[0];}s.classList.add('show');clearTimeout(s._t);s._t=setTimeout(function(){s.classList.remove('show');},5200);};
+  if(window.__autoSaudar!==false) setTimeout(function(){window.__saudar();},400);
+
   addEventListener('resize',()=>{drawMom(1);$$('.spark').forEach(c=>drawSpark(c,DATA[cur].mom));});
 
   window.__replay=function(){try{paint(cur);}catch(e){}try{tickCamp();}catch(e){}};
@@ -782,7 +814,7 @@
     id('loginScreen').style.display='none';
     try{
       var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}});
-      if(r.ok){var d=await r.json(); if(window.__setCand)window.__setCand(d.candidato);}
+      if(r.ok){var d=await r.json(); if(window.__setCand)window.__setCand(d.candidato); if(window.__saudar)window.__saudar((d.candidato||{}).nome);}
     }catch(e){}
     if(window.__replay) setTimeout(window.__replay,60);
   }
