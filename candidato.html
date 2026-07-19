@@ -828,6 +828,7 @@
   // ===== menu do header (+ sair) =====
   var menuBtn=$('#menuBtn'),menuDrop=$('#menuDrop');
   if(menuBtn&&menuDrop){
+    document.body.appendChild(menuDrop); // tira do header (que tem transform do reveal) pra o fixed/z-index valer sobre tudo
     menuBtn.addEventListener('click',function(e){e.stopPropagation();var open=menuDrop.classList.toggle('open');if(open){var r=menuBtn.getBoundingClientRect();var w=menuDrop.offsetWidth||220;menuDrop.style.top=(r.bottom+8)+'px';var left=Math.min(r.right-w,window.innerWidth-w-10);menuDrop.style.left=Math.max(10,left)+'px';}});
     menuDrop.addEventListener('click',function(e){e.stopPropagation();});
     document.addEventListener('click',function(){menuDrop.classList.remove('open');$$('.info.show').forEach(function(o){o.classList.remove('show');});});
