@@ -36,8 +36,16 @@
   .chip.blue{background:var(--bluebg);color:var(--blue)} .chip.amb{background:var(--ambbg);color:var(--amb)}
 
   /* header */
-  header{display:flex;align-items:center;gap:15px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
-    border-radius:var(--r);padding:18px 18px 15px;box-shadow:var(--shadow);position:relative}
+  header{display:flex;flex-direction:column;align-items:stretch;gap:12px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r);padding:18px 18px 16px;box-shadow:var(--shadow);position:relative}
+  .hd-row1{display:flex;align-items:flex-start;gap:15px}
+  .hd-row1 .cand{flex:1}
+  header>.toggle,header>#campChip{align-self:flex-start}
+  .custom-box{display:none;align-self:flex-start;align-items:center;gap:8px;flex-wrap:wrap;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px 11px}
+  .custom-box.open{display:flex}
+  .custom-box label{font-size:11.5px;font-weight:600;color:var(--mut);display:flex;align-items:center;gap:6px}
+  .custom-box input{font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:#fff;color:var(--ink)}
+  .custom-box #cApply{border:0;background:var(--blue);color:#fff;font:inherit;font-size:12px;font-weight:700;padding:6px 13px;border-radius:8px;cursor:pointer}
   .cand{display:flex;align-items:center;gap:13px;min-width:0}
   .ava{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-weight:700;font-size:19px;flex:none;position:relative;
     background:linear-gradient(135deg,var(--blue),#6FA8FF);color:#fff;box-shadow:0 8px 20px -8px rgba(66,133,244,.5)}
@@ -338,30 +346,37 @@
   <!-- HEADER -->
   <header class="reveal">
     <div class="stripe4"></div>
-    <div class="cand">
-      <div class="ava">MD<span class="num-badge">15</span></div>
-      <div style="min-width:0">
-        <h1>Marina Duarte</h1>
-        <div class="role">Candidata · Pernambuco · operado pela <b style="color:var(--blue)">Maracatu Digital</b></div>
+    <div class="hd-row1">
+      <div class="cand">
+        <div class="ava">MD<span class="num-badge">15</span></div>
+        <div style="min-width:0">
+          <h1>Marina Duarte</h1>
+          <div class="role">Candidata · Pernambuco · operado pela <b style="color:var(--blue)">Maracatu Digital</b></div>
+        </div>
+      </div>
+      <div class="menu-wrap">
+        <button class="menu-btn" id="menuBtn" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
+        <div class="menu-drop" id="menuDrop">
+          <a href="https://www.maracatumktdigital.com" target="_blank" rel="noopener"><span>🌐</span> Site da Maracatu</a>
+          <a href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20falar%20com%20a%20Maracatu." target="_blank" rel="noopener"><span>💬</span> Falar com a Maracatu</a>
+          <a href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Gostaria%20de%20receber%20o%20relat%C3%B3rio%20da%20minha%20campanha." target="_blank" rel="noopener"><span>📊</span> Pedir relatório</a>
+          <div class="menu-sep"></div>
+          <button type="button" id="menuSair"><span>🚪</span> Sair</button>
+        </div>
       </div>
     </div>
-    <div class="spacer"></div>
-    <span class="chip blue" id="campChip">— campanhas ativas</span>
     <div class="toggle" id="toggle">
       <button data-p="7d">7 dias</button>
       <button data-p="30d" class="on">30 dias</button>
       <button data-p="camp">Campanha</button>
+      <button data-p="custom">Personalizado</button>
     </div>
-    <div class="menu-wrap">
-      <button class="menu-btn" id="menuBtn" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
-      <div class="menu-drop" id="menuDrop">
-        <a href="https://www.maracatumktdigital.com" target="_blank" rel="noopener"><span>🌐</span> Site da Maracatu</a>
-        <a href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20falar%20com%20a%20Maracatu." target="_blank" rel="noopener"><span>💬</span> Falar com a Maracatu</a>
-        <a href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Gostaria%20de%20receber%20o%20relat%C3%B3rio%20da%20minha%20campanha." target="_blank" rel="noopener"><span>📊</span> Pedir relatório</a>
-        <div class="menu-sep"></div>
-        <button type="button" id="menuSair"><span>🚪</span> Sair</button>
-      </div>
+    <div class="custom-box" id="customBox">
+      <label>De <input type="date" id="cIni"></label>
+      <label>Até <input type="date" id="cFim"></label>
+      <button id="cApply">Aplicar</button>
     </div>
+    <span class="chip blue" id="campChip">— campanhas ativas</span>
   </header>
 
   <!-- ANÁLISE DIÁRIA DA IA -->
@@ -690,7 +705,11 @@
   }
 
   // toggle
-  $('#toggle').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#toggle button').forEach(x=>x.classList.toggle('on',x===b));paint(b.dataset.p);});
+  function customData(dias){var b=DATA['30d'];var f=Math.max(0.15,Math.min(3,dias/30));var sc=n=>Math.round(n*f);
+    return {indice:b.indice,alcance:sc(b.alcance),alcDelta:b.alcDelta,apoiadores:b.apoiadores,apoDelta:sc(b.apoDelta),apoPct:b.apoPct,engaj:b.engaj,contatos:sc(b.contatos),mom:b.mom.slice(),momL:b.momL.slice(),regioes:b.regioes,pautas:b.pautas,advs:b.advs.map(a=>[a[0],sc(a[1])]),heat:b.heat};}
+  $('#toggle').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#toggle button').forEach(x=>x.classList.toggle('on',x===b));if(b.dataset.p==='custom'){$('#customBox').classList.add('open');return;}$('#customBox').classList.remove('open');paint(b.dataset.p);});
+  (function(){var fmt=d=>new Date(d).toISOString().slice(0,10);var hoje=new Date('2026-07-19T12:00:00-03:00');var ci=$('#cIni'),cf=$('#cFim');if(ci)ci.value=fmt(hoje-45*86400000);if(cf)cf.value=fmt(hoje);
+    var ap=$('#cApply');if(ap)ap.addEventListener('click',function(){var a=$('#cIni').value,z=$('#cFim').value;if(!a||!z)return;var dias=Math.round((new Date(z)-new Date(a))/86400000);if(dias<1)dias=1;DATA['custom']=customData(dias);paint('custom');});})();
 
   // orçamento (fixo)
   const frac=ORC.gasto/ORC.previsto;setPie(frac);
