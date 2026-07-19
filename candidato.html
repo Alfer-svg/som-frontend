@@ -307,16 +307,33 @@
   .lg-card{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 20px 60px -20px rgba(60,64,67,.35);padding:30px 28px;width:100%;max-width:384px;position:relative;overflow:hidden}
   .lg-stripe{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--blue) 0 25%,var(--red) 25% 50%,var(--amb2) 50% 75%,var(--grn) 75% 100%)}
   .lg-brand{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--mut);margin-top:6px}
-  .lg-logo{width:20px;height:20px;border-radius:50%;background:conic-gradient(var(--blue),var(--red),var(--amb2),var(--grn),var(--blue))}
+  .lg-logo{width:22px;height:22px;border-radius:50%;overflow:hidden;flex:none}
   .lg-h{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:16px}
-  .lg-s{font-size:13px;color:var(--mut);margin-top:3px;margin-bottom:20px}
+  .lg-s{font-size:13px;color:var(--mut);margin-top:3px;margin-bottom:20px;line-height:1.45}
   #lgForm label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mut2);margin:12px 0 5px}
   #lgForm input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;font:inherit;font-size:14px;background:var(--bg);transition:.15s}
   #lgForm input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(66,133,244,.12)}
   #lgBtn{width:100%;margin-top:18px;padding:12px;border:0;border-radius:11px;background:var(--blue);color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px -8px rgba(66,133,244,.6);transition:.15s}
   #lgBtn:hover{background:#3b78e7} #lgBtn:disabled{opacity:.6;cursor:default}
   .lg-err{color:var(--red);font-size:12.5px;margin-top:12px;min-height:16px;font-weight:600}
-  .lg-foot{text-align:center;font-size:11px;color:var(--mut2);margin-top:18px}
+  .lg-foot{text-align:center;font-size:11px;color:var(--mut2);margin-top:18px;line-height:1.4}
+  /* etapa foto */
+  .cam-wrap{position:relative;width:172px;height:172px;margin:14px auto 2px;border-radius:50%;overflow:hidden;background:#0c0d0e;border:3px solid var(--line)}
+  .cam-wrap video,.cam-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+  .cam-wrap video{transform:scaleX(-1)} .cam-wrap img{display:none}
+  .cam-wrap.done video{display:none} .cam-wrap.done img{display:block}
+  .consent{display:flex;gap:9px;align-items:flex-start;font-size:12px;color:var(--mut);margin:14px 0 2px;line-height:1.4;cursor:pointer}
+  .consent input{flex:0 0 16px;width:16px;height:16px;min-width:0;margin-top:1px}
+  .foto-btns{display:flex;gap:8px;margin-top:12px}
+  .foto-btns button{flex:1;padding:11px 8px;border:0;border-radius:11px;background:var(--blue);color:#fff;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+  .foto-btns button.ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+  .foto-btns button:disabled{opacity:.5;cursor:default}
+  /* proteções pós-login */
+  #wmark{position:fixed;inset:0;pointer-events:none;z-index:41;display:none}
+  #alertaCap{position:fixed;top:0;left:0;right:0;z-index:9998;background:var(--red);color:#fff;font-size:12.5px;font-weight:700;text-align:center;padding:11px 16px;transform:translateY(-100%);transition:.25s;line-height:1.35}
+  #alertaCap.on{transform:translateY(0)}
+  #protegido{position:fixed;inset:0;z-index:9997;background:rgba(246,247,249,.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center}
+  #protegido.on{display:flex} #protegido span{font-size:15px;font-weight:700;color:var(--mut)}
 
 </style>
 </head>
@@ -326,19 +343,37 @@
   <div class="lg-card">
     <div class="lg-stripe"></div>
     <div class="lg-brand"><span class="lg-logo"></span> Maracatu Digital</div>
-    <div class="lg-h">Central de Campanha</div>
-    <div class="lg-s">Acesso exclusivo do candidato</div>
-    <form id="lgForm" autocomplete="on">
-      <label for="lgEmail">E-mail</label>
-      <input id="lgEmail" type="email" required placeholder="voce@campanha.com" autocomplete="username">
-      <label for="lgSenha">Senha</label>
-      <input id="lgSenha" type="password" required placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password">
-      <div id="lgErr" class="lg-err"></div>
-      <button id="lgBtn" type="submit">Entrar no painel</button>
-    </form>
+    <div id="stepCred">
+      <div class="lg-h">Central de Campanha</div>
+      <div class="lg-s">Acesso exclusivo do candidato</div>
+      <form id="lgForm" autocomplete="on">
+        <label for="lgEmail">E-mail</label>
+        <input id="lgEmail" type="email" required placeholder="voce@campanha.com" autocomplete="username">
+        <label for="lgSenha">Senha</label>
+        <input id="lgSenha" type="password" required placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password">
+        <div id="lgErr" class="lg-err"></div>
+        <button id="lgBtn" type="submit">Continuar</button>
+      </form>
+    </div>
+    <div id="stepFoto" style="display:none">
+      <div class="lg-h" style="font-size:21px">Confirme sua identidade</div>
+      <div class="lg-s">Este ambiente tem dados sensíveis da campanha. Registramos quem acessa.</div>
+      <div class="cam-wrap"><video id="cam" autoplay playsinline muted></video><img id="fotoPrev" alt=""></div>
+      <label class="consent"><input type="checkbox" id="consent"> Autorizo o registro da minha foto, horário e localização neste acesso.</label>
+      <div id="fotoErr" class="lg-err"></div>
+      <div class="foto-btns">
+        <button id="btnVoltar" type="button" class="ghost">Voltar</button>
+        <button id="btnTirar" type="button">Tirar foto</button>
+        <button id="btnRefazer" type="button" class="ghost" style="display:none">Refazer</button>
+        <button id="btnEntrar" type="button" style="display:none">Entrar</button>
+      </div>
+    </div>
     <div class="lg-foot">&#128274; Ambiente privado &middot; dados operados pela Maracatu Digital</div>
   </div>
 </div>
+<div id="wmark"></div>
+<div id="alertaCap">Conteúdo confidencial — dados sensíveis da campanha. Este acesso é identificado e registrado.</div>
+<div id="protegido"><span>Conteúdo protegido</span></div>
 <div id="painelRoot">
 <a class="fab-suporte" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20de%20suporte%20dedicado%20da%20Maracatu." target="_blank" rel="noopener" aria-label="Suporte no WhatsApp"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg></a>
 <div class="wrap"><div class="app">
@@ -872,30 +907,70 @@
 (function(){
   var API='https://som-backend-production-01d8.up.railway.app/api';
   var token=localStorage.getItem('cand_token')||'';
+  var info={}; try{info=JSON.parse(localStorage.getItem('cand_info')||'{}')}catch(e){info={};}
+  var camStream=null, fotoData='', lat=null, lng=null, hbTimer=null, alertaTimer=null;
   function id(x){return document.getElementById(x);}
-  async function entrar(email,senha){
-    var r=await fetch(API+'/cliente-portal/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,senha:senha})});
-    var d=await r.json().catch(function(){return{}});
-    if(!r.ok) throw new Error(d.message||'E-mail ou senha incorretos.');
-    token=d.token; localStorage.setItem('cand_token',token); return d;
+  async function apiPost(path,b){var h={'Content-Type':'application/json'};if(token)h['Authorization']='Bearer '+token;var r=await fetch(API+path,{method:'POST',headers:h,body:JSON.stringify(b||{})});var d=await r.json().catch(function(){return{}});if(!r.ok)throw new Error(d.message||'Falha.');return d;}
+
+  function irFoto(){
+    id('lgErr').textContent='';
+    if(!id('lgEmail').value.trim()||!id('lgSenha').value){id('lgErr').textContent='Preencha e-mail e senha.';return;}
+    id('stepCred').style.display='none'; id('stepFoto').style.display='block'; id('fotoErr').textContent='';
+    fotoData=''; id('consent').checked=false; id('cam').parentNode.classList.remove('done');
+    id('btnTirar').style.display=''; id('btnRefazer').style.display='none'; id('btnEntrar').style.display='none';
+    abrirCam(); pegarLocal();
   }
-  async function abrir(){
-    id('loginScreen').style.display='none';
+  async function abrirCam(){ try{ camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:640}},audio:false}); id('cam').srcObject=camStream; }catch(e){ id('fotoErr').textContent='Precisamos da câmera pra confirmar sua identidade. Autorize o acesso e tente de novo.'; } }
+  function pegarLocal(){ if(!navigator.geolocation)return; navigator.geolocation.getCurrentPosition(function(p){lat=p.coords.latitude;lng=p.coords.longitude;},function(){}, {enableHighAccuracy:true,timeout:8000,maximumAge:60000}); }
+  function tirarFoto(){ var v=id('cam'); if(!v.videoWidth){id('fotoErr').textContent='A câmera ainda está carregando.';return;} var lado=Math.min(v.videoWidth,v.videoHeight),size=360,c=document.createElement('canvas');c.width=size;c.height=size;var ct=c.getContext('2d'),sx=(v.videoWidth-lado)/2,sy=(v.videoHeight-lado)/2;ct.drawImage(v,sx,sy,lado,lado,0,0,size,size);fotoData=c.toDataURL('image/jpeg',0.7);id('fotoPrev').src=fotoData;id('cam').parentNode.classList.add('done');id('btnTirar').style.display='none';id('btnRefazer').style.display='';id('btnEntrar').style.display='';id('fotoErr').textContent=''; }
+  function refazer(){ fotoData=''; id('cam').parentNode.classList.remove('done'); id('btnTirar').style.display=''; id('btnRefazer').style.display='none'; id('btnEntrar').style.display='none'; }
+  function pararCam(){ if(camStream){camStream.getTracks().forEach(function(t){t.stop()});camStream=null;} }
+  function voltar(){ pararCam(); id('stepFoto').style.display='none'; id('stepCred').style.display='block'; }
+  async function entrar(){
+    id('fotoErr').textContent='';
+    if(!fotoData){id('fotoErr').textContent='Tire a foto pra entrar.';return;}
+    if(!id('consent').checked){id('fotoErr').textContent='É preciso autorizar o registro pra entrar.';return;}
+    var btn=id('btnEntrar'); btn.disabled=true; btn.textContent='Entrando\u2026';
     try{
-      var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}});
-      if(r.ok){var d=await r.json(); if(window.__setCand)window.__setCand(d.candidato);}
-    }catch(e){}
+      var d=await apiPost('/cliente-portal/login',{email:id('lgEmail').value.trim(),senha:id('lgSenha').value,selfie:fotoData,lat:lat,lng:lng,consent:true});
+      token=d.token; info={email:id('lgEmail').value.trim(),nome:(d.cliente||{}).nome||(d.cliente||{}).empresa||''};
+      localStorage.setItem('cand_token',token); localStorage.setItem('cand_info',JSON.stringify(info));
+      pararCam(); await abrirPainel();
+    }catch(ex){ id('fotoErr').textContent=ex.message; btn.disabled=false; btn.textContent='Entrar'; }
+  }
+  async function abrirPainel(){
+    id('loginScreen').style.display='none';
+    try{ var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}}); if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato);} }catch(e){}
+    ligarProtecao(); iniciarSessao();
     if(window.__replay) setTimeout(window.__replay,60);
   }
-  window.__sair=function(){localStorage.removeItem('cand_token');location.reload();};
+  function marca(){
+    var quem=(info.nome||'Candidato')+'   '+(info.email||'')+'   '+new Date().toLocaleDateString('pt-BR');
+    quem=quem.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var svg="<svg xmlns='http://www.w3.org/2000/svg' width='350' height='195'><text x='8' y='102' transform='rotate(-22 175 96)' font-family='sans-serif' font-size='12.5' fill='#111' fill-opacity='0.08'>"+quem+"</text></svg>";
+    var w=id('wmark'); w.style.display='block'; w.style.backgroundImage="url(\"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)+"\")"; w.style.backgroundRepeat='repeat';
+  }
+  function ligarProtecao(){
+    marca();
+    document.addEventListener('keyup',function(e){ if(token&&e.key==='PrintScreen')capturaDetectada('printscreen'); });
+    document.addEventListener('keydown',function(e){ if(token&&e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].indexOf(e.code)>=0)capturaDetectada('tela-mac'); });
+    document.addEventListener('visibilitychange',function(){ if(token)proteger(document.hidden); });
+    window.addEventListener('blur',function(){ if(token)proteger(true); });
+    window.addEventListener('focus',function(){ if(token)proteger(false); });
+  }
+  function capturaDetectada(tipo){ id('alertaCap').classList.add('on'); logAt('tentou-capturar:'+tipo); if(alertaTimer)clearTimeout(alertaTimer); alertaTimer=setTimeout(function(){id('alertaCap').classList.remove('on');},4500); }
+  function proteger(on){ id('protegido').classList.toggle('on',!!on); }
+  function iniciarSessao(){ logAt('abriu:painel'); if(hbTimer)clearInterval(hbTimer); hbTimer=setInterval(function(){ if(token&&document.visibilityState==='visible')apiPost('/cliente-portal/heartbeat').catch(function(){}); },30000); }
+  function logAt(acao){ if(!token)return; apiPost('/cliente-portal/atividade',{acao:acao}).catch(function(){}); }
+  window.__sair=function(){ try{if(token)apiPost('/cliente-portal/logout');}catch(e){} if(hbTimer)clearInterval(hbTimer); localStorage.removeItem('cand_token'); localStorage.removeItem('cand_info'); location.reload(); };
+
   document.addEventListener('DOMContentLoaded',function(){
-    id('lgForm').addEventListener('submit',async function(e){
-      e.preventDefault();
-      var btn=id('lgBtn'),err=id('lgErr'); err.textContent=''; btn.disabled=true; btn.textContent='Entrando\u2026';
-      try{ await entrar(id('lgEmail').value.trim(),id('lgSenha').value); await abrir(); }
-      catch(ex){ err.textContent=ex.message; btn.disabled=false; btn.textContent='Entrar no painel'; }
-    });
-    if(token) abrir();
+    id('lgForm').addEventListener('submit',function(e){e.preventDefault();irFoto();});
+    id('btnTirar').addEventListener('click',tirarFoto);
+    id('btnRefazer').addEventListener('click',refazer);
+    id('btnEntrar').addEventListener('click',entrar);
+    id('btnVoltar').addEventListener('click',voltar);
+    if(token) abrirPainel();
   });
 })();
 </script>
