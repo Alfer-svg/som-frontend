@@ -428,7 +428,7 @@
   <!-- REGRAS (compliance) + CENÁRIO -->
   <div class="row split2">
     <div class="panel reveal" style="animation-delay:.45s">
-      <div class="p-head"><h3><span class="dot"></span>Regras do dia — o que pode e o que não pode</h3><span class="chip" id="regrasChip">por IA</span></div>
+      <div class="p-head"><h3><span class="dot"></span>Regras do dia — o que pode e o que não pode</h3><span class="chip" id="regrasChip">Maracatu</span></div>
       <div id="regrasList"></div>
       <div class="src" id="regrasSrc"></div>
     </div>
@@ -686,14 +686,14 @@
   // — regras (compliance, atualizado por IA) —
   const RT={pode:'pode',nao:'não pode',atencao:'atenção'};
   $('#regrasList').innerHTML=ELEI.regras.map(([t,x])=>`<div class="rule ${t}"><span class="rt">${RT[t]}</span><span class="rx">${x}</span></div>`).join('');
-  $('#regrasSrc').innerHTML='🔄 A IA revisa as regras diariamente em fontes oficiais. <b>Fonte:</b> '+ELEI.regrasFonte+' · atualizado '+ELEI.regrasEm+'.';
+  $('#regrasSrc').innerHTML='🔄 A equipe da Maracatu revisa as regras todos os dias em fontes oficiais. <b>Fonte:</b> '+ELEI.regrasFonte+' · atualizado '+ELEI.regrasEm+'.';
   $('#regrasChip').textContent='atualizado '+ELEI.regrasEm;
 
   // — cenário e pesquisas —
   $('#cenario').innerHTML='<div class="cen-txt">'+ELEI.cenario+'</div>'+
     '<div class="cen-topo"><div class="c"><div class="k">Governo PE</div><div class="v">João Campos × Raquel Lyra</div></div><div class="c"><div class="k">Consulta oficial</div><div class="v">PesqEle · TSE</div></div></div>'+
     '<a class="cen-link" href="https://pesqele-divulgacao.tse.jus.br/" target="_blank" rel="noopener">🔎 Ver pesquisas registradas no TSE</a>'+
-    '<div class="src" style="margin-top:10px">A IA busca pesquisas registradas diariamente. Última leitura: '+ELEI.cenarioEm+'.</div>';
+    '<div class="src" style="margin-top:10px">A equipe da Maracatu acompanha as pesquisas registradas. Última leitura: '+ELEI.cenarioEm+'.</div>';
 
   // — contagem regressiva ao vivo —
   const fmt2=n=>String(n).padStart(2,'0');
@@ -722,18 +722,18 @@
     ['orçamento da campanha','Quanto do orçamento previsto para o período eleitoral já foi investido. O gasto vem das contas de anúncio; o previsto é o planejado com a agência.'],
     ['campanhas rodando','Suas campanhas ativas, onde rodam e quanto cada uma alcançou. Puxado direto das contas Meta e Google Ads.'],
     ['onde você é mais forte','Suas zonas de maior alcance em PE, do recorte geográfico das campanhas.'],
-    ['pautas que mais mobilizam','Os temas dos seus conteúdos que mais engajaram, classificados por IA a partir das legendas do seu Instagram.'],
+    ['pautas que mais mobilizam','Os temas dos seus conteúdos que mais engajaram, organizados pela Maracatu a partir das legendas do seu Instagram.'],
     ['adversários','Comparação de PRESENÇA PÚBLICA (seguidores e engajamento no Instagram). Indicador relativo — o alcance pago do adversário não é um dado público.'],
     ['votos para se eleger','Estimativa de quantos votos são necessários, pelo sistema proporcional e nos números reais de PE em 2022. Fonte: TSE/TRE-PE/ALEPE.'],
-    ['regras do dia','O que pode e o que não pode na campanha. A IA revisa diariamente em fontes oficiais (TSE) e atualiza esta lista.'],
-    ['cenário e pesquisas','Como está a disputa. Deputado estadual raramente tem pesquisa própria — o termômetro é o topo da chapa. A IA busca pesquisas registradas no TSE diariamente.'],
+    ['regras do dia','O que pode e o que não pode na campanha. A equipe da Maracatu revisa diariamente em fontes oficiais (TSE) e atualiza esta lista.'],
+    ['cenário e pesquisas','Como está a disputa. Deputado estadual raramente tem pesquisa própria — o termômetro é o topo da chapa. A equipe da Maracatu acompanha as pesquisas registradas no TSE.'],
     ['dicas da maracatu','Recomendações da equipe da agência com base no que os números mostram. Curadas por gente do time, não automáticas.'],
     ['próximos','Sua agenda de campanha e as gravações programadas com a Maracatu.'],
   ];
   const tipFor=txt=>{const t=(txt||'').toLowerCase();const f=TIPS.find(([k])=>t.includes(k));return f?f[1]:null;};
   const mkInfo=(tip,openRight)=>{const s=document.createElement('span');s.className='info'+(openRight?' r':'');s.textContent='i';s.setAttribute('data-tip',tip);s.setAttribute('aria-label',tip);s.setAttribute('tabindex','0');return s;};
   $$('.p-head').forEach(h=>{const h3=h.querySelector('h3');if(!h3)return;const tip=tipFor(h3.textContent);if(tip)h3.appendChild(mkInfo(tip,true));});
-  const iaBox=document.querySelector('.ia');if(iaBox)iaBox.appendChild(mkInfo('Resumo diário escrito com apoio de IA a partir dos seus números reais. Só observa o desempenho — não dá instruções (a estratégia é da agência).',false));
+  const iaBox=document.querySelector('.ia');if(iaBox)iaBox.appendChild(mkInfo('Resumo diário escrito pela equipe da Maracatu a partir dos seus números reais. Acompanha o desempenho; a estratégia é da agência.',false));
   const KTIP={'pessoas alcançadas':'Total de pessoas ÚNICAS que suas campanhas atingiram no período (reach). Fonte: Meta Ads.','apoiadores':'Seguidores somados das suas redes sociais. Fonte: monitoramento de Instagram/Facebook.','engajamento':'% de interação sobre o alcance das suas redes. Fonte: monitoramento.','contatos captados':'Conversas e leads gerados pelas campanhas (ex.: cliques pro WhatsApp). Fonte: Meta/Google Ads.'};
   $$('.tile').forEach(t=>{const lb=t.querySelector('.lbl');if(!lb)return;const tip=KTIP[lb.textContent.trim().toLowerCase()];if(tip)t.appendChild(mkInfo(tip,false));});
   const cdc=$('#cdCard');if(cdc)cdc.querySelector('.lead .t').appendChild(mkInfo('Contagem regressiva do período eleitoral: início em 16/08, propaganda de rua até 03/10 e eleição em 04/10/2026. Fonte: TSE.',true));
