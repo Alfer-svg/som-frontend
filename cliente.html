@@ -83,18 +83,24 @@
         <template x-if="etapa==='foto'">
           <div style="text-align:center">
             <div class="kpi-label" style="text-align:left;margin-bottom:10px">Confirme sua identidade</div>
-            <div style="position:relative;width:170px;height:170px;margin:0 auto;border-radius:50%;overflow:hidden;background:#0b0b0b;border:3px solid var(--line)">
-              <video x-ref="cam" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1)" x-show="!fotoTirada"></video>
-              <img :src="fotoData" x-show="fotoTirada" style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1)">
+            <div style="position:relative;width:184px;height:236px;margin:0 auto">
+              <div style="position:absolute;inset:0;border-radius:50%;overflow:hidden;background:#0b0b0b">
+                <video x-ref="cam" autoplay playsinline muted webkit-playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1)" x-show="!fotoTirada"></video>
+                <img :src="fotoData" x-show="fotoTirada" style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1)">
+              </div>
+              <svg viewBox="0 0 184 236" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+                <ellipse cx="92" cy="118" rx="88" ry="114" fill="none" :stroke="(fotoTirada||rostoOk)?'#1E8E4E':'#D5D2CC'" stroke-width="5" :stroke-dasharray="(fotoTirada||rostoOk)?'0':'11 9'" stroke-linecap="round" style="transition:stroke .25s,stroke-dasharray .25s"></ellipse>
+              </svg>
             </div>
-            <div class="muted" style="font-size:11px;margin-top:8px" x-text="geoOk?'📍 Localização capturada':'📍 Buscando localização…'"></div>
+            <div style="font-size:11.5px;margin-top:9px;font-weight:600" :style="(fotoTirada||rostoOk)?'color:#1E8E4E':'color:var(--mut)'" x-text="fotoTirada?'✓ Foto capturada':(!camPronta?'Abrindo câmera…':(rostoOk?'✓ Rosto enquadrado':'Posicione seu rosto no oval'))"></div>
+            <div class="muted" style="font-size:11px;margin-top:3px" x-text="geoOk?'📍 Localização capturada':'📍 Buscando localização…'"></div>
             <label style="display:flex;gap:8px;align-items:flex-start;text-align:left;font-size:11.5px;color:var(--mut);margin-top:12px;line-height:1.45">
               <input type="checkbox" x-model="consentiu" style="margin-top:2px;flex:0 0 16px;width:16px;height:16px;min-width:0">
               <span style="flex:1;min-width:0">Autorizo o registro da minha <b>foto</b>, <b>localização</b> e <b>atividade</b> neste acesso, para a segurança dos dados da empresa (LGPD).</span>
             </label>
             <div x-show="lgErro" style="color:var(--red);font-size:13px;margin:10px 0 0" x-text="lgErro"></div>
-            <button x-show="!fotoTirada" class="btn btn-amber" style="width:100%;margin-top:14px" @click="tirarFoto()" :disabled="!camPronta">
-              <span x-text="camPronta?'Tirar foto':'Abrindo câmera…'"></span>
+            <button x-show="!fotoTirada" class="btn btn-amber" style="width:100%;margin-top:14px" @click="tirarFoto()" :disabled="!camPronta||!(rostoOk||liberaSemRosto)">
+              <span x-text="!camPronta?'Abrindo câmera…':((rostoOk||liberaSemRosto)?'Tirar foto':'Enquadre seu rosto')"></span>
             </button>
             <div x-show="fotoTirada" class="row" style="gap:8px;margin-top:14px">
               <button class="btn btn-ghost" style="flex:1" @click="refazerFoto()">Refazer</button>
@@ -423,7 +429,7 @@
       aba:'inicio', rTab:'engaj',
       analise:{}, anLoading:false,
       lgEmail:'', lgSenha:'', lgErro:'', lgLoading:false,
-      etapa:'cred', camStream:null, camPronta:false, fotoTirada:false, fotoData:'', lat:null, lng:null, geoOk:false, consentiu:false, hbTimer:null,
+      etapa:'cred', camStream:null, camPronta:false, rostoOk:false, fdTimer:null, liberaSemRosto:false, fotoTirada:false, fotoData:'', lat:null, lng:null, geoOk:false, consentiu:false, hbTimer:null,
       alertaCaptura:false, protegido:false, alertaTimer:null, guardOn:false,
       ap:null, apLoading:false, apAcao:false, ajusteAberto:false, ajusteTxt:'',
       res:{}, resLoading:false, eng:{}, traf:{},
@@ -449,16 +455,56 @@
         this.lgErro='';
         if(!this.lgEmail||!this.lgSenha){ this.lgErro='Preencha e-mail e senha.'; return; }
         this.etapa='foto'; this.fotoTirada=false; this.fotoData=''; this.consentiu=false; this.geoOk=false;
+        this.rostoOk=false; this.liberaSemRosto=false;
         this.abrirCamera(); this.pegarLocal();
       },
       async abrirCamera(){
-        this.camPronta=false;
+        this.camPronta=false; this.rostoOk=false; this.liberaSemRosto=false;
+        let stream;
         try{
-          this.camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:640}},audio:false});
-          await this.$nextTick();
-          const v=this.$refs.cam; if(v){ v.srcObject=this.camStream; v.onloadedmetadata=()=>{ this.camPronta=true; }; }
-        }catch(e){ this.lgErro='Precisamos da câmera para confirmar sua identidade. Autorize o acesso e tente de novo.'; }
+          stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:640}},audio:false});
+        }catch(e){ this.lgErro='Precisamos da câmera para confirmar sua identidade. Autorize o acesso e tente de novo.'; return; }
+        this.camStream=stream;
+        await this.$nextTick();
+        const v=this.$refs.cam;
+        if(!v){ this.lgErro='Não foi possível iniciar a câmera. Tente novamente.'; return; }
+        v.setAttribute('playsinline',''); v.setAttribute('muted',''); v.muted=true;
+        v.srcObject=stream;
+        // iOS Safari às vezes não dispara loadedmetadata sem o play() explícito → várias amarras + fallback
+        const pronto=()=>{ if(!this.camPronta){ this.camPronta=true; this.iniciarDeteccao(); } };
+        v.onloadedmetadata=pronto; v.oncanplay=pronto; v.onplaying=pronto;
+        try{ await v.play(); }catch(e){}
+        let t=0; const chk=setInterval(()=>{ if(this.camPronta||this.etapa!=='foto'){ clearInterval(chk); return; } if(v.videoWidth>0){ clearInterval(chk); pronto(); } else if(++t>30){ clearInterval(chk); pronto(); } }, 200);
+        // escape: se a detecção não confirmar o rosto em 7s, libera o botão mesmo assim (não trava ninguém)
+        setTimeout(()=>{ if(this.etapa==='foto'&&!this.fotoTirada) this.liberaSemRosto=true; }, 7000);
       },
+      iniciarDeteccao(){
+        if(this.fdTimer) clearInterval(this.fdTimer);
+        const cv=document.createElement('canvas'); cv.width=48; cv.height=60; const cx=cv.getContext('2d',{willReadFrequently:true});
+        let fd=('FaceDetector' in window)?new window.FaceDetector({fastMode:true,maxDetectedFaces:1}):null;
+        let estavel=0, busy=false;
+        this.fdTimer=setInterval(async()=>{
+          const v=this.$refs.cam;
+          if(this.etapa!=='foto'||this.fotoTirada||!v||!v.videoWidth){ return; }
+          let ok=false;
+          if(fd){
+            if(busy) return; busy=true;
+            try{ const fs=await fd.detect(v); if(fs&&fs.length){ const b=fs[0].boundingBox; ok=b.width>v.videoWidth*0.22; } }catch(e){ fd=null; }
+            busy=false;
+          }
+          if(!fd){
+            // heurística sem FaceDetector (iOS): região central do oval precisa de brilho plausível + detalhe (variação)
+            cx.drawImage(v,0,0,cv.width,cv.height);
+            let d; try{ d=cx.getImageData(12,10,24,38).data; }catch(e){ return; }
+            let n=d.length/4, soma=0, lums=[];
+            for(let i=0;i<d.length;i+=4){ const L=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; lums.push(L); soma+=L; }
+            const media=soma/n; let varr=0; for(const L of lums) varr+=(L-media)*(L-media); varr/=n;
+            ok = media>42 && media<225 && varr>230;   // rosto centralizado tem brilho médio e textura
+          }
+          if(ok){ if(++estavel>=2){ this.rostoOk=true; } } else { estavel=0; this.rostoOk=false; }
+        }, 350);
+      },
+      pararDeteccao(){ if(this.fdTimer){ clearInterval(this.fdTimer); this.fdTimer=null; } },
       pegarLocal(){
         if(!navigator.geolocation) return;
         navigator.geolocation.getCurrentPosition(
@@ -472,10 +518,10 @@
         const c=document.createElement('canvas'); c.width=size; c.height=size;
         const ctx=c.getContext('2d'); const sx=(v.videoWidth-lado)/2, sy=(v.videoHeight-lado)/2;
         ctx.drawImage(v,sx,sy,lado,lado,0,0,size,size);
-        this.fotoData=c.toDataURL('image/jpeg',0.7); this.fotoTirada=true;
+        this.fotoData=c.toDataURL('image/jpeg',0.7); this.fotoTirada=true; this.pararDeteccao();
       },
-      refazerFoto(){ this.fotoTirada=false; this.fotoData=''; },
-      pararCamera(){ if(this.camStream){ this.camStream.getTracks().forEach(t=>t.stop()); this.camStream=null; } this.camPronta=false; },
+      refazerFoto(){ this.fotoTirada=false; this.fotoData=''; this.rostoOk=false; this.iniciarDeteccao(); },
+      pararCamera(){ this.pararDeteccao(); if(this.camStream){ this.camStream.getTracks().forEach(t=>t.stop()); this.camStream=null; } this.camPronta=false; this.rostoOk=false; },
       voltarCred(){ this.pararCamera(); this.etapa='cred'; this.fotoTirada=false; this.fotoData=''; this.lgErro=''; },
       async entrar(){
         this.lgErro='';
