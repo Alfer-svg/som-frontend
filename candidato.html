@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='49' fill='%23EA4335'/%3E%3Ccircle cx='50' cy='50' r='41.5' fill='%23fff'/%3E%3Ccircle cx='50' cy='50' r='38.5' fill='%23F9A825'/%3E%3Ccircle cx='50' cy='50' r='31' fill='%23fff'/%3E%3Ccircle cx='50' cy='50' r='28' fill='%2334A853'/%3E%3Ccircle cx='50' cy='50' r='20.5' fill='%23fff'/%3E%3Ccircle cx='50' cy='50' r='17.5' fill='%234285F4'/%3E%3Ccircle cx='50' cy='50' r='7' fill='%23fff'/%3E%3C/svg%3E">
 <title>Central de Campanha — Painel do Candidato · Maracatu Digital</title>
 <style>
 
@@ -171,6 +172,13 @@
   .info.r::after{left:0;right:auto} .info.r::before{left:5px;right:auto}
   .tile{padding-top:16px} .tile .info{position:absolute;top:14px;right:14px}
   .ia .info{position:absolute;top:16px;right:16px}
+  .info.show::after{opacity:1;transform:translateY(0)} .info.show::before{opacity:1}
+  @media(max-width:600px){
+    .info::after{position:fixed;left:50%;right:auto;top:auto;bottom:18px;width:92vw;max-width:360px;transform:translate(-50%,12px);z-index:9999}
+    .info.r::after{left:50%;right:auto}
+    .info.show::after{transform:translate(-50%,0)}
+    .info::before{display:none}
+  }
 
   /* card de contagem regressiva */
   .cd-card{display:flex;align-items:center;gap:16px 20px;flex-wrap:wrap;background:linear-gradient(180deg,#fff,var(--redsoft));border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
@@ -233,7 +241,7 @@
   .menu-wrap{position:relative}
   .menu-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:.15s}
   .menu-btn:hover{background:var(--bg);border-color:var(--mut2)}
-  .menu-drop{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px -12px rgba(60,64,67,.4);padding:6px;min-width:214px;z-index:90;opacity:0;visibility:hidden;transform:translateY(-6px);transition:.16s}
+  .menu-drop{position:fixed;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 44px -10px rgba(60,64,67,.45);padding:6px;min-width:214px;z-index:9999;opacity:0;visibility:hidden;transform:translateY(-6px);transition:.16s}
   .menu-drop.open{opacity:1;visibility:visible;transform:translateY(0)}
   .menu-drop a,.menu-drop button{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border-radius:10px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);text-decoration:none;border:0;background:transparent;cursor:pointer;text-align:left}
   .menu-drop a:hover,.menu-drop button:hover{background:var(--bg)}
@@ -797,7 +805,7 @@
     ['próximos','Sua agenda de campanha e as gravações programadas com a Maracatu.'],
   ];
   const tipFor=txt=>{const t=(txt||'').toLowerCase();const f=TIPS.find(([k])=>t.includes(k));return f?f[1]:null;};
-  const mkInfo=(tip,openRight)=>{const s=document.createElement('span');s.className='info'+(openRight?' r':'');s.textContent='i';s.setAttribute('data-tip',tip);s.setAttribute('aria-label',tip);s.setAttribute('tabindex','0');return s;};
+  const mkInfo=(tip,openRight)=>{const s=document.createElement('span');s.className='info'+(openRight?' r':'');s.textContent='i';s.setAttribute('data-tip',tip);s.setAttribute('aria-label',tip);s.setAttribute('tabindex','0');s.addEventListener('click',function(e){e.stopPropagation();var was=s.classList.contains('show');$$('.info.show').forEach(function(o){o.classList.remove('show');});if(!was)s.classList.add('show');});return s;};
   $$('.p-head').forEach(h=>{const h3=h.querySelector('h3');if(!h3)return;const tip=tipFor(h3.textContent);if(tip)h3.appendChild(mkInfo(tip,true));});
   const iaBox=document.querySelector('.ia');if(iaBox)iaBox.appendChild(mkInfo('Resumo diário escrito pela equipe da Maracatu a partir dos seus números reais. Acompanha o desempenho; a estratégia é da agência.',false));
   const KTIP={'pessoas alcançadas':'Total de pessoas ÚNICAS que suas campanhas atingiram no período (reach). Fonte: Meta Ads.','apoiadores':'Seguidores somados das suas redes sociais. Fonte: monitoramento de Instagram/Facebook.','engajamento':'% de interação sobre o alcance das suas redes. Fonte: monitoramento.','contatos captados':'Conversas e leads gerados pelas campanhas (ex.: cliques pro WhatsApp). Fonte: Meta/Google Ads.'};
@@ -805,31 +813,24 @@
   const cdc=$('#cdCard');if(cdc)cdc.querySelector('.lead .t').appendChild(mkInfo('Contagem regressiva do período eleitoral: início em 16/08, propaganda de rua até 03/10 e eleição em 04/10/2026. Fonte: TSE.',true));
 
   // ===== bombo da Maracatu (4 cores + aro + baquetas) no lugar da bola =====
-  function bomboSVG(){
-    var C=['#4285F4','#EA4335','#F9A825','#34A853'];
-    var yT=17,yB=35,xs=15.5,dx=4.2,n=5,topo=[],base=[];
-    for(var i=0;i<n;i++)topo.push(xs+dx*i);
-    for(var i=0;i<n-1;i++)base.push(xs+dx*(i+0.5));
-    var seq=[];for(var i=0;i<n-1;i++){seq.push([topo[i],yT,base[i],yB]);seq.push([base[i],yB,topo[i+1],yT]);}
-    var cordas=seq.map(function(s,i){return '<line x1="'+s[0].toFixed(1)+'" y1="'+s[1]+'" x2="'+s[2].toFixed(1)+'" y2="'+s[3]+'" stroke="'+C[i%4]+'" stroke-width="1.9" stroke-linecap="round"/>';}).join('');
-    return '<svg viewBox="0 0 48 48" width="100%" height="100%" style="display:block">'
-      +'<g stroke="#B07C3E" stroke-width="2.6" stroke-linecap="round"><line x1="9" y1="10" x2="23" y2="23"/></g>'
-      +'<g stroke="#C9A05A" stroke-width="1.9" stroke-linecap="round"><line x1="39" y1="9" x2="25" y2="23"/></g>'
-      +'<rect x="14" y="14.5" width="20" height="21" rx="2.5" fill="#ECDCC0"/>'
-      +cordas
-      +'<rect x="11.5" y="12" width="25" height="5.2" rx="2.6" fill="#33383B"/>'
-      +'<ellipse cx="24" cy="14.4" rx="10.6" ry="2.9" fill="#F5F7FA" stroke="#33383B" stroke-width="1.1"/>'
-      +'<rect x="11.5" y="34.3" width="25" height="5.2" rx="2.6" fill="#33383B"/>'
-      +'</svg>';
-  }
+  function bomboSVG(){return '<svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block">'
+    +'<circle cx="50" cy="50" r="49" fill="#EA4335"/>'
+    +'<circle cx="50" cy="50" r="41.5" fill="#fff"/>'
+    +'<circle cx="50" cy="50" r="38.5" fill="#F9A825"/>'
+    +'<circle cx="50" cy="50" r="31" fill="#fff"/>'
+    +'<circle cx="50" cy="50" r="28" fill="#34A853"/>'
+    +'<circle cx="50" cy="50" r="20.5" fill="#fff"/>'
+    +'<circle cx="50" cy="50" r="17.5" fill="#4285F4"/>'
+    +'<circle cx="50" cy="50" r="7" fill="#fff"/>'
+    +'</svg>';}
   $$('.ia .logo, .foot-bombo, .lg-logo').forEach(el=>{el.innerHTML=bomboSVG();});
 
   // ===== menu do header (+ sair) =====
   var menuBtn=$('#menuBtn'),menuDrop=$('#menuDrop');
   if(menuBtn&&menuDrop){
-    menuBtn.addEventListener('click',function(e){e.stopPropagation();menuDrop.classList.toggle('open');});
+    menuBtn.addEventListener('click',function(e){e.stopPropagation();var open=menuDrop.classList.toggle('open');if(open){var r=menuBtn.getBoundingClientRect();var w=menuDrop.offsetWidth||220;menuDrop.style.top=(r.bottom+8)+'px';var left=Math.min(r.right-w,window.innerWidth-w-10);menuDrop.style.left=Math.max(10,left)+'px';}});
     menuDrop.addEventListener('click',function(e){e.stopPropagation();});
-    document.addEventListener('click',function(){menuDrop.classList.remove('open');});
+    document.addEventListener('click',function(){menuDrop.classList.remove('open');$$('.info.show').forEach(function(o){o.classList.remove('show');});});
     var sair=$('#menuSair'); if(sair)sair.addEventListener('click',function(){menuDrop.classList.remove('open');if(window.__sair)window.__sair();else location.reload();});
   }
 
