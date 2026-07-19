@@ -431,7 +431,11 @@
       init(){
         this.$watch('aba', v=>this.logAtividade('abriu:'+v));
         this._guardCaptura();
-        if(this.token){ this.aba='inicio'; this.iniciarSessao(); this.carregarAnalise(); this.carregarAprovacoes(); }
+        if(this.token){
+          // login direciona o conteúdo: candidato já logado vai pra Central de Campanha
+          if((this.cliente&&this.cliente.perfil)==='candidato'){ location.replace('candidato.html'); return; }
+          this.aba='inicio'; this.iniciarSessao(); this.carregarAnalise(); this.carregarAprovacoes();
+        }
       },
       async api(method, path, body){
         const h={'Content-Type':'application/json'}; if(this.token) h['Authorization']='Bearer '+this.token;
