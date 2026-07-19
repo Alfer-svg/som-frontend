@@ -160,7 +160,7 @@
   /* dicas */
   .dica{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
   .dica:last-child{border:0}
-  .dica .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:16px;flex:none}
+  .dica .dbar{width:3px;border-radius:2px;align-self:stretch;flex:none}
   .dica .tx{font-size:13px;line-height:1.5;color:#3c4043} .dica .tx b{color:var(--ink)}
 
   /* eventos */
@@ -340,7 +340,7 @@
   </div>
 </div>
 <div id="painelRoot">
-<a class="fab-suporte" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20de%20suporte%20dedicado%20da%20Maracatu." target="_blank" rel="noopener" aria-label="Suporte no WhatsApp">💬</a>
+<a class="fab-suporte" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20de%20suporte%20dedicado%20da%20Maracatu." target="_blank" rel="noopener" aria-label="Suporte no WhatsApp"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg></a>
 <div class="wrap"><div class="app">
 
   <!-- HEADER -->
@@ -391,7 +391,7 @@
   <div class="cd-card reveal" style="animation-delay:.055s" id="cdCard">
     <div class="stripe4"></div>
     <div class="lead">
-      <div class="t" id="cdTitulo">⏳ Reta final da campanha</div>
+      <div class="t" id="cdTitulo">Reta final da campanha</div>
       <div class="s" id="cdSub">—</div>
     </div>
     <div class="cd-elei"><div class="n tnum" id="cdEleicao">—</div><div class="l">dias p/ eleição</div></div>
@@ -429,10 +429,10 @@
 
   <!-- KPIs -->
   <div class="row kpis">
-    <div class="tile t-blue reveal" style="animation-delay:.14s"><div class="ico">📡</div><div class="lbl">Pessoas alcançadas</div><div class="v tnum" data-kpi="alcance">0</div><div class="d"><b id="alcDs">—</b></div><canvas class="spark" data-spark="1"></canvas></div>
-    <div class="tile t-grn reveal" style="animation-delay:.17s"><div class="ico">🤝</div><div class="lbl">Apoiadores</div><div class="v tnum" data-kpi="apoiadores">0</div><div class="d"><b>+<span class="tnum" id="apoD">0</span></b> <span id="apoP"></span></div><canvas class="spark" data-spark="1"></canvas></div>
-    <div class="tile t-amb reveal" style="animation-delay:.20s"><div class="ico">💬</div><div class="lbl">Engajamento</div><div class="v tnum"><span data-kpi="engaj">0</span>%</div><div class="d">acima da média do setor</div><canvas class="spark" data-spark="1"></canvas></div>
-    <div class="tile t-red reveal" style="animation-delay:.23s"><div class="ico">📇</div><div class="lbl">Contatos captados</div><div class="v tnum" data-kpi="contatos">0</div><div class="d">WhatsApp · base de apoio</div><canvas class="spark" data-spark="1"></canvas></div>
+    <div class="tile t-blue reveal" style="animation-delay:.14s"><div class="lbl">Pessoas alcançadas</div><div class="v tnum" data-kpi="alcance">0</div><div class="d"><b id="alcDs">—</b></div><canvas class="spark" data-spark="1"></canvas></div>
+    <div class="tile t-grn reveal" style="animation-delay:.17s"><div class="lbl">Apoiadores</div><div class="v tnum" data-kpi="apoiadores">0</div><div class="d"><b>+<span class="tnum" id="apoD">0</span></b> <span id="apoP"></span></div><canvas class="spark" data-spark="1"></canvas></div>
+    <div class="tile t-amb reveal" style="animation-delay:.20s"><div class="lbl">Engajamento</div><div class="v tnum"><span data-kpi="engaj">0</span>%</div><div class="d">acima da média do setor</div><canvas class="spark" data-spark="1"></canvas></div>
+    <div class="tile t-red reveal" style="animation-delay:.23s"><div class="lbl">Contatos captados</div><div class="v tnum" data-kpi="contatos">0</div><div class="d">WhatsApp · base de apoio</div><canvas class="spark" data-spark="1"></canvas></div>
   </div>
 
   <!-- MAPA PE + ORÇAMENTO -->
@@ -524,8 +524,8 @@
       <a href="https://www.maracatumktdigital.com" target="_blank" rel="noopener" style="font-size:14px;font-weight:700;color:var(--ink);text-decoration:none">Operado de ponta a ponta pela Maracatu Digital ↗</a>
       <div style="font-size:12px;color:var(--mut);max-width:38ch;line-height:1.5">Estratégia, criação, tráfego e monitoramento ficam com a gente. Você foca na rua.</div>
       <div class="acoes">
-        <a class="btn-acao zap" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20falar%20com%20a%20Maracatu." target="_blank" rel="noopener">💬 Falar com a Maracatu</a>
-        <a class="btn-acao rel" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Gostaria%20de%20receber%20o%20relat%C3%B3rio%20da%20minha%20campanha." target="_blank" rel="noopener">📊 Pedir relatório</a>
+        <a class="btn-acao zap" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20falar%20com%20a%20Maracatu." target="_blank" rel="noopener">Falar com a Maracatu</a>
+        <a class="btn-acao rel" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Gostaria%20de%20receber%20o%20relat%C3%B3rio%20da%20minha%20campanha." target="_blank" rel="noopener">Pedir relatório</a>
       </div>
     </div>
   </div>
@@ -579,17 +579,17 @@
   const REG_ALIAS={recife:['recife','rmr','metrop','znorte'],olinda:['olinda','rmr','metrop'],jaboatao:['jaboatao','olinda','rmr','metrop'],vitoriadesa:['vitoria','rmr'],caruaru:['caruaru','agreste'],garanhuns:['garanhuns','agreste'],arcoverde:['arcoverde','agreste'],serratalhada:['serratalhada','sertao'],salgueiro:['salgueiro','sertao'],petrolina:['petrolina','sertao','saofrancisco']};
   const normLoc=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
   function campanhasEm(cidade){const key=normLoc(cidade);const al=REG_ALIAS[key]||[key];return CAMPANHAS.filter(c=>c[3]==='ativa').filter(c=>{const loc=normLoc(c[1]);if(loc.includes('estadual'))return true;return al.some(a=>loc.includes(a));});}
-  const eventos=[['04','OUT','Eleição — 1º turno','Dia da votação','🗳️'],['22','SET','Comício Zona Norte','Praça do Derby · 18h','📢'],['24','SET','Gravação — santinho digital','Estúdio Maracatu · 10h','🎬'],['27','SET','Entrevista — rádio local','Ao vivo · 08h','🎙️'],['29','SET','Caminhada no Centro','Rua da Aurora · 16h','🚶']];
+  const eventos=[['04','OUT','Eleição — 1º turno','Dia da votação',''],['22','SET','Comício Zona Norte','Praça do Derby · 18h',''],['24','SET','Gravação — santinho digital','Estúdio Maracatu · 10h',''],['27','SET','Entrevista — rádio local','Ao vivo · 08h',''],['29','SET','Caminhada no Centro','Rua da Aurora · 16h','']];
   const ANALISES=[
     {h:'Sua campanha vive o melhor momento até agora.',p:'Seu alcance subiu no período e o custo por pessoa impactada ficou abaixo da média do setor. A equipe foi ajustando as campanhas ao longo das semanas, e a base de apoio segue crescendo.',t:['Alcance em alta','Custo eficiente','+ apoiadores']},
     {h:'A estratégia está funcionando e os números confirmam.',p:'As pautas que priorizamos são as mesmas que mais mobilizam o seu público, e o alcance segue subindo semana a semana. Isso vem de acompanhar a campanha de perto, não de sorte.',t:['Pautas certeiras','Alcance subindo','Equipe atenta']},
     {h:'Os ajustes da semana já aparecem nos números.',p:'A Maracatu vem mexendo nas campanhas toda semana, e o resultado aparece: o engajamento está acima da média e o custo por pessoa impactada segue baixo. Enquanto você faz a rua, a parte digital fica com a gente.',t:['Engajamento alto','Custo baixo','Ajuste constante']}
   ];
   const DICAS=[
-    ['💡','var(--ambbg)','var(--amb)','A campanha <b>“Saúde Perto de Você”</b> é a que mais puxa resultado. Vale a equipe reforçar esse tema nos próximos dias.'],
-    ['📈','var(--bluebg)','var(--blue)','O <b>engajamento tem pico às 19h</b>. Concentre publicações e lives nesse horário para alcançar mais gente.'],
-    ['🗺️','var(--redbg)','var(--red)','A <b>Zona Norte é a que mais responde</b> no mapa. É onde o investimento rende mais, então priorizem eventos por lá.'],
-    ['🎯','var(--grnbg)','var(--grnink)','Seu <b>custo por pessoa impactada está abaixo do mercado</b>. Com essa margem, dá pra aumentar o orçamento com segurança.']
+    ['','var(--ambbg)','var(--amb)','A campanha <b>“Saúde Perto de Você”</b> é a que mais puxa resultado. Vale a equipe reforçar esse tema nos próximos dias.'],
+    ['','var(--bluebg)','var(--blue)','O <b>engajamento tem pico às 19h</b>. Concentre publicações e lives nesse horário para alcançar mais gente.'],
+    ['','var(--redbg)','var(--red)','A <b>Zona Norte é a que mais responde</b> no mapa. É onde o investimento rende mais, então priorizem eventos por lá.'],
+    ['','var(--grnbg)','var(--grnink)','Seu <b>custo por pessoa impactada está abaixo do mercado</b>. Com essa margem, dá pra aumentar o orçamento com segurança.']
   ];
 
   let cur='30d';
@@ -660,7 +660,7 @@
       const mostra=(cx,cy)=>{const r=mapEl.getBoundingClientRect();const py=cy-r.top;const lx=Math.max(108,Math.min(cx-r.left,r.width-108));mapTip.style.left=lx+'px';mapTip.style.top=py+'px';mapTip.style.transform=(py<r.height*0.5?'translate(-50%,16px)':'translate(-50%,-112%)');mapTip.style.opacity=1;
         const camps=campanhasEm(n);
         const linhas=camps.length?camps.slice(0,5).map(c=>{const est=normLoc(c[1]).includes('estadual');return `<div class="mt-c"><span>${c[0]}</span><b>${est?'estadual':kfmt(c[2])}</b></div>`;}).join(''):'<div class="mt-c"><span style="color:#9AA0A6">sem campanha rodando aqui</span></div>';
-        mapTip.innerHTML=`<div class="mt-h">📍 ${n}</div>${linhas}`;};
+        mapTip.innerHTML=`<div class="mt-h">${n}</div>${linhas}`;};
       hit.addEventListener('mousemove',e=>mostra(e.clientX,e.clientY));
       hit.addEventListener('mouseleave',()=>mapTip.style.opacity=0);
       hit.addEventListener('click',e=>{e.stopPropagation();mostra(e.clientX,e.clientY);clearTimeout(mapTip._t);mapTip._t=setTimeout(()=>{mapTip.style.opacity=0;},4200);});
@@ -719,16 +719,16 @@
 
   // campanhas
   const ativas=CAMPANHAS.filter(c=>c[3]==='ativa').length;
-  $('#campChip').textContent=`🎯 ${ativas} campanhas ativas`;$('#campCount').textContent=`${ativas} ativas · ${CAMPANHAS.length-ativas} pausada`;
-  $('#campanhas').innerHTML=CAMPANHAS.map(([n,l,r,s,cn])=>`<div class="camp"><span class="st ${s==='pausada'?'pause':''}"></span><div class="in"><div class="nm">${n}</div><div class="lo">📍 ${l}</div></div><span class="cn">${cn}</span><div class="rc"><div class="b tnum">${kfmt(r)}</div><div class="s">alcance</div></div></div>`).join('');
+  $('#campChip').textContent=`${ativas} campanhas ativas`;$('#campCount').textContent=`${ativas} ativas · ${CAMPANHAS.length-ativas} pausada`;
+  $('#campanhas').innerHTML=CAMPANHAS.map(([n,l,r,s,cn])=>`<div class="camp"><span class="st ${s==='pausada'?'pause':''}"></span><div class="in"><div class="nm">${n}</div><div class="lo">${l}</div></div><span class="cn">${cn}</span><div class="rc"><div class="b tnum">${kfmt(r)}</div><div class="s">alcance</div></div></div>`).join('');
 
   // análise IA (rotaciona por dia)
   const dia=new Date().getDate();const an=ANALISES[dia%ANALISES.length];
   $('#iaH').textContent=an.h;$('#iaP').textContent=an.p;$('#iaTags').innerHTML=an.t.map(t=>`<span class="tag">${t}</span>`).join('');
   // dicas
-  $('#dicas').innerHTML=DICAS.map(([ic,bg,co,tx])=>`<div class="dica"><div class="ic" style="background:${bg};color:${co}">${ic}</div><div class="tx">${tx}</div></div>`).join('');
+  $('#dicas').innerHTML=DICAS.map(([ic,bg,co,tx])=>`<div class="dica"><span class="dbar" style="background:${co}"></span><div class="tx">${tx}</div></div>`).join('');
   // eventos
-  $('#eventos').innerHTML=eventos.map(([d,m,t,s,ic])=>`<div class="ev"><div class="dt"><div class="d tnum">${d}</div><div class="m">${m}</div></div><div class="info"><div class="t">${t}</div><div class="s">${s}</div></div><span class="tp">${ic}</span></div>`).join('');
+  $('#eventos').innerHTML=eventos.map(([d,m,t,s,ic])=>`<div class="ev"><div class="dt"><div class="d tnum">${d}</div><div class="m">${m}</div></div><div class="info"><div class="t">${t}</div><div class="s">${s}</div></div></div>`).join('');
 
   // countdown
   function tick(){const now=new Date();$('#stamp').textContent=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
@@ -778,13 +778,13 @@
   // — regras (compliance, atualizado por IA) —
   const RT={pode:'pode',nao:'não pode',atencao:'atenção'};
   $('#regrasList').innerHTML=ELEI.regras.map(([t,x])=>`<div class="rule ${t}"><span class="rt">${RT[t]}</span><span class="rx">${x}</span></div>`).join('');
-  $('#regrasSrc').innerHTML='🔄 A equipe da Maracatu revisa as regras todos os dias em fontes oficiais. <b>Fonte:</b> '+ELEI.regrasFonte+' · atualizado '+ELEI.regrasEm+'.';
+  $('#regrasSrc').innerHTML='A equipe da Maracatu revisa as regras todos os dias em fontes oficiais. <b>Fonte:</b> '+ELEI.regrasFonte+' · atualizado '+ELEI.regrasEm+'.';
   $('#regrasChip').textContent='atualizado '+ELEI.regrasEm;
 
   // — cenário e pesquisas —
   $('#cenario').innerHTML='<div class="cen-txt">'+ELEI.cenario+'</div>'+
     '<div class="cen-topo"><div class="c"><div class="k">Governo PE</div><div class="v">João Campos × Raquel Lyra</div></div><div class="c"><div class="k">Consulta oficial</div><div class="v">PesqEle · TSE</div></div></div>'+
-    '<a class="cen-link" href="https://pesqele-divulgacao.tse.jus.br/" target="_blank" rel="noopener">🔎 Ver pesquisas registradas no TSE</a>'+
+    '<a class="cen-link" href="https://pesqele-divulgacao.tse.jus.br/" target="_blank" rel="noopener">Ver pesquisas registradas no TSE</a>'+
     '<div class="src" style="margin-top:10px">A equipe da Maracatu acompanha as pesquisas registradas. Última leitura: '+ELEI.cenarioEm+'.</div>';
 
   // — contagem regressiva ao vivo —
@@ -799,9 +799,9 @@
     S('cdD',d);S('cdH',h);S('cdM',m);S('cdS',s);
     var ce=$('#cdEleicao'); if(ce)ce.textContent=Math.max(0,Math.ceil((ELEI.eleicao-now)/86400000));
     const tit=$('#cdTitulo'),sub=$('#cdSub');
-    if(now>=ELEI.eleicao){ tit.textContent='🗳️ Dia da eleição'; sub.textContent='A votação acontece hoje — 04/10/2026.'; }
-    else if(pre){ tit.textContent='⏳ Contagem para o início da campanha'; sub.textContent='Propaganda eleitoral liberada em 16/08/2026 · eleição em 04/10.'; }
-    else { tit.textContent='⏳ Reta final da campanha'; sub.textContent='Propaganda de rua até 22h de 03/10 · eleição em 04/10/2026.'; }
+    if(now>=ELEI.eleicao){ tit.textContent='Dia da eleição'; sub.textContent='A votação acontece hoje — 04/10/2026.'; }
+    else if(pre){ tit.textContent='Contagem para o início da campanha'; sub.textContent='Propaganda eleitoral liberada em 16/08/2026 · eleição em 04/10.'; }
+    else { tit.textContent='Reta final da campanha'; sub.textContent='Propaganda de rua até 22h de 03/10 · eleição em 04/10/2026.'; }
     const tot=ELEI.eleicao-ELEI.inicioCampanha, pass=Math.min(tot,Math.max(0,now-ELEI.inicioCampanha));
     const fill=$('#cdFill'); if(fill) fill.style.width=(pass/tot*100).toFixed(1)+'%';
   }
