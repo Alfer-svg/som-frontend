@@ -1030,8 +1030,8 @@
 <script>
 (function(){
   var API='https://som-backend-production-01d8.up.railway.app/api';
-  var token=localStorage.getItem('cand_token')||'';
-  var info={}; try{info=JSON.parse(localStorage.getItem('cand_info')||'{}')}catch(e){info={};}
+  var token=localStorage.getItem('cliente_token')||localStorage.getItem('cand_token')||'';
+  var info={}; try{info=JSON.parse(localStorage.getItem('cliente_info')||localStorage.getItem('cand_info')||'{}')}catch(e){info={};}
   var camStream=null, fotoData='', lat=null, lng=null, hbTimer=null, alertaTimer=null;
   function id(x){return document.getElementById(x);}
   async function apiPost(path,b){var h={'Content-Type':'application/json'};if(token)h['Authorization']='Bearer '+token;var r=await fetch(API+path,{method:'POST',headers:h,body:JSON.stringify(b||{})});var d=await r.json().catch(function(){return{}});if(!r.ok)throw new Error(d.message||'Falha.');return d;}
@@ -1063,8 +1063,10 @@
     }catch(ex){ id('fotoErr').textContent=ex.message; btn.disabled=false; btn.textContent='Entrar'; }
   }
   async function abrirPainel(){
+    try{ var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}});
+      if(r.status===401||r.status===403){ localStorage.removeItem('cliente_token'); localStorage.removeItem('cand_token'); location.replace('cliente.html'); return; }
+      if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato);} }catch(e){}
     id('loginScreen').style.display='none';
-    try{ var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}}); if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato);} }catch(e){}
     ligarProtecao(); iniciarSessao();
     if(window.__replay) setTimeout(window.__replay,60);
   }
@@ -1092,7 +1094,7 @@
       if(window.__replay)setTimeout(window.__replay,60);
     }catch(e){ id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
   }
-  window.__sair=function(){ try{if(token)apiPost('/cliente-portal/logout');}catch(e){} if(hbTimer)clearInterval(hbTimer); localStorage.removeItem('cand_token'); localStorage.removeItem('cand_info'); location.reload(); };
+  window.__sair=function(){ try{if(token)apiPost('/cliente-portal/logout');}catch(e){} if(hbTimer)clearInterval(hbTimer); localStorage.removeItem('cand_token'); localStorage.removeItem('cand_info'); localStorage.removeItem('cliente_token'); localStorage.removeItem('cliente_info'); location.replace('cliente.html'); };
 
   document.addEventListener('DOMContentLoaded',function(){
     id('lgForm').addEventListener('submit',function(e){e.preventDefault();irFoto();});
@@ -1101,8 +1103,9 @@
     id('btnEntrar').addEventListener('click',entrar);
     id('btnVoltar').addEventListener('click',voltar);
     var qs=new URLSearchParams(location.search),cli=qs.get('cliente'),somTok=localStorage.getItem('som_token');
-    if(cli&&somTok){ abrirComoAdmin(cli,somTok); return; }
-    if(token) abrirPainel();
+    if(cli&&somTok){ abrirComoAdmin(cli,somTok); return; }   // equipe do SOM abrindo o painel de um candidato
+    if(token){ abrirPainel(); return; }                      // candidato já logado no app do SOM
+    location.replace('cliente.html');                        // login é único: pelo app do SOM
   });
 })();
 </script>

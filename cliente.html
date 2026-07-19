@@ -68,14 +68,41 @@
         <div class="muted" style="font-size:13px;margin-top:4px">Acompanhe seus resultados e aprove seu conteúdo.</div>
       </div>
       <div class="card" style="padding:18px">
-        <label class="kpi-label">E-mail</label>
-        <input type="email" x-model="lgEmail" placeholder="voce@empresa.com" style="margin:6px 0 14px" @keydown.enter="entrar()">
-        <label class="kpi-label">Senha</label>
-        <input type="password" x-model="lgSenha" placeholder="sua senha" style="margin:6px 0 4px" @keydown.enter="entrar()">
-        <div x-show="lgErro" style="color:var(--red);font-size:13px;margin:8px 0 0" x-text="lgErro"></div>
-        <button class="btn btn-amber" style="width:100%;margin-top:16px" @click="entrar()" :disabled="lgLoading">
-          <span x-text="lgLoading?'Entrando…':'Entrar'"></span>
-        </button>
+        <!-- ETAPA 1 · credenciais -->
+        <template x-if="etapa==='cred'">
+          <div>
+            <label class="kpi-label">E-mail</label>
+            <input type="email" x-model="lgEmail" placeholder="voce@empresa.com" style="margin:6px 0 14px" @keydown.enter="irParaFoto()">
+            <label class="kpi-label">Senha</label>
+            <input type="password" x-model="lgSenha" placeholder="sua senha" style="margin:6px 0 4px" @keydown.enter="irParaFoto()">
+            <div x-show="lgErro" style="color:var(--red);font-size:13px;margin:8px 0 0" x-text="lgErro"></div>
+            <button class="btn btn-amber" style="width:100%;margin-top:16px" @click="irParaFoto()">Continuar</button>
+          </div>
+        </template>
+        <!-- ETAPA 2 · foto + consentimento -->
+        <template x-if="etapa==='foto'">
+          <div style="text-align:center">
+            <div class="kpi-label" style="text-align:left;margin-bottom:10px">Confirme sua identidade</div>
+            <div style="position:relative;width:170px;height:170px;margin:0 auto;border-radius:50%;overflow:hidden;background:#0b0b0b;border:3px solid var(--line)">
+              <video x-ref="cam" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1)" x-show="!fotoTirada"></video>
+              <img :src="fotoData" x-show="fotoTirada" style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1)">
+            </div>
+            <div class="muted" style="font-size:11px;margin-top:8px" x-text="geoOk?'📍 Localização capturada':'📍 Buscando localização…'"></div>
+            <label style="display:flex;gap:8px;align-items:flex-start;text-align:left;font-size:11.5px;color:var(--mut);margin-top:12px;line-height:1.45">
+              <input type="checkbox" x-model="consentiu" style="margin-top:2px;flex:0 0 16px;width:16px;height:16px;min-width:0">
+              <span style="flex:1;min-width:0">Autorizo o registro da minha <b>foto</b>, <b>localização</b> e <b>atividade</b> neste acesso, para a segurança dos dados da empresa (LGPD).</span>
+            </label>
+            <div x-show="lgErro" style="color:var(--red);font-size:13px;margin:10px 0 0" x-text="lgErro"></div>
+            <button x-show="!fotoTirada" class="btn btn-amber" style="width:100%;margin-top:14px" @click="tirarFoto()" :disabled="!camPronta">
+              <span x-text="camPronta?'Tirar foto':'Abrindo câmera…'"></span>
+            </button>
+            <div x-show="fotoTirada" class="row" style="gap:8px;margin-top:14px">
+              <button class="btn btn-ghost" style="flex:1" @click="refazerFoto()">Refazer</button>
+              <button class="btn btn-amber" style="flex:2" @click="entrar()" :disabled="lgLoading||!consentiu"><span x-text="lgLoading?'Entrando…':'Entrar'"></span></button>
+            </div>
+            <button class="btn btn-ghost" style="width:100%;margin-top:8px;font-size:12px" @click="voltarCred()">Voltar</button>
+          </div>
+        </template>
       </div>
       <div class="muted" style="text-align:center;font-size:12px;margin-top:18px">Não tem acesso? Fale com a equipe Maracatu.</div>
     </div>
@@ -84,6 +111,16 @@
   <!-- ══════════ APP ══════════ -->
   <template x-if="token">
     <div>
+      <!-- marca d'água (identidade) + proteção contra captura de tela -->
+      <div :style="marcaStyle()" style="position:fixed;inset:0;pointer-events:none;z-index:40"></div>
+      <div x-show="alertaCaptura" style="position:fixed;top:0;left:0;right:0;z-index:90;background:#7A0A1C;color:#fff;text-align:center;padding:11px 14px;font-size:13px;font-weight:700;box-shadow:0 2px 12px rgba(0,0,0,.22)">⚠️ Dados sensíveis — este acesso está sendo registrado</div>
+      <div x-show="protegido" style="position:fixed;inset:0;z-index:80;background:rgba(247,247,249,.93);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)">
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+          <div style="font-size:30px">🔒</div>
+          <div style="font-weight:800">Conteúdo protegido</div>
+          <div class="muted" style="font-size:12px">Volte para o app para continuar</div>
+        </div>
+      </div>
       <!-- topo -->
       <div style="padding:16px 18px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px">
         <div class="row" style="gap:11px;min-width:0">
@@ -95,6 +132,7 @@
         </div>
         <button class="btn btn-ghost" style="padding:8px 12px;font-size:12px;flex:none" @click="sair()">Sair</button>
       </div>
+      <div style="padding:0 18px 8px;font-size:10.5px;color:var(--mut);display:flex;align-items:center;gap:5px;position:relative;z-index:41"><span>🔒</span><span>Conteúdo confidencial · seu acesso está sendo registrado</span></div>
 
       <!-- ───── INÍCIO (leitura do dia pela IA) ───── -->
       <div x-show="aba==='inicio'" style="padding:8px 16px">
@@ -385,10 +423,16 @@
       aba:'inicio', rTab:'engaj',
       analise:{}, anLoading:false,
       lgEmail:'', lgSenha:'', lgErro:'', lgLoading:false,
+      etapa:'cred', camStream:null, camPronta:false, fotoTirada:false, fotoData:'', lat:null, lng:null, geoOk:false, consentiu:false, hbTimer:null,
+      alertaCaptura:false, protegido:false, alertaTimer:null, guardOn:false,
       ap:null, apLoading:false, apAcao:false, ajusteAberto:false, ajusteTxt:'',
       res:{}, resLoading:false, eng:{}, traf:{},
       ag:{}, agLoading:false, agLoaded:false,
-      init(){ if(this.token){ this.aba='inicio'; this.carregarAnalise(); this.carregarAprovacoes(); } },
+      init(){
+        this.$watch('aba', v=>this.logAtividade('abriu:'+v));
+        this._guardCaptura();
+        if(this.token){ this.aba='inicio'; this.iniciarSessao(); this.carregarAnalise(); this.carregarAprovacoes(); }
+      },
       async api(method, path, body){
         const h={'Content-Type':'application/json'}; if(this.token) h['Authorization']='Bearer '+this.token;
         const r=await fetch(API+path,{method,headers:h,body:body!=null?JSON.stringify(body):undefined});
@@ -396,18 +440,97 @@
         const d=await r.json().catch(()=>null);
         if(!r.ok) throw new Error((d&&d.message)||'Erro'); return d;
       },
+      // ── acesso seguro: câmera + geolocalização + consentimento ──
+      irParaFoto(){
+        this.lgErro='';
+        if(!this.lgEmail||!this.lgSenha){ this.lgErro='Preencha e-mail e senha.'; return; }
+        this.etapa='foto'; this.fotoTirada=false; this.fotoData=''; this.consentiu=false; this.geoOk=false;
+        this.abrirCamera(); this.pegarLocal();
+      },
+      async abrirCamera(){
+        this.camPronta=false;
+        try{
+          this.camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:640}},audio:false});
+          await this.$nextTick();
+          const v=this.$refs.cam; if(v){ v.srcObject=this.camStream; v.onloadedmetadata=()=>{ this.camPronta=true; }; }
+        }catch(e){ this.lgErro='Precisamos da câmera para confirmar sua identidade. Autorize o acesso e tente de novo.'; }
+      },
+      pegarLocal(){
+        if(!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+          p=>{ this.lat=p.coords.latitude; this.lng=p.coords.longitude; this.geoOk=true; },
+          ()=>{}, {enableHighAccuracy:true,timeout:8000,maximumAge:60000}
+        );
+      },
+      tirarFoto(){
+        const v=this.$refs.cam; if(!v||!this.camPronta) return;
+        const lado=Math.min(v.videoWidth,v.videoHeight)||480, size=360;
+        const c=document.createElement('canvas'); c.width=size; c.height=size;
+        const ctx=c.getContext('2d'); const sx=(v.videoWidth-lado)/2, sy=(v.videoHeight-lado)/2;
+        ctx.drawImage(v,sx,sy,lado,lado,0,0,size,size);
+        this.fotoData=c.toDataURL('image/jpeg',0.7); this.fotoTirada=true;
+      },
+      refazerFoto(){ this.fotoTirada=false; this.fotoData=''; },
+      pararCamera(){ if(this.camStream){ this.camStream.getTracks().forEach(t=>t.stop()); this.camStream=null; } this.camPronta=false; },
+      voltarCred(){ this.pararCamera(); this.etapa='cred'; this.fotoTirada=false; this.fotoData=''; this.lgErro=''; },
       async entrar(){
-        this.lgErro=''; if(!this.lgEmail||!this.lgSenha){ this.lgErro='Preencha e-mail e senha.'; return; }
+        this.lgErro='';
+        if(!this.fotoData){ this.lgErro='Tire a foto para entrar.'; return; }
+        if(!this.consentiu){ this.lgErro='É preciso autorizar o registro para entrar.'; return; }
         this.lgLoading=true;
         try{
-          const d=await this.api('POST','/cliente-portal/login',{email:this.lgEmail,senha:this.lgSenha});
-          this.token=d.token; this.cliente=d.cliente;
-          localStorage.setItem('cliente_token',d.token); localStorage.setItem('cliente_info',JSON.stringify(d.cliente));
-          this.aba='inicio'; this.carregarAnalise(); this.carregarAprovacoes();
+          const d=await this.api('POST','/cliente-portal/login',{email:this.lgEmail,senha:this.lgSenha,selfie:this.fotoData,lat:this.lat,lng:this.lng,consent:true});
+          this.pararCamera();
+          this.token=d.token; this.cliente={...d.cliente, email:this.lgEmail};
+          localStorage.setItem('cliente_token',d.token); localStorage.setItem('cliente_info',JSON.stringify(this.cliente));
+          this.etapa='cred'; this.lgSenha=''; this.fotoData=''; this.fotoTirada=false;
+          // candidato: o painel exclusivo é a Central de Campanha — leva pra lá reusando esta sessão
+          if((d.cliente&&d.cliente.perfil)==='candidato'){ location.replace('candidato.html'); return; }
+          this.aba='inicio'; this.iniciarSessao(); this.carregarAnalise(); this.carregarAprovacoes();
         }catch(e){ this.lgErro=(e.message||'Não foi possível entrar.'); }
         this.lgLoading=false;
       },
-      sair(){ this.token=''; localStorage.removeItem('cliente_token'); localStorage.removeItem('cliente_info'); this.ap=null; this.res={}; this.ag={}; this.agLoaded=false; },
+      // ── auditoria da sessão (tempo de uso + atividade) ──
+      iniciarSessao(){
+        this.logAtividade('abriu:app');
+        if(this.hbTimer) clearInterval(this.hbTimer);
+        this.hbTimer=setInterval(()=>{ if(this.token && document.visibilityState==='visible') this.api('POST','/cliente-portal/heartbeat').catch(()=>{}); }, 30000);
+      },
+      logAtividade(acao,meta){ if(!this.token) return; this.api('POST','/cliente-portal/atividade',{acao,meta}).catch(()=>{}); },
+      // ── proteção contra captura de tela ──
+      // marca d'água diagonal com a identidade de quem está logado (rastreável se vazar print)
+      marcaStyle(){
+        const xml=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const quem=this.cliente.nome||this.cliente.empresa||'Cliente';
+        const email=this.cliente.email||'';
+        const dia=new Date().toLocaleDateString('pt-BR');
+        const linha=xml(quem+(email?'  '+email:'')+'  '+dia);
+        const svg="<svg xmlns='http://www.w3.org/2000/svg' width='330' height='180'><text x='8' y='95' transform='rotate(-22 165 90)' font-family='sans-serif' font-size='12.5' fill='#111' fill-opacity='0.09'>"+linha+"</text></svg>";
+        return { backgroundImage:"url(\"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg)+"\")", backgroundRepeat:'repeat' };
+      },
+      _guardCaptura(){
+        if(this.guardOn) return; this.guardOn=true; const self=this;
+        // PrintScreen (desktop) + Cmd+Shift+3/4/5 (macOS) → captura provável
+        document.addEventListener('keyup', e=>{ if(self.token && e.key==='PrintScreen') self.capturaDetectada('printscreen'); });
+        document.addEventListener('keydown', e=>{ if(self.token && e.metaKey && e.shiftKey && ['Digit3','Digit4','Digit5'].includes(e.code)) self.capturaDetectada('tela-mac'); });
+        // sair da tela (troca de app / perda de foco) → borra o conteúdo
+        document.addEventListener('visibilitychange', ()=>{ if(self.token) self.protegerTela(document.hidden); });
+        window.addEventListener('blur', ()=>{ if(self.token) self.protegerTela(true); });
+        window.addEventListener('focus', ()=>{ if(self.token) self.protegerTela(false); });
+      },
+      capturaDetectada(tipo){
+        this.alertaCaptura=true; this.logAtividade('tentou-capturar:'+tipo);
+        if(this.alertaTimer) clearTimeout(this.alertaTimer);
+        this.alertaTimer=setTimeout(()=>{ this.alertaCaptura=false; }, 4500);
+      },
+      protegerTela(on){ this.protegido=!!on; },
+      async sair(){
+        try{ if(this.token) await this.api('POST','/cliente-portal/logout'); }catch(e){}
+        if(this.hbTimer){ clearInterval(this.hbTimer); this.hbTimer=null; }
+        this.pararCamera();
+        this.token=''; localStorage.removeItem('cliente_token'); localStorage.removeItem('cliente_info');
+        this.ap=null; this.res={}; this.ag={}; this.agLoaded=false; this.etapa='cred';
+      },
       // ── leitura do dia (IA) ──
       async carregarAnalise(){ this.anLoading=true; try{ this.analise=await this.api('GET','/cliente-portal/analise')||{}; }catch(e){} this.anLoading=false; },
       saudacao(){ const h=new Date().getHours(); return h<12?'Bom dia':(h<18?'Boa tarde':'Boa noite'); },
@@ -416,8 +539,8 @@
       hojeExtenso(){ try{ const s=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'}); return s.charAt(0).toUpperCase()+s.slice(1); }catch(e){ return ''; } },
       // ── aprovações ──
       async carregarAprovacoes(){ this.apLoading=true; try{ this.ap=await this.api('GET','/cliente-portal/aprovacoes'); }catch(e){} this.apLoading=false; },
-      async aprovar(){ if(!confirm('Aprovar o conteúdo desta semana?')) return; this.apAcao=true; try{ await this.api('POST','/cliente-portal/aprovacoes/'+this.ap.id+'/aprovar',{nome:this.cliente.nome||''}); await this.carregarAprovacoes(); }catch(e){ alert(e.message); } this.apAcao=false; },
-      async pedirAjuste(){ if(!this.ajusteTxt.trim()){ alert('Descreva o ajuste.'); return; } this.apAcao=true; try{ await this.api('POST','/cliente-portal/aprovacoes/'+this.ap.id+'/ajuste',{nome:this.cliente.nome||'',comentario:this.ajusteTxt}); this.ajusteAberto=false; this.ajusteTxt=''; await this.carregarAprovacoes(); }catch(e){ alert(e.message); } this.apAcao=false; },
+      async aprovar(){ if(!confirm('Aprovar o conteúdo desta semana?')) return; this.apAcao=true; try{ await this.api('POST','/cliente-portal/aprovacoes/'+this.ap.id+'/aprovar',{nome:this.cliente.nome||''}); this.logAtividade('aprovou:layout',{id:this.ap.id}); await this.carregarAprovacoes(); }catch(e){ alert(e.message); } this.apAcao=false; },
+      async pedirAjuste(){ if(!this.ajusteTxt.trim()){ alert('Descreva o ajuste.'); return; } this.apAcao=true; try{ await this.api('POST','/cliente-portal/aprovacoes/'+this.ap.id+'/ajuste',{nome:this.cliente.nome||'',comentario:this.ajusteTxt}); this.logAtividade('pediu-ajuste:layout',{id:this.ap.id}); this.ajusteAberto=false; this.ajusteTxt=''; await this.carregarAprovacoes(); }catch(e){ alert(e.message); } this.apAcao=false; },
       // ── resultados ──
       async carregarResultados(){ this.resLoading=true; try{ this.res=await this.api('GET','/cliente-portal/resultados'); this.eng=this.res.engajamento||{}; this.traf=this.res.trafego||{}; }catch(e){} this.resLoading=false; },
       saude(){ const e=this.eng.engajamentoPct; if(e==null) return 50; const s=Math.round(40+Math.min(e,8)/8*59); return Math.max(20,Math.min(99,s)); },
