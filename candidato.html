@@ -734,7 +734,7 @@
   function tick(){const now=new Date();$('#stamp').textContent=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
   tick();setInterval(tick,60000);
 
-  // ===== movimento ao vivo (a máquina girando) =====
+  // ===== números atualizando ao vivo =====
   if(!reduce){
     const bump=el=>{el.classList.remove('bumped');void el.offsetWidth;el.classList.add('bumped');};
     let liveImp=ORC.impactadas;
