@@ -233,6 +233,25 @@
   .saudacao b{font-size:15px} .saudacao span{font-size:12px;color:var(--mut)}
   .saudacao .bar4{position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--blue) 0 25%,var(--red) 25% 50%,var(--amb2) 50% 75%,var(--grn) 75% 100%)}
   @media (prefers-reduced-motion:reduce){.fab-suporte::after{animation:none}.saudacao{transition:none}}
+
+  /* menu do header */
+  .menu-wrap{position:relative}
+  .menu-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:.15s}
+  .menu-btn:hover{background:var(--bg);border-color:var(--mut2)}
+  .menu-drop{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px -12px rgba(60,64,67,.4);padding:6px;min-width:214px;z-index:80;opacity:0;visibility:hidden;transform:translateY(-6px);transition:.16s}
+  .menu-drop.open{opacity:1;visibility:visible;transform:translateY(0)}
+  .menu-drop a,.menu-drop button{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border-radius:10px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);text-decoration:none;border:0;background:transparent;cursor:pointer;text-align:left}
+  .menu-drop a:hover,.menu-drop button:hover{background:var(--bg)}
+  .menu-drop button#menuSair{color:var(--red)}
+  .menu-sep{height:1px;background:var(--line);margin:5px 6px}
+  /* tela cheia do mapa */
+  .fs-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--mut);cursor:pointer;font-size:13px;display:grid;place-items:center;transition:.15s;flex:none;line-height:1}
+  .fs-btn:hover{background:var(--bg);color:var(--ink);border-color:var(--mut2)}
+  .panel.mapa-cheia{position:fixed;inset:0;z-index:200;border-radius:0;margin:0;padding:18px;display:flex;flex-direction:column;background:#fff}
+  .panel.mapa-cheia > .p-head{flex:none}
+  .panel.mapa-cheia #map{flex:1;height:100%;min-height:0;border-radius:12px}
+  .panel.mapa-cheia .legend{flex:none;margin-top:14px}
+  .panel.mapa-cheia .map-tip{z-index:210}
   .reveal{opacity:0;transform:translateY(12px);animation:rise .6s cubic-bezier(.2,.8,.2,1) forwards}
   @keyframes rise{to{opacity:1;transform:none}}
 
@@ -330,6 +349,16 @@
       <button data-p="30d" class="on">30 dias</button>
       <button data-p="camp">Campanha</button>
     </div>
+    <div class="menu-wrap">
+      <button class="menu-btn" id="menuBtn" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
+      <div class="menu-drop" id="menuDrop">
+        <a href="https://www.maracatumktdigital.com" target="_blank" rel="noopener"><span>🌐</span> Site da Maracatu</a>
+        <a href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20falar%20com%20a%20Maracatu." target="_blank" rel="noopener"><span>💬</span> Falar com a Maracatu</a>
+        <a href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Gostaria%20de%20receber%20o%20relat%C3%B3rio%20da%20minha%20campanha." target="_blank" rel="noopener"><span>📊</span> Pedir relatório</a>
+        <div class="menu-sep"></div>
+        <button type="button" id="menuSair"><span>🚪</span> Sair</button>
+      </div>
+    </div>
   </header>
 
   <!-- ANÁLISE DIÁRIA DA IA -->
@@ -390,8 +419,8 @@
 
   <!-- MAPA PE + ORÇAMENTO -->
   <div class="row split">
-    <div class="panel reveal" style="animation-delay:.26s;position:relative">
-      <div class="p-head"><h3><span class="dot"></span>Mapa de calor — Pernambuco</h3><span class="chip amb">resultado das campanhas</span></div>
+    <div class="panel reveal" id="mapCard" style="animation-delay:.26s;position:relative">
+      <div class="p-head"><h3><span class="dot"></span>Mapa de calor — Pernambuco</h3><div style="display:flex;align-items:center;gap:8px"><span class="chip amb">resultado das campanhas</span><button class="fs-btn" id="mapFs" title="Tela cheia" aria-label="Ver mapa em tela cheia">⛶</button></div></div>
       <svg id="map" viewBox="0 0 920 310" preserveAspectRatio="xMidYMid meet"></svg>
       <div class="map-tip" id="mapTip"></div>
       <div class="legend"><span>Menor alcance</span><span class="legbar"></span><span>Maior alcance</span></div>
@@ -474,7 +503,7 @@
     <div class="panel reveal" style="animation-delay:.47s"><div class="p-head"><h3><span class="dot"></span>Próximos da campanha</h3></div><div id="eventos"></div></div>
     <div class="panel reveal" style="animation-delay:.50s;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px">
       <div class="foot-bombo" style="width:46px;height:46px"></div>
-      <div style="font-size:14px;font-weight:700">Operado de ponta a ponta pela Maracatu Digital</div>
+      <a href="https://www.maracatumktdigital.com" target="_blank" rel="noopener" style="font-size:14px;font-weight:700;color:var(--ink);text-decoration:none">Operado de ponta a ponta pela Maracatu Digital ↗</a>
       <div style="font-size:12px;color:var(--mut);max-width:38ch;line-height:1.5">Estratégia, criação, tráfego e monitoramento — a agência cuida de tudo pra você focar na rua.</div>
       <div class="acoes">
         <a class="btn-acao zap" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20falar%20com%20a%20Maracatu." target="_blank" rel="noopener">💬 Falar com a Maracatu</a>
@@ -788,6 +817,27 @@
   // ===== saudação de boas-vindas =====
   window.__saudar=function(nome){var s=document.getElementById('saudacao');if(!s)return;if(nome){var sn=document.getElementById('saudNome');if(sn)sn.textContent=String(nome).trim().split(/\s+/)[0];}s.classList.add('show');clearTimeout(s._t);s._t=setTimeout(function(){s.classList.remove('show');},5200);};
   if(window.__autoSaudar!==false) setTimeout(function(){window.__saudar();},400);
+
+  // ===== menu do header (+ sair) =====
+  var menuBtn=$('#menuBtn'),menuDrop=$('#menuDrop');
+  if(menuBtn&&menuDrop){
+    menuBtn.addEventListener('click',function(e){e.stopPropagation();menuDrop.classList.toggle('open');});
+    menuDrop.addEventListener('click',function(e){e.stopPropagation();});
+    document.addEventListener('click',function(){menuDrop.classList.remove('open');});
+    var sair=$('#menuSair'); if(sair)sair.addEventListener('click',function(){menuDrop.classList.remove('open');if(window.__sair)window.__sair();else location.reload();});
+  }
+
+  // ===== tela cheia do mapa (funciona no mobile via overlay CSS) =====
+  var mapFs=$('#mapFs'),mapCard=$('#mapCard');
+  if(mapFs&&mapCard){
+    mapFs.addEventListener('click',function(){
+      var cheia=mapCard.classList.toggle('mapa-cheia');
+      mapFs.textContent=cheia?'✕':'⛶';
+      mapFs.title=cheia?'Fechar tela cheia':'Tela cheia';
+      document.body.style.overflow=cheia?'hidden':'';
+    });
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('mapa-cheia'))mapFs.click();});
+  }
 
   addEventListener('resize',()=>{drawMom(1);$$('.spark').forEach(c=>drawSpark(c,DATA[cur].mom));});
 
