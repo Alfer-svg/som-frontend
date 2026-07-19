@@ -95,8 +95,10 @@
   #map{width:100%;height:auto;display:block;border-radius:12px;background:linear-gradient(180deg,#FBFCFE,#F3F6FB);border:1px solid var(--line)}
   .legend{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:11px;color:var(--mut)}
   .legbar{flex:1;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--grn),var(--amb2),var(--red));max-width:220px}
-  .map-tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:9px;padding:7px 10px;font-size:12px;opacity:0;transition:opacity .1s;transform:translate(-50%,-130%);white-space:nowrap;z-index:9;box-shadow:var(--shadow)}
-  .map-tip b{color:#fff} .map-tip small{color:#9AA0A6}
+  .map-tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:10px;padding:9px 11px;font-size:12px;opacity:0;transition:opacity .1s;transform:translate(-50%,-112%);white-space:normal;width:208px;text-align:left;z-index:9;box-shadow:0 12px 30px -8px rgba(0,0,0,.45)}
+  .map-tip .mt-h{font-weight:800;font-size:12.5px;margin-bottom:6px;color:#fff}
+  .map-tip .mt-c{display:flex;justify-content:space-between;gap:12px;font-size:11.5px;padding:2.5px 0;line-height:1.3}
+  .map-tip .mt-c span{color:#E8EAED} .map-tip .mt-c b{color:#8AB4F8;white-space:nowrap;font-weight:700}
   .cityd{cursor:pointer;transition:r .15s}
 
   /* orçamento pie */
@@ -182,6 +184,9 @@
   .cd-bar .track{height:8px;background:#fff;border:1px solid var(--line);border-radius:99px;overflow:hidden}
   .cd-bar .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--amb2),var(--red));width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
   .cd-bar .ends{display:flex;justify-content:space-between;font-size:10px;color:var(--mut2);font-weight:600}
+  .cd-elei{text-align:center;padding-right:18px;border-right:1px solid var(--line);align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+  .cd-elei .n{font-size:30px;font-weight:800;color:var(--red);line-height:1;font-variant-numeric:tabular-nums}
+  .cd-elei .l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut2);font-weight:700;margin-top:5px}
 
   /* votos para se eleger */
   .votos-grid{display:grid;grid-template-columns:210px 1fr;gap:18px;align-items:center}
@@ -305,7 +310,6 @@
       <button data-p="30d" class="on">30 dias</button>
       <button data-p="camp">Campanha</button>
     </div>
-    <div class="count"><div class="big tnum" id="cd">—</div><div class="lb">dias p/ eleição</div></div>
   </header>
 
   <!-- ANÁLISE DIÁRIA DA IA -->
@@ -323,6 +327,7 @@
       <div class="t" id="cdTitulo">⏳ Reta final da campanha</div>
       <div class="s" id="cdSub">—</div>
     </div>
+    <div class="cd-elei"><div class="n tnum" id="cdEleicao">—</div><div class="l">dias p/ eleição</div></div>
     <div class="cd-units">
       <div class="cd-u"><div class="n tnum" id="cdD">—</div><div class="l">dias</div></div>
       <div class="cd-u"><div class="n tnum" id="cdH">—</div><div class="l">horas</div></div>
@@ -499,6 +504,10 @@
     ['Mobilidade que Move','Reg. Metrop.',24000,'pausada','Meta'],
     ['Recall — Marina 15','Estadual',37000,'ativa','YouTube']
   ];
+  // campanhas rodando por região (matching do local com aliases de mesorregião)
+  const REG_ALIAS={recife:['recife','rmr','metrop','znorte'],olinda:['olinda','rmr','metrop'],jaboatao:['jaboatao','olinda','rmr','metrop'],vitoriadesa:['vitoria','rmr'],caruaru:['caruaru','agreste'],garanhuns:['garanhuns','agreste'],arcoverde:['arcoverde','agreste'],serratalhada:['serratalhada','sertao'],salgueiro:['salgueiro','sertao'],petrolina:['petrolina','sertao','saofrancisco']};
+  const normLoc=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  function campanhasEm(cidade){const key=normLoc(cidade);const al=REG_ALIAS[key]||[key];return CAMPANHAS.filter(c=>c[3]==='ativa').filter(c=>{const loc=normLoc(c[1]);if(loc.includes('estadual'))return true;return al.some(a=>loc.includes(a));});}
   const eventos=[['04','OUT','Eleição — 1º turno','Dia da votação','🗳️'],['22','SET','Comício Zona Norte','Praça do Derby · 18h','📢'],['24','SET','Gravação — santinho digital','Estúdio Maracatu · 10h','🎬'],['27','SET','Entrevista — rádio local','Ao vivo · 08h','🎙️'],['29','SET','Caminhada no Centro','Rua da Aurora · 16h','🚶']];
   const ANALISES=[
     {h:'Sua campanha está no melhor momento — e não é por acaso.',p:'O trabalho da Maracatu Digital está rendendo: seu alcance cresceu no período e cada real investido rende acima da média do setor. A equipe vem afinando as campanhas dia após dia, e a base de apoio só aumenta. Você está em boas mãos.',t:['Alcance em alta','Custo eficiente','+ apoiadores']},
@@ -572,11 +581,18 @@
     const outline=document.createElementNS(NS,'path');outline.setAttribute('d',PE_PATH);outline.setAttribute('fill','none');outline.setAttribute('stroke','#9FB0CC');outline.setAttribute('stroke-width','1.6');outline.setAttribute('stroke-linejoin','round');mapEl.appendChild(outline);
     // dots + labels (top cidades)
     CIDADES.forEach(([n,x,y],i)=>{const v=vals[i];
-      const d=document.createElementNS(NS,'circle');d.setAttribute('cx',x);d.setAttribute('cy',y);d.setAttribute('r',v>60?4.5:3.2);d.setAttribute('fill','#fff');d.setAttribute('stroke',heatColor(v));d.setAttribute('stroke-width','2.4');d.setAttribute('class','cityd');
-      d.addEventListener('mousemove',e=>{const r=mapEl.getBoundingClientRect();mapTip.style.left=(e.clientX-r.left)+'px';mapTip.style.top=(e.clientY-r.top)+'px';mapTip.style.opacity=1;mapTip.innerHTML=`<b>${n}</b> · ${Math.round(v/100*DATA[cur].alcance/CIDADES.length*3.2).toLocaleString('pt-BR')} alcançados<br><small>intensidade ${v}/100</small>`;});
-      d.addEventListener('mouseleave',()=>mapTip.style.opacity=0);
-      mapEl.appendChild(d);
+      const d=document.createElementNS(NS,'circle');d.setAttribute('cx',x);d.setAttribute('cy',y);d.setAttribute('r',v>60?4.5:3.2);d.setAttribute('fill','#fff');d.setAttribute('stroke',heatColor(v));d.setAttribute('stroke-width','2.4');mapEl.appendChild(d);
       if(v>=55){const lb=document.createElementNS(NS,'text');lb.setAttribute('x',x);lb.setAttribute('y',y-9);lb.setAttribute('text-anchor','middle');lb.setAttribute('font-size','11');lb.setAttribute('font-weight','700');lb.setAttribute('fill','#3c4043');lb.textContent=n;mapEl.appendChild(lb);}});
+    // hit-areas generosas: hover mostra as CAMPANHAS ativas rodando naquela região
+    CIDADES.forEach(([n,x,y])=>{
+      const hit=document.createElementNS(NS,'circle');hit.setAttribute('cx',x);hit.setAttribute('cy',y);hit.setAttribute('r','26');hit.setAttribute('fill','transparent');hit.setAttribute('class','cityd');
+      hit.addEventListener('mousemove',e=>{const r=mapEl.getBoundingClientRect();mapTip.style.left=(e.clientX-r.left)+'px';mapTip.style.top=(e.clientY-r.top)+'px';mapTip.style.opacity=1;
+        const camps=campanhasEm(n);
+        const linhas=camps.length?camps.slice(0,5).map(c=>{const est=normLoc(c[1]).includes('estadual');return `<div class="mt-c"><span>${c[0]}</span><b>${est?'estadual':kfmt(c[2])}</b></div>`;}).join(''):'<div class="mt-c"><span style="color:#9AA0A6">sem campanha rodando aqui</span></div>';
+        mapTip.innerHTML=`<div class="mt-h">📍 ${n}</div>${linhas}`;});
+      hit.addEventListener('mouseleave',()=>mapTip.style.opacity=0);
+      mapEl.appendChild(hit);
+    });
     // radar pulses nas cidades mais quentes (expansão)
     if(!reduce){
       const radar=document.createElementNS(NS,'g');radar.setAttribute('clip-path','url(#peclip)');
@@ -638,8 +654,7 @@
   $('#eventos').innerHTML=eventos.map(([d,m,t,s,ic])=>`<div class="ev"><div class="dt"><div class="d tnum">${d}</div><div class="m">${m}</div></div><div class="info"><div class="t">${t}</div><div class="s">${s}</div></div><span class="tp">${ic}</span></div>`).join('');
 
   // countdown
-  const alvo=new Date('2026-10-04T08:00:00-03:00');
-  function tick(){const now=new Date();$('#cd').textContent=Math.max(0,Math.ceil((alvo-now)/86400000));$('#stamp').textContent=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+  function tick(){const now=new Date();$('#stamp').textContent=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
   tick();setInterval(tick,60000);
 
   // ===== movimento ao vivo (a máquina girando) =====
@@ -705,6 +720,7 @@
     const d=Math.floor(ms/86400000),h=Math.floor(ms/3600000)%24,m=Math.floor(ms/60000)%60,s=Math.floor(ms/1000)%60;
     const S=(id,v)=>{const el=$('#'+id);if(el)el.textContent=fmt2(v);};
     S('cdD',d);S('cdH',h);S('cdM',m);S('cdS',s);
+    var ce=$('#cdEleicao'); if(ce)ce.textContent=Math.max(0,Math.ceil((ELEI.eleicao-now)/86400000));
     const tit=$('#cdTitulo'),sub=$('#cdSub');
     if(now>=ELEI.eleicao){ tit.textContent='🗳️ Dia da eleição'; sub.textContent='A votação acontece hoje — 04/10/2026.'; }
     else if(pre){ tit.textContent='⏳ Contagem para o início da campanha'; sub.textContent='Propaganda eleitoral liberada em 16/08/2026 · eleição em 04/10.'; }
