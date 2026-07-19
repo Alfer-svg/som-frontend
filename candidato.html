@@ -438,7 +438,7 @@
   <!-- MAPA PE + ORÇAMENTO -->
   <div class="row split">
     <div class="panel reveal" id="mapCard" style="animation-delay:.26s;position:relative">
-      <div class="p-head"><h3><span class="dot"></span>Mapa de calor — Pernambuco</h3><div style="display:flex;align-items:center;gap:8px"><span class="chip amb">resultado das campanhas</span><button class="fs-btn" id="mapFs" title="Tela cheia" aria-label="Ver mapa em tela cheia">⛶</button></div></div>
+      <div class="p-head"><h3><span class="dot"></span>Mapa de calor — Pernambuco</h3><div style="display:flex;align-items:center;gap:8px"><span class="chip amb">por cidade</span><button class="fs-btn" id="mapFs" title="Tela cheia" aria-label="Ver mapa em tela cheia">⛶</button></div></div>
       <svg id="map" viewBox="0 0 920 310" preserveAspectRatio="xMidYMid meet"></svg>
       <div class="map-tip" id="mapTip"></div>
       <div class="legend"><span>Menor alcance</span><span class="legbar"></span><span>Maior alcance</span></div>
@@ -505,7 +505,7 @@
       <div class="src" id="regrasSrc"></div>
     </div>
     <div class="panel reveal" style="animation-delay:.47s">
-      <div class="p-head"><h3><span class="dot"></span>Cenário e pesquisas</h3><span class="chip blue">termômetro</span></div>
+      <div class="p-head"><h3><span class="dot"></span>Cenário e pesquisas</h3><span class="chip blue">a disputa</span></div>
       <div id="cenario"></div>
     </div>
   </div>
@@ -522,7 +522,7 @@
     <div class="panel reveal" style="animation-delay:.50s;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px">
       <div class="foot-bombo" style="width:46px;height:46px"></div>
       <a href="https://www.maracatumktdigital.com" target="_blank" rel="noopener" style="font-size:14px;font-weight:700;color:var(--ink);text-decoration:none">Operado de ponta a ponta pela Maracatu Digital ↗</a>
-      <div style="font-size:12px;color:var(--mut);max-width:38ch;line-height:1.5">Estratégia, criação, tráfego e monitoramento — a agência cuida de tudo pra você focar na rua.</div>
+      <div style="font-size:12px;color:var(--mut);max-width:38ch;line-height:1.5">Estratégia, criação, tráfego e monitoramento ficam com a gente. Você foca na rua.</div>
       <div class="acoes">
         <a class="btn-acao zap" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20falar%20com%20a%20Maracatu." target="_blank" rel="noopener">💬 Falar com a Maracatu</a>
         <a class="btn-acao rel" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Gostaria%20de%20receber%20o%20relat%C3%B3rio%20da%20minha%20campanha." target="_blank" rel="noopener">📊 Pedir relatório</a>
@@ -581,15 +581,15 @@
   function campanhasEm(cidade){const key=normLoc(cidade);const al=REG_ALIAS[key]||[key];return CAMPANHAS.filter(c=>c[3]==='ativa').filter(c=>{const loc=normLoc(c[1]);if(loc.includes('estadual'))return true;return al.some(a=>loc.includes(a));});}
   const eventos=[['04','OUT','Eleição — 1º turno','Dia da votação','🗳️'],['22','SET','Comício Zona Norte','Praça do Derby · 18h','📢'],['24','SET','Gravação — santinho digital','Estúdio Maracatu · 10h','🎬'],['27','SET','Entrevista — rádio local','Ao vivo · 08h','🎙️'],['29','SET','Caminhada no Centro','Rua da Aurora · 16h','🚶']];
   const ANALISES=[
-    {h:'Sua campanha está no melhor momento — e não é por acaso.',p:'O trabalho da Maracatu Digital está rendendo: seu alcance cresceu no período e cada real investido rende acima da média do setor. A equipe vem afinando as campanhas dia após dia, e a base de apoio só aumenta. Você está em boas mãos.',t:['Alcance em alta','Custo eficiente','+ apoiadores']},
-    {h:'A estratégia está funcionando — os números confirmam.',p:'A leitura da Maracatu para hoje é de confiança: as pautas que a agência priorizou são exatamente as que mais mobilizam o seu público, e o momentum de alcance segue subindo. É o tipo de resultado que vem de time afiado cuidando de cada detalhe.',t:['Pautas certeiras','Momentum subindo','Time afiado']},
-    {h:'Cada ajuste da equipe aparece nos resultados.',p:'A Maracatu Digital vem otimizando as campanhas de perto, e dá pra sentir: o engajamento está acima da média e o custo por pessoa impactada segue baixo. Enquanto você faz a rua, a agência mantém a máquina digital girando a seu favor.',t:['Engajamento alto','Máquina girando','Otimização diária']}
+    {h:'Sua campanha vive o melhor momento até agora.',p:'Seu alcance subiu no período e o custo por pessoa impactada ficou abaixo da média do setor. A equipe foi ajustando as campanhas ao longo das semanas, e a base de apoio segue crescendo.',t:['Alcance em alta','Custo eficiente','+ apoiadores']},
+    {h:'A estratégia está funcionando e os números confirmam.',p:'As pautas que priorizamos são as mesmas que mais mobilizam o seu público, e o alcance segue subindo semana a semana. Isso vem de acompanhar a campanha de perto, não de sorte.',t:['Pautas certeiras','Alcance subindo','Equipe atenta']},
+    {h:'Os ajustes da semana já aparecem nos números.',p:'A Maracatu vem mexendo nas campanhas toda semana, e o resultado aparece: o engajamento está acima da média e o custo por pessoa impactada segue baixo. Enquanto você faz a rua, a parte digital fica com a gente.',t:['Engajamento alto','Custo baixo','Ajuste constante']}
   ];
   const DICAS=[
-    ['💡','var(--ambbg)','var(--amb)','A campanha <b>“Saúde Perto de Você”</b> é a sua mais forte — a Maracatu acertou a mensagem. Vale a equipe reforçar esse tema nos próximos dias.'],
-    ['📈','var(--bluebg)','var(--blue)','O <b>pico de engajamento às 19h</b> que a agência mapeou é ouro: concentre publicações e lives nesse horário para multiplicar o alcance.'],
-    ['🗺️','var(--redbg)','var(--red)','A <b>Zona Norte está fervendo</b> no mapa graças à segmentação da Maracatu — é onde cada real rende mais. Priorizem eventos por lá.'],
-    ['🎯','var(--grnbg)','var(--grnink)','Seu <b>custo por pessoa impactada está abaixo do mercado</b>. Eficiência é marca da agência — dá pra escalar o orçamento com segurança.']
+    ['💡','var(--ambbg)','var(--amb)','A campanha <b>“Saúde Perto de Você”</b> é a que mais puxa resultado. Vale a equipe reforçar esse tema nos próximos dias.'],
+    ['📈','var(--bluebg)','var(--blue)','O <b>engajamento tem pico às 19h</b>. Concentre publicações e lives nesse horário para alcançar mais gente.'],
+    ['🗺️','var(--redbg)','var(--red)','A <b>Zona Norte é a que mais responde</b> no mapa. É onde o investimento rende mais, então priorizem eventos por lá.'],
+    ['🎯','var(--grnbg)','var(--grnink)','Seu <b>custo por pessoa impactada está abaixo do mercado</b>. Com essa margem, dá pra aumentar o orçamento com segurança.']
   ];
 
   let cur='30d';
