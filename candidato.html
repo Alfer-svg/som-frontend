@@ -583,14 +583,16 @@
     CIDADES.forEach(([n,x,y],i)=>{const v=vals[i];
       const d=document.createElementNS(NS,'circle');d.setAttribute('cx',x);d.setAttribute('cy',y);d.setAttribute('r',v>60?4.5:3.2);d.setAttribute('fill','#fff');d.setAttribute('stroke',heatColor(v));d.setAttribute('stroke-width','2.4');mapEl.appendChild(d);
       if(v>=55){const lb=document.createElementNS(NS,'text');lb.setAttribute('x',x);lb.setAttribute('y',y-9);lb.setAttribute('text-anchor','middle');lb.setAttribute('font-size','11');lb.setAttribute('font-weight','700');lb.setAttribute('fill','#3c4043');lb.textContent=n;mapEl.appendChild(lb);}});
-    // hit-areas generosas: hover mostra as CAMPANHAS ativas rodando naquela região
+    // hit-areas generosas: hover (desktop) OU toque (mobile) mostra as CAMPANHAS ativas da região
     CIDADES.forEach(([n,x,y])=>{
       const hit=document.createElementNS(NS,'circle');hit.setAttribute('cx',x);hit.setAttribute('cy',y);hit.setAttribute('r','26');hit.setAttribute('fill','transparent');hit.setAttribute('class','cityd');
-      hit.addEventListener('mousemove',e=>{const r=mapEl.getBoundingClientRect();mapTip.style.left=(e.clientX-r.left)+'px';mapTip.style.top=(e.clientY-r.top)+'px';mapTip.style.opacity=1;
+      const mostra=(cx,cy)=>{const r=mapEl.getBoundingClientRect();mapTip.style.left=(cx-r.left)+'px';mapTip.style.top=(cy-r.top)+'px';mapTip.style.opacity=1;
         const camps=campanhasEm(n);
         const linhas=camps.length?camps.slice(0,5).map(c=>{const est=normLoc(c[1]).includes('estadual');return `<div class="mt-c"><span>${c[0]}</span><b>${est?'estadual':kfmt(c[2])}</b></div>`;}).join(''):'<div class="mt-c"><span style="color:#9AA0A6">sem campanha rodando aqui</span></div>';
-        mapTip.innerHTML=`<div class="mt-h">📍 ${n}</div>${linhas}`;});
+        mapTip.innerHTML=`<div class="mt-h">📍 ${n}</div>${linhas}`;};
+      hit.addEventListener('mousemove',e=>mostra(e.clientX,e.clientY));
       hit.addEventListener('mouseleave',()=>mapTip.style.opacity=0);
+      hit.addEventListener('click',e=>{e.stopPropagation();mostra(e.clientX,e.clientY);clearTimeout(mapTip._t);mapTip._t=setTimeout(()=>{mapTip.style.opacity=0;},4200);});
       mapEl.appendChild(hit);
     });
     // radar pulses nas cidades mais quentes (expansão)
