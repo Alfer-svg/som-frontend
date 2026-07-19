@@ -24,7 +24,7 @@
     padding:20px clamp(12px,3vw,32px) 44px;font-feature-settings:'tnum' 1;-webkit-font-smoothing:antialiased}
   .app{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:15px}
   .tnum{font-variant-numeric:tabular-nums}
-  .stripe4{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--blue) 0 25%,var(--red) 25% 50%,var(--amb2) 50% 75%,var(--grn) 75% 100%)}
+  .stripe4{position:absolute;top:0;left:0;right:0;height:5px;border-radius:var(--r) var(--r) 0 0;background:linear-gradient(90deg,var(--blue) 0 25%,var(--red) 25% 50%,var(--amb2) 50% 75%,var(--grn) 75% 100%)}
 
   .card,.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:17px;position:relative;box-shadow:var(--shadow-sm)}
   .panel{overflow:hidden}
@@ -36,7 +36,7 @@
 
   /* header */
   header{display:flex;align-items:center;gap:15px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
-    border-radius:var(--r);padding:18px 18px 15px;box-shadow:var(--shadow);overflow:hidden}
+    border-radius:var(--r);padding:18px 18px 15px;box-shadow:var(--shadow);position:relative}
   .cand{display:flex;align-items:center;gap:13px;min-width:0}
   .ava{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-weight:700;font-size:19px;flex:none;position:relative;
     background:linear-gradient(135deg,var(--blue),#6FA8FF);color:#fff;box-shadow:0 8px 20px -8px rgba(66,133,244,.5)}
@@ -238,7 +238,7 @@
   .menu-wrap{position:relative}
   .menu-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:.15s}
   .menu-btn:hover{background:var(--bg);border-color:var(--mut2)}
-  .menu-drop{position:fixed;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px -12px rgba(60,64,67,.4);padding:6px;min-width:214px;z-index:90;opacity:0;visibility:hidden;transform:translateY(-6px);transition:.16s}
+  .menu-drop{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px -12px rgba(60,64,67,.4);padding:6px;min-width:214px;z-index:90;opacity:0;visibility:hidden;transform:translateY(-6px);transition:.16s}
   .menu-drop.open{opacity:1;visibility:visible;transform:translateY(0)}
   .menu-drop a,.menu-drop button{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border-radius:10px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);text-decoration:none;border:0;background:transparent;cursor:pointer;text-align:left}
   .menu-drop a:hover,.menu-drop button:hover{background:var(--bg)}
@@ -821,7 +821,7 @@
   // ===== menu do header (+ sair) =====
   var menuBtn=$('#menuBtn'),menuDrop=$('#menuDrop');
   if(menuBtn&&menuDrop){
-    menuBtn.addEventListener('click',function(e){e.stopPropagation();var open=menuDrop.classList.toggle('open');if(open){var r=menuBtn.getBoundingClientRect();menuDrop.style.top=(r.bottom+8)+'px';menuDrop.style.right=(window.innerWidth-r.right)+'px';}});
+    menuBtn.addEventListener('click',function(e){e.stopPropagation();menuDrop.classList.toggle('open');});
     menuDrop.addEventListener('click',function(e){e.stopPropagation();});
     document.addEventListener('click',function(){menuDrop.classList.remove('open');});
     var sair=$('#menuSair'); if(sair)sair.addEventListener('click',function(){menuDrop.classList.remove('open');if(window.__sair)window.__sair();else location.reload();});
