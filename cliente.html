@@ -75,6 +75,10 @@
             <input type="email" x-model="lgEmail" placeholder="voce@empresa.com" style="margin:6px 0 14px" @keydown.enter="irParaFoto()">
             <label class="kpi-label">Senha</label>
             <input type="password" x-model="lgSenha" placeholder="sua senha" style="margin:6px 0 4px" @keydown.enter="irParaFoto()">
+            <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:12.5px;color:var(--mut);cursor:pointer;user-select:none">
+              <input type="checkbox" x-model="lembrar" style="flex:0 0 16px;width:16px;height:16px;min-width:0;cursor:pointer">
+              <span>Lembrar meu acesso neste aparelho</span>
+            </label>
             <div x-show="lgErro" style="color:var(--red);font-size:13px;margin:8px 0 0" x-text="lgErro"></div>
             <button class="btn btn-amber" style="width:100%;margin-top:16px" @click="irParaFoto()">Continuar</button>
           </div>
@@ -431,7 +435,7 @@
       cliente: JSON.parse(localStorage.getItem('cliente_info')||'{}'),
       aba:'inicio', rTab:'engaj',
       analise:{}, anLoading:false,
-      lgEmail:'', lgSenha:'', lgErro:'', lgLoading:false,
+      lgEmail:'', lgSenha:'', lgErro:'', lgLoading:false, lembrar: localStorage.getItem('som_lembrar')==='1',
       etapa:'cred', camStream:null, camPronta:false, camErro:false, rostoOk:false, fdTimer:null, liberaSemRosto:false, fotoTirada:false, fotoData:'', lat:null, lng:null, geoOk:false, consentiu:false, hbTimer:null,
       alertaCaptura:false, protegido:false, alertaTimer:null, guardOn:false,
       ap:null, apLoading:false, apAcao:false, ajusteAberto:false, ajusteTxt:'',
@@ -440,6 +444,8 @@
       init(){
         this.$watch('aba', v=>this.logAtividade('abriu:'+v));
         this._guardCaptura();
+        // "Lembrar meu acesso": pré-preenche e-mail+senha salvos neste aparelho
+        if(this.lembrar){ try{ const c=JSON.parse(decodeURIComponent(escape(atob(localStorage.getItem('som_cred')||'')))); if(c){ this.lgEmail=c.email||''; this.lgSenha=c.senha||''; } }catch(e){} }
         if(this.token){
           // login direciona o conteúdo: candidato já logado vai pra Central de Campanha
           if((this.cliente&&this.cliente.perfil)==='candidato'){ location.replace('candidato.html'); return; }
@@ -539,6 +545,9 @@
           this.pararCamera();
           this.token=d.token; this.cliente={...d.cliente, email:this.lgEmail};
           localStorage.setItem('cliente_token',d.token); localStorage.setItem('cliente_info',JSON.stringify(this.cliente));
+          // "Lembrar meu acesso": guarda (ou apaga) e-mail+senha neste aparelho — a selfie continua obrigatória a cada acesso
+          if(this.lembrar){ localStorage.setItem('som_lembrar','1'); localStorage.setItem('som_cred', btoa(unescape(encodeURIComponent(JSON.stringify({email:this.lgEmail,senha:this.lgSenha}))))); }
+          else { localStorage.removeItem('som_lembrar'); localStorage.removeItem('som_cred'); }
           this.etapa='cred'; this.lgSenha=''; this.fotoData=''; this.fotoTirada=false;
           // candidato: o painel exclusivo é a Central de Campanha — leva pra lá reusando esta sessão
           if((d.cliente&&d.cliente.perfil)==='candidato'){ location.replace('candidato.html'); return; }
