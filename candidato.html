@@ -238,7 +238,7 @@
   .menu-wrap{position:relative}
   .menu-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:.15s}
   .menu-btn:hover{background:var(--bg);border-color:var(--mut2)}
-  .menu-drop{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px -12px rgba(60,64,67,.4);padding:6px;min-width:214px;z-index:80;opacity:0;visibility:hidden;transform:translateY(-6px);transition:.16s}
+  .menu-drop{position:fixed;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px -12px rgba(60,64,67,.4);padding:6px;min-width:214px;z-index:90;opacity:0;visibility:hidden;transform:translateY(-6px);transition:.16s}
   .menu-drop.open{opacity:1;visibility:visible;transform:translateY(0)}
   .menu-drop a,.menu-drop button{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border-radius:10px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);text-decoration:none;border:0;background:transparent;cursor:pointer;text-align:left}
   .menu-drop a:hover,.menu-drop button:hover{background:var(--bg)}
@@ -821,7 +821,7 @@
   // ===== menu do header (+ sair) =====
   var menuBtn=$('#menuBtn'),menuDrop=$('#menuDrop');
   if(menuBtn&&menuDrop){
-    menuBtn.addEventListener('click',function(e){e.stopPropagation();menuDrop.classList.toggle('open');});
+    menuBtn.addEventListener('click',function(e){e.stopPropagation();var open=menuDrop.classList.toggle('open');if(open){var r=menuBtn.getBoundingClientRect();menuDrop.style.top=(r.bottom+8)+'px';menuDrop.style.right=(window.innerWidth-r.right)+'px';}});
     menuDrop.addEventListener('click',function(e){e.stopPropagation();});
     document.addEventListener('click',function(){menuDrop.classList.remove('open');});
     var sair=$('#menuSair'); if(sair)sair.addEventListener('click',function(){menuDrop.classList.remove('open');if(window.__sair)window.__sair();else location.reload();});
