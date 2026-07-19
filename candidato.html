@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Central de Campanha — Painel do Candidato · Maracatu Digital</title>
+<style>
+
+  :root{
+    --bg:#F6F7F9; --card:#fff; --ink:#202124; --mut:#5F6368; --mut2:#9AA0A6; --line:#E8EAED;
+    --blue:#4285F4; --bluebg:#E8F0FE; --blsoft:#F4F8FE;
+    --grn:#34A853; --grnbg:#E6F4EA; --grnink:#1E8E4E; --grnsoft:#F3FAF6;
+    --amb:#B06000; --amb2:#F9A825; --ambbg:#FEF7E0; --ambsoft:#FEFBEF;
+    --red:#EA4335; --redbg:#FCE8E6; --redsoft:#FEF6F4;
+    --accent:#4285F4; --shadow:0 2px 10px rgba(60,64,67,.08); --shadow-sm:0 1px 2px rgba(60,64,67,.06);
+    --r:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  .wrap{min-height:100vh;background:
+      radial-gradient(1100px 480px at 88% -6%, rgba(66,133,244,.06), transparent 60%),
+      radial-gradient(800px 420px at 4% 104%, rgba(52,168,83,.05), transparent 55%), var(--bg);
+    color:var(--ink);font-family:Roboto,system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+    padding:20px clamp(12px,3vw,32px) 44px;font-feature-settings:'tnum' 1;-webkit-font-smoothing:antialiased}
+  .app{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:15px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .stripe4{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--blue) 0 25%,var(--red) 25% 50%,var(--amb2) 50% 75%,var(--grn) 75% 100%)}
+
+  .card,.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:17px;position:relative;box-shadow:var(--shadow-sm)}
+  .panel{overflow:hidden}
+  .panel h3{font-size:13px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .panel h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .p-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;gap:10px}
+  .chip{font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--grnbg);color:var(--grnink);white-space:nowrap}
+  .chip.blue{background:var(--bluebg);color:var(--blue)} .chip.amb{background:var(--ambbg);color:var(--amb)}
+
+  /* header */
+  header{display:flex;align-items:center;gap:15px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r);padding:18px 18px 15px;box-shadow:var(--shadow);overflow:hidden}
+  .cand{display:flex;align-items:center;gap:13px;min-width:0}
+  .ava{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-weight:700;font-size:19px;flex:none;position:relative;
+    background:linear-gradient(135deg,var(--blue),#6FA8FF);color:#fff;box-shadow:0 8px 20px -8px rgba(66,133,244,.5)}
+  .num-badge{position:absolute;bottom:-6px;right:-6px;background:#fff;border:1.5px solid var(--blue);color:var(--blue);font-size:11px;font-weight:800;border-radius:8px;padding:1px 6px}
+  .cand h1{font-size:clamp(18px,2.4vw,23px);font-weight:700;letter-spacing:-.02em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cand .role{font-size:12px;color:var(--mut);margin-top:2px}
+  .spacer{flex:1}
+  .toggle{display:flex;gap:3px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px}
+  .toggle button{border:0;background:transparent;color:var(--mut);font:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:9px;cursor:pointer;transition:.15s}
+  .toggle button.on{background:var(--blue);color:#fff;box-shadow:0 5px 14px -6px rgba(66,133,244,.6)}
+  .toggle button:not(.on):hover{color:var(--ink)}
+  .count{display:flex;flex-direction:column;align-items:flex-end;gap:1px;padding-left:4px}
+  .count .big{font-size:23px;font-weight:800;line-height:1;color:var(--red)}
+  .count .lb{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut2);font-weight:700}
+
+  /* análise IA */
+  .ia{background:linear-gradient(180deg,#fff,var(--blsoft));border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .ia .lab{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);display:flex;align-items:center;gap:8px}
+  .ia .logo{width:20px;height:20px;border-radius:50%;background:conic-gradient(var(--blue),var(--red),var(--amb2),var(--grn),var(--blue));flex:none}
+  .ia h2{font-size:clamp(17px,2.2vw,21px);font-weight:700;letter-spacing:-.02em;margin:8px 0 7px;line-height:1.15;max-width:66ch}
+  .ia p{font-size:13.5px;line-height:1.6;color:#3c4043;max-width:82ch}
+  .ia .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .ia .tag{font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--mut)}
+
+  .row{display:grid;gap:15px}
+  .hero{grid-template-columns:280px 1fr}
+  .kpis{grid-template-columns:repeat(4,1fr)}
+  .split{grid-template-columns:1.5fr 1fr}
+  .split2{grid-template-columns:1.25fr 1fr}
+  .even{grid-template-columns:1fr 1fr}
+  @media(max-width:940px){.hero,.split,.split2,.even{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+
+  /* gauge */
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding-top:4px}
+  .gnum{font-size:50px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .gsub{font-size:11px;color:var(--mut);margin-top:2px} .gtag{margin-top:10px;font-size:12px;font-weight:700;color:var(--grnink);display:flex;gap:6px}
+
+  /* kpi soft tiles */
+  .tile{padding:16px;border-radius:var(--r);border:1px solid var(--line);position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .tile .ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+  .tile .lbl{font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--mut);font-weight:600;margin-top:10px}
+  .tile .v{font-size:27px;font-weight:800;letter-spacing:-.02em;margin-top:6px;line-height:1;color:var(--ink)}
+  .tile .d{font-size:12px;margin-top:7px;color:var(--mut);display:flex;gap:5px;align-items:center}
+  .tile .d b{color:var(--grnink)}
+  .spark{height:30px;margin-top:10px}
+  .t-blue{background:var(--blsoft)} .t-blue .ico{background:var(--bluebg);color:var(--blue)}
+  .t-grn{background:var(--grnsoft)} .t-grn .ico{background:var(--grnbg);color:var(--grnink)}
+  .t-amb{background:var(--ambsoft)} .t-amb .ico{background:var(--ambbg);color:var(--amb)}
+  .t-red{background:var(--redsoft)} .t-red .ico{background:var(--redbg);color:var(--red)}
+
+  /* momentum */
+  #mom{width:100%;height:180px;display:block}
+  .mom-tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:9px;padding:6px 10px;font-size:12px;transform:translate(-50%,-125%);opacity:0;transition:opacity .12s;white-space:nowrap;z-index:5;box-shadow:var(--shadow)}
+  .mom-tip b{color:#8AB4F8}
+
+  /* mapa PE */
+  #map{width:100%;height:auto;display:block;border-radius:12px;background:linear-gradient(180deg,#FBFCFE,#F3F6FB);border:1px solid var(--line)}
+  .legend{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:11px;color:var(--mut)}
+  .legbar{flex:1;height:8px;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--grn),var(--amb2),var(--red));max-width:220px}
+  .map-tip{position:absolute;pointer-events:none;background:var(--ink);color:#fff;border-radius:9px;padding:7px 10px;font-size:12px;opacity:0;transition:opacity .1s;transform:translate(-50%,-130%);white-space:nowrap;z-index:9;box-shadow:var(--shadow)}
+  .map-tip b{color:#fff} .map-tip small{color:#9AA0A6}
+  .cityd{cursor:pointer;transition:r .15s}
+
+  /* orçamento pie */
+  .pie-flex{display:flex;align-items:center;gap:18px}
+  .pie-legend{display:flex;flex-direction:column;gap:9px;flex:1}
+  .pie-legend .li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mut)}
+  .pie-legend .li b{color:var(--ink);margin-left:auto;font-variant-numeric:tabular-nums}
+  .pie-legend .k{width:11px;height:11px;border-radius:3px;flex:none}
+  .mrow{display:flex;gap:10px;margin-top:15px}
+  .mrow .m{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+  .mrow .m .k{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut2);font-weight:700}
+  .mrow .m .v{font-size:18px;font-weight:800;margin-top:4px;color:var(--ink)}
+
+  /* campanhas list */
+  .camp{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .camp:last-child{border:0}
+  .camp .st{width:9px;height:9px;border-radius:50%;flex:none;background:var(--grn);box-shadow:0 0 0 3px var(--grnbg)}
+  .camp .st.pause{background:var(--amb2);box-shadow:0 0 0 3px var(--ambbg)}
+  .camp .in{flex:1;min-width:0}
+  .camp .nm{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .camp .lo{font-size:11.5px;color:var(--mut);margin-top:1px;display:flex;align-items:center;gap:5px}
+  .camp .rc{text-align:right;flex:none} .camp .rc .b{font-size:13px;font-weight:800;color:var(--ink)} .camp .rc .s{font-size:10px;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .camp .cn{font-size:10px;font-weight:700;padding:2px 7px;border-radius:7px;background:var(--bluebg);color:var(--blue);flex:none}
+
+  /* bars */
+  .bar-row{display:flex;align-items:center;gap:11px;margin:10px 0}
+  .bar-row .nm{width:120px;font-size:12.5px;color:var(--ink);flex:none;font-weight:600}
+  .bar-track{flex:1;height:9px;background:var(--bg);border-radius:99px;overflow:hidden}
+  .bar-fill{height:100%;width:0;border-radius:99px;transition:width 1.1s cubic-bezier(.2,.8,.2,1);background:linear-gradient(90deg,#6FA8FF,var(--blue))}
+  .bar-row .vl{width:44px;text-align:right;font-size:12.5px;font-weight:700;color:var(--mut);flex:none}
+
+  /* pautas */
+  .pauta{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .pauta:last-child{border:0}
+  .pauta .rk{width:22px;height:22px;border-radius:7px;background:var(--bluebg);color:var(--blue);display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+  .pauta .nm{flex:1;font-size:13px;font-weight:600}
+  .pauta .mini{width:78px;height:6px;background:var(--bg);border-radius:99px;overflow:hidden;flex:none}
+  .pauta .mini i{display:block;height:100%;width:0;background:var(--grn);border-radius:99px;transition:width 1s ease}
+  .pauta .pc{width:38px;text-align:right;font-size:12px;font-weight:800}
+
+  /* adversarios */
+  .adv{display:flex;align-items:center;gap:10px;margin:11px 0}
+  .adv .nm{width:96px;font-size:12.5px;flex:none;font-weight:600} .adv.me .nm{color:var(--blue)}
+  .adv .tk{flex:1;height:15px;background:var(--bg);border-radius:7px;overflow:hidden}
+  .adv .tk i{display:block;height:100%;width:0;border-radius:7px;background:#C6CDD6;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+  .adv.me .tk i{background:linear-gradient(90deg,var(--blue),#6FA8FF)}
+  .adv .vl{width:52px;text-align:right;font-size:12px;font-weight:800;flex:none;color:var(--mut)} .adv.me .vl{color:var(--ink)}
+
+  /* dicas */
+  .dica{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .dica:last-child{border:0}
+  .dica .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:16px;flex:none}
+  .dica .tx{font-size:13px;line-height:1.5;color:#3c4043} .dica .tx b{color:var(--ink)}
+
+  /* eventos */
+  .ev{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)} .ev:last-child{border:0}
+  .ev .dt{width:42px;text-align:center;flex:none} .ev .dt .d{font-size:18px;font-weight:800;line-height:1} .ev .dt .m{font-size:9.5px;color:var(--mut2);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+  .ev .info{flex:1;min-width:0} .ev .info .t{font-size:13px;font-weight:700} .ev .info .s{font-size:11.5px;color:var(--mut);margin-top:1px}
+  .ev .tp{font-size:15px;flex:none}
+
+  .foot{text-align:center;color:var(--mut2);font-size:11.5px;margin-top:4px} .foot b{color:var(--mut)}
+
+  /* tooltips ⓘ em todos os cards */
+  .info{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--mut2);color:var(--mut2);font-size:10px;font-weight:800;font-style:normal;cursor:help;position:relative;flex:none}
+  .info:hover{border-color:var(--blue);color:var(--blue)}
+  .info::after{content:attr(data-tip);position:absolute;top:calc(100% + 9px);right:0;background:var(--ink);color:#fff;font-size:11.5px;font-weight:500;line-height:1.5;letter-spacing:0;text-transform:none;width:min(250px,72vw);padding:10px 12px;border-radius:10px;opacity:0;pointer-events:none;transform:translateY(4px);transition:.16s;z-index:30;box-shadow:0 12px 32px -8px rgba(0,0,0,.4);white-space:normal;text-align:left}
+  .info::before{content:'';position:absolute;top:calc(100% + 4px);right:5px;border:5px solid transparent;border-bottom-color:var(--ink);opacity:0;transition:.16s;z-index:31}
+  .info:hover::after{opacity:1;transform:translateY(0)} .info:hover::before{opacity:1}
+  .info.r::after{left:0;right:auto} .info.r::before{left:5px;right:auto}
+  .tile{padding-top:16px} .tile .info{position:absolute;top:14px;right:14px}
+  .ia .info{position:absolute;top:16px;right:16px}
+
+  /* card de contagem regressiva */
+  .cd-card{display:flex;align-items:center;gap:16px 20px;flex-wrap:wrap;background:linear-gradient(180deg,#fff,var(--redsoft));border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+  .cd-card .lead{display:flex;flex-direction:column;gap:3px;min-width:150px}
+  .cd-card .lead .t{font-size:13px;font-weight:800;display:flex;align-items:center;gap:7px}
+  .cd-card .lead .s{font-size:11.5px;color:var(--mut);max-width:34ch;line-height:1.4}
+  .cd-units{display:flex;gap:8px}
+  .cd-u{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;text-align:center;min-width:54px}
+  .cd-u .n{font-size:22px;font-weight:800;line-height:1;color:var(--red);font-variant-numeric:tabular-nums}
+  .cd-u .l{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut2);font-weight:700;margin-top:5px}
+  .cd-bar{flex:1;min-width:190px;display:flex;flex-direction:column;gap:6px}
+  .cd-bar .track{height:8px;background:#fff;border:1px solid var(--line);border-radius:99px;overflow:hidden}
+  .cd-bar .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--amb2),var(--red));width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}
+  .cd-bar .ends{display:flex;justify-content:space-between;font-size:10px;color:var(--mut2);font-weight:600}
+
+  /* votos para se eleger */
+  .votos-grid{display:grid;grid-template-columns:210px 1fr;gap:18px;align-items:center}
+  @media(max-width:640px){.votos-grid{grid-template-columns:1fr}}
+  .votos-hero{text-align:center;background:var(--ambsoft);border:1px solid var(--line);border-radius:14px;padding:15px}
+  .votos-hero .vk{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--amb);font-weight:800}
+  .votos-hero .vn{font-size:34px;font-weight:800;color:var(--amb);letter-spacing:-.02em;line-height:1.05;margin-top:5px}
+  .votos-hero .vh{font-size:11px;color:var(--mut);margin-top:6px;line-height:1.35}
+  .votos-steps{display:flex;flex-direction:column;gap:10px}
+  .vstep{display:flex;align-items:center;gap:11px}
+  .vstep .vi{width:26px;height:26px;border-radius:8px;background:var(--bluebg);color:var(--blue);display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+  .vstep .vt{font-size:12.5px;color:#3c4043;line-height:1.35} .vstep .vt b{color:var(--ink)}
+  .votos-note{margin-top:13px;font-size:11.5px;color:var(--mut);line-height:1.55;background:var(--bg);border-radius:10px;padding:11px 13px}
+  .votos-note b{color:var(--ink)} .votos-note i{color:var(--mut2)}
+  /* regras de compliance */
+  .rule{display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid var(--line)}
+  .rule:last-child{border:0}
+  .rule .rt{font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;flex:none;margin-top:1px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
+  .rule.pode .rt{background:var(--grnbg);color:var(--grnink)} .rule.nao .rt{background:var(--redbg);color:var(--red)} .rule.atencao .rt{background:var(--ambbg);color:var(--amb)}
+  .rule .rx{font-size:12px;line-height:1.45;color:#3c4043}
+  .src{font-size:10.5px;color:var(--mut2);margin-top:11px;line-height:1.45} .src b{color:var(--mut)}
+  .cen-txt{font-size:12.5px;line-height:1.6;color:#3c4043}
+  .cen-link{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;font-weight:700;color:var(--blue);background:var(--bluebg);padding:8px 12px;border-radius:9px;text-decoration:none}
+  .cen-link:hover{background:#dce9fd}
+  .cen-topo{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .cen-topo .c{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .cen-topo .c .k{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut2);font-weight:700}
+  .cen-topo .c .v{font-size:12.5px;font-weight:700;margin-top:3px;color:var(--ink)}
+  .reveal{opacity:0;transform:translateY(12px);animation:rise .6s cubic-bezier(.2,.8,.2,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  /* ===== MOVIMENTO — pulso & expansão ===== */
+  .stripe4{overflow:hidden}
+  .stripe4::after{content:'';position:absolute;top:0;left:0;height:100%;width:38%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:sheen 6s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-120%)}55%,100%{transform:translateX(360%)}}
+
+  @keyframes pulseDot{0%{box-shadow:0 0 0 0 rgba(52,168,83,.5)}70%{box-shadow:0 0 0 7px rgba(52,168,83,0)}100%{box-shadow:0 0 0 0 rgba(52,168,83,0)}}
+  .camp .st:not(.pause){animation:pulseDot 2.6s ease-out infinite}
+
+  #garc{animation:breathe 3.6s ease-in-out infinite}
+  @keyframes breathe{0%,100%{filter:drop-shadow(0 0 0 rgba(66,133,244,0))}50%{filter:drop-shadow(0 0 5px rgba(66,133,244,.5))}}
+
+  .tile .ico{animation:iconGlow 4.5s ease-in-out infinite}
+  @keyframes iconGlow{0%,100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 0 0 6px var(--gl,rgba(66,133,244,.09))}}
+  .t-blue .ico{--gl:rgba(66,133,244,.10)} .t-grn .ico{--gl:rgba(52,168,83,.12)} .t-amb .ico{--gl:rgba(249,168,37,.14)} .t-red .ico{--gl:rgba(234,67,53,.10)}
+
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.08em;color:var(--grnink);text-transform:uppercase}
+  .live .ld{width:7px;height:7px;border-radius:50%;background:var(--grn);position:relative}
+  .live .ld::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--grn);animation:ping 1.9s cubic-bezier(0,0,.2,1) infinite}
+  @keyframes ping{0%{transform:scale(1);opacity:.7}80%,100%{transform:scale(2.8);opacity:0}}
+
+  .mom-live{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--blue);transform:translate(-50%,-50%);pointer-events:none;z-index:2}
+  .mom-live::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--blue);animation:ping 1.9s cubic-bezier(0,0,.2,1) infinite}
+
+  @keyframes flashUp{0%{color:var(--grnink)}100%{color:inherit}}
+  .bumped{animation:flashUp 1s ease-out}
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal{animation:none;opacity:1;transform:none}
+    [class*=transition],.bar-fill,.pauta .mini i,.adv .tk i{transition:none}
+    .stripe4::after,.camp .st,#garc,.tile .ico,.live .ld::after,.mom-live::after,.bumped{animation:none}
+    .mom-live{display:none}
+  }
+
+
+  #loginScreen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:radial-gradient(1000px 500px at 80% -10%,rgba(66,133,244,.12),transparent 60%),radial-gradient(800px 400px at 0% 110%,rgba(52,168,83,.10),transparent 55%),#F6F7F9}
+  .lg-card{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 20px 60px -20px rgba(60,64,67,.35);padding:30px 28px;width:100%;max-width:384px;position:relative;overflow:hidden}
+  .lg-stripe{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--blue) 0 25%,var(--red) 25% 50%,var(--amb2) 50% 75%,var(--grn) 75% 100%)}
+  .lg-brand{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--mut);margin-top:6px}
+  .lg-logo{width:20px;height:20px;border-radius:50%;background:conic-gradient(var(--blue),var(--red),var(--amb2),var(--grn),var(--blue))}
+  .lg-h{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:16px}
+  .lg-s{font-size:13px;color:var(--mut);margin-top:3px;margin-bottom:20px}
+  #lgForm label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--mut2);margin:12px 0 5px}
+  #lgForm input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;font:inherit;font-size:14px;background:var(--bg);transition:.15s}
+  #lgForm input:focus{outline:none;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(66,133,244,.12)}
+  #lgBtn{width:100%;margin-top:18px;padding:12px;border:0;border-radius:11px;background:var(--blue);color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px -8px rgba(66,133,244,.6);transition:.15s}
+  #lgBtn:hover{background:#3b78e7} #lgBtn:disabled{opacity:.6;cursor:default}
+  .lg-err{color:var(--red);font-size:12.5px;margin-top:12px;min-height:16px;font-weight:600}
+  .lg-foot{text-align:center;font-size:11px;color:var(--mut2);margin-top:18px}
+
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="lg-card">
+    <div class="lg-stripe"></div>
+    <div class="lg-brand"><span class="lg-logo"></span> Maracatu Digital</div>
+    <div class="lg-h">Central de Campanha</div>
+    <div class="lg-s">Acesso exclusivo do candidato</div>
+    <form id="lgForm" autocomplete="on">
+      <label for="lgEmail">E-mail</label>
+      <input id="lgEmail" type="email" required placeholder="voce@campanha.com" autocomplete="username">
+      <label for="lgSenha">Senha</label>
+      <input id="lgSenha" type="password" required placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password">
+      <div id="lgErr" class="lg-err"></div>
+      <button id="lgBtn" type="submit">Entrar no painel</button>
+    </form>
+    <div class="lg-foot">&#128274; Ambiente privado &middot; dados operados pela Maracatu Digital</div>
+  </div>
+</div>
+<div id="painelRoot">
+<div class="wrap"><div class="app">
+
+  <!-- HEADER -->
+  <header class="reveal">
+    <div class="stripe4"></div>
+    <div class="cand">
+      <div class="ava">MD<span class="num-badge">15</span></div>
+      <div style="min-width:0">
+        <h1>Marina Duarte</h1>
+        <div class="role">Candidata · Pernambuco · operado pela <b style="color:var(--blue)">Maracatu Digital</b></div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <span class="chip blue" id="campChip">— campanhas ativas</span>
+    <div class="toggle" id="toggle">
+      <button data-p="7d">7 dias</button>
+      <button data-p="30d" class="on">30 dias</button>
+      <button data-p="camp">Campanha</button>
+    </div>
+    <div class="count"><div class="big tnum" id="cd">—</div><div class="lb">dias p/ eleição</div></div>
+  </header>
+
+  <!-- ANÁLISE DIÁRIA DA IA -->
+  <div class="ia reveal" style="animation-delay:.05s">
+    <div class="lab"><span class="logo"></span> Leitura do dia · por Maracatu Digital <span class="live" style="margin-left:auto"><span class="ld"></span> ao vivo</span></div>
+    <h2 id="iaH">—</h2>
+    <p id="iaP">—</p>
+    <div class="tags" id="iaTags"></div>
+  </div>
+
+  <!-- CONTAGEM REGRESSIVA DA CAMPANHA -->
+  <div class="cd-card reveal" style="animation-delay:.055s" id="cdCard">
+    <div class="stripe4"></div>
+    <div class="lead">
+      <div class="t" id="cdTitulo">⏳ Reta final da campanha</div>
+      <div class="s" id="cdSub">—</div>
+    </div>
+    <div class="cd-units">
+      <div class="cd-u"><div class="n tnum" id="cdD">—</div><div class="l">dias</div></div>
+      <div class="cd-u"><div class="n tnum" id="cdH">—</div><div class="l">horas</div></div>
+      <div class="cd-u"><div class="n tnum" id="cdM">—</div><div class="l">min</div></div>
+      <div class="cd-u"><div class="n tnum" id="cdS">—</div><div class="l">seg</div></div>
+    </div>
+    <div class="cd-bar">
+      <div class="track"><div class="fill" id="cdFill"></div></div>
+      <div class="ends"><span id="cdIni">16/08</span><span>propaganda até 03/10</span><span id="cdFim">eleição 04/10</span></div>
+    </div>
+  </div>
+
+  <!-- HERO: índice + momentum -->
+  <div class="row hero">
+    <div class="panel reveal" style="animation-delay:.08s">
+      <div class="p-head"><h3><span class="dot"></span>Índice de Campanha</h3></div>
+      <div class="gauge-wrap">
+        <svg width="176" height="116" viewBox="0 0 176 116">
+          <path d="M16 104 A72 72 0 0 1 160 104" fill="none" stroke="#EAECEF" stroke-width="13" stroke-linecap="round"/>
+          <path id="garc" d="M16 104 A72 72 0 0 1 160 104" fill="none" stroke="var(--blue)" stroke-width="13" stroke-linecap="round"/>
+          <text x="88" y="94" text-anchor="middle" class="gnum tnum" id="gnum" fill="var(--ink)">0</text>
+        </svg>
+        <div class="gsub">de 100 · desempenho de mídia + momentum</div>
+        <div class="gtag">▲ <span id="gtrend">subindo</span> vs. período anterior</div>
+      </div>
+    </div>
+    <div class="panel reveal" style="animation-delay:.11s;position:relative">
+      <div class="p-head"><h3><span class="dot"></span>Momentum de alcance</h3><span class="chip">crescendo</span></div>
+      <canvas id="mom"></canvas><span class="mom-live" id="momLive" style="display:none"></span><div class="mom-tip" id="momTip"></div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row kpis">
+    <div class="tile t-blue reveal" style="animation-delay:.14s"><div class="ico">📡</div><div class="lbl">Pessoas alcançadas</div><div class="v tnum" data-kpi="alcance">0</div><div class="d"><b id="alcDs">—</b></div><canvas class="spark" data-spark="1"></canvas></div>
+    <div class="tile t-grn reveal" style="animation-delay:.17s"><div class="ico">🤝</div><div class="lbl">Apoiadores</div><div class="v tnum" data-kpi="apoiadores">0</div><div class="d"><b>+<span class="tnum" id="apoD">0</span></b> <span id="apoP"></span></div><canvas class="spark" data-spark="1"></canvas></div>
+    <div class="tile t-amb reveal" style="animation-delay:.20s"><div class="ico">💬</div><div class="lbl">Engajamento</div><div class="v tnum"><span data-kpi="engaj">0</span>%</div><div class="d">acima da média do setor</div><canvas class="spark" data-spark="1"></canvas></div>
+    <div class="tile t-red reveal" style="animation-delay:.23s"><div class="ico">📇</div><div class="lbl">Contatos captados</div><div class="v tnum" data-kpi="contatos">0</div><div class="d">WhatsApp · base de apoio</div><canvas class="spark" data-spark="1"></canvas></div>
+  </div>
+
+  <!-- MAPA PE + ORÇAMENTO -->
+  <div class="row split">
+    <div class="panel reveal" style="animation-delay:.26s;position:relative">
+      <div class="p-head"><h3><span class="dot"></span>Mapa de calor — Pernambuco</h3><span class="chip amb">resultado das campanhas</span></div>
+      <svg id="map" viewBox="0 0 920 310" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="map-tip" id="mapTip"></div>
+      <div class="legend"><span>Menor alcance</span><span class="legbar"></span><span>Maior alcance</span></div>
+    </div>
+    <div class="panel reveal" style="animation-delay:.29s">
+      <div class="p-head"><h3><span class="dot"></span>Orçamento da campanha eleitoral</h3></div>
+      <div class="pie-flex">
+        <svg width="112" height="112" viewBox="0 0 112 112" style="flex:none">
+          <circle cx="56" cy="56" r="44" fill="none" stroke="#EAECEF" stroke-width="15"/>
+          <circle id="pieG" cx="56" cy="56" r="44" fill="none" stroke="var(--blue)" stroke-width="15" stroke-linecap="round" transform="rotate(-90 56 56)"/>
+          <text x="56" y="52" text-anchor="middle" font-size="20" font-weight="800" fill="var(--ink)" id="pieC">0%</text>
+          <text x="56" y="70" text-anchor="middle" font-size="9" fill="var(--mut)">gasto</text>
+        </svg>
+        <div class="pie-legend">
+          <div class="li"><span class="k" style="background:var(--blue)"></span>Gasto até agora <b id="lgGasto">—</b></div>
+          <div class="li"><span class="k" style="background:#EAECEF"></span>Ainda previsto <b id="lgRest">—</b></div>
+          <div class="li" style="border-top:1px solid var(--line);padding-top:8px;margin-top:2px"><span class="k" style="background:transparent"></span>Previsto total <b id="lgTot">—</b></div>
+        </div>
+      </div>
+      <div class="mrow">
+        <div class="m"><div class="k">Pessoas impactadas</div><div class="v tnum" id="impact">0</div></div>
+        <div class="m"><div class="k">Custo por pessoa</div><div class="v tnum" id="cpp">R$0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMPANHAS + FORÇA -->
+  <div class="row split2">
+    <div class="panel reveal" style="animation-delay:.32s">
+      <div class="p-head"><h3><span class="dot"></span>Campanhas rodando</h3><span class="chip" id="campCount">—</span></div>
+      <div id="campanhas"></div>
+    </div>
+    <div class="panel reveal" style="animation-delay:.35s">
+      <div class="p-head"><h3><span class="dot"></span>Onde você é mais forte</h3><span class="chip amb">por zona</span></div>
+      <div id="regioes"></div>
+    </div>
+  </div>
+
+  <!-- PAUTAS + ADVERSÁRIOS -->
+  <div class="row even">
+    <div class="panel reveal" style="animation-delay:.38s"><div class="p-head"><h3><span class="dot"></span>Pautas que mais mobilizam</h3></div><div id="pautas"></div></div>
+    <div class="panel reveal" style="animation-delay:.41s"><div class="p-head"><h3><span class="dot"></span>Você vs. adversários</h3><span class="chip blue">alcance</span></div><div id="advs"></div><div class="foot" style="text-align:left;margin-top:11px">Estimativa por monitoramento público. <b>Ilustrativo.</b></div></div>
+  </div>
+
+  <!-- VOTOS PARA SE ELEGER -->
+  <div class="panel reveal" style="animation-delay:.43s">
+    <div class="p-head"><h3><span class="dot"></span>Votos para se eleger — Deputado Estadual · PE</h3><span class="chip amb" id="votosChip">estimativa</span></div>
+    <div class="votos-grid">
+      <div class="votos-hero">
+        <div class="vk">alvo de segurança</div>
+        <div class="vn tnum" id="vAlvo">—</div>
+        <div class="vh">votos próprios — patamar do último eleito em 2022</div>
+      </div>
+      <div class="votos-steps" id="votosSteps"></div>
+    </div>
+    <div class="votos-note" id="votosNote"></div>
+  </div>
+
+  <!-- REGRAS (compliance) + CENÁRIO -->
+  <div class="row split2">
+    <div class="panel reveal" style="animation-delay:.45s">
+      <div class="p-head"><h3><span class="dot"></span>Regras do dia — o que pode e o que não pode</h3><span class="chip" id="regrasChip">por IA</span></div>
+      <div id="regrasList"></div>
+      <div class="src" id="regrasSrc"></div>
+    </div>
+    <div class="panel reveal" style="animation-delay:.47s">
+      <div class="p-head"><h3><span class="dot"></span>Cenário e pesquisas</h3><span class="chip blue">termômetro</span></div>
+      <div id="cenario"></div>
+    </div>
+  </div>
+
+  <!-- DICAS PARA A EQUIPE -->
+  <div class="panel reveal" style="animation-delay:.49s">
+    <div class="p-head"><h3><span class="dot"></span>Dicas da Maracatu para a sua equipe</h3><span class="chip">atualizado hoje</span></div>
+    <div id="dicas"></div>
+  </div>
+
+  <!-- EVENTOS -->
+  <div class="row even">
+    <div class="panel reveal" style="animation-delay:.47s"><div class="p-head"><h3><span class="dot"></span>Próximos da campanha</h3></div><div id="eventos"></div></div>
+    <div class="panel reveal" style="animation-delay:.50s;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:6px">
+      <div style="width:40px;height:40px;border-radius:50%;background:conic-gradient(var(--blue),var(--red),var(--amb2),var(--grn),var(--blue))"></div>
+      <div style="font-size:14px;font-weight:700">Operado de ponta a ponta pela Maracatu Digital</div>
+      <div style="font-size:12px;color:var(--mut);max-width:38ch;line-height:1.5">Estratégia, criação, tráfego e monitoramento — a agência cuida de tudo pra você focar na rua.</div>
+    </div>
+  </div>
+
+  <div class="foot">Painel exclusivo do candidato · dados operados pela <b>Maracatu Digital</b> · <span id="stamp"></span></div>
+</div></div>
+</div>
+<script>
+
+(function(){
+  const F=new Intl.NumberFormat('pt-BR'); const money=n=>'R$ '+F.format(Math.round(n));
+  const kfmt=n=>n>=1000000?(n/1000000).toFixed(2).replace('.',',')+' mi':n>=1000?(n/1000).toFixed(1).replace('.',',')+' mil':F.format(n);
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  const easeOut=t=>1-Math.pow(1-t,3); const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const NS='http://www.w3.org/2000/svg';
+
+  const DATA={
+    '7d':{indice:68,alcance:72400,alcDelta:9,apoiadores:48200,apoDelta:1240,apoPct:2.6,engaj:8.1,contatos:640,
+      mom:[41,44,43,49,52,58,63],momL:['S1','S2','S3','S4','S5','S6','S7'],
+      regioes:[['Zona Norte',84],['Centro',77],['Zona Oeste',63],['Zona Sul',58],['Reg. Metrop.',46]],
+      pautas:[['Saúde',33],['Segurança',27],['Emprego',20],['Educação',13],['Mobilidade',7]],
+      advs:[['Você',72400],['Adv. Costa',61200],['Adv. Lima',44800]],
+      heat:[92,70,64,48,54,34,27,18,22,50]},
+    '30d':{indice:72,alcance:284500,alcDelta:23,apoiadores:48200,apoDelta:6400,apoPct:15.3,engaj:7.8,contatos:3140,
+      mom:[52,55,51,60,64,69,72,78,81,85,90,96],momL:['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10','S11','S12'],
+      regioes:[['Zona Norte',82],['Centro',74],['Zona Oeste',61],['Zona Sul',55],['Reg. Metrop.',48]],
+      pautas:[['Saúde',34],['Segurança',28],['Emprego',19],['Educação',12],['Mobilidade',7]],
+      advs:[['Você',284500],['Adv. Costa',210300],['Adv. Lima',156800]],
+      heat:[100,78,72,55,64,40,33,22,28,58]},
+    'camp':{indice:74,alcance:1240000,alcDelta:90,apoiadores:48200,apoDelta:22800,apoPct:89.7,engaj:7.4,contatos:11800,
+      mom:[22,28,26,34,40,44,49,55,58,66,71,77,83,88,94,100],momL:['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'],
+      regioes:[['Zona Norte',79],['Centro',72],['Zona Oeste',66],['Zona Sul',60],['Reg. Metrop.',54]],
+      pautas:[['Saúde',31],['Segurança',26],['Emprego',22],['Educação',14],['Mobilidade',7]],
+      advs:[['Você',1240000],['Adv. Costa',980000],['Adv. Lima',720000]],
+      heat:[96,74,70,60,72,52,44,34,40,70]}
+  };
+  // orçamento é do período eleitoral (fixo)
+  const ORC={previsto:220000,gasto:76500,impactadas:1240000};
+  const CIDADES=[['Recife',896.3,113.1],['Olinda',899.7,107.7],['Jaboatão',878.1,121],['Vitória de S.A.',840.3,121.8],['Caruaru',747,142.9],['Garanhuns',676.2,220.3],['Arcoverde',600.2,160.1],['Serra Talhada',430.9,105.7],['Salgueiro',319,116.1],['Petrolina',130.6,285.2]];
+  const CAMPANHAS=[
+    ['Saúde Perto de Você','Recife · RMR',98000,'ativa','Meta'],
+    ['Segurança com Inteligência','Jaboatão · Olinda',64000,'ativa','Meta + Google'],
+    ['Interior Forte','Petrolina · Sertão',51000,'ativa','YouTube'],
+    ['Emprego pra Juventude','Caruaru · Agreste',42000,'ativa','Meta'],
+    ['Mulheres na Política','Estadual',33000,'ativa','Instagram'],
+    ['Educação em 1º Lugar','Recife · Z. Norte',29000,'ativa','Meta'],
+    ['Mobilidade que Move','Reg. Metrop.',24000,'pausada','Meta'],
+    ['Recall — Marina 15','Estadual',37000,'ativa','YouTube']
+  ];
+  const eventos=[['04','OUT','Eleição — 1º turno','Dia da votação','🗳️'],['22','SET','Comício Zona Norte','Praça do Derby · 18h','📢'],['24','SET','Gravação — santinho digital','Estúdio Maracatu · 10h','🎬'],['27','SET','Entrevista — rádio local','Ao vivo · 08h','🎙️'],['29','SET','Caminhada no Centro','Rua da Aurora · 16h','🚶']];
+  const ANALISES=[
+    {h:'Sua campanha está no melhor momento — e não é por acaso.',p:'O trabalho da Maracatu Digital está rendendo: seu alcance cresceu no período e cada real investido rende acima da média do setor. A equipe vem afinando as campanhas dia após dia, e a base de apoio só aumenta. Você está em boas mãos.',t:['Alcance em alta','Custo eficiente','+ apoiadores']},
+    {h:'A estratégia está funcionando — os números confirmam.',p:'A leitura da Maracatu para hoje é de confiança: as pautas que a agência priorizou são exatamente as que mais mobilizam o seu público, e o momentum de alcance segue subindo. É o tipo de resultado que vem de time afiado cuidando de cada detalhe.',t:['Pautas certeiras','Momentum subindo','Time afiado']},
+    {h:'Cada ajuste da equipe aparece nos resultados.',p:'A Maracatu Digital vem otimizando as campanhas de perto, e dá pra sentir: o engajamento está acima da média e o custo por pessoa impactada segue baixo. Enquanto você faz a rua, a agência mantém a máquina digital girando a seu favor.',t:['Engajamento alto','Máquina girando','Otimização diária']}
+  ];
+  const DICAS=[
+    ['💡','var(--ambbg)','var(--amb)','A campanha <b>“Saúde Perto de Você”</b> é a sua mais forte — a Maracatu acertou a mensagem. Vale a equipe reforçar esse tema nos próximos dias.'],
+    ['📈','var(--bluebg)','var(--blue)','O <b>pico de engajamento às 19h</b> que a agência mapeou é ouro: concentre publicações e lives nesse horário para multiplicar o alcance.'],
+    ['🗺️','var(--redbg)','var(--red)','A <b>Zona Norte está fervendo</b> no mapa graças à segmentação da Maracatu — é onde cada real rende mais. Priorizem eventos por lá.'],
+    ['🎯','var(--grnbg)','var(--grnink)','Seu <b>custo por pessoa impactada está abaixo do mercado</b>. Eficiência é marca da agência — dá pra escalar o orçamento com segurança.']
+  ];
+
+  let cur='30d';
+  function animateNum(el,to,fmt,dur){ if(reduce){el.textContent=fmt(to);return;} const from=parseFloat(el.dataset.from||0);dur=dur||900;const t0=performance.now();el.dataset.from=to;(function s(now){const p=Math.min(1,(now-t0)/dur);el.textContent=fmt(from+(to-from)*easeOut(p));if(p<1)requestAnimationFrame(s);})(t0); }
+  function hexA(h,a){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function heatColor(v){ // 0..100 → Maracatu blue→grn→amb→red
+    const stops=[[0,[66,133,244]],[38,[52,168,83]],[68,[249,168,37]],[100,[234,67,53]]];
+    v=Math.max(0,Math.min(100,v)); let i=0; while(i<stops.length-1 && v>stops[i+1][0])i++;
+    const [v0,c0]=stops[i],[v1,c1]=stops[Math.min(i+1,stops.length-1)]; const t=v1===v0?0:(v-v0)/(v1-v0);
+    return `rgb(${Math.round(lerp(c0[0],c1[0],t))},${Math.round(lerp(c0[1],c1[1],t))},${Math.round(lerp(c0[2],c1[2],t))})`;
+  }
+  function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+  // momentum
+  const cv=$('#mom'),tip=$('#momTip');let momPts=[],momData=[],momLabels=[];
+  function sizeC(c){const r=c.getBoundingClientRect();const d=devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return{ctx:x,w:r.width,h:r.height};}
+  function drawMom(prog){const{ctx,w,h}=sizeC(cv);ctx.clearRect(0,0,w,h);const pad={l:6,r:6,t:12,b:16};const d=momData,max=Math.max(...d)*1.08,min=Math.min(...d)*.82;
+    const X=i=>pad.l+(w-pad.l-pad.r)*(i/(d.length-1)),Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-min)/(max-min));const acc=css('--blue');
+    ctx.strokeStyle='rgba(0,0,0,.05)';ctx.lineWidth=1;for(let g=0;g<=3;g++){const y=pad.t+(h-pad.t-pad.b)*g/3;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();}
+    momPts=d.map((v,i)=>[X(i),Y(v)]);const n=Math.max(1,Math.floor((d.length-1)*prog)+1);
+    const g=ctx.createLinearGradient(0,pad.t,0,h-pad.b);g.addColorStop(0,hexA(acc,.28));g.addColorStop(1,hexA(acc,0));
+    ctx.beginPath();ctx.moveTo(momPts[0][0],h-pad.b);for(let i=0;i<n;i++)ctx.lineTo(momPts[i][0],momPts[i][1]);ctx.lineTo(momPts[Math.min(n-1,momPts.length-1)][0],h-pad.b);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath();ctx.moveTo(momPts[0][0],momPts[0][1]);for(let i=1;i<n;i++)ctx.lineTo(momPts[i][0],momPts[i][1]);ctx.strokeStyle=acc;ctx.lineWidth=2.6;ctx.lineJoin='round';ctx.stroke();
+    const lp=momPts[Math.min(n-1,momPts.length-1)];ctx.beginPath();ctx.arc(lp[0],lp[1],4.2,0,7);ctx.fillStyle=acc;ctx.fill();ctx.beginPath();ctx.arc(lp[0],lp[1],7.5,0,7);ctx.strokeStyle=hexA(acc,.35);ctx.lineWidth=2;ctx.stroke();
+    const ml=document.getElementById('momLive');if(ml&&!reduce){ml.style.display='block';ml.style.left=(cv.offsetLeft+lp[0])+'px';ml.style.top=(cv.offsetTop+lp[1])+'px';}}
+  function animMom(){if(reduce){drawMom(1);return;}const t0=performance.now();(function s(now){const p=Math.min(1,(now-t0)/1000);drawMom(easeOut(p));if(p<1)requestAnimationFrame(s);})(t0);}
+  cv.addEventListener('mousemove',e=>{if(!momPts.length)return;const r=cv.getBoundingClientRect();const x=e.clientX-r.left;let bi=0,bd=1e9;momPts.forEach((p,i)=>{const dd=Math.abs(p[0]-x);if(dd<bd){bd=dd;bi=i;}});const p=momPts[bi];tip.style.left=p[0]+'px';tip.style.top=p[1]+'px';tip.style.opacity=1;tip.innerHTML=`Sem. ${momLabels[bi]} · <b>${kfmt(Math.round(momData[bi]/100*DATA[cur].alcance))}</b>`;});
+  cv.addEventListener('mouseleave',()=>tip.style.opacity=0);
+
+  function drawSpark(c,arr){const{ctx,w,h}=sizeC(c);ctx.clearRect(0,0,w,h);const max=Math.max(...arr),min=Math.min(...arr);const acc=css('--blue');
+    const X=i=>2+(w-4)*(i/(arr.length-1)),Y=v=>2+(h-4)*(1-(v-min)/((max-min)||1));const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,hexA(acc,.25));g.addColorStop(1,hexA(acc,0));
+    ctx.beginPath();ctx.moveTo(X(0),h);arr.forEach((v,i)=>ctx.lineTo(X(i),Y(v)));ctx.lineTo(X(arr.length-1),h);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+    ctx.beginPath();arr.forEach((v,i)=>i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v)));ctx.strokeStyle=acc;ctx.lineWidth=1.7;ctx.stroke();}
+
+  // gauge
+  const garc=$('#garc');const GLEN=garc.getTotalLength();garc.style.strokeDasharray=GLEN;
+  function setGauge(val){const f=val/100;if(reduce){garc.style.strokeDashoffset=GLEN*(1-f);$('#gnum').textContent=val;return;}const t0=performance.now();(function s(now){const p=Math.min(1,(now-t0)/1000),e=easeOut(p);garc.style.strokeDashoffset=GLEN*(1-f*e);$('#gnum').textContent=Math.round(val*e);if(p<1)requestAnimationFrame(s);})(t0);}
+
+  // pie orçamento
+  const pieG=$('#pieG');const PR=2*Math.PI*44;pieG.style.strokeDasharray=PR;
+  function setPie(frac){if(reduce){pieG.style.strokeDashoffset=PR*(1-frac);$('#pieC').textContent=Math.round(frac*100)+'%';return;}const t0=performance.now();(function s(now){const p=Math.min(1,(now-t0)/1000),e=easeOut(p);pieG.style.strokeDashoffset=PR*(1-frac*e);$('#pieC').textContent=Math.round(frac*100*e)+'%';if(p<1)requestAnimationFrame(s);})(t0);}
+
+  // MAPA PE
+  // Contorno REAL de Pernambuco (malha IBGE, projeção equiretangular; cidades por lat/lng).
+  const PE_PATH="M 455 83.6 L 453.5 80.6 L 449 78.6 L 441.2 83.8 L 433.9 85.5 L 431.4 84.1 L 431.1 78 L 429 73.4 L 426.9 67.6 L 423 65.6 L 415.6 72.3 L 412.2 71 L 409.1 70.7 L 403.7 74.8 L 390.5 75.3 L 386.1 67.8 L 377.9 60.1 L 374 58.4 L 370.2 63.3 L 367.8 62.8 L 359.1 65.6 L 358.6 70.9 L 352.9 69.9 L 349.5 74.8 L 343.4 75.9 L 343.4 80.1 L 340.3 86.8 L 335 86.3 L 332.7 82.8 L 323.2 85.3 L 321.2 77.5 L 315.2 70.7 L 311.9 70.3 L 306.8 67.1 L 300.8 69 L 298.9 63.9 L 293.4 63.9 L 284.5 57.6 L 281.8 56.7 L 277.9 56.1 L 274.6 52.1 L 270.7 52.2 L 269.2 47.1 L 273.1 43.1 L 272.4 39.2 L 266.8 38.3 L 260.8 40.8 L 257.3 33.9 L 253.5 33.7 L 249.8 33.5 L 247.2 27.7 L 239 22.2 L 234.2 20.8 L 222.3 21.5 L 218.4 20.6 L 214.1 22.4 L 212 22.2 L 209 22.6 L 198.9 26.8 L 192.8 27.6 L 181.6 27.8 L 177.6 26.5 L 172.3 24.7 L 165.7 19.4 L 163.2 17.5 L 156.7 17.4 L 152 21.1 L 149.8 24.4 L 145.3 26 L 137.8 25.1 L 127.7 19.7 L 125.2 21.5 L 124.3 29.2 L 110.2 34.3 L 108.6 36.4 L 103.5 37.3 L 101.6 40.4 L 103.1 45.3 L 106.2 50.2 L 111.1 55 L 114.3 63.1 L 112.4 68.4 L 108.2 71.8 L 107.3 76.3 L 111.1 79.5 L 120.2 81.8 L 123.4 83.5 L 125.7 88.4 L 124.9 101.8 L 122.6 106.3 L 120.6 110.6 L 116.7 119.9 L 118.7 124.3 L 116.6 125.8 L 112.8 124.5 L 111.1 126.9 L 103.6 132.6 L 102.1 135.4 L 92.4 139.1 L 92.7 144.5 L 91 147.5 L 87.6 147.6 L 87.4 152.8 L 84.9 155.3 L 81.6 154 L 75.4 157.9 L 76.1 160.7 L 72.8 163.7 L 65.7 157.6 L 57.5 161.8 L 55 167.7 L 52.4 167 L 50.5 172.1 L 45.5 175.9 L 42.4 174.9 L 40.1 180.8 L 35.8 182.3 L 33.7 188.9 L 28.6 191.2 L 23.7 191.1 L 21.9 193.8 L 16.9 197.1 L 14 197 L 17.3 199.6 L 24.9 200.6 L 32.1 196.7 L 38.8 197.5 L 44.9 196.6 L 45.2 201.6 L 48.7 206.3 L 57.9 207 L 59.9 214.4 L 65.6 211.8 L 68.4 214.2 L 73.5 213.3 L 76.9 217.9 L 79 223.6 L 83.1 228.5 L 82.9 231.9 L 85.4 235.7 L 87.2 244.6 L 89.5 246.9 L 93.4 247.2 L 95.8 249.5 L 102.3 252.3 L 105.7 251.9 L 108.1 254.7 L 107.8 258.1 L 104.6 263.9 L 106.4 267.4 L 105.4 269.9 L 100.9 273.4 L 97.3 281.7 L 97.8 285.8 L 94.8 287.4 L 94.5 291.2 L 101.7 291.2 L 106.2 294 L 114.1 296 L 123.3 292.8 L 125.2 288.7 L 129.4 286.3 L 135.3 288 L 139.2 281.4 L 142 279.3 L 145.7 281.9 L 150.5 282.5 L 156.8 269.5 L 160 258 L 159 253.1 L 161.8 244.9 L 166.4 241.3 L 170.6 242.5 L 177.2 248.1 L 181.3 248.4 L 188.5 244.3 L 190.1 242.4 L 198.3 242 L 201.9 241.4 L 205.1 240.3 L 214.1 230 L 216.1 226.3 L 215.4 221.8 L 212.4 217 L 213.6 212.5 L 223.5 210.5 L 227.8 211.3 L 233.3 208.1 L 240.5 208.8 L 243.5 206.9 L 243.4 201.9 L 240.8 193.6 L 241.4 191.1 L 247.2 190.9 L 251.5 190.6 L 257.7 188 L 264.6 183.8 L 270.3 182.4 L 273.6 178.6 L 278.5 175.9 L 283.5 174.7 L 286.6 176.6 L 288.2 178 L 296.2 178.7 L 298.1 181.2 L 301.4 186.5 L 301.7 194 L 303.3 196.7 L 307.8 197.5 L 312.4 195.1 L 315.6 197.7 L 326.4 200.1 L 330.6 200.7 L 335.3 203.9 L 338.3 207.9 L 341.7 209.4 L 354.9 206.8 L 361.5 207.3 L 370.6 214.5 L 375.2 216.8 L 376.9 224 L 379.5 230.8 L 384.8 232.7 L 388.3 228.9 L 388.6 220.7 L 393.7 212.7 L 396.2 211.7 L 401.6 212.7 L 407.4 217.2 L 406.1 221.8 L 401.8 224.8 L 401.4 229.2 L 402.8 232 L 410.2 237.7 L 416.4 239.1 L 422 234.5 L 427.3 233.1 L 431.9 239 L 427 244.7 L 428.8 253.3 L 432.1 256.3 L 432.2 262.1 L 437.3 271.4 L 439 276.5 L 443.7 272.3 L 446.9 271.5 L 450.1 266.3 L 451.8 262.2 L 458.8 256.4 L 462.4 256.6 L 469.7 254.3 L 474.3 253.2 L 478.6 246.5 L 480.9 243.5 L 491.4 234.4 L 495 225.8 L 495.1 220.1 L 504.7 214.7 L 506.6 218.5 L 512.4 226.2 L 518 233.4 L 521.9 234.4 L 526.4 230.4 L 531.9 230.6 L 535.7 229.4 L 543.8 234.2 L 550.8 235.2 L 553.7 237.9 L 558.7 241.2 L 567.2 249.8 L 569.6 253.8 L 573.9 257.2 L 576.4 263.3 L 580.6 261.9 L 585.8 264.8 L 584.6 268.2 L 589.9 267.6 L 591.7 265.1 L 595.2 265.8 L 599.8 270.3 L 599.3 273.7 L 604.3 274.7 L 607.1 279.4 L 610.4 280.2 L 613.6 283 L 616.2 282.5 L 616.2 279 L 619.3 272.2 L 623.9 269.6 L 629.9 271.2 L 635.2 270.1 L 640 269 L 648.5 271.8 L 658.7 276.7 L 661.2 277.8 L 666.6 276.7 L 665.9 271.7 L 675.6 267.9 L 677.4 265 L 680.8 264.9 L 685 261.4 L 688.9 262.9 L 695.3 262.2 L 700 258 L 704.1 256.6 L 707.7 255.5 L 708.7 252.2 L 707.4 247.4 L 710.9 247 L 715.1 243.7 L 717.1 240.1 L 723.1 239.8 L 727.3 237.9 L 729.6 234.2 L 726.3 231.4 L 726.3 229 L 732.6 226.8 L 735.1 223.5 L 739.2 222.7 L 745.3 222.1 L 750.5 220.6 L 754.1 219.6 L 755.8 216.6 L 762.7 216.3 L 764.9 218.1 L 767.3 217.8 L 771.7 214.9 L 774.3 216.9 L 773.3 221.3 L 778 223.8 L 781.5 222.8 L 788.5 221.2 L 791.2 219.3 L 793.9 219.2 L 800.6 214.8 L 806.4 211.5 L 812.4 212.4 L 815.9 210.9 L 817.4 213.8 L 824.3 213.7 L 832.2 216.6 L 845.5 220 L 848 219.4 L 856.6 220.4 L 859.2 223.4 L 862.2 216.8 L 861.7 214.3 L 863.9 209.1 L 866 206.9 L 868.2 202 L 869.2 196.5 L 868 194.9 L 873.4 184.5 L 875.4 179.7 L 879 178.4 L 879.6 170.2 L 885.3 157.2 L 885.3 153.5 L 887.7 145.7 L 889.7 135.5 L 891.2 133.8 L 892.4 126.5 L 899 112.4 L 901.4 108.3 L 903.4 101.5 L 904.4 97.2 L 903.9 91.9 L 901.6 86.9 L 901.1 83.3 L 904 75 L 902.9 68.5 L 900.6 66.8 L 906 59.5 L 902.9 52.5 L 902.6 49.1 L 899.9 47.9 L 891.2 48.2 L 889.1 46.5 L 885.3 47.8 L 882 42.9 L 881.9 38 L 870.4 29.9 L 865.3 30.8 L 859 29.1 L 854 29.8 L 846.1 26.9 L 841.8 28.5 L 834.6 32.1 L 830.5 35.6 L 822.1 39.6 L 818.6 36.9 L 812.6 40.8 L 811.6 44.5 L 806.8 53.2 L 809.4 56.1 L 808.2 61.4 L 803.7 63.5 L 799.9 62 L 795.6 63.6 L 794 66 L 787.4 68.9 L 785.3 67.6 L 779.7 69.6 L 772.4 73.6 L 767.6 74.7 L 759.9 75.3 L 757.6 79.7 L 751.5 79.9 L 749.4 79.5 L 743.3 82.8 L 740.8 82.5 L 734.4 78.7 L 726.5 79.1 L 718.8 79.1 L 714.3 76.6 L 709.1 80.7 L 711.1 83.4 L 707.9 85.2 L 702.6 82.2 L 689.4 82.5 L 685.2 84.6 L 685.2 92.2 L 683 96 L 678.4 97.1 L 670.7 94.1 L 665.9 94.5 L 665.8 98.5 L 663.8 101.4 L 660.3 100.2 L 658.3 105 L 658.1 114 L 654.7 115.7 L 658.2 120.9 L 649.3 124.7 L 650.2 126.6 L 641.6 129.1 L 640 131.8 L 636.5 130.9 L 626.4 135.1 L 620.1 139 L 614.8 142.1 L 613.8 144.9 L 608.8 145.4 L 604.8 143.7 L 602.1 140.7 L 596.4 140.1 L 590.8 133.4 L 590.3 128.9 L 585.8 128.4 L 587.9 122.7 L 588 117.9 L 586 113.2 L 587.2 109.7 L 585.7 106.3 L 577.7 103.2 L 567.8 102.3 L 561.2 104.1 L 559.9 100.1 L 565.5 98.3 L 568.4 94.4 L 574.3 90.6 L 573.9 87.1 L 577.2 85.8 L 578 82 L 582.6 80 L 584.3 81.2 L 586.9 78.6 L 588.7 74.2 L 587.1 70.6 L 585.6 68.1 L 581 62.3 L 580.6 60.1 L 585.3 52.4 L 591.5 47.3 L 596.8 45 L 604.1 42.5 L 609.6 39.7 L 604.4 34.4 L 605.7 30.6 L 600.3 27.5 L 595.9 24.8 L 584.7 21.4 L 583.5 18.6 L 575.7 14 L 572.1 14 L 564.8 16 L 559 20 L 560 21.8 L 555 24.6 L 548.8 24.6 L 540 25.6 L 541.2 28.7 L 536.5 35.1 L 535.7 38.4 L 529.7 41.5 L 524.5 43.9 L 523.1 46.2 L 518.3 45.9 L 507.5 55.3 L 506 56.8 L 505 58.9 L 503.1 62.9 L 500.6 58.9 L 497.3 61.2 L 490.8 62.3 L 484.5 68.2 L 482.1 70.1 L 477.1 76.8 L 471.3 78.5 L 466 74.5 L 461.9 77.6 L 460.9 85.1 L 455 83.6 Z";
+  const mapEl=$('#map'),mapTip=$('#mapTip');
+  function renderMap(vals){
+    mapEl.innerHTML='';
+    const defs=document.createElementNS(NS,'defs');
+    const cp=document.createElementNS(NS,'clipPath');cp.id='peclip';const cpp=document.createElementNS(NS,'path');cpp.setAttribute('d',PE_PATH);cp.appendChild(cpp);defs.appendChild(cp);
+    const fl=document.createElementNS(NS,'filter');fl.id='soft';fl.setAttribute('x','-20%');fl.setAttribute('y','-20%');fl.setAttribute('width','140%');fl.setAttribute('height','140%');
+    const gb=document.createElementNS(NS,'feGaussianBlur');gb.setAttribute('stdDeviation','15');fl.appendChild(gb);defs.appendChild(fl);
+    mapEl.appendChild(defs);
+    const base=document.createElementNS(NS,'path');base.setAttribute('d',PE_PATH);base.setAttribute('fill','#E8EEF7');base.setAttribute('stroke','#9FB0CC');base.setAttribute('stroke-width','1.6');base.setAttribute('stroke-linejoin','round');mapEl.appendChild(base);
+    const heat=document.createElementNS(NS,'g');heat.setAttribute('clip-path','url(#peclip)');heat.setAttribute('filter','url(#soft)');heat.style.mixBlendMode='multiply';
+    CIDADES.forEach(([n,x,y],i)=>{const v=vals[i];const c=document.createElementNS(NS,'circle');c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',reduce?(30+v*.55):0);c.setAttribute('fill',heatColor(v));c.setAttribute('fill-opacity',.55);heat.appendChild(c);
+      if(!reduce){const t0=performance.now(),tr=30+v*.55;(function s(now){const p=Math.min(1,(now-t0-i*45)/700);if(p>0)c.setAttribute('r',tr*easeOut(p));if(p<1)requestAnimationFrame(s);})(t0);}});
+    mapEl.appendChild(heat);
+    const outline=document.createElementNS(NS,'path');outline.setAttribute('d',PE_PATH);outline.setAttribute('fill','none');outline.setAttribute('stroke','#9FB0CC');outline.setAttribute('stroke-width','1.6');outline.setAttribute('stroke-linejoin','round');mapEl.appendChild(outline);
+    // dots + labels (top cidades)
+    CIDADES.forEach(([n,x,y],i)=>{const v=vals[i];
+      const d=document.createElementNS(NS,'circle');d.setAttribute('cx',x);d.setAttribute('cy',y);d.setAttribute('r',v>60?4.5:3.2);d.setAttribute('fill','#fff');d.setAttribute('stroke',heatColor(v));d.setAttribute('stroke-width','2.4');d.setAttribute('class','cityd');
+      d.addEventListener('mousemove',e=>{const r=mapEl.getBoundingClientRect();mapTip.style.left=(e.clientX-r.left)+'px';mapTip.style.top=(e.clientY-r.top)+'px';mapTip.style.opacity=1;mapTip.innerHTML=`<b>${n}</b> · ${Math.round(v/100*DATA[cur].alcance/CIDADES.length*3.2).toLocaleString('pt-BR')} alcançados<br><small>intensidade ${v}/100</small>`;});
+      d.addEventListener('mouseleave',()=>mapTip.style.opacity=0);
+      mapEl.appendChild(d);
+      if(v>=55){const lb=document.createElementNS(NS,'text');lb.setAttribute('x',x);lb.setAttribute('y',y-9);lb.setAttribute('text-anchor','middle');lb.setAttribute('font-size','11');lb.setAttribute('font-weight','700');lb.setAttribute('fill','#3c4043');lb.textContent=n;mapEl.appendChild(lb);}});
+    // radar pulses nas cidades mais quentes (expansão)
+    if(!reduce){
+      const radar=document.createElementNS(NS,'g');radar.setAttribute('clip-path','url(#peclip)');
+      const ring=(x,y,col,maxR,delay)=>{
+        const c=document.createElementNS(NS,'circle');c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r','4');
+        c.setAttribute('fill','none');c.setAttribute('stroke',col);c.setAttribute('stroke-width','2.2');c.setAttribute('opacity','0');
+        const aR=document.createElementNS(NS,'animate');aR.setAttribute('attributeName','r');aR.setAttribute('values','4;'+maxR);aR.setAttribute('dur','2.8s');aR.setAttribute('begin',delay+'s');aR.setAttribute('repeatCount','indefinite');aR.setAttribute('calcMode','spline');aR.setAttribute('keySplines','.2 .7 .3 1');aR.setAttribute('keyTimes','0;1');
+        const aO=document.createElementNS(NS,'animate');aO.setAttribute('attributeName','opacity');aO.setAttribute('values','.5;0');aO.setAttribute('dur','2.8s');aO.setAttribute('begin',delay+'s');aO.setAttribute('repeatCount','indefinite');
+        c.appendChild(aR);c.appendChild(aO);return c;
+      };
+      CIDADES.map((c,i)=>[i,vals[i]]).sort((a,b)=>b[1]-a[1]).slice(0,3).forEach(([i,v],k)=>{
+        const x=CIDADES[i][1],y=CIDADES[i][2],col=heatColor(v),maxR=20+v*.22;
+        radar.appendChild(ring(x,y,col,maxR,k*.9));radar.appendChild(ring(x,y,col,maxR,k*.9+1.4));
+      });
+      mapEl.appendChild(radar);
+    }
+    // titulo estado
+    const st=document.createElementNS(NS,'text');st.setAttribute('x','300');st.setAttribute('y','300');st.setAttribute('text-anchor','middle');st.setAttribute('font-size','12');st.setAttribute('font-weight','800');st.setAttribute('fill','#B7C2D4');st.setAttribute('letter-spacing','3');st.textContent='PERNAMBUCO';mapEl.appendChild(st);
+  }
+
+  function renderLists(d){
+    $('#regioes').innerHTML=d.regioes.map(([n,v])=>`<div class="bar-row"><span class="nm">${n}</span><span class="bar-track"><i class="bar-fill" data-w="${v}"></i></span><span class="vl tnum">${v}%</span></div>`).join('');
+    const pmax=Math.max(...d.pautas.map(p=>p[1]));
+    $('#pautas').innerHTML=d.pautas.map(([n,v],i)=>`<div class="pauta"><span class="rk">${i+1}</span><span class="nm">${n}</span><span class="mini"><i data-w="${Math.round(v/pmax*100)}"></i></span><span class="pc tnum">${v}%</span></div>`).join('');
+    const amax=Math.max(...d.advs.map(a=>a[1]));
+    $('#advs').innerHTML=d.advs.map(([n,v],i)=>`<div class="adv ${i===0?'me':''}"><span class="nm">${n}</span><span class="tk"><i data-w="${Math.round(v/amax*100)}"></i></span><span class="vl tnum">${kfmt(v)}</span></div>`).join('');
+    requestAnimationFrame(()=>$$('[data-w]').forEach(el=>el.style.width=el.dataset.w+'%'));
+  }
+
+  function paint(p){
+    cur=p;const d=DATA[p];momData=d.mom.slice();momLabels=d.momL.slice();
+    animateNum($('[data-kpi=alcance]'),d.alcance,v=>kfmt(Math.round(v)));$('#alcDs').textContent=`▲ +${d.alcDelta}% no período`;
+    animateNum($('[data-kpi=apoiadores]'),d.apoiadores,v=>F.format(Math.round(v)));animateNum($('#apoD'),d.apoDelta,v=>F.format(Math.round(v)));$('#apoP').textContent=`(+${d.apoPct}%)`;
+    animateNum($('[data-kpi=engaj]'),d.engaj,v=>v.toFixed(1).replace('.',','));animateNum($('[data-kpi=contatos]'),d.contatos,v=>F.format(Math.round(v)));
+    setGauge(d.indice);$('#gtrend').textContent=d.indice>=72?'em alta':'estável';
+    renderLists(d);renderMap(d.heat);animMom();$$('.spark').forEach(c=>drawSpark(c,d.mom));
+  }
+
+  // toggle
+  $('#toggle').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#toggle button').forEach(x=>x.classList.toggle('on',x===b));paint(b.dataset.p);});
+
+  // orçamento (fixo)
+  const frac=ORC.gasto/ORC.previsto;setPie(frac);
+  $('#lgGasto').textContent=money(ORC.gasto);$('#lgRest').textContent=money(ORC.previsto-ORC.gasto);$('#lgTot').textContent=money(ORC.previsto);
+  animateNum($('#impact'),ORC.impactadas,v=>kfmt(Math.round(v)));
+  $('#cpp').textContent='R$ '+(ORC.gasto/ORC.impactadas).toFixed(3).replace('.',',');
+
+  // campanhas
+  const ativas=CAMPANHAS.filter(c=>c[3]==='ativa').length;
+  $('#campChip').textContent=`🎯 ${ativas} campanhas ativas`;$('#campCount').textContent=`${ativas} ativas · ${CAMPANHAS.length-ativas} pausada`;
+  $('#campanhas').innerHTML=CAMPANHAS.map(([n,l,r,s,cn])=>`<div class="camp"><span class="st ${s==='pausada'?'pause':''}"></span><div class="in"><div class="nm">${n}</div><div class="lo">📍 ${l}</div></div><span class="cn">${cn}</span><div class="rc"><div class="b tnum">${kfmt(r)}</div><div class="s">alcance</div></div></div>`).join('');
+
+  // análise IA (rotaciona por dia)
+  const dia=new Date().getDate();const an=ANALISES[dia%ANALISES.length];
+  $('#iaH').textContent=an.h;$('#iaP').textContent=an.p;$('#iaTags').innerHTML=an.t.map(t=>`<span class="tag">${t}</span>`).join('');
+  // dicas
+  $('#dicas').innerHTML=DICAS.map(([ic,bg,co,tx])=>`<div class="dica"><div class="ic" style="background:${bg};color:${co}">${ic}</div><div class="tx">${tx}</div></div>`).join('');
+  // eventos
+  $('#eventos').innerHTML=eventos.map(([d,m,t,s,ic])=>`<div class="ev"><div class="dt"><div class="d tnum">${d}</div><div class="m">${m}</div></div><div class="info"><div class="t">${t}</div><div class="s">${s}</div></div><span class="tp">${ic}</span></div>`).join('');
+
+  // countdown
+  const alvo=new Date('2026-10-04T08:00:00-03:00');
+  function tick(){const now=new Date();$('#cd').textContent=Math.max(0,Math.ceil((alvo-now)/86400000));$('#stamp').textContent=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+  tick();setInterval(tick,60000);
+
+  // ===== movimento ao vivo (a máquina girando) =====
+  if(!reduce){
+    const bump=el=>{el.classList.remove('bumped');void el.offsetWidth;el.classList.add('bumped');};
+    let liveImp=ORC.impactadas;
+    setInterval(()=>{liveImp+=Math.floor(140+Math.random()*520);const im=$('#impact');im.textContent=kfmt(liveImp);$('#cpp').textContent='R$ '+(ORC.gasto/liveImp).toFixed(3).replace('.',',');bump(im);},3800);
+    setInterval(()=>{const el=$('[data-kpi=contatos]');const n=parseInt(el.textContent.replace(/\D/g,''))||0;el.textContent=F.format(n+Math.floor(1+Math.random()*3));bump(el);},6200);
+    setInterval(()=>{const el=$('[data-kpi=alcance]');const b=parseFloat(el.dataset.from||0)+Math.floor(200+Math.random()*900);el.dataset.from=b;el.textContent=kfmt(Math.round(b));bump(el);},5000);
+  }
+
+  // ===== INTELIGÊNCIA ELEITORAL (fonte: pesquisa TSE/TRE-PE/ALEPE) =====
+  const ELEI={
+    inicioCampanha:new Date('2026-08-16T00:00:00-03:00'),
+    fimPropaganda:new Date('2026-10-03T22:00:00-03:00'),
+    eleicao:new Date('2026-10-04T08:00:00-03:00'),
+    votos:{cadeiras:49,qe:102318,pisoMin:11000,ultimoEleito:24851,alvo:25000},
+    regras:[
+      ['pode','Impulsionar conteúdo pago é a ÚNICA propaganda paga on-line permitida — com CNPJ/CPF do responsável visível.'],
+      ['atencao','Todo conteúdo feito ou alterado por IA precisa de aviso destacado de que é sintético (rotulagem obrigatória).'],
+      ['nao','Deepfake / conteúdo falso com IA que prejudique ou favoreça candidatura é proibido.'],
+      ['nao','Silêncio de IA: nada de novo conteúdo sintético de 72h antes até 24h depois do dia 04/10.'],
+      ['nao','Outdoor, showmício e distribuição de brindes (camisetas, chaveiros, cestas) são proibidos.'],
+      ['nao','Boca de urna e propaganda de rua no dia 04/10 é crime eleitoral.'],
+      ['pode','Comícios (8h-22h), carros de som, santinhos e caminhadas/carreatas até as 22h de 03/10.'],
+      ['atencao','Pesquisa que você encomendar tem de ser registrada no PesqEle 5 dias antes de divulgar.'],
+    ],
+    regrasFonte:'TSE · Res. 23.760, 23.755 e 23.610',
+    regrasEm:'19/07/2026',
+    cenario:'Deputado estadual quase nunca tem pesquisa própria — a eleição é proporcional, não majoritária. O termômetro é o topo da chapa (governo de PE: João Campos × Raquel Lyra) e a força do seu partido/federação.',
+    cenarioEm:'19/07/2026',
+  };
+
+  // — votos para se eleger —
+  $('#vAlvo').textContent='~'+F.format(ELEI.votos.alvo);
+  $('#votosSteps').innerHTML=[
+    ['1',`<b>${ELEI.votos.cadeiras} cadeiras</b> na Assembleia (ALEPE) em disputa`],
+    ['2',`Quociente eleitoral: <b>~${F.format(ELEI.votos.qe)}</b> votos "valem" 1 cadeira (base 2022)`],
+    ['3',`Piso para habilitar: <b>~${F.format(ELEI.votos.pisoMin)}</b> votos próprios (10% do quociente)`],
+    ['4',`É proporcional: quem elege é <b>partido + candidato</b> passarem do quociente, não o voto isolado`],
+  ].map(([i,t])=>`<div class="vstep"><span class="vi">${i}</span><span class="vt">${t}</span></div>`).join('');
+  $('#votosNote').innerHTML='<b>Como funciona:</b> soma-se os votos válidos ÷ '+ELEI.votos.cadeiras+' = o "preço" de uma cadeira. O partido/federação leva cadeiras conforme seus votos, e dentro dele as vagas vão para os mais votados que fizerem ao menos 10% do quociente. Não precisa de 100 mil votos sozinho: mira-se o piso (~'+F.format(ELEI.votos.pisoMin)+') para habilitar e a faixa dos '+F.format(ELEI.votos.alvo)+' como segurança (o último eleito em 2022 fez '+F.format(ELEI.votos.ultimoEleito)+'). <b>O número final depende do desempenho de toda a chapa.</b> <i>Base: PE 2022 · fonte TSE / TRE-PE / ALEPE.</i>';
+
+  // — regras (compliance, atualizado por IA) —
+  const RT={pode:'pode',nao:'não pode',atencao:'atenção'};
+  $('#regrasList').innerHTML=ELEI.regras.map(([t,x])=>`<div class="rule ${t}"><span class="rt">${RT[t]}</span><span class="rx">${x}</span></div>`).join('');
+  $('#regrasSrc').innerHTML='🔄 A IA revisa as regras diariamente em fontes oficiais. <b>Fonte:</b> '+ELEI.regrasFonte+' · atualizado '+ELEI.regrasEm+'.';
+  $('#regrasChip').textContent='atualizado '+ELEI.regrasEm;
+
+  // — cenário e pesquisas —
+  $('#cenario').innerHTML='<div class="cen-txt">'+ELEI.cenario+'</div>'+
+    '<div class="cen-topo"><div class="c"><div class="k">Governo PE</div><div class="v">João Campos × Raquel Lyra</div></div><div class="c"><div class="k">Consulta oficial</div><div class="v">PesqEle · TSE</div></div></div>'+
+    '<a class="cen-link" href="https://pesqele-divulgacao.tse.jus.br/" target="_blank" rel="noopener">🔎 Ver pesquisas registradas no TSE</a>'+
+    '<div class="src" style="margin-top:10px">A IA busca pesquisas registradas diariamente. Última leitura: '+ELEI.cenarioEm+'.</div>';
+
+  // — contagem regressiva ao vivo —
+  const fmt2=n=>String(n).padStart(2,'0');
+  function tickCamp(){
+    const now=new Date();
+    const pre=now<ELEI.inicioCampanha;
+    const alvo=pre?ELEI.inicioCampanha:ELEI.eleicao;
+    let ms=alvo-now; if(ms<0)ms=0;
+    const d=Math.floor(ms/86400000),h=Math.floor(ms/3600000)%24,m=Math.floor(ms/60000)%60,s=Math.floor(ms/1000)%60;
+    const S=(id,v)=>{const el=$('#'+id);if(el)el.textContent=fmt2(v);};
+    S('cdD',d);S('cdH',h);S('cdM',m);S('cdS',s);
+    const tit=$('#cdTitulo'),sub=$('#cdSub');
+    if(now>=ELEI.eleicao){ tit.textContent='🗳️ Dia da eleição'; sub.textContent='A votação acontece hoje — 04/10/2026.'; }
+    else if(pre){ tit.textContent='⏳ Contagem para o início da campanha'; sub.textContent='Propaganda eleitoral liberada em 16/08/2026 · eleição em 04/10.'; }
+    else { tit.textContent='⏳ Reta final da campanha'; sub.textContent='Propaganda de rua até 22h de 03/10 · eleição em 04/10/2026.'; }
+    const tot=ELEI.eleicao-ELEI.inicioCampanha, pass=Math.min(tot,Math.max(0,now-ELEI.inicioCampanha));
+    const fill=$('#cdFill'); if(fill) fill.style.width=(pass/tot*100).toFixed(1)+'%';
+  }
+  tickCamp(); setInterval(tickCamp,1000);
+
+  // ===== TOOLTIPS (ⓘ) em todos os cards =====
+  const TIPS=[
+    ['índice de campanha','Nota 0–100 da saúde da sua operação de mídia: combina CTR, custo por lead, custo por pessoa, engajamento e momentum — dados reais das contas de anúncio. Não é intenção de voto.'],
+    ['momentum de alcance','Evolução do seu alcance (pessoas únicas atingidas) ao longo do período. Vem do histórico diário das campanhas Meta.'],
+    ['mapa de calor','Onde suas campanhas mais alcançaram gente em PE. Alimentado pelo recorte geográfico dos anúncios (Meta/Google) por região.'],
+    ['orçamento da campanha','Quanto do orçamento previsto para o período eleitoral já foi investido. O gasto vem das contas de anúncio; o previsto é o planejado com a agência.'],
+    ['campanhas rodando','Suas campanhas ativas, onde rodam e quanto cada uma alcançou. Puxado direto das contas Meta e Google Ads.'],
+    ['onde você é mais forte','Suas zonas de maior alcance em PE, do recorte geográfico das campanhas.'],
+    ['pautas que mais mobilizam','Os temas dos seus conteúdos que mais engajaram, classificados por IA a partir das legendas do seu Instagram.'],
+    ['adversários','Comparação de PRESENÇA PÚBLICA (seguidores e engajamento no Instagram). Indicador relativo — o alcance pago do adversário não é um dado público.'],
+    ['votos para se eleger','Estimativa de quantos votos são necessários, pelo sistema proporcional e nos números reais de PE em 2022. Fonte: TSE/TRE-PE/ALEPE.'],
+    ['regras do dia','O que pode e o que não pode na campanha. A IA revisa diariamente em fontes oficiais (TSE) e atualiza esta lista.'],
+    ['cenário e pesquisas','Como está a disputa. Deputado estadual raramente tem pesquisa própria — o termômetro é o topo da chapa. A IA busca pesquisas registradas no TSE diariamente.'],
+    ['dicas da maracatu','Recomendações da equipe da agência com base no que os números mostram. Curadas por gente do time, não automáticas.'],
+    ['próximos','Sua agenda de campanha e as gravações programadas com a Maracatu.'],
+  ];
+  const tipFor=txt=>{const t=(txt||'').toLowerCase();const f=TIPS.find(([k])=>t.includes(k));return f?f[1]:null;};
+  const mkInfo=(tip,openRight)=>{const s=document.createElement('span');s.className='info'+(openRight?' r':'');s.textContent='i';s.setAttribute('data-tip',tip);s.setAttribute('aria-label',tip);s.setAttribute('tabindex','0');return s;};
+  $$('.p-head').forEach(h=>{const h3=h.querySelector('h3');if(!h3)return;const tip=tipFor(h3.textContent);if(tip)h3.appendChild(mkInfo(tip,true));});
+  const iaBox=document.querySelector('.ia');if(iaBox)iaBox.appendChild(mkInfo('Resumo diário escrito com apoio de IA a partir dos seus números reais. Só observa o desempenho — não dá instruções (a estratégia é da agência).',false));
+  const KTIP={'pessoas alcançadas':'Total de pessoas ÚNICAS que suas campanhas atingiram no período (reach). Fonte: Meta Ads.','apoiadores':'Seguidores somados das suas redes sociais. Fonte: monitoramento de Instagram/Facebook.','engajamento':'% de interação sobre o alcance das suas redes. Fonte: monitoramento.','contatos captados':'Conversas e leads gerados pelas campanhas (ex.: cliques pro WhatsApp). Fonte: Meta/Google Ads.'};
+  $$('.tile').forEach(t=>{const lb=t.querySelector('.lbl');if(!lb)return;const tip=KTIP[lb.textContent.trim().toLowerCase()];if(tip)t.appendChild(mkInfo(tip,false));});
+  const cdc=$('#cdCard');if(cdc)cdc.querySelector('.lead .t').appendChild(mkInfo('Contagem regressiva do período eleitoral: início em 16/08, propaganda de rua até 03/10 e eleição em 04/10/2026. Fonte: TSE.',true));
+
+  addEventListener('resize',()=>{drawMom(1);$$('.spark').forEach(c=>drawSpark(c,DATA[cur].mom));});
+
+  window.__replay=function(){try{paint(cur);}catch(e){}try{tickCamp();}catch(e){}};
+  window.__setCand=function(c){try{if(!c)return;var nm=c.nome||c.empresa;if(nm){var h1=document.querySelector('.cand h1');if(h1)h1.textContent=nm;var av=document.querySelector('.ava');if(av){var ini=String(nm).trim().split(/\s+/).map(function(x){return x[0]||''}).slice(0,2).join('').toUpperCase();if(av.childNodes[0])av.childNodes[0].nodeValue=ini;}}if(c.numero){var nb=document.querySelector('.num-badge');if(nb)nb.textContent=c.numero;}var role=document.querySelector('.cand .role');if(role){role.innerHTML=(c.cargo?c.cargo:'Candidato')+' · '+(c.uf||'Pernambuco')+' · operado pela <b style="color:var(--blue)">Maracatu Digital</b>';}}catch(e){}};
+
+  paint('30d');
+})();
+
+</script>
+
+<script>
+(function(){
+  var API='https://som-backend-production-01d8.up.railway.app/api';
+  var token=localStorage.getItem('cand_token')||'';
+  function id(x){return document.getElementById(x);}
+  async function entrar(email,senha){
+    var r=await fetch(API+'/cliente-portal/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,senha:senha})});
+    var d=await r.json().catch(function(){return{}});
+    if(!r.ok) throw new Error(d.message||'E-mail ou senha incorretos.');
+    token=d.token; localStorage.setItem('cand_token',token); return d;
+  }
+  async function abrir(){
+    id('loginScreen').style.display='none';
+    try{
+      var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}});
+      if(r.ok){var d=await r.json(); if(window.__setCand)window.__setCand(d.candidato);}
+    }catch(e){}
+    if(window.__replay) setTimeout(window.__replay,60);
+  }
+  window.__sair=function(){localStorage.removeItem('cand_token');location.reload();};
+  document.addEventListener('DOMContentLoaded',function(){
+    id('lgForm').addEventListener('submit',async function(e){
+      e.preventDefault();
+      var btn=id('lgBtn'),err=id('lgErr'); err.textContent=''; btn.disabled=true; btn.textContent='Entrando\u2026';
+      try{ await entrar(id('lgEmail').value.trim(),id('lgSenha').value); await abrir(); }
+      catch(ex){ err.textContent=ex.message; btn.disabled=false; btn.textContent='Entrar no painel'; }
+    });
+    if(token) abrir();
+  });
+})();
+</script>
+</body>
+</html>
