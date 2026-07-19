@@ -160,7 +160,14 @@
   /* dicas */
   .dica{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
   .dica:last-child{border:0}
-  .dica .dbar{width:3px;border-radius:2px;align-self:stretch;flex:none}
+  .dica .ic{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;flex:none}
+  .dica .ic svg{width:17px;height:17px}
+  .tile .ico svg{width:17px;height:17px}
+  .ev .tp svg{width:19px;height:19px;color:var(--mut2)}
+  .btn-acao svg{width:16px;height:16px;flex:none}
+  #campChip svg{width:12px;height:12px;vertical-align:-1px;margin-right:4px}
+  .cd-card .t-ic{display:inline-flex;align-items:center} .cd-card .t-ic svg{width:15px;height:15px}
+  .mt-h svg{width:13px;height:13px;vertical-align:-2px;margin-right:3px}
   .dica .tx{font-size:13px;line-height:1.5;color:#3c4043} .dica .tx b{color:var(--ink)}
 
   /* eventos */
@@ -426,7 +433,7 @@
   <div class="cd-card reveal" style="animation-delay:.055s" id="cdCard">
     <div class="stripe4"></div>
     <div class="lead">
-      <div class="t" id="cdTitulo">Reta final da campanha</div>
+      <div class="t"><span class="t-ic"></span><span id="cdTitulo">Reta final da campanha</span></div>
       <div class="s" id="cdSub">—</div>
     </div>
     <div class="cd-elei"><div class="n tnum" id="cdEleicao">—</div><div class="l">dias p/ eleição</div></div>
@@ -576,6 +583,26 @@
   const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
   const easeOut=t=>1-Math.pow(1-t,3); const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   const NS='http://www.w3.org/2000/svg';
+  // biblioteca de ícones (line icons, sem emoji)
+  const ICO={
+    alcance:'<circle cx="12" cy="12" r="2"/><path d="M16.2 7.8a6 6 0 0 1 0 8.5"/><path d="M7.8 16.2a6 6 0 0 1 0-8.5"/><path d="M19.1 4.9a10 10 0 0 1 0 14.2"/><path d="M4.9 19.1a10 10 0 0 1 0-14.2"/>',
+    apoiadores:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    engaj:'<path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 21l1.9-5.5A8.5 8.5 0 1 1 21 11.5z"/>',
+    contatos:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/>',
+    ideia:'<path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.1 14c.2-1 .7-1.7 1.4-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.8.8 1.2 1.5 1.4 2.5"/>',
+    trend:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+    mapa:'<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+    alvo:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    relogio:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    pin:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+    grafico:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+    megafone:'<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+    video:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+    mic:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>',
+    urna:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+    caminhada:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'
+  };
+  function svgi(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICO[n]||'')+'</svg>';}
 
   const DATA={
     '7d':{indice:68,alcance:72400,alcDelta:9,apoiadores:48200,apoDelta:1240,apoPct:2.6,engaj:8.1,contatos:640,
@@ -614,17 +641,17 @@
   const REG_ALIAS={recife:['recife','rmr','metrop','znorte'],olinda:['olinda','rmr','metrop'],jaboatao:['jaboatao','olinda','rmr','metrop'],vitoriadesa:['vitoria','rmr'],caruaru:['caruaru','agreste'],garanhuns:['garanhuns','agreste'],arcoverde:['arcoverde','agreste'],serratalhada:['serratalhada','sertao'],salgueiro:['salgueiro','sertao'],petrolina:['petrolina','sertao','saofrancisco']};
   const normLoc=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
   function campanhasEm(cidade){const key=normLoc(cidade);const al=REG_ALIAS[key]||[key];return CAMPANHAS.filter(c=>c[3]==='ativa').filter(c=>{const loc=normLoc(c[1]);if(loc.includes('estadual'))return true;return al.some(a=>loc.includes(a));});}
-  const eventos=[['04','OUT','Eleição — 1º turno','Dia da votação',''],['22','SET','Comício Zona Norte','Praça do Derby · 18h',''],['24','SET','Gravação — santinho digital','Estúdio Maracatu · 10h',''],['27','SET','Entrevista — rádio local','Ao vivo · 08h',''],['29','SET','Caminhada no Centro','Rua da Aurora · 16h','']];
+  const eventos=[['04','OUT','Eleição — 1º turno','Dia da votação','urna'],['22','SET','Comício Zona Norte','Praça do Derby · 18h','megafone'],['24','SET','Gravação — santinho digital','Estúdio Maracatu · 10h','video'],['27','SET','Entrevista — rádio local','Ao vivo · 08h','mic'],['29','SET','Caminhada no Centro','Rua da Aurora · 16h','caminhada']];
   const ANALISES=[
     {h:'Sua campanha vive o melhor momento até agora.',p:'Seu alcance subiu no período e o custo por pessoa impactada ficou abaixo da média do setor. A equipe foi ajustando as campanhas ao longo das semanas, e a base de apoio segue crescendo.',t:['Alcance em alta','Custo eficiente','+ apoiadores']},
     {h:'A estratégia está funcionando e os números confirmam.',p:'As pautas que priorizamos são as mesmas que mais mobilizam o seu público, e o alcance segue subindo semana a semana. Isso vem de acompanhar a campanha de perto, não de sorte.',t:['Pautas certeiras','Alcance subindo','Equipe atenta']},
     {h:'Os ajustes da semana já aparecem nos números.',p:'A Maracatu vem mexendo nas campanhas toda semana, e o resultado aparece: o engajamento está acima da média e o custo por pessoa impactada segue baixo. Enquanto você faz a rua, a parte digital fica com a gente.',t:['Engajamento alto','Custo baixo','Ajuste constante']}
   ];
   const DICAS=[
-    ['','var(--ambbg)','var(--amb)','A campanha <b>“Saúde Perto de Você”</b> é a que mais puxa resultado. Vale a equipe reforçar esse tema nos próximos dias.'],
-    ['','var(--bluebg)','var(--blue)','O <b>engajamento tem pico às 19h</b>. Concentre publicações e lives nesse horário para alcançar mais gente.'],
-    ['','var(--redbg)','var(--red)','A <b>Zona Norte é a que mais responde</b> no mapa. É onde o investimento rende mais, então priorizem eventos por lá.'],
-    ['','var(--grnbg)','var(--grnink)','Seu <b>custo por pessoa impactada está abaixo do mercado</b>. Com essa margem, dá pra aumentar o orçamento com segurança.']
+    ['ideia','var(--ambbg)','var(--amb)','A campanha <b>“Saúde Perto de Você”</b> é a que mais puxa resultado. Vale a equipe reforçar esse tema nos próximos dias.'],
+    ['trend','var(--bluebg)','var(--blue)','O <b>engajamento tem pico às 19h</b>. Concentre publicações e lives nesse horário para alcançar mais gente.'],
+    ['mapa','var(--redbg)','var(--red)','A <b>Zona Norte é a que mais responde</b> no mapa. É onde o investimento rende mais, então priorizem eventos por lá.'],
+    ['alvo','var(--grnbg)','var(--grnink)','Seu <b>custo por pessoa impactada está abaixo do mercado</b>. Com essa margem, dá pra aumentar o orçamento com segurança.']
   ];
 
   let cur='30d';
@@ -695,7 +722,7 @@
       const mostra=(cx,cy)=>{const r=mapEl.getBoundingClientRect();const py=cy-r.top;const lx=Math.max(108,Math.min(cx-r.left,r.width-108));mapTip.style.left=lx+'px';mapTip.style.top=py+'px';mapTip.style.transform=(py<r.height*0.5?'translate(-50%,16px)':'translate(-50%,-112%)');mapTip.style.opacity=1;
         const camps=campanhasEm(n);
         const linhas=camps.length?camps.slice(0,5).map(c=>{const est=normLoc(c[1]).includes('estadual');return `<div class="mt-c"><span>${c[0]}</span><b>${est?'estadual':kfmt(c[2])}</b></div>`;}).join(''):'<div class="mt-c"><span style="color:#9AA0A6">sem campanha rodando aqui</span></div>';
-        mapTip.innerHTML=`<div class="mt-h">${n}</div>${linhas}`;};
+        mapTip.innerHTML=`<div class="mt-h">${svgi('pin')}${n}</div>${linhas}`;};
       hit.addEventListener('mousemove',e=>mostra(e.clientX,e.clientY));
       hit.addEventListener('mouseleave',()=>mapTip.style.opacity=0);
       hit.addEventListener('click',e=>{e.stopPropagation();mostra(e.clientX,e.clientY);clearTimeout(mapTip._t);mapTip._t=setTimeout(()=>{mapTip.style.opacity=0;},4200);});
@@ -755,15 +782,24 @@
   // campanhas
   const ativas=CAMPANHAS.filter(c=>c[3]==='ativa').length;
   $('#campChip').textContent=`${ativas} campanhas ativas`;$('#campCount').textContent=`${ativas} ativas · ${CAMPANHAS.length-ativas} pausada`;
+  // ícones SVG nos KPIs, botões de ação, chip de campanhas e título da contagem
+  (function(){
+    var K={alcance:'alcance',apoiadores:'apoiadores',engaj:'engaj',contatos:'contatos'};
+    Object.keys(K).forEach(function(k){var el=$('[data-kpi='+k+']');if(!el)return;var tile=el.closest('.tile');if(tile&&!tile.querySelector('.ico')){var d=document.createElement('div');d.className='ico';d.innerHTML=svgi(K[k]);tile.insertBefore(d,tile.firstChild);}});
+    var bz=document.querySelector('.btn-acao.zap');if(bz)bz.insertAdjacentHTML('afterbegin',svgi('engaj'));
+    var br=document.querySelector('.btn-acao.rel');if(br)br.insertAdjacentHTML('afterbegin',svgi('grafico'));
+    var chip=$('#campChip');if(chip)chip.insertAdjacentHTML('afterbegin',svgi('alvo'));
+    var tic=document.querySelector('.cd-card .t-ic');if(tic)tic.innerHTML=svgi('relogio');
+  })();
   $('#campanhas').innerHTML=CAMPANHAS.map(([n,l,r,s,cn])=>`<div class="camp"><span class="st ${s==='pausada'?'pause':''}"></span><div class="in"><div class="nm">${n}</div><div class="lo">${l}</div></div><span class="cn">${cn}</span><div class="rc"><div class="b tnum">${kfmt(r)}</div><div class="s">alcance</div></div></div>`).join('');
 
   // análise IA (rotaciona por dia)
   const dia=new Date().getDate();const an=ANALISES[dia%ANALISES.length];
   $('#iaH').textContent=an.h;$('#iaP').textContent=an.p;$('#iaTags').innerHTML=an.t.map(t=>`<span class="tag">${t}</span>`).join('');
   // dicas
-  $('#dicas').innerHTML=DICAS.map(([ic,bg,co,tx])=>`<div class="dica"><span class="dbar" style="background:${co}"></span><div class="tx">${tx}</div></div>`).join('');
+  $('#dicas').innerHTML=DICAS.map(([ic,bg,co,tx])=>`<div class="dica"><div class="ic" style="background:${bg};color:${co}">${svgi(ic)}</div><div class="tx">${tx}</div></div>`).join('');
   // eventos
-  $('#eventos').innerHTML=eventos.map(([d,m,t,s,ic])=>`<div class="ev"><div class="dt"><div class="d tnum">${d}</div><div class="m">${m}</div></div><div class="info"><div class="t">${t}</div><div class="s">${s}</div></div></div>`).join('');
+  $('#eventos').innerHTML=eventos.map(([d,m,t,s,ic])=>`<div class="ev"><div class="dt"><div class="d tnum">${d}</div><div class="m">${m}</div></div><div class="info"><div class="t">${t}</div><div class="s">${s}</div></div><span class="tp">${svgi(ic)}</span></div>`).join('');
 
   // countdown
   function tick(){const now=new Date();$('#stamp').textContent=now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
