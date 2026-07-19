@@ -1,0 +1,18 @@
+{
+  "name": "som-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SOM — app nativo (shell Capacitor) da Área do Cliente da Maracatu Digital",
+  "scripts": {
+    "sync": "cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.2.1",
+    "@capacitor/ios": "^6.2.1",
+    "@capacitor/keyboard": "^6.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1",
+    "typescript": "^5.9.3"
+  }
+}
