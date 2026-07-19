@@ -227,12 +227,7 @@
   .fab-suporte:hover{transform:scale(1.06)}
   .fab-suporte::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--grn);z-index:-1;animation:ping 2.4s cubic-bezier(0,0,.2,1) infinite}
   @media(max-width:520px){.fab-suporte{width:52px;height:52px;font-size:22px;right:14px;bottom:14px}}
-  /* saudação de boas-vindas */
-  .saudacao{position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-30px);z-index:70;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px -12px rgba(60,64,67,.4);padding:13px 22px 15px;display:flex;flex-direction:column;gap:2px;text-align:center;opacity:0;transition:.4s cubic-bezier(.2,.8,.2,1);pointer-events:none;max-width:90vw;overflow:hidden}
-  .saudacao.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .saudacao b{font-size:15px} .saudacao span{font-size:12px;color:var(--mut)}
-  .saudacao .bar4{position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--blue) 0 25%,var(--red) 25% 50%,var(--amb2) 50% 75%,var(--grn) 75% 100%)}
-  @media (prefers-reduced-motion:reduce){.fab-suporte::after{animation:none}.saudacao{transition:none}}
+  @media (prefers-reduced-motion:reduce){.fab-suporte::after{animation:none}}
 
   /* menu do header */
   .menu-wrap{position:relative}
@@ -247,6 +242,7 @@
   /* tela cheia do mapa */
   .fs-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--mut);cursor:pointer;font-size:13px;display:grid;place-items:center;transition:.15s;flex:none;line-height:1}
   .fs-btn:hover{background:var(--bg);color:var(--ink);border-color:var(--mut2)}
+  #mapCard{overflow:visible}
   .panel.mapa-cheia{position:fixed;inset:0;z-index:200;border-radius:0;margin:0;padding:18px;display:flex;flex-direction:column;background:#fff}
   .panel.mapa-cheia > .p-head{flex:none}
   .panel.mapa-cheia #map{flex:1;height:100%;min-height:0;border-radius:12px}
@@ -328,7 +324,6 @@
   </div>
 </div>
 <div id="painelRoot">
-<div class="saudacao" id="saudacao"><div class="bar4"></div><b>Bem-vinda, <span id="saudNome">Marina</span>! 👋</b><span>Aqui está o resumo da sua campanha hoje.</span></div>
 <a class="fab-suporte" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20de%20suporte%20dedicado%20da%20Maracatu." target="_blank" rel="noopener" aria-label="Suporte no WhatsApp">💬</a>
 <div class="wrap"><div class="app">
 
@@ -515,7 +510,6 @@
   <div class="foot">Painel exclusivo do candidato · dados operados pela <b>Maracatu Digital</b> · <span id="stamp"></span></div>
 </div></div>
 </div>
-<script>window.__autoSaudar=false;</script>
 <script>
 
 (function(){
@@ -640,7 +634,7 @@
     // hit-areas generosas: hover (desktop) OU toque (mobile) mostra as CAMPANHAS ativas da região
     CIDADES.forEach(([n,x,y])=>{
       const hit=document.createElementNS(NS,'circle');hit.setAttribute('cx',x);hit.setAttribute('cy',y);hit.setAttribute('r','26');hit.setAttribute('fill','transparent');hit.setAttribute('class','cityd');
-      const mostra=(cx,cy)=>{const r=mapEl.getBoundingClientRect();mapTip.style.left=(cx-r.left)+'px';mapTip.style.top=(cy-r.top)+'px';mapTip.style.opacity=1;
+      const mostra=(cx,cy)=>{const r=mapEl.getBoundingClientRect();const py=cy-r.top;const lx=Math.max(108,Math.min(cx-r.left,r.width-108));mapTip.style.left=lx+'px';mapTip.style.top=py+'px';mapTip.style.transform=(py<r.height*0.5?'translate(-50%,16px)':'translate(-50%,-112%)');mapTip.style.opacity=1;
         const camps=campanhasEm(n);
         const linhas=camps.length?camps.slice(0,5).map(c=>{const est=normLoc(c[1]).includes('estadual');return `<div class="mt-c"><span>${c[0]}</span><b>${est?'estadual':kfmt(c[2])}</b></div>`;}).join(''):'<div class="mt-c"><span style="color:#9AA0A6">sem campanha rodando aqui</span></div>';
         mapTip.innerHTML=`<div class="mt-h">📍 ${n}</div>${linhas}`;};
@@ -811,12 +805,24 @@
   const cdc=$('#cdCard');if(cdc)cdc.querySelector('.lead .t').appendChild(mkInfo('Contagem regressiva do período eleitoral: início em 16/08, propaganda de rua até 03/10 e eleição em 04/10/2026. Fonte: TSE.',true));
 
   // ===== bombo da Maracatu (4 cores + aro + baquetas) no lugar da bola =====
-  function bomboSVG(){return '<svg viewBox="0 0 40 40" width="100%" height="100%" style="display:block"><g stroke="#C79A5A" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="8" x2="26" y2="29"/><line x1="35" y1="8" x2="14" y2="29"/></g><circle cx="20" cy="20" r="13" fill="#3c4043"/><path d="M20 20 L30.5 20 A10.5 10.5 0 0 1 20 30.5 Z" fill="#4285F4"/><path d="M20 20 L20 30.5 A10.5 10.5 0 0 1 9.5 20 Z" fill="#EA4335"/><path d="M20 20 L9.5 20 A10.5 10.5 0 0 1 20 9.5 Z" fill="#F9A825"/><path d="M20 20 L20 9.5 A10.5 10.5 0 0 1 30.5 20 Z" fill="#34A853"/><circle cx="20" cy="20" r="10.5" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1"/><circle cx="20" cy="20" r="2" fill="#fff" opacity=".9"/></svg>';}
+  function bomboSVG(){
+    var C=['#4285F4','#EA4335','#F9A825','#34A853'];
+    var yT=17,yB=35,xs=15.5,dx=4.2,n=5,topo=[],base=[];
+    for(var i=0;i<n;i++)topo.push(xs+dx*i);
+    for(var i=0;i<n-1;i++)base.push(xs+dx*(i+0.5));
+    var seq=[];for(var i=0;i<n-1;i++){seq.push([topo[i],yT,base[i],yB]);seq.push([base[i],yB,topo[i+1],yT]);}
+    var cordas=seq.map(function(s,i){return '<line x1="'+s[0].toFixed(1)+'" y1="'+s[1]+'" x2="'+s[2].toFixed(1)+'" y2="'+s[3]+'" stroke="'+C[i%4]+'" stroke-width="1.9" stroke-linecap="round"/>';}).join('');
+    return '<svg viewBox="0 0 48 48" width="100%" height="100%" style="display:block">'
+      +'<g stroke="#B07C3E" stroke-width="2.6" stroke-linecap="round"><line x1="9" y1="10" x2="23" y2="23"/></g>'
+      +'<g stroke="#C9A05A" stroke-width="1.9" stroke-linecap="round"><line x1="39" y1="9" x2="25" y2="23"/></g>'
+      +'<rect x="14" y="14.5" width="20" height="21" rx="2.5" fill="#ECDCC0"/>'
+      +cordas
+      +'<rect x="11.5" y="12" width="25" height="5.2" rx="2.6" fill="#33383B"/>'
+      +'<ellipse cx="24" cy="14.4" rx="10.6" ry="2.9" fill="#F5F7FA" stroke="#33383B" stroke-width="1.1"/>'
+      +'<rect x="11.5" y="34.3" width="25" height="5.2" rx="2.6" fill="#33383B"/>'
+      +'</svg>';
+  }
   $$('.ia .logo, .foot-bombo, .lg-logo').forEach(el=>{el.innerHTML=bomboSVG();});
-
-  // ===== saudação de boas-vindas =====
-  window.__saudar=function(nome){var s=document.getElementById('saudacao');if(!s)return;if(nome){var sn=document.getElementById('saudNome');if(sn)sn.textContent=String(nome).trim().split(/\s+/)[0];}s.classList.add('show');clearTimeout(s._t);s._t=setTimeout(function(){s.classList.remove('show');},5200);};
-  if(window.__autoSaudar!==false) setTimeout(function(){window.__saudar();},400);
 
   // ===== menu do header (+ sair) =====
   var menuBtn=$('#menuBtn'),menuDrop=$('#menuDrop');
@@ -864,7 +870,7 @@
     id('loginScreen').style.display='none';
     try{
       var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}});
-      if(r.ok){var d=await r.json(); if(window.__setCand)window.__setCand(d.candidato); if(window.__saudar)window.__saudar((d.candidato||{}).nome);}
+      if(r.ok){var d=await r.json(); if(window.__setCand)window.__setCand(d.candidato);}
     }catch(e){}
     if(window.__replay) setTimeout(window.__replay,60);
   }
