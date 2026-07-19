@@ -178,6 +178,38 @@
 
   .foot{text-align:center;color:var(--mut2);font-size:11.5px;margin-top:4px} .foot b{color:var(--mut)}
 
+  /* relatório semanal (modal) */
+  .rel-modal{position:fixed;inset:0;z-index:150;background:rgba(32,33,36,.5);display:none;padding:24px 16px;overflow:auto;-webkit-overflow-scrolling:touch}
+  .rel-modal.open{display:block}
+  .rel-box{max-width:960px;margin:0 auto;background:var(--bg);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(0,0,0,.5)}
+  .rel-head{position:sticky;top:0;z-index:2;background:#fff;border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .rel-title{font-size:19px;font-weight:800;letter-spacing:-.02em} .rel-psub{font-size:12px;color:var(--mut);margin-top:2px}
+  .rel-actions{display:flex;align-items:center;gap:8px}
+  .rel-btn{font-size:12.5px;font-weight:700;padding:8px 13px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .rel-btn.prim{background:var(--grn);color:#fff;border-color:transparent} .rel-btn svg{width:15px;height:15px}
+  .rel-x{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:15px;color:var(--mut);flex:none}
+  .rel-body{padding:20px}
+  .rel-sec{background:#fff;border:1px solid var(--line);border-radius:16px;padding:17px 18px;margin-bottom:14px}
+  .rel-sec h4{font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:13px} .rel-sec h4 svg{width:16px;height:16px;color:var(--blue);flex:none}
+  .rel-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+  @media(max-width:640px){.rel-kpis{grid-template-columns:1fr 1fr}.rel-actions .rel-btn span{display:none}}
+  .rel-kpi{background:var(--bg);border-radius:12px;padding:12px 13px}
+  .rel-kpi .k{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut2);font-weight:700}
+  .rel-kpi .v{font-size:22px;font-weight:800;margin-top:5px;letter-spacing:-.02em;line-height:1}
+  .rel-kpi .d{font-size:11px;color:var(--grnink);margin-top:4px;font-weight:600}
+  .rbar{display:flex;align-items:center;gap:11px;margin:9px 0}
+  .rbar .nm{width:140px;font-size:12.5px;font-weight:600;flex:none;color:var(--ink)}
+  .rbar .tk{flex:1;height:10px;background:var(--bg);border-radius:99px;overflow:hidden}
+  .rbar .tk i{display:block;height:100%;border-radius:99px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+  .rbar .vl{width:42px;text-align:right;font-size:12.5px;font-weight:800;flex:none;font-variant-numeric:tabular-nums}
+  .rel-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.rel-2col{grid-template-columns:1fr}}
+  .rel-txt{font-size:13.5px;line-height:1.65;color:#3c4043} .rel-txt b{color:var(--ink)}
+  .rel-ins{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)} .rel-ins:last-child{border:0}
+  .rel-ins .n{width:24px;height:24px;border-radius:7px;background:var(--bluebg);color:var(--blue);display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+  .rel-ins .t{font-size:13px;line-height:1.5;color:#3c4043} .rel-ins .t b{color:var(--ink)}
+  @media print{.rel-modal{position:static;background:#fff;padding:0}.rel-head{position:static}.rel-x,.rel-actions{display:none}.wrap,.fab-suporte{display:none}}
+
   /* tooltips ⓘ em todos os cards */
   .info{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--mut2);color:var(--mut2);font-size:10px;font-weight:800;font-style:normal;cursor:help;position:relative;flex:none}
   .info:hover{border-color:var(--blue);color:var(--blue)}
@@ -398,6 +430,7 @@
       <div class="menu-wrap">
         <button class="menu-btn" id="menuBtn" aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
         <div class="menu-drop" id="menuDrop">
+          <button type="button" id="menuRel">Relatório semanal</button>
           <a href="https://www.maracatumktdigital.com" target="_blank" rel="noopener">Site da Maracatu</a>
           <a href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20falar%20com%20a%20Maracatu." target="_blank" rel="noopener">Falar com a Maracatu</a>
           <a href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Gostaria%20de%20receber%20o%20relat%C3%B3rio%20da%20minha%20campanha." target="_blank" rel="noopener">Pedir relatório</a>
@@ -573,6 +606,20 @@
 
   <div class="foot">Painel exclusivo do candidato · dados operados pela <b>Maracatu Digital</b> · <span id="stamp"></span></div>
 </div></div>
+
+<div id="relModal" class="rel-modal">
+  <div class="rel-box">
+    <div class="rel-head">
+      <div><div class="rel-title">Relatório semanal</div><div class="rel-psub" id="relPeriodo">—</div></div>
+      <div class="rel-actions">
+        <a class="rel-btn prim" id="relZap" href="#" target="_blank" rel="noopener"><span>Enviar à equipe</span></a>
+        <button class="rel-btn" onclick="window.print()"><span>Imprimir / PDF</span></button>
+        <button class="rel-x" id="relFechar" aria-label="Fechar">✕</button>
+      </div>
+    </div>
+    <div class="rel-body" id="relBody"></div>
+  </div>
+</div>
 </div>
 <script>
 
@@ -915,6 +962,42 @@
     document.addEventListener('click',function(){menuDrop.classList.remove('open');$$('.info.show').forEach(function(o){o.classList.remove('show');});});
     var sair=$('#menuSair'); if(sair)sair.addEventListener('click',function(){menuDrop.classList.remove('open');if(window.__sair)window.__sair();else location.reload();});
   }
+
+  // ===== relatório semanal =====
+  var REL={
+    periodo:'12 a 18 de julho de 2026',
+    resumo:[['Alcance na semana','284,5 mil','+23% vs. semana anterior'],['Novos apoiadores','+6.400','+15,3%'],['Engajamento','7,8%','acima da média do setor'],['Contatos (WhatsApp)','820','+11%'],['Investido','R$ 24.800',''],['Custo por contato','R$ 30,24','abaixo do mercado']],
+    sexo:[['Mulheres',54,'linear-gradient(90deg,#F06292,#EA4335)'],['Homens',46,'linear-gradient(90deg,#6FA8FF,#4285F4)']],
+    idade:[['18–24',14],['25–34',31],['35–44',26],['45–54',16],['55–64',9],['65+',4]],
+    geo:[['Região Metropolitana',38],['Zona da Mata',22],['Agreste',19],['Sertão',13],['S. Francisco',8]],
+    canais:[['Instagram',42],['Facebook (Meta)',28],['YouTube',18],['Google',12]],
+    horarios:[['Manhã (6–12h)',18],['Tarde (12–18h)',34],['Noite (18–22h)',44],['Madrugada',4]],
+    picoHora:'19h às 21h',
+    analise:'A semana foi de crescimento firme: o alcance subiu 23% e o público feminino (54%) segue como a maior base, puxado pelas pautas de saúde e educação. Quem tem entre 25 e 44 anos concentra 57% de quem foi alcançado, e a Região Metropolitana responde por mais de um terço do resultado. O Instagram foi o canal que mais engajou, com a maior parte da atividade à noite.',
+    insights:['As mulheres de 25 a 44 anos são o maior grupo da sua base. Manter as pautas de saúde e educação conversa direto com esse público.','A Região Metropolitana rende mais por real investido. Concentrar eventos e impulsionamento por lá segura o custo por contato baixo.','O engajamento se concentra das 19h às 21h. Publicar e fazer lives nesse horário alcança mais gente sem gastar mais.','Sertão e São Francisco ainda somam 21% juntos. Se a ideia é crescer no interior, é onde há mais espaço pra ganhar.','O custo por contato (R$ 30) está abaixo do mercado — dá pra escalar o orçamento com segurança se quiser acelerar.']
+  };
+  function renderRel(){
+    $('#relPeriodo').textContent='Semana de '+REL.periodo+' · dados operados pela Maracatu Digital';
+    $('#relZap').href='https://wa.me/5581999143099?text='+encodeURIComponent('Olá! Vi o relatório semanal no painel e quero conversar sobre os próximos passos.');
+    function bar(nm,pct,cor,max){var w=Math.round(pct/(max||100)*100);return '<div class="rbar"><span class="nm">'+nm+'</span><span class="tk"><i data-w="'+w+'" style="background:'+(cor||'linear-gradient(90deg,#6FA8FF,var(--blue))')+'"></i></span><span class="vl">'+pct+'%</span></div>';}
+    var mI=Math.max.apply(null,REL.idade.map(function(x){return x[1]})),mG=Math.max.apply(null,REL.geo.map(function(x){return x[1]})),mC=Math.max.apply(null,REL.canais.map(function(x){return x[1]})),mH=Math.max.apply(null,REL.horarios.map(function(x){return x[1]}));
+    $('#relBody').innerHTML=
+      '<div class="rel-sec"><h4>'+svgi('trend')+' Resumo da semana</h4><div class="rel-kpis">'+REL.resumo.map(function(r){return '<div class="rel-kpi"><div class="k">'+r[0]+'</div><div class="v">'+r[1]+'</div><div class="d">'+r[2]+'</div></div>'}).join('')+'</div></div>'+
+      '<div class="rel-2col"><div class="rel-sec"><h4>'+svgi('apoiadores')+' Público por sexo</h4>'+REL.sexo.map(function(s){return bar(s[0],s[1],s[2])}).join('')+'</div>'+
+      '<div class="rel-sec"><h4>'+svgi('apoiadores')+' Faixa etária</h4>'+REL.idade.map(function(a){return bar(a[0],a[1],null,mI)}).join('')+'</div></div>'+
+      '<div class="rel-2col"><div class="rel-sec"><h4>'+svgi('mapa')+' Onde (regiões de PE)</h4>'+REL.geo.map(function(g){return bar(g[0],g[1],'linear-gradient(90deg,var(--amb2),var(--red))',mG)}).join('')+'</div>'+
+      '<div class="rel-sec"><h4>'+svgi('engaj')+' Canais</h4>'+REL.canais.map(function(c){return bar(c[0],c[1],'linear-gradient(90deg,#5BD07E,var(--grn))',mC)}).join('')+'</div></div>'+
+      '<div class="rel-sec"><h4>'+svgi('relogio')+' Melhores horários</h4>'+REL.horarios.map(function(h){return bar(h[0],h[1],'linear-gradient(90deg,#F9C846,var(--amb2))',mH)}).join('')+'<div class="rel-txt" style="margin-top:10px">Pico de engajamento entre <b>'+REL.picoHora+'</b> — é quando concentrar publicações e lives.</div></div>'+
+      '<div class="rel-sec"><h4>'+svgi('ideia')+' Leitura da semana</h4><div class="rel-txt">'+REL.analise+'</div><div style="margin-top:14px">'+REL.insights.map(function(t,i){return '<div class="rel-ins"><span class="n">'+(i+1)+'</span><span class="t">'+t+'</span></div>'}).join('')+'</div></div>'+
+      '<div class="rel-txt" style="text-align:center;color:var(--mut2);font-size:11px;margin-top:6px">Dados de exemplo — no ar, o relatório é gerado com os números reais das campanhas (Meta, Google, Instagram).</div>';
+    requestAnimationFrame(function(){$$('#relBody .rbar .tk i').forEach(function(el){el.style.width=el.dataset.w+'%';});});
+  }
+  function abrirRel(){renderRel();$('#relModal').classList.add('open');document.body.style.overflow='hidden';}
+  function fecharRel(){$('#relModal').classList.remove('open');document.body.style.overflow='';}
+  var mRel=$('#menuRel');if(mRel)mRel.addEventListener('click',function(){var md=$('#menuDrop');if(md)md.classList.remove('open');abrirRel();});
+  var rX=$('#relFechar');if(rX)rX.addEventListener('click',fecharRel);
+  var rMod=$('#relModal');if(rMod)rMod.addEventListener('click',function(e){if(e.target===rMod)fecharRel();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){var m=$('#relModal');if(m&&m.classList.contains('open'))fecharRel();}});
 
   // ===== tela cheia do mapa (funciona no mobile via overlay CSS) =====
   var mapFs=$('#mapFs'),mapCard=$('#mapCard');
