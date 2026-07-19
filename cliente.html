@@ -94,9 +94,12 @@
             </div>
             <div style="font-size:11.5px;margin-top:9px;font-weight:600" :style="(fotoTirada||rostoOk)?'color:#1E8E4E':'color:var(--mut)'" x-text="fotoTirada?'✓ Foto capturada':(!camPronta?'Abrindo câmera…':(rostoOk?'✓ Rosto enquadrado':'Posicione seu rosto no oval'))"></div>
             <div class="muted" style="font-size:11px;margin-top:3px" x-text="geoOk?'📍 Localização capturada':'📍 Buscando localização…'"></div>
-            <label style="display:flex;gap:8px;align-items:flex-start;text-align:left;font-size:11.5px;color:var(--mut);margin-top:12px;line-height:1.45">
+            <div style="text-align:left;font-size:12px;line-height:1.6;color:var(--mut);background:#F4F7FC;border:1px solid #E4EAF4;border-radius:13px;padding:13px 14px;margin-top:14px">
+              Aqui você acompanha <b style="color:var(--ink)">dados sensíveis e estratégicos</b> — o mesmo nível de informação que gestores das maiores empresas usam para tomar decisões. Por isso prezamos pela <b style="color:var(--ink)">máxima segurança e confidencialidade</b>: cada acesso é confirmado pela sua identidade e fica registrado.
+            </div>
+            <label style="display:flex;gap:9px;align-items:flex-start;text-align:left;font-size:11.5px;color:var(--mut);margin-top:12px;line-height:1.5">
               <input type="checkbox" x-model="consentiu" style="margin-top:2px;flex:0 0 16px;width:16px;height:16px;min-width:0">
-              <span style="flex:1;min-width:0">Autorizo o registro da minha <b>foto</b>, <b>localização</b> e <b>atividade</b> neste acesso, para a segurança dos dados da empresa (LGPD).</span>
+              <span style="flex:1;min-width:0">Autorizo o registro da minha <b>foto</b>, <b>localização</b> e <b>horário</b> neste acesso, para proteger a confidencialidade das informações <span style="white-space:nowrap">(LGPD).</span></span>
             </label>
             <div x-show="lgErro" style="color:var(--red);font-size:13px;margin:10px 0 0" x-text="lgErro"></div>
             <button x-show="!fotoTirada" class="btn btn-amber" style="width:100%;margin-top:14px" @click="tirarFoto()" :disabled="!camPronta||!(rostoOk||liberaSemRosto)">
