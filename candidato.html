@@ -1113,9 +1113,11 @@
       var total=ses.length>=200?'200+':String(ses.length);
       var linhas=ses.slice(0,5).map(function(s2){
         var foto=s2.selfie?('<img src="'+s2.selfie+'" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--line)">'):'<span style="width:34px;height:34px;border-radius:50%;background:var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:14px">👤</span>';
+        // "agora" = sessão sem logout E com sinal de vida nos últimos 3 min (login+duração ≈ último ping)
+        var online=s2.aberta && (Date.now()-(new Date(s2.loginAt).getTime()+Number(s2.duracaoSeg||0)*1000))<3*60*1000;
         return '<div style="display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)">'
           +foto
-          +'<div style="min-width:0"><div style="font-weight:700;font-size:13px">'+fmt(s2.loginAt)+(s2.aberta?' <span style="color:#1E9E4F;font-size:11px;font-weight:800">· agora</span>':'')+'</div>'
+          +'<div style="min-width:0"><div style="font-weight:700;font-size:13px">'+fmt(s2.loginAt)+(online?' <span style="color:#1E9E4F;font-size:11px;font-weight:800">· agora</span>':'')+'</div>'
           +'<div style="font-size:11.5px;color:#6c7480">'+aparelho(s2.userAgent)+' · '+dur(s2.duracaoSeg)+' de uso</div></div>'
           +'<div style="font-size:12px;text-align:right">'+onde(s2)+'</div></div>';
       }).join('');
