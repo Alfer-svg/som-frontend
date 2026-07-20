@@ -2279,6 +2279,15 @@ document.addEventListener('alpine:init', () => {
     abrirTrafRel() { this.trafRelForm = { periodo: 'hoje', de: '', ate: '', clienteId: '' }; this.trafRelDados = null; this.trafRelModal = true; },
     // Relatório mensal de MÍDIA PAGA do cliente (Google + Meta) — página editorial, PDF pela impressão
     gerarRelMidia(clienteId) { if (!clienteId) return; window.open('relatorio-midia.html?cliente=' + encodeURIComponent(clienteId), '_blank'); },
+    // Painel do Candidato (item da sidebar): 1 candidato abre direto; vários, modal de escolha
+    candModal: false,
+    candClientes() { return (this.clients || []).filter(c => c.perfil === 'candidato' && c.status !== 'Inativo'); },
+    abrirCandidato() {
+      const cs = this.candClientes();
+      if (!cs.length) return;
+      if (cs.length === 1) window.open('candidato.html?cliente=' + encodeURIComponent(cs[0].id), '_blank');
+      else this.candModal = true;
+    },
     _trafRelRange() {
       const hoje = this._hojeStr(); const f = this.trafRelForm;
       if (f.periodo === 'hoje') return { de: hoje, ate: hoje };

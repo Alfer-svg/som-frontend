@@ -192,6 +192,11 @@
         </div>
       </template>
 
+      <!-- Painel do Candidato (admin) — abre a visão da equipe do candidato -->
+      <div class="nav-item" x-show="ehAdmin && candClientes().length" @click="abrirCandidato()" title="Painel exclusivo do candidato — abre a visão da equipe (sem selfie).">
+        <span class="nav-icon"><i class="ph ph-flag-banner ic-ph" style="color:#7C3AED"></i></span><span>Candidato</span>
+      </div>
+
       <!-- Agenda / Calendário de eventos (admin + Gestor de Tráfego) -->
       <div class="nav-item" x-show="podeVer('agenda')" :class="page==='agenda'?'active':''" @click="go('agenda')" title="Calendário de eventos, contatos e histórico dos clientes.">
         <span class="nav-icon"><i class="ph ph-calendar-dots ic-ph" style="color:#F9A825"></i></span><span>Agenda</span>
@@ -2289,6 +2294,21 @@
       </section>
 
       <!-- Histórico do cliente (modal, aberto ao clicar num cliente) -->
+      <!-- Escolha do candidato (quando há mais de um cliente com perfil candidato) -->
+      <div class="modal-backdrop" x-show="candModal" x-cloak @click.self="candModal=false">
+        <div class="modal" style="max-width:420px">
+          <div class="modal-head"><div class="modal-title"><i class="ph ph-flag-banner ic-ph" style="color:#7C3AED"></i> Painel do Candidato</div><button class="btn btn-icon btn-ghost" @click="candModal=false">✕</button></div>
+          <div class="modal-body">
+            <div class="text-3 fs-12 mb-2">Escolha o candidato pra abrir a visão da equipe:</div>
+            <template x-for="c in candClientes()" :key="'cand'+c.id">
+              <div class="nav-item" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px" @click="candModal=false; window.open('candidato.html?cliente='+encodeURIComponent(c.id),'_blank')">
+                <span class="nav-icon"><i class="ph ph-user ic-ph"></i></span><span x-text="c.empresa || c.nome || '—'"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
       <div class="modal-backdrop" x-show="agendaHistCli" x-cloak @click.self="agendaHistCli=''">
         <div class="modal" style="max-width:460px">
           <div class="modal-head"><div class="modal-title"><i class="ph ph-clock-counter-clockwise ic-ph"></i> Histórico — <span x-text="clienteNome(agendaHistCli)"></span></div><button class="btn btn-icon btn-ghost" @click="agendaHistCli=''">✕</button></div>
