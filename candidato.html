@@ -375,8 +375,8 @@
   #protegido{position:fixed;inset:0;z-index:9997;background:rgba(246,247,249,.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center}
   #protegido.on{display:flex} #protegido span{font-size:15px;font-weight:700;color:var(--mut)}
   #badgeAdmin{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;background:var(--ink);color:#fff;font-size:12px;font-weight:700;padding:8px 15px;border-radius:99px;box-shadow:0 8px 22px -6px rgba(0,0,0,.45)}
-  /* visão da equipe: os canais de suporte do candidato (WhatsApp/relatório/FAB) não aparecem */
-  body.equipe .fab-suporte,body.equipe .btn-acao,body.equipe a[href*="wa.me"]{display:none!important}
+  /* visão da equipe: canais de suporte do candidato (WhatsApp/relatório/FAB) e o menu dele não aparecem */
+  body.equipe .fab-suporte,body.equipe .btn-acao,body.equipe a[href*="wa.me"],body.equipe .menu-wrap{display:none!important}
 
 </style>
 </head>
@@ -1095,8 +1095,39 @@
       document.body.classList.add('equipe'); // esconde botões de suporte (são canal do candidato, não da equipe)
       var b=document.createElement('div'); b.id='badgeAdmin'; b.textContent='Visão da equipe · '+(info.nome); document.body.appendChild(b);
       montarAcessos(clienteId,somTok); // quadro de acessos do candidato (só a equipe vê)
+      montarDiagnostico(clienteId,somTok); // diagnóstico interno no topo (só a equipe vê)
       if(window.__replay)setTimeout(window.__replay,60);
     }catch(e){ id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
+  }
+
+  // Diagnóstico INTERNO (visão da equipe, no topo): pontos negativos + soluções, pela IA.
+  async function montarDiagnostico(clienteId,somTok){
+    var escq=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
+    var card=document.createElement('section');
+    card.className='card';
+    card.style.cssText='margin:0 0 14px;border:1px solid #F4B40055;background:linear-gradient(180deg,#FFFDF5,#fff)';
+    card.innerHTML='<div style="font-weight:800;font-size:13px">🛠️ Diagnóstico interno · uso da equipe</div><div style="font-size:12px;color:#6c7480;margin-top:6px">Analisando os números da campanha e escrevendo os pontos com solução… (~15s)</div>';
+    var app=document.querySelector('.app'); if(app)app.prepend(card);
+    try{
+      var r=await fetch(API+'/cliente-portal/admin/diagnostico-candidato/'+encodeURIComponent(clienteId),{headers:{'Authorization':'Bearer '+somTok}});
+      var d=await r.json();
+      if(!r.ok||!d.disponivel){ card.innerHTML='<div style="font-weight:800;font-size:13px">🛠️ Diagnóstico interno · uso da equipe</div><div style="font-size:12px;color:#9aa0aa;margin-top:6px">Indisponível agora'+(d&&d.motivo?(' — '+escq(d.motivo)):'')+'.</div>'; return; }
+      var COR={alta:['#FCEAE7','#C5221F','ALTA'],media:['#FCF2D6','#B45309','MÉDIA'],baixa:['#EAF1FB','#2b5fa8','BAIXA']};
+      var itens=(d.pontos||[]).map(function(p){
+        var c2=COR[p.prioridade]||COR.media;
+        return '<div style="padding:11px 0;border-top:1px solid #EEEAE0">'
+          +'<div style="display:flex;gap:8px;align-items:flex-start">'
+          +'<span style="flex:none;font-size:10px;font-weight:800;letter-spacing:.05em;padding:3px 8px;border-radius:99px;background:'+c2[0]+';color:'+c2[1]+'">'+c2[2]+'</span>'
+          +'<div style="min-width:0"><div style="font-weight:700;font-size:13px;line-height:1.45">'+escq(p.problema)+'</div>'
+          +'<div style="font-size:12.5px;line-height:1.55;margin-top:4px;color:#1E5631"><b style="color:#1E9E4F">→ Solução:</b> '+escq(p.solucao)+'</div></div></div></div>';
+      }).join('');
+      card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+        +'<div style="font-weight:800;font-size:13px">🛠️ Diagnóstico interno · pontos a melhorar</div>'
+        +'<span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;padding:3px 9px;border-radius:99px;background:#FCEAE7;color:#C5221F">SÓ A EQUIPE VÊ</span></div>'
+        +'<div style="font-size:13px;line-height:1.6;color:#3b4048;margin:8px 0 6px">'+escq(d.resumo||'')+'</div>'
+        +itens
+        +'<div style="font-size:11px;color:#9aa0aa;margin-top:8px">Gerado dos números reais do painel · atualiza a cada 6h · o candidato não vê este quadro</div>';
+    }catch(e){ card.remove(); }
   }
 
   // Quadro (visão da equipe): quantas vezes o candidato acessou o app, quando e onde — últimos 5.
