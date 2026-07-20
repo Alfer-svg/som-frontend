@@ -1094,8 +1094,42 @@
       if(window.__setCand)window.__setCand(d.candidato);
       document.body.classList.add('equipe'); // esconde botões de suporte (são canal do candidato, não da equipe)
       var b=document.createElement('div'); b.id='badgeAdmin'; b.textContent='Visão da equipe · '+(info.nome); document.body.appendChild(b);
+      montarAcessos(clienteId,somTok); // quadro de acessos do candidato (só a equipe vê)
       if(window.__replay)setTimeout(window.__replay,60);
     }catch(e){ id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
+  }
+
+  // Quadro (visão da equipe): quantas vezes o candidato acessou o app, quando e onde — últimos 5.
+  async function montarAcessos(clienteId,somTok){
+    try{
+      var r=await fetch(API+'/cliente-portal/admin/auditoria?clienteId='+encodeURIComponent(clienteId)+'&limit=200',{headers:{'Authorization':'Bearer '+somTok}});
+      if(!r.ok)return;
+      var ses=await r.json(); if(!Array.isArray(ses))return;
+      var escq=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')};
+      var fmt=function(d){try{return new Date(d).toLocaleString('pt-BR',{timeZone:'America/Recife',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+      var dur=function(s2){s2=Number(s2||0); if(s2<60)return s2+'s'; var m=Math.round(s2/60); return m<60?(m+' min'):(Math.floor(m/60)+'h'+String(m%60).padStart(2,'0'))};
+      var aparelho=function(ua){ua=String(ua||''); var dv=/iPhone/.test(ua)?'iPhone':/iPad/.test(ua)?'iPad':/Android/.test(ua)?'Android':/Macintosh/.test(ua)?'Mac':/Windows/.test(ua)?'PC':'—'; var nv=/CriOS|Chrome/.test(ua)?'Chrome':/Firefox|FxiOS/.test(ua)?'Firefox':/Safari/.test(ua)?'Safari':''; return dv+(nv?' · '+nv:'')};
+      var onde=function(s2){ if(s2.local)return escq(s2.local); if(s2.lat!=null&&s2.lng!=null)return '<a href="https://maps.google.com/?q='+s2.lat+','+s2.lng+'" target="_blank" rel="noopener" style="color:var(--blue);font-weight:700">ver no mapa</a>'; return '<span style="color:#9aa0aa">sem localização</span>'};
+      var total=ses.length>=200?'200+':String(ses.length);
+      var linhas=ses.slice(0,5).map(function(s2){
+        var foto=s2.selfie?('<img src="'+s2.selfie+'" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--line)">'):'<span style="width:34px;height:34px;border-radius:50%;background:var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:14px">👤</span>';
+        return '<div style="display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)">'
+          +foto
+          +'<div style="min-width:0"><div style="font-weight:700;font-size:13px">'+fmt(s2.loginAt)+(s2.aberta?' <span style="color:#1E9E4F;font-size:11px;font-weight:800">· agora</span>':'')+'</div>'
+          +'<div style="font-size:11.5px;color:#6c7480">'+aparelho(s2.userAgent)+' · '+dur(s2.duracaoSeg)+' de uso</div></div>'
+          +'<div style="font-size:12px;text-align:right">'+onde(s2)+'</div></div>';
+      }).join('');
+      var card=document.createElement('section');
+      card.className='card';
+      card.style.margin='14px 0 0';
+      card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">'
+        +'<div style="font-weight:800;font-size:13px;letter-spacing:.02em">🔐 Acessos do candidato ao app</div>'
+        +'<div style="font-size:12px;color:#6c7480"><b style="font-size:16px;color:var(--ink,#17140f)">'+total+'</b> acesso'+(total==='1'?'':'s')+' no total</div></div>'
+        +(linhas||'<div style="font-size:12.5px;color:#9aa0aa;padding:8px 0">Nenhum acesso registrado ainda.</div>')
+        +'<div style="font-size:11px;color:#9aa0aa;margin-top:8px">Últimos 5 acessos · horário de Recife · visível só pra equipe Maracatu</div>';
+      var hd=document.querySelector('#painelRoot header');
+      if(hd)hd.insertAdjacentElement('afterend',card); else document.querySelector('.app').prepend(card);
+    }catch(e){}
   }
   window.__sair=function(){ try{if(token)apiPost('/cliente-portal/logout');}catch(e){} if(hbTimer)clearInterval(hbTimer); localStorage.removeItem('cand_token'); localStorage.removeItem('cand_info'); localStorage.removeItem('cliente_token'); localStorage.removeItem('cliente_info'); location.replace('cliente.html'); };
 
