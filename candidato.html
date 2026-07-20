@@ -382,6 +382,11 @@
 </head>
 <body>
 
+<script>
+// Visão da equipe (?cliente= + sessão do SOM): esconde o login JÁ, antes de pintar — sem flash.
+if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('som_token'))document.documentElement.classList.add('boot-equipe');
+</script>
+<style>.boot-equipe #loginScreen{display:none!important}</style>
 <div id="loginScreen">
   <div class="lg-card">
     <div class="lg-stripe"></div>
@@ -457,16 +462,8 @@
     <span class="chip blue" id="campChip">— campanhas ativas</span>
   </header>
 
-  <!-- ANÁLISE DIÁRIA DA IA -->
-  <div class="ia reveal" style="animation-delay:.05s">
-    <div class="lab"><span class="logo"></span> Leitura do dia · por Maracatu Digital</div>
-    <h2 id="iaH">—</h2>
-    <p id="iaP">—</p>
-    <div class="tags" id="iaTags"></div>
-  </div>
-
-  <!-- CONTAGEM REGRESSIVA DA CAMPANHA -->
-  <div class="cd-card reveal" style="animation-delay:.055s" id="cdCard">
+  <!-- CONTAGEM REGRESSIVA DA CAMPANHA (logo abaixo do card do candidato — pedido do Dinho 20/07) -->
+  <div class="cd-card reveal" style="animation-delay:.05s" id="cdCard">
     <div class="stripe4"></div>
     <div class="lead">
       <div class="t"><span class="t-ic"></span><span id="cdTitulo">Reta final da campanha</span></div>
@@ -483,6 +480,14 @@
       <div class="track"><div class="fill" id="cdFill"></div></div>
       <div class="ends"><span id="cdIni">16/08</span><span>propaganda até 03/10</span><span id="cdFim">eleição 04/10</span></div>
     </div>
+  </div>
+
+  <!-- ANÁLISE DIÁRIA DA IA -->
+  <div class="ia reveal" style="animation-delay:.055s">
+    <div class="lab"><span class="logo"></span> Leitura do dia · por Maracatu Digital</div>
+    <h2 id="iaH">—</h2>
+    <p id="iaP">—</p>
+    <div class="tags" id="iaTags"></div>
   </div>
 
   <!-- HERO: índice + momentum -->
@@ -1097,7 +1102,7 @@
       montarAcessos(clienteId,somTok).then(function(){ montarLogOtimizacoes(clienteId,somTok,info.nome); }); // quadros da equipe, na ordem
       montarDiagnostico(clienteId,somTok); // diagnóstico interno no topo (só a equipe vê)
       if(window.__replay)setTimeout(window.__replay,60);
-    }catch(e){ id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
+    }catch(e){ document.documentElement.classList.remove('boot-equipe'); id('loginScreen').style.display='flex'; id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
   }
 
   // Log de otimizações da campanha (visão da equipe) — mesmo padrão do Tráfego:
@@ -1212,8 +1217,9 @@
         +'<div style="font-size:12px;color:#6c7480"><b style="font-size:16px;color:var(--ink,#17140f)">'+total+'</b> acesso'+(total==='1'?'':'s')+' no total</div></div>'
         +(linhas||'<div style="font-size:12.5px;color:#9aa0aa;padding:8px 0">Nenhum acesso registrado ainda.</div>')
         +'<div style="font-size:11px;color:#9aa0aa;margin-top:8px">Últimos 5 acessos · horário de Recife · visível só pra equipe Maracatu</div>';
-      var hd=document.querySelector('#painelRoot header');
-      if(hd)hd.insertAdjacentElement('afterend',card); else document.querySelector('.app').prepend(card);
+      // entra depois da contagem (que agora vem colada no card do candidato)
+      var anc=document.getElementById('cdCard')||document.querySelector('#painelRoot header');
+      if(anc)anc.insertAdjacentElement('afterend',card); else document.querySelector('.app').prepend(card);
     }catch(e){}
   }
   window.__sair=function(){ try{if(token)apiPost('/cliente-portal/logout');}catch(e){} if(hbTimer)clearInterval(hbTimer); localStorage.removeItem('cand_token'); localStorage.removeItem('cand_info'); localStorage.removeItem('cliente_token'); localStorage.removeItem('cliente_info'); location.replace('cliente.html'); };
