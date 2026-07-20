@@ -1178,12 +1178,31 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
           +'<div style="min-width:0"><div style="font-weight:700;font-size:13px;line-height:1.45">'+escq(p.problema)+'</div>'
           +'<div style="font-size:12.5px;line-height:1.55;margin-top:4px;color:#1E5631"><b style="color:#1E9E4F">→ Solução:</b> '+escq(p.solucao)+'</div></div></div></div>';
       }).join('');
-      card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      // Card RECOLHÍVEL: nasce fechado (é longo e domina a tela) e lembra a escolha
+      // por candidato. O cabeçalho mostra quantos pontos há, pra não sumir da vista.
+      var pts=(d.pontos||[]); var nTot=pts.length;
+      var nAlta=pts.filter(function(p){return String(p.prioridade||'').toLowerCase()==='alta'}).length;
+      var KEY='som_diag_aberto_'+clienteId;
+      var aberto=localStorage.getItem(KEY)==='1';
+      card.innerHTML='<div class="diag-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer;user-select:none" title="Clique para recolher/expandir">'
+        +'<div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap">'
+        +'<span class="diag-seta" style="font-size:10px;color:#6c7480;width:10px;display:inline-block">▶</span>'
         +'<div style="font-weight:800;font-size:13px">🛠️ Diagnóstico interno · pontos a melhorar</div>'
+        +'<span class="diag-resumo-chip" style="font-size:11px;color:#6c7480">'+nTot+(nTot===1?' ponto':' pontos')+(nAlta?(' · '+nAlta+' alta'):'')+'</span></div>'
         +'<span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;padding:3px 9px;border-radius:99px;background:#FCEAE7;color:#C5221F">SÓ A EQUIPE VÊ</span></div>'
+        +'<div class="diag-body">'
         +'<div style="font-size:13px;line-height:1.6;color:#3b4048;margin:8px 0 6px">'+escq(d.resumo||'')+'</div>'
         +itens
-        +'<div style="font-size:11px;color:#9aa0aa;margin-top:8px">Gerado dos números reais do painel · atualiza a cada 6h · o candidato não vê este quadro</div>';
+        +'<div style="font-size:11px;color:#9aa0aa;margin-top:8px">Gerado dos números reais do painel · atualiza a cada 6h · o candidato não vê este quadro</div>'
+        +'</div>';
+      var elHead=card.querySelector('.diag-head'), elBody=card.querySelector('.diag-body'), elSeta=card.querySelector('.diag-seta'), elChip=card.querySelector('.diag-resumo-chip');
+      function aplicaDiag(){
+        elBody.style.display=aberto?'block':'none';
+        elSeta.textContent=aberto?'▼':'▶';
+        elChip.style.display=aberto?'none':'inline';
+      }
+      elHead.addEventListener('click',function(){ aberto=!aberto; try{localStorage.setItem(KEY,aberto?'1':'0')}catch(e){} aplicaDiag(); });
+      aplicaDiag();
     }catch(e){ card.remove(); }
   }
 
