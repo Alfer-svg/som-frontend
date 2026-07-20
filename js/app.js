@@ -2277,6 +2277,8 @@ document.addEventListener('alpine:init', () => {
     trafRelForm: { periodo: 'hoje', de: '', ate: '', clienteId: '' },
     trafRelDados: null, // { de, ate, clientes: [{cliente, dias, otimizacoes, ads, itensFeitos, dias100}] }
     abrirTrafRel() { this.trafRelForm = { periodo: 'hoje', de: '', ate: '', clienteId: '' }; this.trafRelDados = null; this.trafRelModal = true; },
+    // Relatório mensal de MÍDIA PAGA do cliente (Google + Meta) — página editorial, PDF pela impressão
+    gerarRelMidia(clienteId) { if (!clienteId) return; window.open('relatorio-midia.html?cliente=' + encodeURIComponent(clienteId), '_blank'); },
     _trafRelRange() {
       const hoje = this._hojeStr(); const f = this.trafRelForm;
       if (f.periodo === 'hoje') return { de: hoje, ate: hoje };

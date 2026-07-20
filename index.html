@@ -1872,7 +1872,9 @@
                 </div>
               </div>
 
-              <div class="ficha-sec-title"><i class="ph ph-megaphone ic-ph"></i> Tráfego Pago — Google & Meta Ads</div>
+              <div class="ficha-sec-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span><i class="ph ph-megaphone ic-ph"></i> Tráfego Pago — Google & Meta Ads</span>
+                <button class="btn btn-sm" @click="gerarRelMidia(monitorCliente.id)" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap" title="Relatório mensal de mídia paga do cliente (Google + Meta), pronto pra enviar em PDF"><i class="ph ph-newspaper ic-ph"></i> Gerar relatório</button>
+              </div>
               <!-- Linhas AUTOMÁTICAS (via API do Google Ads / MCC) -->
               <template x-for="a in adsLinhasAuto(monitorCliente)" :key="a.id">
                 <div class="rede-row" style="gap:8px">
@@ -3891,6 +3893,7 @@
               </template>
               <button class="btn btn-sm" :style="trafContasPer==='custom'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Intervalo</button>
               <span x-show="trafContasLoading||metaContasLoading" class="text-3 fs-12"><i class="ph ph-circle-notch ic-ph"></i> consultando…</span>
+              <button class="btn btn-sm" x-show="adsCliente" @click="gerarRelMidia(adsCliente)" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap;margin-left:auto" title="Relatório mensal de mídia paga do cliente selecionado (Google + Meta), pronto pra enviar em PDF"><i class="ph ph-newspaper ic-ph"></i> Gerar relatório</button>
             </div>
             <div x-show="trafContasPer==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:8px">
               <span class="text-3 fs-12">De</span><input type="date" class="form-input fs-12" style="max-width:150px" x-model="trafContasIni">
@@ -4026,6 +4029,7 @@
               </template>
               <button class="btn btn-sm" :style="trafContasPer==='custom'?'background:#0866FF;color:#fff;border-color:#0866FF':'background:var(--surface-2);color:var(--text-2)'" @click="trafSetPeriodo('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Intervalo</button>
               <span x-show="trafContasLoading||metaContasLoading" class="text-3 fs-12"><i class="ph ph-circle-notch ic-ph"></i> consultando…</span>
+              <button class="btn btn-sm" x-show="adsCliente" @click="gerarRelMidia(adsCliente)" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap;margin-left:auto" title="Relatório mensal de mídia paga do cliente selecionado (Google + Meta), pronto pra enviar em PDF"><i class="ph ph-newspaper ic-ph"></i> Gerar relatório</button>
             </div>
             <div x-show="trafContasPer==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:8px">
               <span class="text-3 fs-12">De</span><input type="date" class="form-input fs-12" style="max-width:150px" x-model="trafContasIni">
