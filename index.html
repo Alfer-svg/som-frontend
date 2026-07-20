@@ -193,7 +193,7 @@
       </template>
 
       <!-- Painel do Candidato (admin) — abre a visão da equipe DENTRO do SOM -->
-      <div class="nav-item" x-show="ehAdmin && candClientes().length" :class="page==='candidato'?'active':''" @click="abrirCandidato()" title="Painel exclusivo do candidato — visão da equipe, dentro do SOM.">
+      <div class="nav-item" x-show="(ehAdmin || papel==='comercial') && candClientes().length" :class="page==='candidato'?'active':''" @click="abrirCandidato()" title="Painel exclusivo do candidato — visão da equipe, dentro do SOM.">
         <span class="nav-icon"><i class="ph ph-flag-banner ic-ph" style="color:#7C3AED"></i></span><span>Candidato</span>
       </div>
 
