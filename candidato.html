@@ -375,6 +375,8 @@
   #protegido{position:fixed;inset:0;z-index:9997;background:rgba(246,247,249,.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center}
   #protegido.on{display:flex} #protegido span{font-size:15px;font-weight:700;color:var(--mut)}
   #badgeAdmin{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;background:var(--ink);color:#fff;font-size:12px;font-weight:700;padding:8px 15px;border-radius:99px;box-shadow:0 8px 22px -6px rgba(0,0,0,.45)}
+  /* visão da equipe: os canais de suporte do candidato (WhatsApp/relatório/FAB) não aparecem */
+  body.equipe .fab-suporte,body.equipe .btn-acao,body.equipe a[href*="wa.me"]{display:none!important}
 
 </style>
 </head>
@@ -1090,6 +1092,7 @@
       info={nome:(d.candidato||{}).nome||'Candidato',email:''};
       id('loginScreen').style.display='none';
       if(window.__setCand)window.__setCand(d.candidato);
+      document.body.classList.add('equipe'); // esconde botões de suporte (são canal do candidato, não da equipe)
       var b=document.createElement('div'); b.id='badgeAdmin'; b.textContent='Visão da equipe · '+(info.nome); document.body.appendChild(b);
       if(window.__replay)setTimeout(window.__replay,60);
     }catch(e){ id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
