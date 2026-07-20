@@ -328,13 +328,7 @@
   }
 
   function carregar() {
-    var mes = mesInput.value; // YYYY-MM
-    var q = '';
-    if (mes) {
-      var y = +mes.split('-')[0], mo = +mes.split('-')[1];
-      var fim = new Date(Date.UTC(y, mo, 0)).toISOString().slice(0, 10);
-      q = '?ini=' + mes + '-01&fim=' + fim;
-    }
+    var q = (curIni && curFim) ? ('?ini=' + curIni + '&fim=' + curFim) : '';
     document.getElementById('pdf').disabled = true;
     estado('<div class="spin"></div><b>Gerando o relatório…</b>Puxando Google Ads e Meta Ads e escrevendo a leitura do mês. Leva menos de um minuto.');
     fetch(API + '/relatorios/midia/' + encodeURIComponent(clienteId) + q, {
@@ -355,14 +349,27 @@
     });
   }
 
-  // mês padrão: o que veio na URL (?ini=) ou o mês passado fechado
-  (function initMes() {
-    var ini = qs.get('ini');
-    if (ini && /^\d{4}-\d{2}/.test(ini)) { mesInput.value = ini.slice(0, 7); return; }
-    var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1);
+  // Período em vigor. Pode ser QUALQUER intervalo (?ini=&fim=) — semana, quinzena,
+  // mês ou personalizado. O seletor de mês da barra só existe pro uso avulso da página;
+  // quando o relatório é aberto pelo Tráfego, quem manda no período é a URL.
+  var curIni = '', curFim = '';
+  function ehData(s) { return /^\d{4}-\d{2}-\d{2}$/.test(s || ''); }
+  function mesInteiro(mes) { // 'YYYY-MM' → 1º ao último dia
+    var y = +mes.split('-')[0], mo = +mes.split('-')[1];
+    curIni = mes + '-01';
+    curFim = new Date(Date.UTC(y, mo, 0)).toISOString().slice(0, 10);
+  }
+  (function initPeriodo() {
+    var i = qs.get('ini'), f = qs.get('fim');
+    if (ehData(i) && ehData(f)) { curIni = i; curFim = f; mesInput.value = i.slice(0, 7); return; }
+    if (ehData(i)) { mesInteiro(i.slice(0, 7)); mesInput.value = i.slice(0, 7); return; }
+    var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); // mês passado fechado
     mesInput.value = d.toISOString().slice(0, 7);
+    mesInteiro(mesInput.value);
   })();
-  mesInput.addEventListener('change', carregar);
+  mesInput.addEventListener('change', function () { mesInteiro(mesInput.value); carregar(); });
+  // Embutido numa aba do SOM (iframe): a barra é redundante, os seletores ficam na aba.
+  if (qs.get('embed')) { var b = document.querySelector('.bar'); if (b) b.style.display = 'none'; }
 
   if (!clienteId) { estado('<b>Falta o cliente.</b>Abra esta página pelo botão <b>Gerar relatório</b> na ficha do cliente no SOM.'); return; }
   if (!token) { estado('<b>Você não está logado.</b>Abra o <a href="index.html">SOM</a>, faça login e clique em Gerar relatório de novo.'); return; }

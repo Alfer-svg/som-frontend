@@ -3663,6 +3663,7 @@
             <span x-show="adsAlertasCanal('Meta').sem.length" class="badge fs-11 fw-800" style="background:#fee2e2;color:#dc2626;margin-left:4px" x-text="adsAlertasCanal('Meta').sem.length"></span>
           </div>
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
+          <div class="tab" :class="trafTab==='relatorio'?'active':''" @click="trafTab='relatorio'"><i class="ph ph-newspaper ic-ph"></i> Relatório</div>
         </div>
 
         <!-- "Seu dia": KPIs no padrão Google (multicolor — igual ao dashboard) -->
@@ -4189,6 +4190,40 @@
               <div class="card" style="padding:12px;background:#F3FAF6;border-color:#E6F4EA"><div class="text-3 fs-11">Contas distintas (30d)</div><div style="font-size:22px;font-weight:500" x-text="trafInd.contas30"></div></div>
               <div class="card" style="padding:12px;background:#FEFBEF;border-color:#FEF7E0"><div class="text-3 fs-11">Dias com rotina (30d)</div><div style="font-size:22px;font-weight:500" x-text="trafInd.diasAtivos30"></div></div>
             </div>
+          </div>
+        </div>
+
+        <!-- ─────── Aba: Relatório de mídia paga (Google + Meta + leitura da IA) ─────── -->
+        <div x-show="trafTab==='relatorio'">
+          <div class="card" style="padding:10px 12px;margin-bottom:12px">
+            <div class="flex items-center gap-2" style="flex-wrap:wrap">
+              <span class="text-3 fs-12"><i class="ph ph-funnel ic-ph"></i> Cliente</span>
+              <select class="form-select fs-13" style="max-width:240px;font-weight:600" x-model="relMidCliente" @change="relMidGerar()">
+                <option value="">Escolha o cliente…</option>
+                <template x-for="c in adsClientesLista" :key="'arm'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+              </select>
+              <span class="text-3 fs-12" style="margin-left:8px"><i class="ph ph-calendar-blank ic-ph"></i> Período</span>
+              <template x-for="pp in [['7','7d'],['15','15d'],['30','30d'],['mesAtual','Mês atual'],['mesPassado','Mês passado']]" :key="'rmper'+pp[0]">
+                <button class="btn btn-sm" :style="relMidPer===pp[0]?'background:#2563eb;color:#fff;border-color:#2563eb':'background:var(--surface-2);color:var(--text-2)'" @click="relMidSetPer(pp[0])" x-text="pp[1]"></button>
+              </template>
+              <button class="btn btn-sm" :style="relMidPer==='custom'?'background:#2563eb;color:#fff;border-color:#2563eb':'background:var(--surface-2);color:var(--text-2)'" @click="relMidSetPer('custom')"><i class="ph ph-calendar-blank ic-ph"></i> Intervalo</button>
+              <button class="btn btn-sm" x-show="relMidCliente" @click="relMidGerar()" style="background:#141210;color:#fff;border-color:#141210;white-space:nowrap;margin-left:auto"><i class="ph ph-newspaper ic-ph"></i> Gerar relatório</button>
+              <button class="btn btn-sm" x-show="relMidUrl" @click="relMidNovaAba()" title="Abrir em nova aba (lá tem o botão de baixar em PDF)"><i class="ph ph-arrow-square-out ic-ph"></i> Nova aba / PDF</button>
+            </div>
+            <div x-show="relMidPer==='custom'" class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:8px">
+              <span class="text-3 fs-12">De</span><input type="date" class="form-input fs-12" style="max-width:150px" x-model="relMidIni">
+              <span class="text-3 fs-12">até</span><input type="date" class="form-input fs-12" style="max-width:150px" x-model="relMidFim">
+              <button class="btn btn-sm btn-primary" @click="relMidGerar()"><i class="ph ph-magnifying-glass ic-ph"></i> Aplicar</button>
+            </div>
+            <div class="text-3 fs-11" style="margin-top:6px">Google Ads + Meta Ads do período, com a leitura escrita pela IA. Leva ~20s pra gerar. <span x-show="relMidUrl" x-text="'· '+relMidPerLabel()"></span></div>
+          </div>
+          <div x-show="!relMidUrl" class="card" style="padding:40px 16px;text-align:center">
+            <div style="font-size:34px;line-height:1">📰</div>
+            <div class="fw-600 fs-13" style="margin-top:8px">Escolha um cliente pra gerar o relatório</div>
+            <div class="text-3 fs-12" style="margin-top:4px">É o mesmo relatório do Monitoramento — aqui você troca o cliente e o período sem sair da página.</div>
+          </div>
+          <div x-show="relMidUrl" class="card" style="padding:0;overflow:hidden">
+            <iframe :src="relMidUrl" style="width:100%;height:78vh;border:0;display:block" title="Relatório de mídia paga"></iframe>
           </div>
         </div>
       </section>
@@ -6463,7 +6498,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=431"></script>
+<script src="js/app.js?v=432"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

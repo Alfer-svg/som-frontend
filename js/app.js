@@ -564,7 +564,7 @@ document.addEventListener('alpine:init', () => {
     // ── Gestão de Tráfego (página trafego: admin + gestortrafego) ──
     TRAF_TAREFAS,
     trafDia: '',            // 'YYYY-MM-DD' do checklist em edição (default hoje)
-    trafTab: 'rotina',      // aba da página: rotina | contas | indicadores (admin)
+    trafTab: 'rotina',      // aba da página: rotina | gads | mads | indicadores (admin) | relatorio
     // Filtro de período da aba Contas & Campanhas: 'mes' (snapshot instantâneo) | '7' | '15' | '30' | 'custom'
     trafContasPer: 'mes', trafContasIni: '', trafContasFim: '',
     trafContasLive: null, trafContasLoading: false, trafContasErro: '', trafCampAberta: {},
@@ -2277,8 +2277,47 @@ document.addEventListener('alpine:init', () => {
     trafRelForm: { periodo: 'hoje', de: '', ate: '', clienteId: '' },
     trafRelDados: null, // { de, ate, clientes: [{cliente, dias, otimizacoes, ads, itensFeitos, dias100}] }
     abrirTrafRel() { this.trafRelForm = { periodo: 'hoje', de: '', ate: '', clienteId: '' }; this.trafRelDados = null; this.trafRelModal = true; },
-    // Relatório mensal de MÍDIA PAGA do cliente (Google + Meta) — página editorial, PDF pela impressão
-    gerarRelMidia(clienteId) { if (!clienteId) return; window.open('relatorio-midia.html?cliente=' + encodeURIComponent(clienteId), '_blank'); },
+    // Relatório de MÍDIA PAGA do cliente (Google + Meta) — página editorial, PDF pela impressão.
+    // Sem período = mês passado fechado (default do backend).
+    gerarRelMidia(clienteId, ini, fim) {
+      if (!clienteId) return;
+      let u = 'relatorio-midia.html?cliente=' + encodeURIComponent(clienteId);
+      if (ini && fim) u += '&ini=' + ini + '&fim=' + fim;
+      window.open(u, '_blank');
+    },
+
+    // ── Aba Relatório (Tráfego): mesmo relatório do Monitoramento, com seletor de
+    //    cliente e de período, renderizado aqui dentro (iframe) pra não perder o SOM de vista.
+    relMidCliente: '',            // '' = nenhum escolhido ainda
+    relMidPer: 'mesPassado',      // 7 | 15 | 30 | mesAtual | mesPassado | custom
+    relMidIni: '', relMidFim: '',
+    relMidUrl: '',                // url em exibição no iframe (só muda ao clicar Gerar)
+    relMidPerLabel() {
+      return { '7': 'Últimos 7 dias', '15': 'Últimos 15 dias', '30': 'Últimos 30 dias', mesAtual: 'Mês atual', mesPassado: 'Mês passado', custom: 'Período escolhido' }[this.relMidPer] || '';
+    },
+    // Resolve o período escolhido em { ini, fim } — datas em America/Recife (UTC-3).
+    relMidRange() {
+      const p = this.relMidPer;
+      if (p === 'custom') return (this.relMidIni && this.relMidFim) ? { ini: this.relMidIni, fim: this.relMidFim } : null;
+      if (p === 'mesAtual' || p === 'mesPassado') {
+        const h = new Date(Date.now() - 3 * 3600e3);
+        const y = h.getUTCFullYear(), m = h.getUTCMonth() + (p === 'mesAtual' ? 0 : -1);
+        const pri = new Date(Date.UTC(y, m, 1)), ult = new Date(Date.UTC(y, m + 1, 0));
+        return { ini: pri.toISOString().slice(0, 10), fim: (p === 'mesAtual' ? new Date(Date.now() - 3 * 3600e3) : ult).toISOString().slice(0, 10) };
+      }
+      return { ini: this._isoDiasAtras(Number(p) - 1), fim: this._isoDiasAtras(0) };
+    },
+    relMidSetPer(p) {
+      this.relMidPer = p;
+      if (p === 'custom') { if (!this.relMidIni) this.relMidIni = this._isoDiasAtras(7); if (!this.relMidFim) this.relMidFim = this._isoDiasAtras(0); return; }
+      if (this.relMidCliente) this.relMidGerar();
+    },
+    relMidGerar() {
+      const r = this.relMidRange();
+      if (!this.relMidCliente || !r) return;
+      this.relMidUrl = 'relatorio-midia.html?embed=1&cliente=' + encodeURIComponent(this.relMidCliente) + '&ini=' + r.ini + '&fim=' + r.fim;
+    },
+    relMidNovaAba() { const r = this.relMidRange(); if (this.relMidCliente && r) this.gerarRelMidia(this.relMidCliente, r.ini, r.fim); },
     // Painel do Candidato (item da sidebar): abre DENTRO do SOM (iframe na página 'candidato').
     // 1 candidato entra direto; vários, modal de escolha. Admin only (o guard real é o backend).
     candModal: false,
