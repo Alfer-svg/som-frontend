@@ -192,8 +192,8 @@
         </div>
       </template>
 
-      <!-- Painel do Candidato (admin) — abre a visão da equipe do candidato -->
-      <div class="nav-item" x-show="ehAdmin && candClientes().length" @click="abrirCandidato()" title="Painel exclusivo do candidato — abre a visão da equipe (sem selfie).">
+      <!-- Painel do Candidato (admin) — abre a visão da equipe DENTRO do SOM -->
+      <div class="nav-item" x-show="ehAdmin && candClientes().length" :class="page==='candidato'?'active':''" @click="abrirCandidato()" title="Painel exclusivo do candidato — visão da equipe, dentro do SOM.">
         <span class="nav-icon"><i class="ph ph-flag-banner ic-ph" style="color:#7C3AED"></i></span><span>Candidato</span>
       </div>
 
@@ -3610,6 +3610,23 @@
 </section>
 
       <!-- ========== GESTÃO DE TRÁFEGO (rotina por cliente + contas + indicadores) ========== -->
+      <!-- Painel do Candidato dentro do SOM (iframe da visão da equipe) -->
+      <section x-show="page==='candidato'" x-cloak>
+        <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:22px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-flag-banner ic-ph" style="color:#7C3AED"></i> Painel do Candidato</div>
+            <div class="text-3" style="font-size:13px;margin-top:4px">Visão da equipe — o que o candidato vê, mais o quadro de acessos.</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select class="form-select fs-13" style="max-width:240px;font-weight:600" x-show="candClientes().length>1" x-model="candSel">
+              <template x-for="c in candClientes()" :key="'candsel'+c.id"><option :value="c.id" x-text="c.empresa || c.nome || '—'"></option></template>
+            </select>
+            <button class="btn btn-sm" @click="window.open('candidato.html?cliente='+encodeURIComponent(candSel),'_blank')" title="Abrir em tela cheia, numa aba própria"><i class="ph ph-arrow-square-out ic-ph"></i> Tela cheia</button>
+          </div>
+        </div>
+        <iframe x-show="candSel" :src="page==='candidato' && candSel ? ('candidato.html?cliente='+encodeURIComponent(candSel)) : ''" style="width:100%;height:calc(100vh - 150px);border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
+      </section>
+
       <section x-show="page==='trafego'">
         <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
           <div>
