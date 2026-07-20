@@ -1094,10 +1094,62 @@
       if(window.__setCand)window.__setCand(d.candidato);
       document.body.classList.add('equipe'); // esconde botões de suporte (são canal do candidato, não da equipe)
       var b=document.createElement('div'); b.id='badgeAdmin'; b.textContent='Visão da equipe · '+(info.nome); document.body.appendChild(b);
-      montarAcessos(clienteId,somTok); // quadro de acessos do candidato (só a equipe vê)
+      montarAcessos(clienteId,somTok).then(function(){ montarLogOtimizacoes(clienteId,somTok,info.nome); }); // quadros da equipe, na ordem
       montarDiagnostico(clienteId,somTok); // diagnóstico interno no topo (só a equipe vê)
       if(window.__replay)setTimeout(window.__replay,60);
     }catch(e){ id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
+  }
+
+  // Log de otimizações da campanha (visão da equipe) — mesmo padrão do Tráfego:
+  // coleção compartilhada 'candidato.log' (array completo via /colecoes), filtrada por cliente.
+  async function montarLogOtimizacoes(clienteId,somTok,nomeCliente){
+    var escq=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
+    var todos=[]; // array COMPLETO da coleção (todos os candidatos) — o POST regrava inteiro
+    try{ var r=await fetch(API+'/colecoes/candidato.log',{headers:{'Authorization':'Bearer '+somTok}}); var d=await r.json(); todos=Array.isArray(d)?d:(Array.isArray(d&&d.dados)?d.dados:[]); }catch(e){}
+    var usuario='equipe'; try{ var u=JSON.parse(localStorage.getItem('som_usuario')||'null'); if(u&&u.nome)usuario=u.nome; }catch(e){}
+
+    var card=document.createElement('section');
+    card.className='card'; card.style.margin='14px 0 0';
+    var anc=document.getElementById('cardAcessos');
+    if(anc)anc.insertAdjacentElement('afterend',card); else { var hd=document.querySelector('#painelRoot header'); if(hd)hd.insertAdjacentElement('afterend',card); }
+
+    function render(){
+      var meus=todos.filter(function(l){return l.clienteId===clienteId}).slice(0,30);
+      var linhas=meus.map(function(l){
+        return '<div style="padding:10px 0;border-top:1px solid var(--line)">'
+          +'<div style="display:flex;gap:8px;align-items:baseline;justify-content:space-between">'
+          +'<div style="font-size:11.5px;color:#6c7480"><b style="color:#3b4048">'+escq(l.por||'—')+'</b> · '+escq((l.data||'').split('-').reverse().slice(0,2).join('/'))+' '+escq(l.hora||'')+'</div>'
+          +'<button data-del="'+escq(l.id)+'" style="border:0;background:none;color:#c5221f;cursor:pointer;font-size:12px" title="Excluir registro">✕</button></div>'
+          +'<div style="font-size:13px;font-weight:600;line-height:1.5;margin-top:2px">'+escq(l.alteracao||'')+'</div>'
+          +(l.motivo?('<div style="font-size:12px;color:#6c7480;line-height:1.5;margin-top:2px">Por quê: '+escq(l.motivo)+'</div>'):'')
+          +'</div>';
+      }).join('');
+      card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">'
+        +'<div style="font-weight:800;font-size:13px;letter-spacing:.02em">📝 Log de otimizações da campanha</div>'
+        +'<div style="font-size:12px;color:#6c7480"><b>'+meus.length+'</b> registro'+(meus.length===1?'':'s')+'</div></div>'
+        +'<div style="display:grid;gap:8px;margin-bottom:6px">'
+        +'<input id="logAlt" placeholder="O que foi ajustado? (ex.: verba da campanha Saúde +20%, novo público 35-64 Zona Norte)" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:13px">'
+        +'<div style="display:flex;gap:8px"><input id="logMot" placeholder="Por quê? (opcional)" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:13px">'
+        +'<button id="logBtn" style="border:0;border-radius:10px;background:#17140f;color:#fff;font:inherit;font-size:13px;font-weight:700;padding:10px 16px;cursor:pointer">Registrar</button></div></div>'
+        +(linhas||'<div style="font-size:12.5px;color:#9aa0aa;padding:8px 0;border-top:1px solid var(--line)">Nenhuma otimização registrada ainda — o que a equipe ajustar na campanha, registra aqui.</div>')
+        +'<div style="font-size:11px;color:#9aa0aa;margin-top:8px">Visível só pra equipe Maracatu · compartilhado com o módulo Candidato do SOM</div>';
+      card.querySelector('#logBtn').addEventListener('click',registrar);
+      card.querySelector('#logAlt').addEventListener('keydown',function(e){if(e.key==='Enter')registrar();});
+      card.querySelectorAll('[data-del]').forEach(function(b){ b.addEventListener('click',function(){ remover(b.getAttribute('data-del')); }); });
+    }
+    async function salvar(){ try{ await fetch(API+'/colecoes/candidato.log',{method:'POST',headers:{'Authorization':'Bearer '+somTok,'Content-Type':'application/json'},body:JSON.stringify({itens:todos})}); }catch(e){} }
+    function registrar(){
+      var alt=card.querySelector('#logAlt').value.trim(); if(!alt)return;
+      var mot=card.querySelector('#logMot').value.trim();
+      var ag=new Date();
+      todos.unshift({ id:'cl'+ag.getTime().toString(36)+Math.random().toString(36).slice(2,6),
+        data:new Date(ag.getTime()-3*3600*1000).toISOString().slice(0,10),
+        hora:ag.toLocaleTimeString('pt-BR',{timeZone:'America/Recife',hour:'2-digit',minute:'2-digit'}),
+        clienteId:clienteId, cliente:nomeCliente||'', alteracao:alt, motivo:mot, por:usuario, em:ag.toISOString() });
+      salvar(); render();
+    }
+    function remover(idr){ if(!confirm('Excluir este registro do log?'))return; todos=todos.filter(function(x){return x.id!==idr}); salvar(); render(); }
+    render();
   }
 
   // Diagnóstico INTERNO (visão da equipe, no topo): pontos negativos + soluções, pela IA.
@@ -1153,7 +1205,7 @@
           +'<div style="font-size:12px;text-align:right">'+onde(s2)+'</div></div>';
       }).join('');
       var card=document.createElement('section');
-      card.className='card';
+      card.className='card'; card.id='cardAcessos';
       card.style.margin='14px 0 0';
       card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px">'
         +'<div style="font-weight:800;font-size:13px;letter-spacing:.02em">🔐 Acessos do candidato ao app</div>'
