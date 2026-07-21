@@ -648,6 +648,7 @@ document.addEventListener('alpine:init', () => {
     // Info / Status do sistema (admin): aba Status (saúde dos serviços) + aba Senhas (cofre global da agência)
     infoAba: 'status', infoData: null, infoLoading: false, infoErro: '',
     csLista: [], csLoading: false, csErro: '', csModal: false, csForm: {}, csRevelar: {}, // cofre-senhas global (≠ cred* por-cliente)
+    podeCofre: false, // não-admin com acesso ao cofre (e-mails na config ui.cofreAcesso — ex.: Laryssa)
     // Portal do cliente (Área do Cliente / app): admin gerencia o login do cliente
     portalModal: false, portalForm: {}, portalAcessos: [], portalLink: 'https://alfer-svg.github.io/som-frontend/cliente.html',
     onboardings: [], onbModal: false, onbSel: {},
@@ -897,7 +898,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.ajustaAbaOperacional(); this.carregarClientes(); this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); this.carregarOperacoes(); this.carregarSamara(); } if (p === 'infostatus') { this.infoAba = 'status'; this.carregarInfoStatus(); this.carregarCofreSenhas(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.operTab = 'painel'; this.carregarClientes(); this.carregarProjetos(); this.carregarEquipe(); this.carregarPresenca(); this.carregarSamara(); this.carregarOperacoes(); if (!this.matTop) this.carregarMelhores(); } },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); this.carregarMetaApp(); this.carregarMetaStatus('maracatu'); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.ajustaAbaOperacional(); this.carregarClientes(); this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); this.carregarOperacoes(); this.carregarSamara(); } if (p === 'infostatus') { this.infoAba = this.ehAdmin ? 'status' : 'senhas'; if (this.ehAdmin) this.carregarInfoStatus(); this.carregarCofreSenhas(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); if (p === 'operacoes') { this.operTab = 'painel'; this.carregarClientes(); this.carregarProjetos(); this.carregarEquipe(); this.carregarPresenca(); this.carregarSamara(); this.carregarOperacoes(); if (!this.matTop) this.carregarMelhores(); } },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -955,6 +956,7 @@ document.addEventListener('alpine:init', () => {
     podeVer(p) {
       if (this.papel === 'admin') return true;        // admin sempre vê tudo
       if (p === 'pessoal') return true;               // a própria ficha é de todos
+      if (p === 'infostatus') return this.podeCofre;  // Info/Status: admin ou acesso individual ao cofre
       if (p === 'configuracoes') return false;        // Configurações é só-admin
       if (p === 'onboarding') p = 'comercial';        // onboarding anda com Clientes
       return this.permsDoPapel(this.papel).includes(p);
@@ -1034,6 +1036,8 @@ document.addEventListener('alpine:init', () => {
       try { const r = await this.api('GET', '/config/ui.perfisCustom'); const v = (r && r.valor) ? JSON.parse(r.valor) : null; this.perfisCustom = Array.isArray(v) ? v : []; } catch { this.perfisCustom = []; }
       // permissões editáveis (o que cada perfil acessa)
       try { const r = await this.api('GET', '/config/ui.permissoes'); const v = (r && r.valor) ? JSON.parse(r.valor) : null; this.permissoesCustom = (v && typeof v === 'object') ? v : {}; } catch { this.permissoesCustom = {}; }
+      // acesso individual ao cofre de senhas (admin sempre; outros pela config ui.cofreAcesso)
+      try { this.podeCofre = !!(await this.api('GET', '/cofre-senhas-acesso')).pode; } catch { this.podeCofre = false; }
       this.garantirPaginaPermitida();
     },
     // Salva nomes/descrições dos fixos (ui.papeis) + os perfis personalizados (ui.perfisCustom).

@@ -213,7 +213,7 @@
       </div>
 
       <!-- Info / Status do sistema (só admin) -->
-      <div class="nav-item" x-show="ehAdmin" :class="page==='infostatus'?'active':''" @click="go('infostatus')" title="Saúde dos serviços que o SOM usa + cofre de senhas dos serviços da agência.">
+      <div class="nav-item" x-show="ehAdmin || podeCofre" :class="page==='infostatus'?'active':''" @click="go('infostatus')" title="Saúde dos serviços que o SOM usa + cofre de senhas dos serviços da agência.">
         <span class="nav-icon"><i class="ph ph-activity ic-ph"></i></span><span>Info / Status</span>
       </div>
 
@@ -4409,7 +4409,7 @@
 
         <!-- Abas -->
         <div class="flex gap-2 mb-4">
-          <button class="btn btn-sm" :style="infoAba==='status'?'background:#F9A825;color:#1A1C1E;border-color:#F9A825':'background:var(--surface-2);color:var(--text-2)'" @click="infoAba='status'"><i class="ph ph-activity ic-ph"></i> Status</button>
+          <button class="btn btn-sm" x-show="ehAdmin" :style="infoAba==='status'?'background:#F9A825;color:#1A1C1E;border-color:#F9A825':'background:var(--surface-2);color:var(--text-2)'" @click="infoAba='status'"><i class="ph ph-activity ic-ph"></i> Status</button>
           <button class="btn btn-sm" :style="infoAba==='senhas'?'background:#F9A825;color:#1A1C1E;border-color:#F9A825':'background:var(--surface-2);color:var(--text-2)'" @click="infoAba='senhas'; carregarCofreSenhas()"><i class="ph ph-key ic-ph"></i> Senhas</button>
         </div>
 
@@ -6498,7 +6498,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=433"></script>
+<script src="js/app.js?v=434"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
