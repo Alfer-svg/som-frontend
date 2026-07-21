@@ -1757,23 +1757,42 @@ document.addEventListener('alpine:init', () => {
     // ── Stories orgânicos de hoje — META POR CLIENTE (Cronograma Semanal de Stories) ──
     // Faixa de stories/dia por cliente (referência do Dinho). min = piso da meta.
     get samStoriesMeta() {
-      return [
-        { cliente: 'CMJ', faixa: '2-3', min: 2, alvo: 3 },
-        { cliente: 'Medic', faixa: '2', min: 2, alvo: 2 },
-        { cliente: 'MilPrint', faixa: '2', min: 2, alvo: 2 },
-        { cliente: 'Vetor', faixa: '3', min: 3, alvo: 3 },
-        { cliente: 'Akio', faixa: '1-2', min: 1, alvo: 2 },
-        { cliente: 'Lanche Card', faixa: '3', min: 3, alvo: 3 },
-        { cliente: 'Hospital (HEP)', faixa: '2-3', min: 2, alvo: 3 },
-        { cliente: 'Corpo Livre', faixa: '3+', min: 3, alvo: 3 },
-        { cliente: 'Mediar', faixa: '2-3', min: 2, alvo: 3 },
-        { cliente: 'Studyo', faixa: '3-4', min: 3, alvo: 4 },
-        { cliente: 'Martur', faixa: '3-5', min: 3, alvo: 5 },
-        { cliente: 'SOGNO', faixa: '1-2', min: 1, alvo: 2 },
-        { cliente: 'Vitanutri', faixa: '2-3', min: 2, alvo: 3 },
-        { cliente: 'UNIFACOL', faixa: 'conforme material', min: 1, alvo: 1, demanda: true },
-        { cliente: 'SSM', faixa: 'conforme demanda', min: 1, alvo: 1, demanda: true },
+      // A LISTA de clientes deriva do CADASTRO (samClientes = social ativo): cliente novo
+      // entra sozinho com meta padrão 1-2 e cliente desativado sai — antes era lista fixa
+      // no código e cliente novo (caso MOURA&SERAK 21/07) nunca aparecia no card.
+      // As METAS finas continuam curadas aqui; `casa` = termo que identifica o cliente no
+      // cadastro (mantém o rótulo curto de sempre, que também é a chave dos registros do dia).
+      const CURADAS = [
+        { cliente: 'CMJ', casa: 'cmj', faixa: '2-3', min: 2, alvo: 3 },
+        { cliente: 'Medic', casa: 'medic', faixa: '2', min: 2, alvo: 2 },
+        { cliente: 'MilPrint', casa: 'milprint', faixa: '2', min: 2, alvo: 2 },
+        { cliente: 'Vetor', casa: 'vetor', faixa: '3', min: 3, alvo: 3 },
+        { cliente: 'Akio', casa: 'akio', faixa: '1-2', min: 1, alvo: 2 },
+        { cliente: 'Lanche Card', casa: 'lanche card', faixa: '3', min: 3, alvo: 3 },
+        { cliente: 'Hospital (HEP)', casa: 'hospital', faixa: '2-3', min: 2, alvo: 3 },
+        { cliente: 'Corpo Livre', casa: 'corpo livre', faixa: '3+', min: 3, alvo: 3 },
+        { cliente: 'Mediar', casa: 'mediar', faixa: '2-3', min: 2, alvo: 3 },
+        { cliente: 'Studyo', casa: 'studyo', faixa: '3-4', min: 3, alvo: 4 },
+        { cliente: 'Martur', casa: 'martur', faixa: '3-5', min: 3, alvo: 5 },
+        { cliente: 'SOGNO', casa: 'sogno', faixa: '1-2', min: 1, alvo: 2 },
+        { cliente: 'Vitanutri', casa: 'vitanutri', faixa: '2-3', min: 2, alvo: 3 },
+        // 'ifacol' casa tanto "UNIFACOL" quanto a grafia "UINIFACOL" do cadastro.
+        { cliente: 'UNIFACOL', casa: 'ifacol', faixa: 'conforme material', min: 1, alvo: 1, demanda: true },
+        { cliente: 'SSM', casa: 'smith magenis', faixa: 'conforme demanda', min: 1, alvo: 1, demanda: true },
       ];
+      const norm = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+      const lista = [];
+      const usadas = new Set();
+      for (const c of this.samClientes || []) {
+        const emp = c.empresa || c.nome || '';
+        if (!emp) continue;
+        const cur = CURADAS.find((m) => !usadas.has(m.cliente) && norm(emp).includes(m.casa));
+        if (cur) { usadas.add(cur.cliente); lista.push(cur); }
+        else lista.push({ cliente: emp, faixa: '1-2', min: 1, alvo: 2, auto: true });
+      }
+      // Curadas primeiro (na ordem de sempre), automáticos por ordem alfabética no fim.
+      const ordem = (m) => { const i = CURADAS.indexOf(m); return i >= 0 ? i : CURADAS.length; };
+      return lista.sort((a, b) => ordem(a) - ordem(b) || String(a.cliente).localeCompare(String(b.cliente), 'pt-BR'));
     },
     _samStoryRec(nome) { const h = this._hojeStr(); return this.samStories.find(s => s.cliente === nome && s.data === h); },
     samStoryQtd(nome) { const r = this._samStoryRec(nome); return (r && Number(r.feitos)) || 0; },
