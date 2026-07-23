@@ -619,6 +619,9 @@ document.addEventListener('alpine:init', () => {
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
     cloudCfg: { cloud: '', preset: '' }, uploadando: false, // storage de arquivos (Cloudinary)
     cronTick: 0, // tique de 1s pra o cronômetro ao vivo
+    cronConfirm: null, // modal "ainda produzindo?": { id, nome, deadline, left } — pede confirmação a cada 1h
+    CRON_HORA: 3600, // sessão pede confirmação a cada 1h aberta
+    CRON_GRACA: 300, // após pedir, espera 5min a resposta; sem resposta, encerra
     quickAddCol: '', quickAddText: '', // adicionar cartão rápido
     layouts: [], layoutModal: false, layoutAtual: null, // layout da semana (Fase 2/3)
     semanaOffset: 0, // navegação de período na programação/layouts (0=atual, +1=próximo, -1=anterior)
@@ -702,7 +705,7 @@ document.addEventListener('alpine:init', () => {
       this.finance   = MD.get('som_finance', []);
       this.fornecedores = MD.get('som_fornecedores', []); // cadastro de fornecedores (despesas)
       this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento (cache; fonte = backend)
-      if (this.token) { this.page = MD.get('som_page', 'dashboard'); this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis(); this.startHeartbeat(); this.startChatMonitor(); this.startOnboardingMonitor(); this.registrarPush(); this.go(this.page);
+      if (this.token) { this.page = MD.get('som_page', 'dashboard'); this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis(); this.startHeartbeat(); this.startChatMonitor(); this.startProducaoGuard(); this.startOnboardingMonitor(); this.registrarPush(); this.go(this.page);
         const _card = new URLSearchParams(location.search).get('card'); // abriu pela notificação → vai direto no card
         if (_card) { history.replaceState({}, '', location.pathname); this.$nextTick(() => this.abrirCardPorId(_card)); }
       }
@@ -742,7 +745,7 @@ document.addEventListener('alpine:init', () => {
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
         localStorage.setItem('som_login_visto', '1');
         if (this.lembrarLogin) localStorage.setItem('som_login_email', this.loginEmail); else localStorage.removeItem('som_login_email');
-        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); this.startOnboardingMonitor(); this.registrarPush(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis();
+        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); this.startProducaoGuard(); this.startOnboardingMonitor(); this.registrarPush(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -784,7 +787,24 @@ document.addEventListener('alpine:init', () => {
           lista = lista.filter(p => p.responsavel === eu || (Array.isArray(p.membros) && p.membros.includes(eu)));
         }
         this.projects = lista;
+        this._faxinaSessoesAbandonadas(); // encerra timers esquecidos (aba/navegador fechado)
       } catch { }
+    },
+    // Encerra sessões abertas há mais de 1h SEM confirmação (o dono fechou o
+    // navegador, então o vigia interativo não rodou). Roda a cada carregamento —
+    // como o relatório só é visto dentro do app, o tempo é corrigido a tempo.
+    async _faxinaSessoesAbandonadas() {
+      const limite = (this.CRON_HORA + this.CRON_GRACA) * 1000; // 1h + graça
+      for (const p of (this.projects || [])) {
+        if (!p.cronInicio) continue;
+        if (this.cronConfirm && this.cronConfirm.id === p.id) continue; // modal cuidando dessa
+        const base = new Date(p.cronConfirmadoEm || p.cronInicio).getTime();
+        if (Date.now() - base > limite) {
+          this._fecharSessao(p, { auto: true });
+          try { await this.salvarProjetoApi(p); } catch { }
+          if (this.cardRef && this.cardRef.id === p.id) this.cardRef = p;
+        }
+      }
     },
     async salvarLeadApi(l) { const { id, ...dados } = l; const r = await this.api('POST', '/leads', { id, dados }); if (r && r.id && !id) l.id = r.id; return r; },
     async salvarProjetoApi(p) {
@@ -4876,15 +4896,87 @@ ${this._docFoot()}
     fmtDur(s) { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; const mm = String(m).padStart(2, '0'), xx = String(x).padStart(2, '0'); return h > 0 ? (h + ':' + mm + ':' + xx) : (mm + ':' + xx); },
     async iniciarProducao() {
       const p = this.cardRef; if (!p || p.cronInicio) return;
-      p.cronInicio = new Date().toISOString(); p.cronAutor = (this.usuario && this.usuario.nome) || '';
+      const agora = new Date().toISOString();
+      p.cronInicio = agora; p.cronAutor = (this.usuario && this.usuario.nome) || '';
+      p.cronConfirmadoEm = agora; // marco da última confirmação (pra pedir a cada 1h)
       await this.salvarCard();
     },
     async pararProducao() {
       const p = this.cardRef; if (!p || !p.cronInicio) return;
-      const seg = this.tempoSessao(p); if (!Array.isArray(p.sessoes)) p.sessoes = [];
-      p.sessoes.push({ id: MD.uid(), autor: p.cronAutor || '', inicio: p.cronInicio, fim: new Date().toISOString(), segundos: seg });
-      p.tempoTotal = (p.tempoTotal || 0) + seg; p.cronInicio = null; p.cronAutor = null;
+      await this._fecharSessao(p, { auto: false });
       await this.salvarCard();
+    },
+    // Fecha a sessão aberta de um card e empurra pro histórico de sessões.
+    // auto=false → parada manual (fim = agora). auto=true → o SISTEMA encerrou por
+    // falta de confirmação: credita só até o marco confirmado + 1h e MARCA a sessão.
+    _fecharSessao(p, { auto }) {
+      if (!p || !p.cronInicio) return;
+      const ini = new Date(p.cronInicio).getTime();
+      const base = new Date(p.cronConfirmadoEm || p.cronInicio).getTime();
+      const agora = Date.now();
+      const fimMs = auto ? Math.min(agora, base + this.CRON_HORA * 1000) : agora;
+      const seg = Math.max(0, Math.round((fimMs - ini) / 1000));
+      if (!Array.isArray(p.sessoes)) p.sessoes = [];
+      p.sessoes.push({
+        id: MD.uid(), autor: p.cronAutor || '', inicio: p.cronInicio,
+        fim: new Date(fimMs).toISOString(), segundos: seg,
+        ...(auto ? { encerradoPeloSistema: true, motivo: 'sem confirmação de 1h' } : {}),
+      });
+      p.tempoTotal = (p.tempoTotal || 0) + seg;
+      p.cronInicio = null; p.cronAutor = null; p.cronConfirmadoEm = null;
+    },
+    // ── Vigia de produção: pede confirmação a cada 1h de sessão aberta; sem
+    // resposta, encerra sozinho (e registra a sessão como "encerrada pelo sistema"). ──
+    startProducaoGuard() {
+      if (this._prodGuard) return;
+      this._prodGuard = setInterval(() => this._tickProducao(), 1000);
+    },
+    async _tickProducao() {
+      // 1) countdown do modal aberto + auto-encerramento no fim do prazo
+      if (this.cronConfirm) {
+        const left = Math.max(0, Math.round((this.cronConfirm.deadline - Date.now()) / 1000));
+        this.cronConfirm.left = left;
+        const p = (this.projects || []).find(x => x.id === this.cronConfirm.id);
+        if (!p || !p.cronInicio) { this.cronConfirm = null; return; } // já parou por outro caminho
+        if (left <= 0) {
+          this._fecharSessao(p, { auto: true });
+          const nome = p.nome || p.tema || 'produção';
+          this.cronConfirm = null;
+          try { await this.salvarProjetoApi(p); } catch { }
+          if (this.cardRef && this.cardRef.id === p.id) this.cardRef = p;
+          this.mostrarToast('⏱ Sessão de "' + nome + '" encerrada pelo sistema — sem confirmação.');
+        }
+        return;
+      }
+      // 2) a cada ~10s, procura MINHA sessão aberta que passou de 1h desde a última confirmação
+      this._prodScan = (this._prodScan || 0) + 1;
+      if (this._prodScan % 10 !== 0) return;
+      const eu = (this.usuario && this.usuario.nome) || '';
+      const p = (this.projects || []).find(x => x.cronInicio && (x.cronAutor || '') === eu);
+      if (!p) return;
+      const base = new Date(p.cronConfirmadoEm || p.cronInicio).getTime();
+      if (Date.now() - base >= this.CRON_HORA * 1000) {
+        this.cronConfirm = { id: p.id, nome: p.nome || p.tema || 'produção', deadline: Date.now() + this.CRON_GRACA * 1000, left: this.CRON_GRACA };
+        this.tocarBeep();
+        this.notificarSistema('⏱ Produção ainda em andamento?', 'Confirme em ' + Math.round(this.CRON_GRACA / 60) + ' min ou o cronômetro de "' + this.cronConfirm.nome + '" será encerrado.');
+      }
+    },
+    async confirmarProducao() {
+      const p = this.cronConfirm && (this.projects || []).find(x => x.id === this.cronConfirm.id);
+      this.cronConfirm = null;
+      if (!p || !p.cronInicio) return;
+      p.cronConfirmadoEm = new Date().toISOString(); // reinicia a contagem de 1h
+      try { await this.salvarProjetoApi(p); } catch { }
+      this.mostrarToast('✅ Produção confirmada — seguimos cronometrando.');
+    },
+    async encerrarProducaoAgora() {
+      const p = this.cronConfirm && (this.projects || []).find(x => x.id === this.cronConfirm.id);
+      this.cronConfirm = null;
+      if (!p || !p.cronInicio) return;
+      this._fecharSessao(p, { auto: false });
+      try { await this.salvarProjetoApi(p); } catch { }
+      if (this.cardRef && this.cardRef.id === p.id) this.cardRef = p;
+      this.mostrarToast('■ Produção encerrada.');
     },
     // ── Monitor global de mensagens (notifica mesmo com o card fechado) ──
     startChatMonitor() { if (this._chatMonitor) return; this._chatBaseline = false; this._chatSeen = {}; this._chatMonitor = setInterval(() => this.monitorChat(), 8000); this.monitorChat(); },

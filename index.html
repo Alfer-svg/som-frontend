@@ -43,6 +43,21 @@
   <span x-text="toastMsg"></span>
 </div>
 
+<!-- ⏱ Confirmação de produção: a cada 1h de sessão aberta o sistema pergunta se
+     ainda está produzindo; sem resposta no prazo, encerra sozinho. -->
+<div x-show="cronConfirm" x-cloak x-transition style="position:fixed;inset:0;z-index:10000;background:rgba(20,18,16,.6);display:flex;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;max-width:420px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.35);padding:22px;text-align:center">
+    <div style="font-size:34px;line-height:1">⏱</div>
+    <div style="font-weight:800;font-size:18px;margin-top:6px">Ainda está produzindo?</div>
+    <div class="text-2 fs-13" style="margin-top:6px">Sua sessão em <b x-text="cronConfirm && cronConfirm.nome"></b> passou de 1 hora. Confirme pra continuar cronometrando — senão o sistema encerra automaticamente.</div>
+    <div style="margin:16px 0;font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;color:#dc2626" x-text="cronConfirm && fmtDur(cronConfirm.left)"></div>
+    <div class="flex gap-2" style="justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary" @click="confirmarProducao()">✅ Continuar produção</button>
+      <button class="btn btn-ghost" @click="encerrarProducaoAgora()">■ Encerrar agora</button>
+    </div>
+  </div>
+</div>
+
 <!-- ───────── LOGIN ───────── -->
 <style>
 .lg-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1200px 600px at 50% -10%,#23211d 0%,#0c0b0a 55%,#080807 100%)}
@@ -5806,7 +5821,10 @@
           <div class="text-3 fs-12 fw-700" style="margin-bottom:3px">Sessões</div>
           <template x-for="s in cardRef.sessoes" :key="s.id">
             <div class="flex items-center justify-between fs-12" style="padding:3px 0;border-bottom:1px solid var(--border)">
-              <span class="text-2"><b x-text="s.autor"></b> · <span x-text="fmtDataHora(s.inicio)"></span></span>
+              <span class="text-2">
+                <b x-text="s.autor"></b> · <span x-text="fmtDataHora(s.inicio)"></span>
+                <span x-show="s.encerradoPeloSistema" class="badge fs-10 fw-700" style="background:#FEF3C7;color:#B45309;margin-left:6px" title="O sistema encerrou por falta de confirmação de 1h">⏱ encerrada pelo sistema</span>
+              </span>
               <span class="fw-700" style="font-variant-numeric:tabular-nums" x-text="fmtDur(s.segundos)"></span>
             </div>
           </template>
@@ -6498,7 +6516,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=434"></script>
+<script src="js/app.js?v=435"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
