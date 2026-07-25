@@ -1162,12 +1162,18 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       });
       var temInter=totI>0;
       var blocoGenero=function(titulo,mVal,fVal){
+        // PIZZA (pedido do Dinho): fatia azul = masculino sobre o fundo rosa = feminino
         var tot=(mVal+fVal)||1; var pM=Math.round(mVal/tot*100), pF=100-pM;
+        var ang=(mVal/tot)*360, rad=Math.PI/180;
+        var x=60+54*Math.sin(ang*rad), y=60-54*Math.cos(ang*rad), large=ang>180?1:0;
+        var fatiaM='M60 60 L60 6 A54 54 0 '+large+' 1 '+x.toFixed(1)+' '+y.toFixed(1)+' Z';
         return '<div><div style="font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px">'+titulo+'</div>'
-          +'<div style="display:flex;height:26px;border-radius:8px;overflow:hidden;font-size:12px;font-weight:700;color:#fff">'
-          +'<div style="width:'+pM+'%;background:#4285F4;display:flex;align-items:center;justify-content:center;min-width:34px">'+pM+'%</div>'
-          +'<div style="width:'+pF+'%;background:#EC407A;display:flex;align-items:center;justify-content:center;min-width:34px">'+pF+'%</div></div>'
-          +'<div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin-top:6px"><span>♂ '+F.format(mVal)+'</span><span>♀ '+F.format(fVal)+'</span></div></div>';
+          +'<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'
+          +'<svg width="128" height="128" viewBox="0 0 120 120" style="flex-shrink:0"><circle cx="60" cy="60" r="54" fill="#EC407A"/><path d="'+fatiaM+'" fill="#4285F4"/><circle cx="60" cy="60" r="54" fill="none" stroke="#fff" stroke-width="2"/></svg>'
+          +'<div style="font-size:12.5px;line-height:2.1">'
+          +'<div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4285F4;margin-right:7px"></i>♂ Masculino — <b>'+F.format(mVal)+'</b> ('+pM+'%)</div>'
+          +'<div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#EC407A;margin-right:7px"></i>♀ Feminino — <b>'+F.format(fVal)+'</b> ('+pF+'%)</div>'
+          +'</div></div></div>';
       };
       var blocoFaixas=function(titulo,mapa,tot){
         var ordem=Object.keys(mapa).sort(); var mx=Math.max.apply(null,ordem.map(function(k){return mapa[k];}))||1;
