@@ -1122,7 +1122,36 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     }
     // pautas / adversários: sem fonte real agora → "em coleta"
     var pau=byId('pautas'); if(pau&&(!api.pautas||!api.pautas.disponivel))pau.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Em coleta — a classificação de temas por IA entra quando ligada.</div>';
-    var adv=byId('advs'); if(adv&&(!api.adversarios||!api.adversarios.disponivel))adv.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Configure os @ dos adversários pra comparar presença.</div>';
+    var adv=byId('advs');
+    if(adv&&api.adversarios&&api.adversarios.disponivel){
+      // Comparativo REAL por presença pública no IG (seguidores) — não alcance demo
+      var vs=api.adversarios;
+      var lista=[{nome:'Você',seguidores:(vs.voce||{}).seguidores,me:true}].concat((vs.concorrentes||[]).map(function(x){return {nome:x.nome||('@'+x.handle),seguidores:x.seguidores,me:false};}));
+      var mxA=Math.max.apply(null,lista.map(function(x){return x.seguidores||0;}))||1;
+      adv.innerHTML=lista.map(function(x){var v=x.seguidores;var w=v?Math.round(v/mxA*100):0;
+        return '<div class="adv '+(x.me?'me':'')+'"><span class="nm">'+esc(x.nome)+'</span><span class="tk"><i style="width:'+w+'%"></i></span><span class="vl tnum">'+(v!=null?kfmt(v):'coletando')+'</span></div>';}).join('');
+      var advChip=adv.parentNode&&adv.parentNode.querySelector('.chip'); if(advChip)advChip.textContent='seguidores · IG';
+    }else if(adv){ adv.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Configure os @ dos adversários pra comparar presença.</div>'; }
+    // Leitura do dia REAL (IA com guardrail do backend; tem fallback sem IA)
+    var AN=api.analise||{};
+    if(AN.headline){ var iaH=byId('iaH'); if(iaH)iaH.textContent=AN.headline; var iaP=byId('iaP'); if(iaP)iaP.textContent=AN.texto||''; var iaT=byId('iaTags'); if(iaT)iaT.innerHTML=(AN.destaques||[]).map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join(''); }
+    // Dicas CURADAS pela equipe (sem curadoria = aviso, não dica inventada)
+    var dic=byId('dicas');
+    if(dic){ var DC=api.dicas||[];
+      dic.innerHTML=DC.length?DC.map(function(t){return '<div class="dica"><div class="ic" style="background:var(--bluebg);color:var(--blue)">'+svgi('ideia')+'</div><div class="tx">'+esc(String(t))+'</div></div>';}).join('')
+        :'<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Em curadoria pela equipe Maracatu — as orientações da semana aparecem aqui.</div>'; }
+    // Agenda REAL (reuniões + gravações do sistema) + o dia da eleição
+    var evB=byId('eventos');
+    if(evB){ var AG=api.agenda||{}; var evs=[];
+      (AG.reunioes||[]).forEach(function(e){evs.push({data:e.data,t:e.titulo||e.tipo,s:[e.hora,e.nota].filter(Boolean).join(' · '),ic:'megafone'});});
+      (AG.gravacoes||[]).forEach(function(g){evs.push({data:g.data,t:g.tipo||'Captação',s:g.local||'',ic:'video'});});
+      var elei=(api.candidato||{}).eleicao; if(elei)evs.push({data:String(elei).slice(0,10),t:'Eleição — 1º turno',s:'Dia da votação',ic:'urna'});
+      evs.sort(function(a,b){return String(a.data).localeCompare(String(b.data));});
+      var MES=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+      evB.innerHTML=evs.length?evs.slice(0,6).map(function(e){var dt=String(e.data).split('-');return '<div class="ev"><div class="dt"><div class="d tnum">'+dt[2]+'</div><div class="m">'+(MES[parseInt(dt[1],10)-1]||'')+'</div></div><div class="info"><div class="t">'+esc(e.t)+'</div><div class="s">'+esc(e.s||'')+'</div></div><span class="tp">'+svgi(e.ic)+'</span></div>';}).join('')
+        :'<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Sem eventos agendados no sistema.</div>'; }
+    // índice real não tem "período anterior" — texto do gauge fica honesto
+    var gtg=document.querySelector('.gtag'); if(gtg&&IDX.valor!=null)gtg.innerHTML='▲ '+(IDX.valor>=70?'em alta':'estável');
     // mapa de calor real (Leaflet, pinos por bairro)
     if(M.disponivel&&M.pontos&&M.pontos.length){ if(window.L)desenharMapaReal(M.pontos); else setTimeout(function(){if(window.L)desenharMapaReal(M.pontos);},600); }
   }catch(e){ console.warn('aplicarReal falhou',e); } };
