@@ -1105,6 +1105,16 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     var ativas=C.filter(function(c){return c.status==='ACTIVE';}).length, pausadas=C.length-ativas;
     var cc=byId('campCount'); if(cc)cc.textContent=ativas+' ativas'+(pausadas?' · '+pausadas+' pausada'+(pausadas>1?'s':''):'');
     var ch=byId('campChip'); if(ch)ch.textContent=ativas+' campanhas ativas';
+    // Chip do SALDO da conta de anúncios (logo Meta + valor disponível), ao lado do de campanhas
+    var CA=api.contaAds||null;
+    if(ch&&CA&&CA.saldo!=null&&!byId('chipSaldo')){
+      var sp=document.createElement('span'); sp.className='chip'; sp.id='chipSaldo';
+      sp.style.cssText='display:inline-flex;align-items:center;gap:6px;margin-left:8px;background:#e8f0fe;color:#0866FF';
+      sp.innerHTML='<svg width="16" height="11" viewBox="0 0 32 20" style="flex-shrink:0"><path d="M2 10c0-4.4 2.6-8 6-8 5.5 0 10.5 16 16 16 3.4 0 6-3.6 6-8s-2.6-8-6-8c-5.5 0-10.5 16-16 16-3.4 0-6-3.6-6-8z" fill="none" stroke="#0866FF" stroke-width="3.2" stroke-linecap="round"/></svg>'
+        +'R$ '+Number(CA.saldo).toLocaleString('pt-BR',{minimumFractionDigits:2})+' de saldo';
+      sp.title='Saldo disponível na conta de anúncios (Meta), atualizado '+(CA.em?new Date(CA.em).toLocaleString('pt-BR',{timeZone:'America/Recife',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'');
+      ch.parentNode.insertBefore(sp,ch.nextSibling);
+    }
     var camps=byId('campanhas');
     if(camps)camps.innerHTML=C.length?C.map(function(c){
       var loc=c.local||'', st=c.status==='ACTIVE'?'':'pause';
