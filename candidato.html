@@ -27,7 +27,11 @@
   /* mobile: nada vaza a largura da tela (tiles do mapa, barras, etc.) */
   html,body{max-width:100%;overflow-x:hidden}
   #mapCard,.leaflet-container,.mapWrap{max-width:100%;overflow:hidden}
-  @media(max-width:600px){ .demo-grid{grid-template-columns:1fr !important} }
+  @media(max-width:600px){
+    .demo-grid{grid-template-columns:1fr !important}
+    /* selo "visão da equipe" não cobre o conteúdo no celular: canto, compacto */
+    #badgeAdmin{left:10px;right:auto;transform:none;bottom:10px;font-size:10.5px;padding:6px 11px;max-width:calc(100vw - 20px);opacity:.94}
+  }
   .wrap{min-height:100vh;background:
       radial-gradient(1100px 480px at 88% -6%, rgba(66,133,244,.06), transparent 60%),
       radial-gradient(800px 420px at 4% 104%, rgba(52,168,83,.05), transparent 55%), var(--bg);
