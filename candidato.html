@@ -27,6 +27,7 @@
   /* mobile: nada vaza a largura da tela (tiles do mapa, barras, etc.) */
   html,body{max-width:100%;overflow-x:hidden}
   #mapCard,.leaflet-container,.mapWrap{max-width:100%;overflow:hidden}
+  @media(max-width:600px){ .demo-grid{grid-template-columns:1fr !important} }
   .wrap{min-height:100vh;background:
       radial-gradient(1100px 480px at 88% -6%, rgba(66,133,244,.06), transparent 60%),
       radial-gradient(800px 420px at 4% 104%, rgba(52,168,83,.05), transparent 55%), var(--bg);
@@ -1210,7 +1211,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       var pn=document.createElement('div'); pn.className='panel'; pn.id='demoPanel';
       // 2 colunas SEMPRE (gênero | idade, lado a lado), plataforma embaixo na largura toda
       pn.innerHTML='<div class="p-head"><h3><span class="dot"></span>Quem sua campanha alcança</h3><span class="chip blue">dados reais das campanhas</span></div>'
-        +'<div style="display:grid;grid-template-columns:1fr 1.35fr;gap:16px 22px;align-items:start">'
+        +'<div class="demo-grid" style="display:grid;grid-template-columns:1fr 1.35fr;gap:16px 22px;align-items:start">'
         +blocoGenero('Alcance — Masc × Fem',somaG.male,somaG.female,AN_DM.generoAlcance)
         +blocoFaixas('Alcance por idade',faixas,totD,AN_DM.idadeAlcance)
         +(temInter?blocoGenero('Interações — Masc × Fem',somaGI.male,somaGI.female,AN_DM.generoInteracoes):'')
