@@ -3650,8 +3650,10 @@
         function fitCand(){
           var f=document.getElementById('candFrame');
           if(!f||!f.offsetParent) return; // página não está aberta
+          var vh=window.innerHeight||document.documentElement.clientHeight||0;
+          if(vh<300) return; // viewport ainda não medido (carregamento) — tenta no próximo tick
           var topo=f.getBoundingClientRect().top+window.scrollY;
-          f.style.height=Math.max(520, window.innerHeight-topo-20)+'px';
+          f.style.height=Math.max(520, vh-topo-20)+'px';
         }
         window.addEventListener('resize', fitCand);
         setInterval(fitCand, 800);
