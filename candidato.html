@@ -1093,7 +1093,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     setV('[data-kpi=apoiadores]',K.apoiadores,function(v){return F.format(v);});
     if(K.apoiadores==null){ var apd=byId('apoD'); var apLinha=apd&&apd.closest('.d'); if(apLinha)apLinha.style.display='none'; }
     setV('[data-kpi=engaj]',K.engajamentoPct,function(v){return String(v).replace('.',',');});
-    if(K.engajamentoPct==null){ var eng=$('[data-kpi=engaj]'); var engV=eng&&eng.closest('.v'); if(engV)engV.textContent='—'; var engTile=eng&&eng.closest('.tile'); var engD=engTile&&engTile.querySelector('.d'); if(engD)engD.style.display='none'; }
+    if(K.engajamentoPct==null){ var eng=$('[data-kpi=engaj]'); var engTile=eng&&eng.closest('.tile'); var engD=engTile&&engTile.querySelector('.d'); if(engD)engD.style.display='none'; var engV=eng&&eng.closest('.v'); if(engV)engV.textContent='—'; }
     setV('[data-kpi=contatos]',K.contatos,function(v){return F.format(v);});
     // orçamento / gasto
     var g=byId('lgGasto'); if(g)g.textContent=O.gasto!=null?money(O.gasto):'—';
