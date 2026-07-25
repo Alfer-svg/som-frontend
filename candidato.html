@@ -555,9 +555,21 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     <div class="tile t-red reveal" style="animation-delay:.23s"><div class="lbl">Contatos captados</div><div class="v tnum" data-kpi="contatos">0</div><div class="d">WhatsApp · base de apoio</div><canvas class="spark" data-spark="1"></canvas></div>
   </div>
 
+  <!-- CAMPANHAS + FORÇA (logo abaixo dos KPIs — os anúncios ficam em evidência) -->
+  <div class="row split2">
+    <div class="panel reveal" style="animation-delay:.26s">
+      <div class="p-head"><h3><span class="dot"></span>Campanhas rodando</h3><span class="chip" id="campCount">—</span></div>
+      <div id="campanhas"></div>
+    </div>
+    <div class="panel reveal" style="animation-delay:.29s">
+      <div class="p-head"><h3><span class="dot"></span>Onde você é mais forte</h3><span class="chip amb">por zona</span></div>
+      <div id="regioes"></div>
+    </div>
+  </div>
+
   <!-- MAPA PE + ORÇAMENTO -->
   <div class="row split">
-    <div class="panel reveal" id="mapCard" style="animation-delay:.26s;position:relative">
+    <div class="panel reveal" id="mapCard" style="animation-delay:.32s;position:relative">
       <div class="p-head"><h3><span class="dot"></span>Mapa de calor — Pernambuco</h3><div style="display:flex;align-items:center;gap:8px"><span class="chip amb">por cidade</span><button class="fs-btn" id="mapFs" title="Tela cheia" aria-label="Ver mapa em tela cheia">⛶</button></div></div>
       <svg id="map" viewBox="0 0 920 310" preserveAspectRatio="xMidYMid meet"></svg>
       <div class="map-tip" id="mapTip"></div>
@@ -582,18 +594,6 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
         <div class="m"><div class="k">Pessoas impactadas</div><div class="v tnum" id="impact">0</div></div>
         <div class="m"><div class="k">Custo por pessoa</div><div class="v tnum" id="cpp">R$0</div></div>
       </div>
-    </div>
-  </div>
-
-  <!-- CAMPANHAS + FORÇA -->
-  <div class="row split2">
-    <div class="panel reveal" style="animation-delay:.32s">
-      <div class="p-head"><h3><span class="dot"></span>Campanhas rodando</h3><span class="chip" id="campCount">—</span></div>
-      <div id="campanhas"></div>
-    </div>
-    <div class="panel reveal" style="animation-delay:.35s">
-      <div class="p-head"><h3><span class="dot"></span>Onde você é mais forte</h3><span class="chip amb">por zona</span></div>
-      <div id="regioes"></div>
     </div>
   </div>
 
