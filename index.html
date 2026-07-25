@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=249">
+  <link rel="stylesheet" href="css/styles.css?v=250">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -121,7 +121,9 @@
 <div class="app" x-show="autenticado" x-cloak>
 
   <!-- ───────── SIDEBAR ───────── -->
-  <aside class="sidebar">
+  <!-- Overlay do drawer mobile (fecha o menu ao tocar fora) -->
+  <div class="menu-overlay" :class="menuAberto?'aberta':''" @click="menuAberto=false"></div>
+  <aside class="sidebar" :class="menuAberto?'aberta':''">
     <div class="brand">
       <img class="brand-logo" src="assets/logo-horizontal.png?v=7" alt="Maracatu Digital Intelligence">
     </div>
@@ -266,6 +268,7 @@
   <!-- ───────── MAIN ───────── -->
   <main class="main">
     <header class="topbar">
+      <button class="menu-btn" @click="menuAberto=true" aria-label="Abrir menu"><i class="ph ph-list"></i></button>
       <div>
         <div class="page-title" x-text="{dashboard:'Dashboard',painelComercial:'Painel Comercial',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Produção — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos',pessoal:'Pessoal — Fichas de Registro',configuracoes:'Configurações',relatorios:'Relatórios — Ponto e Produção'}[page]"></div>
       </div>
@@ -6534,7 +6537,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=436"></script>
+<script src="js/app.js?v=437"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
