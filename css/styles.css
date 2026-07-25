@@ -331,8 +331,12 @@ i.ic-ph{font-size:1.25em;line-height:1;vertical-align:-0.18em;display:inline-fle
   .content{ padding:16px 14px; }
   .page-title{ font-size:17px; }
   /* topbar rola horizontalmente se tiver muitos botões, sem estourar a tela */
-  .topbar{ overflow-x:auto; }
-  .search{ min-width:120px; }
+  .topbar{ overflow-x:auto; height:auto; min-height:56px; }
+  /* título nunca quebra em várias linhas apertadas */
+  .topbar > div:first-of-type{ flex:1 1 auto; min-width:0; }
+  .page-title{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .spacer{ flex:0 0 6px; }
+  .search{ min-width:120px; flex-shrink:0; }
   /* grids colapsam para 1 coluna: 2/3/4 colunas ficam ilegíveis a 375px */
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
   /* tabelas: o card rola na horizontal em vez de a página estourar */
