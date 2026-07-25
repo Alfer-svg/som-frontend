@@ -1176,14 +1176,15 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       var plats=(DM.plataformas||[]).slice().sort(function(a,b){return b.reach-a.reach;});
       var totP=plats.reduce(function(s,x){return s+(x.reach||0);},0)||1;
       var pn=document.createElement('div'); pn.className='panel'; pn.id='demoPanel';
+      // 2 colunas SEMPRE (gênero | idade, lado a lado), plataforma embaixo na largura toda
       pn.innerHTML='<div class="p-head"><h3><span class="dot"></span>Quem sua campanha alcança</h3><span class="chip blue">dados reais das campanhas</span></div>'
-        +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px">'
+        +'<div style="display:grid;grid-template-columns:1fr 1.35fr;gap:16px 22px;align-items:start">'
         +blocoGenero('Alcance — Masc × Fem',somaG.male,somaG.female)
         +blocoFaixas('Alcance por idade',faixas,totD)
         +(temInter?blocoGenero('Interações — Masc × Fem',somaGI.male,somaGI.female):'')
         +(temInter?blocoFaixas('Interações por idade',faixasI,totI):'')
         // plataforma
-        +'<div><div style="font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px">De onde vem o alcance</div>'
+        +'<div style="grid-column:1/-1"><div style="font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px">De onde vem o alcance</div>'
         +plats.map(function(x){return '<div class="bar-row"><span class="nm">'+esc(PLAT_NOME[x.plataforma]||x.plataforma)+'</span><span class="bar-track"><i class="bar-fill" style="width:'+Math.round(x.reach/(plats[0].reach||1)*100)+'%"></i></span><span class="vl tnum">'+Math.round(x.reach/totP*100)+'%</span></div>';}).join('')+'</div>'
         +'</div>';
       var mapaPn=byId('mapCard'); if(mapaPn&&mapaPn.parentNode)mapaPn.parentNode.insertBefore(pn,mapaPn.nextSibling); else document.body.appendChild(pn);
