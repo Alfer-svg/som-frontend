@@ -1353,6 +1353,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       var b=document.createElement('div'); b.id='badgeAdmin'; b.textContent='Visão da equipe · '+(info.nome); document.body.appendChild(b);
       montarAcessos(clienteId,somTok).then(function(){ montarLogOtimizacoes(clienteId,somTok,info.nome); }); // quadros da equipe, na ordem
       montarDiagnostico(clienteId,somTok); // diagnóstico interno no topo (só a equipe vê)
+      montarCardsEquipe(d,clienteId,somTok); // base de seguidores + menções + SEO (só a equipe vê)
       if(window.__replay)setTimeout(window.__replay,60);
     }catch(e){ document.documentElement.classList.remove('boot-equipe'); id('loginScreen').style.display='flex'; id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
   }
@@ -1410,6 +1411,55 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   }
 
   // Diagnóstico INTERNO (visão da equipe, no topo): pontos negativos + soluções, pela IA.
+  // ── Cards da EQUIPE: base de seguidores (heurística), menções na web e SEO do site ──
+  function cardEquipe(id,titulo,chip,corpo){
+    var pn=document.createElement('div'); pn.className='panel'; pn.id=id;
+    pn.innerHTML='<div class="p-head"><h3><span class="dot"></span>'+titulo+'</h3><span class="chip amb">'+chip+'</span></div><div class="corpo">'+corpo+'</div>'
+      +'<div style="margin-top:10px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;background:#FEE2E2;color:#991B1B;padding:3px 8px;border-radius:99px">SÓ A EQUIPE VÊ</span></div>';
+    var anc=document.getElementById('topPostsPanel')||document.getElementById('demoPanel')||document.getElementById('mapCard');
+    if(anc&&anc.parentNode)anc.parentNode.insertBefore(pn,anc.nextSibling); else document.body.appendChild(pn);
+    return pn;
+  }
+  function montarCardsEquipe(painel,clienteId,somTok){
+    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+    try{
+      // 1) Base de seguidores (vem no payload do painel)
+      var BS=painel.baseSeguidores;
+      if(BS&&BS.disponivel){
+        var cores={saudavel:['#EAF3DE','#27500A','Base saudável'],atencao:['#FEF3E2','#92400E','Atenção'],suspeito:['#FDEEEE','#8B0000','Sinais suspeitos']};
+        var cv=cores[BS.veredito]||cores.atencao;
+        cardEquipe('cardBase','Base de seguidores — real ou comprada?','indício, não prova',
+          '<div style="display:inline-block;padding:5px 12px;border-radius:99px;font-weight:800;font-size:12.5px;background:'+cv[0]+';color:'+cv[1]+';margin-bottom:9px">'+cv[2]+'</div>'
+          +(BS.pontos||[]).map(function(t){return '<div style="font-size:12.5px;line-height:1.5;padding:3px 0">• '+esc(t)+'</div>';}).join('')
+          +'<div style="font-size:11px;color:var(--mut);margin-top:7px">'+esc(BS.aviso||'')+'</div>');
+      }
+      // 2) Menções na web (busca demora ~20-40s → carrega async com estado)
+      var cm=cardEquipe('cardMencoes','Menções na web — risco de imagem','busca diária','<div style="color:var(--mut);font-size:12.5px">Varrendo notícias e menções recentes… (~30s na primeira vez do dia)</div>');
+      fetch(API+'/cliente-portal/admin/mencoes-candidato/'+clienteId,{headers:{'Authorization':'Bearer '+somTok}}).then(function(r){return r.json();}).then(function(m){
+        var corpo=cm.querySelector('.corpo');
+        if(!m||!m.disponivel){corpo.innerHTML='<div style="color:var(--mut);font-size:12.5px">Sem varredura hoje'+(m&&m.motivo?' — '+esc(m.motivo):'')+'.</div>';return;}
+        var tomCor={negativa:['#FDEEEE','#8B0000'],neutra:['#F1F3F4','#5F6368'],positiva:['#EAF3DE','#27500A']};
+        corpo.innerHTML='<div style="font-size:12.5px;line-height:1.5;margin-bottom:8px">'+esc(m.resumo||'')+'</div>'
+          +(m.itens||[]).map(function(x){var c=tomCor[x.tom]||tomCor.neutra;
+            return '<a href="'+esc(x.url||'#')+'" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;padding:7px 0;border-top:1px dashed var(--line)">'
+              +'<span style="font-size:10px;font-weight:800;background:'+c[0]+';color:'+c[1]+';padding:2px 7px;border-radius:99px;margin-right:6px">'+esc((x.tom||'').toUpperCase())+(x.tom==='negativa'?' · risco '+esc(x.risco||''):'')+'</span>'
+              +'<span style="font-size:12.5px;font-weight:600">'+esc(x.titulo||'')+'</span>'
+              +'<div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+esc(x.fonte||'')+' — '+esc(x.nota||'')+'</div></a>';}).join('');
+      }).catch(function(){var c2=cm.querySelector('.corpo'); if(c2)c2.innerHTML='<div style="color:var(--mut);font-size:12.5px">Falha na varredura — tente recarregar.</div>';});
+      // 3) SEO/GEO do site
+      var cs=cardEquipe('cardSeo','SEO do site — deficiências','auditoria semanal','<div style="color:var(--mut);font-size:12.5px">Auditando o site…</div>');
+      fetch(API+'/cliente-portal/admin/seo-site/'+clienteId,{headers:{'Authorization':'Bearer '+somTok}}).then(function(r){return r.json();}).then(function(a){
+        var corpo=cs.querySelector('.corpo');
+        if(!a||!a.disponivel){corpo.innerHTML='<div style="color:var(--mut);font-size:12.5px">'+esc((a&&a.motivo)||'Auditoria indisponível')+'.</div>';return;}
+        corpo.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-family:inherit;font-size:26px;font-weight:800">'+a.nota+'<span style="font-size:13px;color:var(--mut)">/100</span></span><a href="'+esc(a.site)+'" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue)">'+esc(a.site)+'</a></div>'
+          +'<div style="font-size:11px;font-weight:800;color:#8B0000;text-transform:uppercase;letter-spacing:.04em;margin:6px 0 3px">Deficiências ('+(a.problemas||[]).length+')</div>'
+          +(a.problemas||[]).map(function(t){return '<div style="font-size:12.5px;line-height:1.5;padding:2px 0">✗ '+esc(t)+'</div>';}).join('')
+          +'<div style="font-size:11px;font-weight:800;color:#27500A;text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px">Ok ('+(a.oks||[]).length+')</div>'
+          +(a.oks||[]).map(function(t){return '<div style="font-size:12px;color:var(--mut);padding:1px 0">✓ '+esc(t)+'</div>';}).join('')
+          +'<div style="font-size:12px;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:9px"><b>Busca por IA (GEO):</b> '+esc(a.geo||'')+'</div>';
+      }).catch(function(){var c3=cs.querySelector('.corpo'); if(c3)c3.innerHTML='<div style="color:var(--mut);font-size:12.5px">Falha na auditoria — tente recarregar.</div>';});
+    }catch(e){console.warn('cards equipe',e);}
+  }
   async function montarDiagnostico(clienteId,somTok){
     var escq=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
     var card=document.createElement('section');
