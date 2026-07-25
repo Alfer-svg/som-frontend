@@ -1091,8 +1091,9 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     var setV=function(sel,val,fmt){ var el=$(sel); if(el)el.textContent=(val==null?'—':fmt(val)); };
     setV('[data-kpi=alcance]',K.alcance,function(v){return kfmt(v);}); var ad=byId('alcDs'); if(ad)ad.textContent='pessoas únicas';
     setV('[data-kpi=apoiadores]',K.apoiadores,function(v){return F.format(v);});
-    if(K.apoiadores==null){ var apd=byId('apoD'); if(apd&&apd.parentNode)apd.parentNode.style.display='none'; }
+    if(K.apoiadores==null){ var apd=byId('apoD'); var apLinha=apd&&apd.closest('.d'); if(apLinha)apLinha.style.display='none'; }
     setV('[data-kpi=engaj]',K.engajamentoPct,function(v){return String(v).replace('.',',');});
+    if(K.engajamentoPct==null){ var eng=$('[data-kpi=engaj]'); var engV=eng&&eng.closest('.v'); if(engV)engV.textContent='—'; var engTile=eng&&eng.closest('.tile'); var engD=engTile&&engTile.querySelector('.d'); if(engD)engD.style.display='none'; }
     setV('[data-kpi=contatos]',K.contatos,function(v){return F.format(v);});
     // orçamento / gasto
     var g=byId('lgGasto'); if(g)g.textContent=O.gasto!=null?money(O.gasto):'—';
