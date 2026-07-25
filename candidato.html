@@ -719,7 +719,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   ];
 
   let cur='30d';
-  function animateNum(el,to,fmt,dur){ if(reduce){el.textContent=fmt(to);return;} const from=parseFloat(el.dataset.from||0);dur=dur||900;const t0=performance.now();el.dataset.from=to;(function s(now){const p=Math.min(1,(now-t0)/dur);el.textContent=fmt(from+(to-from)*easeOut(p));if(p<1)requestAnimationFrame(s);})(t0); }
+  function animateNum(el,to,fmt,dur){ if(reduce){el.textContent=fmt(to);return;} const from=parseFloat(el.dataset.from||0);dur=dur||900;const t0=performance.now();el.dataset.from=to;(function s(now){if(window.__realOn)return;const p=Math.min(1,(now-t0)/dur);el.textContent=fmt(from+(to-from)*easeOut(p));if(p<1)requestAnimationFrame(s);})(t0); }
   function hexA(h,a){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;}
   function lerp(a,b,t){return a+(b-a)*t;}
   function heatColor(v){ // 0..100 → Maracatu blue→grn→amb→red
@@ -822,6 +822,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   }
 
   function paint(p){
+    if(window.__realOn)return; // dados reais na tela — o demo não repinta
     cur=p;const d=DATA[p];momData=d.mom.slice();momLabels=d.momL.slice();
     animateNum($('[data-kpi=alcance]'),d.alcance,v=>kfmt(Math.round(v)));$('#alcDs').textContent=`▲ +${d.alcDelta}% no período`;
     animateNum($('[data-kpi=apoiadores]'),d.apoiadores,v=>F.format(Math.round(v)));animateNum($('#apoD'),d.apoDelta,v=>F.format(Math.round(v)));$('#apoP').textContent=`(+${d.apoPct}%)`;
@@ -873,9 +874,14 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   if(!reduce){
     const bump=el=>{el.classList.remove('bumped');void el.offsetWidth;el.classList.add('bumped');};
     let liveImp=ORC.impactadas;
-    setInterval(()=>{liveImp+=Math.floor(140+Math.random()*520);const im=$('#impact');im.textContent=kfmt(liveImp);$('#cpp').textContent='R$ '+(ORC.gasto/liveImp).toFixed(3).replace('.',',');bump(im);},3800);
-    setInterval(()=>{const el=$('[data-kpi=contatos]');const n=parseInt(el.textContent.replace(/\D/g,''))||0;el.textContent=F.format(n+Math.floor(1+Math.random()*3));bump(el);},6200);
-    setInterval(()=>{const el=$('[data-kpi=alcance]');const b=parseFloat(el.dataset.from||0)+Math.floor(200+Math.random()*900);el.dataset.from=b;el.textContent=kfmt(Math.round(b));bump(el);},5000);
+    // Tickers do MODO DEMO (números "vivos"). Registrados em __demoTimers pra o
+    // __aplicarReal DESLIGAR quando entram dados reais — senão eles atropelam os
+    // valores da API segundos depois (bug visto no Túlio: 57 mil virava 291 mil).
+    window.__demoTimers=[
+      setInterval(()=>{liveImp+=Math.floor(140+Math.random()*520);const im=$('#impact');im.textContent=kfmt(liveImp);$('#cpp').textContent='R$ '+(ORC.gasto/liveImp).toFixed(3).replace('.',',');bump(im);},3800),
+      setInterval(()=>{const el=$('[data-kpi=contatos]');const n=parseInt(el.textContent.replace(/\D/g,''))||0;el.textContent=F.format(n+Math.floor(1+Math.random()*3));bump(el);},6200),
+      setInterval(()=>{const el=$('[data-kpi=alcance]');const b=parseFloat(el.dataset.from||0)+Math.floor(200+Math.random()*900);el.dataset.from=b;el.textContent=kfmt(Math.round(b));bump(el);},5000)
+    ];
   }
 
   // ===== INTELIGÊNCIA ELEITORAL (fonte: pesquisa TSE/TRE-PE/ALEPE) =====
@@ -1060,6 +1066,23 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     if(!api)return;
     var $=function(s){return document.querySelector(s);}, byId=function(i){return document.getElementById(i);};
     var K=api.kpis||{}, O=api.orcamento||{}, Fo=api.forca||{}, M=api.mapa||{}, IDX=api.indice||{}, C=api.campanhas||[];
+    // DESLIGA o modo demo: mata os tickers que incrementam números sozinhos e
+    // esconde os sparklines fictícios (senão sobrescrevem os dados reais).
+    window.__realOn=true; // paint()/animateNum param na hora (anti-corrida com a animação demo)
+    (window.__demoTimers||[]).forEach(clearInterval); window.__demoTimers=[];
+    document.querySelectorAll('canvas[data-spark]').forEach(function(c){c.style.display='none';});
+    // Momentum: só desenha com histórico REAL (2+ dias de snapshot); senão avisa que está em coleta.
+    var MO=api.momentum||{}; var momPanel=cv&&cv.parentNode;
+    if(MO.disponivel && (MO.serie||[]).length>=2){
+      momData=MO.serie.map(function(p){return p.alcance;});
+      momLabels=MO.serie.map(function(p){return p.data;});
+      animMom();
+      var mch=momPanel&&momPanel.querySelector('.chip'); if(mch)mch.textContent=(momData[momData.length-1]>=momData[0])?'crescendo':'estável';
+    }else if(momPanel){
+      cv.style.display='none'; var mlv=byId('momLive'); if(mlv)mlv.style.display='none';
+      var mch2=momPanel.querySelector('.chip'); if(mch2)mch2.textContent='em coleta';
+      if(!byId('momColeta')){var dv=document.createElement('div');dv.id='momColeta';dv.style.cssText='color:var(--mut);font-size:13px;padding:14px 4px';dv.textContent='Histórico diário em coleta — o gráfico aparece com alguns dias de registro.';momPanel.appendChild(dv);}
+    }
     // seletor de período fora do ar (o retrato real é o acumulado, não por período demo)
     var tg=byId('toggle'); if(tg)tg.style.display='none'; var cb=byId('customBox'); if(cb)cb.style.display='none';
     // índice
