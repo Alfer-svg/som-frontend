@@ -3639,9 +3639,24 @@
             <button class="btn btn-sm" @click="window.open('candidato.html?cliente='+encodeURIComponent(candSel),'_blank')" title="Abrir em tela cheia, numa aba própria"><i class="ph ph-arrow-square-out ic-ph"></i> Tela cheia</button>
           </div>
         </div>
-        <!-- altura casa com o viewport (topbar+título ≈ 215px): tudo cabe sem rolagem externa — o scroll fica só DENTRO do painel (sem faixa cinza sobrando embaixo) -->
-        <iframe x-show="candSel" :src="page==='candidato' && candSel ? ('candidato.html?cliente='+encodeURIComponent(candSel)) : ''" style="width:100%;height:calc(100vh - 215px);min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
+        <!-- altura calculada em tempo real (script fitCand abaixo): o iframe termina exatamente no fim da janela — sem faixa cinza sobrando e sem rolagem externa -->
+        <iframe id="candFrame" x-show="candSel" :src="page==='candidato' && candSel ? ('candidato.html?cliente='+encodeURIComponent(candSel)) : ''" style="width:100%;height:60vh;min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
       </section>
+      <script>
+      // Ajusta o iframe do Painel do Candidato pra terminar EXATO no fim da janela.
+      // Medido em runtime (a altura do topo varia); roda em loop leve pra pegar a
+      // troca de página do Alpine sem acoplar no estado dele.
+      (function(){
+        function fitCand(){
+          var f=document.getElementById('candFrame');
+          if(!f||!f.offsetParent) return; // página não está aberta
+          var topo=f.getBoundingClientRect().top+window.scrollY;
+          f.style.height=Math.max(520, window.innerHeight-topo-20)+'px';
+        }
+        window.addEventListener('resize', fitCand);
+        setInterval(fitCand, 800);
+      })();
+      </script>
 
       <section x-show="page==='trafego'">
         <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
