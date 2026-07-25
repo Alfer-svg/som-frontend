@@ -1045,8 +1045,10 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   function desenharMapaReal(pts){
     var host=document.getElementById('map'); if(!host||!window.L)return;
-    var div=document.createElement('div'); div.id='map'; div.style.height='340px'; div.style.borderRadius='12px'; div.style.border='1px solid var(--line)';
+    var div=document.createElement('div'); div.id='map'; div.style.height='420px'; div.style.borderRadius='12px'; div.style.border='1px solid var(--line)';
     host.parentNode.replaceChild(div,host);
+    // mapa real ocupa a LINHA INTEIRA (o orçamento desce pra baixo, largura toda)
+    var rowSplit=div.closest('.row.split'); if(rowSplit)rowSplit.style.gridTemplateColumns='1fr';
     // Legenda REAL: cor = intensidade relativa de alcance, tamanho = nº de pessoas
     var lg=document.querySelector('#mapCard .legend');
     if(!lg){ lg=document.createElement('div'); lg.className='legend'; var mc=document.getElementById('mapCard'); if(mc)mc.appendChild(lg); }
