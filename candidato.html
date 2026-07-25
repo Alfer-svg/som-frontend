@@ -1162,7 +1162,10 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
         totD+=x.reach; totI+=(x.interacoes||0);
       });
       var temInter=totI>0;
-      var blocoGenero=function(titulo,mVal,fVal){
+      // Nota da equipe (texto vem do backend; crédito SEMPRE à equipe da Maracatu)
+      var AN_DM=DM.analises||{};
+      var notaEquipe=function(txt){ return txt?'<div style="margin-top:10px;padding:9px 12px;background:var(--bg);border-radius:10px;font-size:12px;line-height:1.5;color:var(--ink)"><b style="color:var(--blue);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em">Leitura da equipe Maracatu</b><br>'+esc(txt)+'</div>':''; };
+      var blocoGenero=function(titulo,mVal,fVal,nota){
         // PIZZA (pedido do Dinho): fatia azul = masculino sobre o fundo rosa = feminino
         var tot=(mVal+fVal)||1; var pM=Math.round(mVal/tot*100), pF=100-pM;
         var ang=(mVal/tot)*360, rad=Math.PI/180;
@@ -1174,12 +1177,12 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
           +'<div style="font-size:12.5px;line-height:2.1">'
           +'<div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4285F4;margin-right:7px"></i>♂ Masculino — <b>'+F.format(mVal)+'</b> ('+pM+'%)</div>'
           +'<div><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#EC407A;margin-right:7px"></i>♀ Feminino — <b>'+F.format(fVal)+'</b> ('+pF+'%)</div>'
-          +'</div></div></div>';
+          +'</div></div>'+notaEquipe(nota)+'</div>';
       };
-      var blocoFaixas=function(titulo,mapa,tot){
+      var blocoFaixas=function(titulo,mapa,tot,nota){
         var ordem=Object.keys(mapa).sort(); var mx=Math.max.apply(null,ordem.map(function(k){return mapa[k];}))||1;
         return '<div><div style="font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px">'+titulo+'</div>'
-          +ordem.map(function(k){var v=mapa[k];return '<div class="bar-row"><span class="nm" style="min-width:44px">'+esc(k)+'</span><span class="bar-track"><i class="bar-fill" style="width:'+Math.round(v/mx*100)+'%"></i></span><span class="vl tnum">'+F.format(v)+' · '+Math.round(v/(tot||1)*100)+'%</span></div>';}).join('')+'</div>';
+          +ordem.map(function(k){var v=mapa[k];return '<div class="bar-row"><span class="nm" style="min-width:44px">'+esc(k)+'</span><span class="bar-track"><i class="bar-fill" style="width:'+Math.round(v/mx*100)+'%"></i></span><span class="vl tnum">'+F.format(v)+' · '+Math.round(v/(tot||1)*100)+'%</span></div>';}).join('')+notaEquipe(nota)+'</div>';
       };
       var PLAT_NOME={facebook:'Facebook',instagram:'Instagram',messenger:'Messenger',audience_network:'Rede de parceiros',unknown:'Outros'};
       var plats=(DM.plataformas||[]).slice().sort(function(a,b){return b.reach-a.reach;});
@@ -1188,13 +1191,13 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       // 2 colunas SEMPRE (gênero | idade, lado a lado), plataforma embaixo na largura toda
       pn.innerHTML='<div class="p-head"><h3><span class="dot"></span>Quem sua campanha alcança</h3><span class="chip blue">dados reais das campanhas</span></div>'
         +'<div style="display:grid;grid-template-columns:1fr 1.35fr;gap:16px 22px;align-items:start">'
-        +blocoGenero('Alcance — Masc × Fem',somaG.male,somaG.female)
-        +blocoFaixas('Alcance por idade',faixas,totD)
-        +(temInter?blocoGenero('Interações — Masc × Fem',somaGI.male,somaGI.female):'')
-        +(temInter?blocoFaixas('Interações por idade',faixasI,totI):'')
+        +blocoGenero('Alcance — Masc × Fem',somaG.male,somaG.female,AN_DM.generoAlcance)
+        +blocoFaixas('Alcance por idade',faixas,totD,AN_DM.idadeAlcance)
+        +(temInter?blocoGenero('Interações — Masc × Fem',somaGI.male,somaGI.female,AN_DM.generoInteracoes):'')
+        +(temInter?blocoFaixas('Interações por idade',faixasI,totI,AN_DM.idadeInteracoes):'')
         // plataforma
         +'<div style="grid-column:1/-1"><div style="font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px">De onde vem o alcance</div>'
-        +plats.map(function(x){return '<div class="bar-row"><span class="nm">'+esc(PLAT_NOME[x.plataforma]||x.plataforma)+'</span><span class="bar-track"><i class="bar-fill" style="width:'+Math.round(x.reach/(plats[0].reach||1)*100)+'%"></i></span><span class="vl tnum">'+Math.round(x.reach/totP*100)+'%</span></div>';}).join('')+'</div>'
+        +plats.map(function(x){return '<div class="bar-row"><span class="nm">'+esc(PLAT_NOME[x.plataforma]||x.plataforma)+'</span><span class="bar-track"><i class="bar-fill" style="width:'+Math.round(x.reach/(plats[0].reach||1)*100)+'%"></i></span><span class="vl tnum">'+Math.round(x.reach/totP*100)+'%</span></div>';}).join('')+notaEquipe(AN_DM.plataformas)+'</div>'
         +'</div>';
       var mapaPn=byId('mapCard'); if(mapaPn&&mapaPn.parentNode)mapaPn.parentNode.insertBefore(pn,mapaPn.nextSibling); else document.body.appendChild(pn);
     }
