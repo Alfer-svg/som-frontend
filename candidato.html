@@ -1448,17 +1448,18 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
           +'<div style="font-size:11px;color:var(--mut);margin-top:7px">'+esc(BS.aviso||'')+'</div>');
       }
       // 2) Menções na web (busca demora ~20-40s → carrega async com estado)
-      var cm=cardEquipe('cardMencoes','Menções na web — risco de imagem','busca diária','<div style="color:var(--mut);font-size:12.5px">Varrendo notícias e menções recentes… (~30s na primeira vez do dia)</div>');
+      var cm=cardEquipe('cardMencoes','O que falam dele — adversários e imprensa','busca diária','<div style="color:var(--mut);font-size:12.5px">Varrendo notícias, redes e o que os adversários dizem… (~30s na primeira vez do dia)</div>');
       fetch(API+'/cliente-portal/admin/mencoes-candidato/'+clienteId,{headers:{'Authorization':'Bearer '+somTok}}).then(function(r){return r.json();}).then(function(m){
         var corpo=cm.querySelector('.corpo');
         if(!m||!m.disponivel){corpo.innerHTML='<div style="color:var(--mut);font-size:12.5px">Sem varredura hoje'+(m&&m.motivo?' — '+esc(m.motivo):'')+'.</div>';return;}
-        var tomCor={negativa:['#FDEEEE','#8B0000'],neutra:['#F1F3F4','#5F6368'],positiva:['#EAF3DE','#27500A']};
+        var tomCor={'ataque-adversario':['#FEE2E2','#991B1B'],negativa:['#FDEEEE','#8B0000'],neutra:['#F1F3F4','#5F6368'],positiva:['#EAF3DE','#27500A']};
+        var tomLabel={'ataque-adversario':'ATAQUE DE ADVERSÁRIO'};
         corpo.innerHTML='<div style="font-size:12.5px;line-height:1.5;margin-bottom:8px">'+esc(m.resumo||'')+'</div>'
           +(m.itens||[]).map(function(x){var c=tomCor[x.tom]||tomCor.neutra;
             return '<a href="'+esc(x.url||'#')+'" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;padding:7px 0;border-top:1px dashed var(--line)">'
-              +'<span style="font-size:10px;font-weight:800;background:'+c[0]+';color:'+c[1]+';padding:2px 7px;border-radius:99px;margin-right:6px">'+esc((x.tom||'').toUpperCase())+(x.tom==='negativa'?' · risco '+esc(x.risco||''):'')+'</span>'
+              +'<span style="font-size:10px;font-weight:800;background:'+c[0]+';color:'+c[1]+';padding:2px 7px;border-radius:99px;margin-right:6px">'+esc(tomLabel[x.tom]||(x.tom||'').toUpperCase())+((x.tom==='negativa'||x.tom==='ataque-adversario')?' · risco '+esc(x.risco||''):'')+'</span>'
               +'<span style="font-size:12.5px;font-weight:600">'+esc(x.titulo||'')+'</span>'
-              +'<div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+esc(x.fonte||'')+' — '+esc(x.nota||'')+'</div></a>';}).join('');
+              +'<div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+(x.autor?'<b>'+esc(x.autor)+'</b> · ':'')+esc(x.fonte||'')+' — '+esc(x.nota||'')+'</div></a>';}).join('');
       }).catch(function(){var c2=cm.querySelector('.corpo'); if(c2)c2.innerHTML='<div style="color:var(--mut);font-size:12.5px">Falha na varredura — tente recarregar.</div>';});
       // 3) SEO/GEO do site
       var cs=cardEquipe('cardSeo','SEO do site — deficiências','auditoria semanal','<div style="color:var(--mut);font-size:12.5px">Auditando o site…</div>');
