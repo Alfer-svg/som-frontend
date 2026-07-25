@@ -306,7 +306,7 @@
   .fs-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--mut);cursor:pointer;font-size:13px;display:grid;place-items:center;transition:.15s;flex:none;line-height:1}
   .fs-btn:hover{background:var(--bg);color:var(--ink);border-color:var(--mut2)}
   #mapCard{overflow:visible}
-  .panel.mapa-cheia{position:fixed;inset:0;z-index:200;border-radius:0;margin:0;padding:18px;display:flex;flex-direction:column;background:#fff}
+  .panel.mapa-cheia{position:fixed!important;inset:0;z-index:200;border-radius:0;margin:0;padding:18px;display:flex;flex-direction:column;background:#fff;overflow:visible} /* !important: o mapCard tem position:relative INLINE que vencia o fixed */
   .panel.mapa-cheia > .p-head{flex:none}
   .panel.mapa-cheia #map{flex:1;height:auto!important;min-height:0;border-radius:12px} /* !important vence o height inline do mapa real (Leaflet) */
   .panel.mapa-cheia .legend{flex:none;margin-top:14px}
@@ -1060,8 +1060,12 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     pts.forEach(function(p){
       var rad=8+Math.sqrt(p.reach/mx)*24, col=heatColor(p.reach/mx*100);
       var listaCidades=(p.cidades&&p.cidades.length)?'<br><span style="font-size:11px;opacity:.85">'+p.cidades.map(esc).join(' · ')+'</span>':'';
+      var htmlPonto='<b>'+esc(p.nome)+'</b>'+listaCidades+'<br>'+kfmt(p.reach)+' alcançados'+(p.spend?' · R$ '+Math.round(p.spend):'');
+      // hover = resumo curto (direction auto evita cortar na borda); clique = POPUP
+      // com a lista completa — o Leaflet dá autoPan, então nunca é engolido.
       L.circleMarker([p.lat,p.lng],{radius:rad,color:col,weight:2,fillColor:col,fillOpacity:.5}).addTo(mp)
-        .bindTooltip('<b>'+esc(p.nome)+'</b>'+listaCidades+'<br>'+kfmt(p.reach)+' alcançados'+(p.spend?' · R$ '+Math.round(p.spend):''),{direction:'top',opacity:.96});
+        .bindTooltip('<b>'+esc(p.nome)+'</b> · '+kfmt(p.reach),{direction:'auto',opacity:.96})
+        .bindPopup(htmlPonto,{autoPan:true,maxWidth:280});
       bounds.push([p.lat,p.lng]);
     });
     if(bounds.length)mp.fitBounds(bounds,{padding:[34,34],maxZoom:13});
@@ -1106,6 +1110,8 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     if(K.engajamentoPct==null){ if(engD)engD.style.display='none'; var engV=eng&&eng.closest('.v'); if(engV)engV.textContent='—'; }
     else if(engD){ engD.textContent='média por post no Instagram'; } // "acima da média do setor" era claim do demo
     setV('[data-kpi=contatos]',K.contatos,function(v){return F.format(v);});
+    // subtítulo honesto: é a métrica de conversas iniciadas pelos anúncios (Meta)
+    var ctEl=$('[data-kpi=contatos]'); var ctTile=ctEl&&ctEl.closest('.tile'); var ctD=ctTile&&ctTile.querySelector('.d'); if(ctD&&K.contatos!=null)ctD.textContent='conversas iniciadas pelos anúncios';
     // orçamento / gasto
     var g=byId('lgGasto'); if(g)g.textContent=O.gasto!=null?money(O.gasto):'—';
     var rst=byId('lgRest'); if(rst)rst.textContent=O.restante!=null?money(O.restante):'—';
