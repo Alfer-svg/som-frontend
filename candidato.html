@@ -1031,13 +1031,24 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   // ===== tela cheia do mapa (funciona no mobile via overlay CSS) =====
   var mapFs=$('#mapFs'),mapCard=$('#mapCard');
   if(mapFs&&mapCard){
-    mapFs.addEventListener('click',function(){
-      var cheia=mapCard.classList.toggle('mapa-cheia');
+    // Tela cheia NATIVA (Fullscreen API): dentro do iframe do SOM o position:fixed
+    // só enchia o iframe — o requestFullscreen toma a TELA inteira de verdade.
+    // Fallback (navegador sem suporte/permissão): o modo CSS antigo.
+    var aplicarEstado=function(cheia){
+      mapCard.classList.toggle('mapa-cheia',cheia);
       mapFs.textContent=cheia?'✕':'⛶';
       mapFs.title=cheia?'Fechar tela cheia':'Tela cheia';
       document.body.style.overflow=cheia?'hidden':'';
+    };
+    mapFs.addEventListener('click',function(){
+      if(document.fullscreenElement){document.exitFullscreen().catch(function(){});return;}
+      if(mapCard.classList.contains('mapa-cheia')){aplicarEstado(false);return;}
+      if(mapCard.requestFullscreen){
+        mapCard.requestFullscreen().catch(function(){aplicarEstado(true);});
+      } else aplicarEstado(true);
     });
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('mapa-cheia'))mapFs.click();});
+    document.addEventListener('fullscreenchange',function(){aplicarEstado(document.fullscreenElement===mapCard);});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('mapa-cheia')&&!document.fullscreenElement)aplicarEstado(false);});
   }
 
   addEventListener('resize',()=>{drawMom(1);$$('.spark').forEach(c=>drawSpark(c,DATA[cur].mom));});
@@ -1078,6 +1089,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     if(bounds.length)mp.fitBounds(bounds,{padding:[34,34],maxZoom:13});
     setTimeout(function(){mp.invalidateSize();},250);
     var fs=document.getElementById('mapFs'); if(fs)fs.addEventListener('click',function(){setTimeout(function(){mp.invalidateSize();},60);});
+    document.addEventListener('fullscreenchange',function(){setTimeout(function(){mp.invalidateSize();},150);}); // fullscreen nativo tb reajusta o Leaflet
   }
   window.__aplicarReal=function(api){ try{
     if(!api)return;

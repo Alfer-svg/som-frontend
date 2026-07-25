@@ -3640,7 +3640,7 @@
           </div>
         </div>
         <!-- altura calculada em tempo real (script fitCand abaixo): o iframe termina exatamente no fim da janela — sem faixa cinza sobrando e sem rolagem externa -->
-        <iframe id="candFrame" x-show="candSel" :src="page==='candidato' && candSel ? ('candidato.html?cliente='+encodeURIComponent(candSel)) : ''" style="width:100%;height:60vh;min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
+        <iframe id="candFrame" allowfullscreen allow="fullscreen" x-show="candSel" :src="page==='candidato' && candSel ? ('candidato.html?cliente='+encodeURIComponent(candSel)) : ''" style="width:100%;height:60vh;min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
       </section>
       <script>
       // Ajusta o iframe do Painel do Candidato pra terminar EXATO no fim da janela.
