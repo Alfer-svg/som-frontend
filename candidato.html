@@ -1062,7 +1062,8 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     pts.forEach(function(p){
       var rad=8+Math.sqrt(p.reach/mx)*24, col=heatColor(p.reach/mx*100);
       var listaCidades=(p.cidades&&p.cidades.length)?'<br><span style="font-size:11px;opacity:.85">'+p.cidades.map(esc).join(' · ')+'</span>':'';
-      var htmlPonto='<b>'+esc(p.nome)+'</b>'+listaCidades+'<br>'+kfmt(p.reach)+' alcançados'+(p.spend?' · R$ '+Math.round(p.spend):'');
+      var notaEst=p.estimado?'<br><span style="font-size:10.5px;opacity:.75">estimativa — alcance da campanha rateado entre as cidades</span>':'';
+      var htmlPonto='<b>'+esc(p.nome)+'</b>'+listaCidades+'<br>'+kfmt(p.reach)+' alcançados'+(p.spend?' · R$ '+Math.round(p.spend):'')+notaEst;
       // hover = resumo curto (direction auto evita cortar na borda); clique = POPUP
       // com a lista completa — o Leaflet dá autoPan, então nunca é engolido.
       L.circleMarker([p.lat,p.lng],{radius:rad,color:col,weight:2,fillColor:col,fillOpacity:.5}).addTo(mp)
