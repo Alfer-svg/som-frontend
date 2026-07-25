@@ -308,7 +308,7 @@
   #mapCard{overflow:visible}
   .panel.mapa-cheia{position:fixed;inset:0;z-index:200;border-radius:0;margin:0;padding:18px;display:flex;flex-direction:column;background:#fff}
   .panel.mapa-cheia > .p-head{flex:none}
-  .panel.mapa-cheia #map{flex:1;height:100%;min-height:0;border-radius:12px}
+  .panel.mapa-cheia #map{flex:1;height:auto!important;min-height:0;border-radius:12px} /* !important vence o height inline do mapa real (Leaflet) */
   .panel.mapa-cheia .legend{flex:none;margin-top:14px}
   .panel.mapa-cheia .map-tip{z-index:210}
   .reveal{opacity:0;transform:translateY(12px);animation:rise .6s cubic-bezier(.2,.8,.2,1) forwards}
@@ -1047,15 +1047,21 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     var host=document.getElementById('map'); if(!host||!window.L)return;
     var div=document.createElement('div'); div.id='map'; div.style.height='340px'; div.style.borderRadius='12px'; div.style.border='1px solid var(--line)';
     host.parentNode.replaceChild(div,host);
-    var lg=document.querySelector('#mapCard .legend'); if(lg)lg.style.display='none';
+    // Legenda REAL: cor = intensidade relativa de alcance, tamanho = nº de pessoas
+    var lg=document.querySelector('#mapCard .legend');
+    if(!lg){ lg=document.createElement('div'); lg.className='legend'; var mc=document.getElementById('mapCard'); if(mc)mc.appendChild(lg); }
+    if(lg){ lg.style.display='flex'; lg.style.cssText+=';align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--mut)';
+      lg.innerHTML='<span style="display:inline-flex;align-items:center;gap:6px"><i style="width:64px;height:8px;border-radius:4px;background:linear-gradient(90deg,#4285F4,#34A853,#F9A825,#EA4335)"></i> menos → mais alcance</span>'
+        +'<span style="display:inline-flex;align-items:center;gap:6px"><i style="width:8px;height:8px;border-radius:50%;border:2px solid var(--mut)"></i><i style="width:14px;height:14px;border-radius:50%;border:2px solid var(--mut)"></i> tamanho = pessoas alcançadas</span>'; }
     var chip=document.querySelector('#mapCard .p-head .chip'); if(chip)chip.textContent='por bairro';
     var mp=L.map('map',{zoomControl:true,attributionControl:false,scrollWheelZoom:false}).setView([-8.05,-34.95],11);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(mp);
     var mx=Math.max.apply(null,pts.map(function(p){return p.reach;}))||1, bounds=[];
     pts.forEach(function(p){
       var rad=8+Math.sqrt(p.reach/mx)*24, col=heatColor(p.reach/mx*100);
+      var listaCidades=(p.cidades&&p.cidades.length)?'<br><span style="font-size:11px;opacity:.85">'+p.cidades.map(esc).join(' · ')+'</span>':'';
       L.circleMarker([p.lat,p.lng],{radius:rad,color:col,weight:2,fillColor:col,fillOpacity:.5}).addTo(mp)
-        .bindTooltip('<b>'+esc(p.nome)+'</b><br>'+kfmt(p.reach)+' alcançados'+(p.spend?' · R$ '+Math.round(p.spend):''),{direction:'top',opacity:.96});
+        .bindTooltip('<b>'+esc(p.nome)+'</b>'+listaCidades+'<br>'+kfmt(p.reach)+' alcançados'+(p.spend?' · R$ '+Math.round(p.spend):''),{direction:'top',opacity:.96});
       bounds.push([p.lat,p.lng]);
     });
     if(bounds.length)mp.fitBounds(bounds,{padding:[34,34],maxZoom:13});
@@ -1086,21 +1092,26 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     // seletor de período fora do ar (o retrato real é o acumulado, não por período demo)
     var tg=byId('toggle'); if(tg)tg.style.display='none'; var cb=byId('customBox'); if(cb)cb.style.display='none';
     // índice
-    if(IDX.valor!=null && window.setGauge){ setGauge(IDX.valor); var gt=byId('gtrend'); if(gt)gt.textContent=IDX.valor>=70?'em alta':'estável'; }
+    // setGauge/setPie vivem NESTE closure (window.setGauge era undefined — o gauge e o
+    // anel do orçamento ficavam presos no valor demo, ex.: 35% de gasto com 0,6% real)
+    if(IDX.valor!=null && typeof setGauge==='function'){ setGauge(IDX.valor); var gt=byId('gtrend'); if(gt)gt.textContent=IDX.valor>=70?'em alta':'estável'; }
     // KPIs (valor direto; sem dado = travessão)
     var setV=function(sel,val,fmt){ var el=$(sel); if(el)el.textContent=(val==null?'—':fmt(val)); };
     setV('[data-kpi=alcance]',K.alcance,function(v){return kfmt(v);}); var ad=byId('alcDs'); if(ad)ad.textContent='pessoas únicas';
     setV('[data-kpi=apoiadores]',K.apoiadores,function(v){return F.format(v);});
-    if(K.apoiadores==null){ var apd=byId('apoD'); var apLinha=apd&&apd.closest('.d'); if(apLinha)apLinha.style.display='none'; }
+    // delta "+6.400 (+15.3%)" era do demo — some sempre (não temos delta real ainda)
+    var apd=byId('apoD'); var apLinha=apd&&apd.closest('.d'); if(apLinha)apLinha.style.display='none';
     setV('[data-kpi=engaj]',K.engajamentoPct,function(v){return String(v).replace('.',',');});
-    if(K.engajamentoPct==null){ var eng=$('[data-kpi=engaj]'); var engTile=eng&&eng.closest('.tile'); var engD=engTile&&engTile.querySelector('.d'); if(engD)engD.style.display='none'; var engV=eng&&eng.closest('.v'); if(engV)engV.textContent='—'; }
+    var eng=$('[data-kpi=engaj]'); var engTile=eng&&eng.closest('.tile'); var engD=engTile&&engTile.querySelector('.d');
+    if(K.engajamentoPct==null){ if(engD)engD.style.display='none'; var engV=eng&&eng.closest('.v'); if(engV)engV.textContent='—'; }
+    else if(engD){ engD.textContent='média por post no Instagram'; } // "acima da média do setor" era claim do demo
     setV('[data-kpi=contatos]',K.contatos,function(v){return F.format(v);});
     // orçamento / gasto
     var g=byId('lgGasto'); if(g)g.textContent=O.gasto!=null?money(O.gasto):'—';
     var rst=byId('lgRest'); if(rst)rst.textContent=O.restante!=null?money(O.restante):'—';
     var tot=byId('lgTot'); if(tot)tot.textContent=O.previsto!=null?money(O.previsto):'—';
     var im=byId('impact'); if(im)im.textContent=O.impactadas!=null?kfmt(O.impactadas):'—';
-    if(window.setPie)setPie(O.previsto?Math.min(1,O.gasto/O.previsto):0);
+    if(typeof setPie==='function')setPie(O.previsto?Math.min(1,O.gasto/O.previsto):0);
     // campanhas rodando (reais)
     var ativas=C.filter(function(c){return c.status==='ACTIVE';}).length, pausadas=C.length-ativas;
     var cc=byId('campCount'); if(cc)cc.textContent=ativas+' ativas'+(pausadas?' · '+pausadas+' pausada'+(pausadas>1?'s':''):'');
