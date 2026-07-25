@@ -1242,7 +1242,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     if(pau&&api.pautas&&api.pautas.disponivel&&(api.pautas.itens||[]).length){
       var its=api.pautas.itens.slice(0,6); var pmx=Math.max.apply(null,its.map(function(x){return x.pct||0;}))||1;
       pau.innerHTML=its.map(function(x,i){return '<div class="pauta"><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(x.tema)+'</span><span class="mini"><i style="width:'+Math.round((x.pct||0)/pmx*100)+'%"></i></span><span class="pc tnum">'+(x.pct||0)+'%</span></div>';}).join('');
-    } else if(pau){ pau.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Em coleta — a classificação de temas por IA entra quando ligada.</div>'; }
+    } else if(pau){ pau.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Em coleta — a classificação por tema entra quando o monitoramento estiver ligado.</div>'; }
     var adv=byId('advs');
     if(adv&&api.adversarios&&api.adversarios.disponivel){
       // Comparativo REAL por presença pública no IG (seguidores) — não alcance demo
@@ -1337,7 +1337,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   async function abrirPainel(){
     try{ var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}});
       if(r.status===401||r.status===403){ localStorage.removeItem('cliente_token'); localStorage.removeItem('cand_token'); location.replace('cliente.html'); return; }
-      if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato); if(window.__aplicarReal)window.__aplicarReal(d);} }catch(e){}
+      if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato); if(window.__aplicarReal)window.__aplicarReal(d); montarLiberadosCandidato(d);} }catch(e){}
     id('loginScreen').style.display='none';
     ligarProtecao(); iniciarSessao();
     if(window.__replay) setTimeout(window.__replay,60);
@@ -1367,7 +1367,8 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       var b=document.createElement('div'); b.id='badgeAdmin'; b.textContent='Visão da equipe · '+(info.nome); document.body.appendChild(b);
       montarAcessos(clienteId,somTok).then(function(){ montarLogOtimizacoes(clienteId,somTok,info.nome); }); // quadros da equipe, na ordem
       montarDiagnostico(clienteId,somTok); // diagnóstico interno no topo (só a equipe vê)
-      montarCardsEquipe(d,clienteId,somTok); // base de seguidores + menções + SEO (só a equipe vê)
+      window.__cliId=clienteId; window.__somTok=somTok; window.__liberados=(d.liberados||[]).slice(); // pra a chave de liberação
+      montarCardsEquipe(d,clienteId,somTok); // base de seguidores + menções + SEO (com chave "liberar pro cliente")
       if(window.__replay)setTimeout(window.__replay,60);
     }catch(e){ document.documentElement.classList.remove('boot-equipe'); id('loginScreen').style.display='flex'; id('stepFoto').style.display='none'; id('stepCred').style.display='block'; id('lgErr').textContent='Sessão da equipe expirada — entre no SOM de novo.'; }
   }
@@ -1426,14 +1427,60 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
 
   // Diagnóstico INTERNO (visão da equipe, no topo): pontos negativos + soluções, pela IA.
   // ── Cards da EQUIPE: base de seguidores (heurística), menções na web e SEO do site ──
-  function cardEquipe(id,titulo,chip,corpo){
+  // chaveKey: nome do card no backend (baseSeguidores/mencoes/seo/diagnostico). Com
+  // ele, o rodapé do card ganha a CHAVE "Liberar pro cliente" (só na visão equipe):
+  // ligada, o candidato passa a ver o card; desligada, fica só com a equipe.
+  window.__liberados = window.__liberados || [];
+  function cardEquipe(id,titulo,chip,corpo,chaveKey){
     var pn=document.createElement('div'); pn.className='panel'; pn.id=id;
-    pn.innerHTML='<div class="p-head"><h3><span class="dot"></span>'+titulo+'</h3><span class="chip amb">'+chip+'</span></div><div class="corpo">'+corpo+'</div>'
-      +'<div style="margin-top:10px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;background:#FEE2E2;color:#991B1B;padding:3px 8px;border-radius:99px">SÓ A EQUIPE VÊ</span></div>';
+    var lib = chaveKey && window.__liberados.indexOf(chaveKey)>=0;
+    var rodape = chaveKey
+      ? '<div style="margin-top:11px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px dashed var(--line);padding-top:10px">'
+          +'<span id="selo_'+id+'" style="font-size:10px;font-weight:800;letter-spacing:.05em;padding:3px 8px;border-radius:99px;background:'+(lib?'#EAF3DE':'#FEE2E2')+';color:'+(lib?'#27500A':'#991B1B')+'">'+(lib?'VISÍVEL PRO CLIENTE':'SÓ A EQUIPE VÊ')+'</span>'
+          +'<label style="display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--mut);cursor:pointer;user-select:none">Liberar pro cliente'
+          +'<input type="checkbox" id="chave_'+id+'" '+(lib?'checked':'')+' style="width:34px;height:19px;cursor:pointer"></label>'
+        +'</div>'
+      : '<div style="margin-top:10px"><span style="font-size:10px;font-weight:800;letter-spacing:.05em;background:#FEE2E2;color:#991B1B;padding:3px 8px;border-radius:99px">SÓ A EQUIPE VÊ</span></div>';
+    pn.innerHTML='<div class="p-head"><h3><span class="dot"></span>'+titulo+'</h3><span class="chip amb">'+chip+'</span></div><div class="corpo">'+corpo+'</div>'+rodape;
     var anc=document.getElementById('topPostsPanel')||document.getElementById('demoPanel')||document.getElementById('mapCard');
     if(anc&&anc.parentNode)anc.parentNode.insertBefore(pn,anc.nextSibling); else document.body.appendChild(pn);
+    if(chaveKey){
+      var chk=pn.querySelector('#chave_'+id);
+      if(chk)chk.addEventListener('change',function(){
+        var on=chk.checked; chk.disabled=true;
+        fetch(API+'/cliente-portal/admin/liberar-card/'+window.__cliId,{method:'POST',headers:{'Authorization':'Bearer '+window.__somTok,'Content-Type':'application/json'},body:JSON.stringify({card:chaveKey,on:on})})
+          .then(function(r){return r.json();}).then(function(res){
+            window.__liberados=res.liberados||window.__liberados;
+            var selo=pn.querySelector('#selo_'+id);
+            if(selo){selo.textContent=on?'VISÍVEL PRO CLIENTE':'SÓ A EQUIPE VÊ';selo.style.background=on?'#EAF3DE':'#FEE2E2';selo.style.color=on?'#27500A':'#991B1B';}
+          }).catch(function(){chk.checked=!on;}).then(function(){chk.disabled=false;});
+      });
+    }
     return pn;
   }
+  // Visão CANDIDATO: monta APENAS os cards que a equipe liberou (sem chave, sem selo).
+  // Base de seguidores vem no payload; menções/SEO via rotas do próprio cliente (gated).
+  function montarLiberadosCandidato(d){
+    var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+    var libs=d.liberados||[]; if(!libs.length)return;
+    function box(id,titulo,chip,corpo){ if(document.getElementById(id))return null; var pn=document.createElement('div'); pn.className='panel'; pn.id=id;
+      pn.innerHTML='<div class="p-head"><h3><span class="dot"></span>'+titulo+'</h3>'+(chip?'<span class="chip amb">'+chip+'</span>':'')+'</div><div class="corpo">'+corpo+'</div>';
+      var anc=document.getElementById('topPostsPanel')||document.getElementById('demoPanel')||document.getElementById('mapCard'); if(anc&&anc.parentNode)anc.parentNode.insertBefore(pn,anc.nextSibling); else document.body.appendChild(pn); return pn; }
+    if(libs.indexOf('baseSeguidores')>=0 && d.baseSeguidores && d.baseSeguidores.disponivel){
+      var BS=d.baseSeguidores, cor=({saudavel:['#EAF3DE','#27500A','Base saudável'],atencao:['#FEF3E2','#92400E','Atenção'],suspeito:['#FDEEEE','#8B0000','Sinais suspeitos']})[BS.veredito]||['#FEF3E2','#92400E','Atenção'];
+      box('cardBaseCli','Sua base de seguidores','',
+        '<div style="display:inline-block;padding:5px 12px;border-radius:99px;font-weight:800;font-size:12.5px;background:'+cor[0]+';color:'+cor[1]+';margin-bottom:9px">'+cor[2]+'</div>'
+        +(BS.pontos||[]).map(function(t){return '<div style="font-size:12.5px;line-height:1.5;padding:3px 0">• '+esc(t)+'</div>';}).join(''));
+    }
+    if(libs.indexOf('mencoes')>=0){ var cm=box('cardMencoesCli','O que falam de você na imprensa','atualização diária','<div style="color:var(--mut);font-size:12.5px">Carregando…</div>'); if(cm)
+      fetch(API+'/cliente-portal/cand/mencoes',{headers:{'Authorization':'Bearer '+token}}).then(function(r){return r.json();}).then(function(m){ var c=cm.querySelector('.corpo'); if(!m||!m.disponivel){c.innerHTML='<div style="color:var(--mut);font-size:12.5px">Sem novidades hoje.</div>';return;}
+        var tc={'ataque-adversario':['#FEE2E2','#991B1B'],negativa:['#FDEEEE','#8B0000'],neutra:['#F1F3F4','#5F6368'],positiva:['#EAF3DE','#27500A']};
+        c.innerHTML='<div style="font-size:12.5px;line-height:1.5;margin-bottom:8px">'+esc(m.resumo||'')+'</div>'+(m.itens||[]).map(function(x){var cc=tc[x.tom]||tc.neutra; return '<a href="'+esc(x.url||'#')+'" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;padding:7px 0;border-top:1px dashed var(--line)"><span style="font-size:12.5px;font-weight:600">'+esc(x.titulo||'')+'</span><div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+esc(x.fonte||'')+'</div></a>';}).join(''); }).catch(function(){}); }
+    if(libs.indexOf('seo')>=0){ var cs=box('cardSeoCli','Saúde do seu site','auditoria semanal','<div style="color:var(--mut);font-size:12.5px">Carregando…</div>'); if(cs)
+      fetch(API+'/cliente-portal/cand/seo',{headers:{'Authorization':'Bearer '+token}}).then(function(r){return r.json();}).then(function(a){ var c=cs.querySelector('.corpo'); if(!a||!a.disponivel){c.innerHTML='<div style="color:var(--mut);font-size:12.5px">Indisponível.</div>';return;}
+        c.innerHTML='<div style="font-size:26px;font-weight:800;margin-bottom:6px">'+a.nota+'<span style="font-size:13px;color:var(--mut)">/100</span></div>'+((a.problemas||[]).length?'<div style="font-size:11px;font-weight:800;color:#8B0000;text-transform:uppercase;margin:4px 0 3px">A melhorar</div>'+(a.problemas||[]).map(function(t){return '<div style="font-size:12.5px;padding:2px 0">✗ '+esc(t)+'</div>';}).join(''):'<div style="color:#27500A">Tudo certo no site.</div>'); }).catch(function(){}); }
+  }
+
   function montarCardsEquipe(painel,clienteId,somTok){
     var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
     try{
@@ -1442,13 +1489,13 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       if(BS&&BS.disponivel){
         var cores={saudavel:['#EAF3DE','#27500A','Base saudável'],atencao:['#FEF3E2','#92400E','Atenção'],suspeito:['#FDEEEE','#8B0000','Sinais suspeitos']};
         var cv=cores[BS.veredito]||cores.atencao;
-        cardEquipe('cardBase','Base de seguidores — real ou comprada?','indício, não prova',
+        cardEquipe('cardBase','Base de seguidores — real ou comprada?','indício, não prova',/*corpo↓*/
           '<div style="display:inline-block;padding:5px 12px;border-radius:99px;font-weight:800;font-size:12.5px;background:'+cv[0]+';color:'+cv[1]+';margin-bottom:9px">'+cv[2]+'</div>'
           +(BS.pontos||[]).map(function(t){return '<div style="font-size:12.5px;line-height:1.5;padding:3px 0">• '+esc(t)+'</div>';}).join('')
-          +'<div style="font-size:11px;color:var(--mut);margin-top:7px">'+esc(BS.aviso||'')+'</div>');
+          +'<div style="font-size:11px;color:var(--mut);margin-top:7px">'+esc(BS.aviso||'')+'</div>','baseSeguidores');
       }
       // 2) Menções na web (busca demora ~20-40s → carrega async com estado)
-      var cm=cardEquipe('cardMencoes','O que falam dele — adversários e imprensa','busca diária','<div style="color:var(--mut);font-size:12.5px">Varrendo notícias, redes e o que os adversários dizem… (~30s na primeira vez do dia)</div>');
+      var cm=cardEquipe('cardMencoes','O que falam dele — adversários e imprensa','busca diária','<div style="color:var(--mut);font-size:12.5px">Varrendo notícias, redes e o que os adversários dizem… (~30s na primeira vez do dia)</div>','mencoes');
       fetch(API+'/cliente-portal/admin/mencoes-candidato/'+clienteId,{headers:{'Authorization':'Bearer '+somTok}}).then(function(r){return r.json();}).then(function(m){
         var corpo=cm.querySelector('.corpo');
         if(!m||!m.disponivel){corpo.innerHTML='<div style="color:var(--mut);font-size:12.5px">Sem varredura hoje'+(m&&m.motivo?' — '+esc(m.motivo):'')+'.</div>';return;}
@@ -1462,7 +1509,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
               +'<div style="font-size:11.5px;color:var(--mut);margin-top:2px">'+(x.autor?'<b>'+esc(x.autor)+'</b> · ':'')+esc(x.fonte||'')+' — '+esc(x.nota||'')+'</div></a>';}).join('');
       }).catch(function(){var c2=cm.querySelector('.corpo'); if(c2)c2.innerHTML='<div style="color:var(--mut);font-size:12.5px">Falha na varredura — tente recarregar.</div>';});
       // 3) SEO/GEO do site
-      var cs=cardEquipe('cardSeo','SEO do site — deficiências','auditoria semanal','<div style="color:var(--mut);font-size:12.5px">Auditando o site…</div>');
+      var cs=cardEquipe('cardSeo','SEO do site — deficiências','auditoria semanal','<div style="color:var(--mut);font-size:12.5px">Auditando o site…</div>','seo');
       fetch(API+'/cliente-portal/admin/seo-site/'+clienteId,{headers:{'Authorization':'Bearer '+somTok}}).then(function(r){return r.json();}).then(function(a){
         var corpo=cs.querySelector('.corpo');
         if(!a||!a.disponivel){corpo.innerHTML='<div style="color:var(--mut);font-size:12.5px">'+esc((a&&a.motivo)||'Auditoria indisponível')+'.</div>';return;}
@@ -1471,7 +1518,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
           +(a.problemas||[]).map(function(t){return '<div style="font-size:12.5px;line-height:1.5;padding:2px 0">✗ '+esc(t)+'</div>';}).join('')
           +'<div style="font-size:11px;font-weight:800;color:#27500A;text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px">Ok ('+(a.oks||[]).length+')</div>'
           +(a.oks||[]).map(function(t){return '<div style="font-size:12px;color:var(--mut);padding:1px 0">✓ '+esc(t)+'</div>';}).join('')
-          +'<div style="font-size:12px;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:9px"><b>Busca por IA (GEO):</b> '+esc(a.geo||'')+'</div>';
+          +'<div style="font-size:12px;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:9px"><b>Presença nas buscas (GEO):</b> '+esc(a.geo||'')+'</div>';
       }).catch(function(){var c3=cs.querySelector('.corpo'); if(c3)c3.innerHTML='<div style="color:var(--mut);font-size:12.5px">Falha na auditoria — tente recarregar.</div>';});
     }catch(e){console.warn('cards equipe',e);}
   }
