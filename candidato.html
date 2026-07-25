@@ -35,6 +35,9 @@
 
   .card,.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:17px;position:relative;box-shadow:var(--shadow-sm)}
   .panel{overflow:hidden}
+  /* tooltip do ⓘ era engolido pelo overflow do painel (caso do Índice) — enquanto o
+     balão está aberto/hover, o painel libera o overflow; fecha, volta a cortar */
+  .panel:has(.info:hover),.panel:has(.info.show){overflow:visible}
   .panel h3{font-size:13px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
   .panel h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
   .p-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;gap:10px}
@@ -579,7 +582,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       <div class="votos-hero">
         <div class="vk">alvo de segurança</div>
         <div class="vn tnum" id="vAlvo">—</div>
-        <div class="vh">votos próprios — patamar do último eleito em 2022</div>
+        <div class="vh">votos próprios — corte interno do PSB em 2022</div>
       </div>
       <div class="votos-steps" id="votosSteps"></div>
     </div>
@@ -889,7 +892,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     inicioCampanha:new Date('2026-08-16T00:00:00-03:00'),
     fimPropaganda:new Date('2026-10-03T22:00:00-03:00'),
     eleicao:new Date('2026-10-04T08:00:00-03:00'),
-    votos:{cadeiras:49,qe:102318,pisoMin:11000,ultimoEleito:24851,alvo:25000},
+    votos:{cadeiras:49,qe:102318,pisoMin:11000,ultimoEleito:24851,alvo:52000,psbEleitos:14,psbCorte:51924},
     regras:[
       ['pode','Impulsionar conteúdo pago é a ÚNICA propaganda paga on-line permitida — com CNPJ/CPF do responsável visível.'],
       ['atencao','Todo conteúdo feito ou alterado por IA precisa de aviso destacado de que é sintético (rotulagem obrigatória).'],
@@ -913,8 +916,9 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     ['2',`Quociente eleitoral: <b>~${F.format(ELEI.votos.qe)}</b> votos "valem" 1 cadeira (base 2022)`],
     ['3',`Piso para habilitar: <b>~${F.format(ELEI.votos.pisoMin)}</b> votos próprios (10% do quociente)`],
     ['4',`É proporcional: quem elege é <b>partido + candidato</b> passarem do quociente, não o voto isolado`],
+    ['5',`<b>Recorte PSB</b> (partido do candidato): maior bancada de 2022, <b>${ELEI.votos.psbEleitos} eleitos</b> — o MENOS votado do PSB que entrou fez <b>${F.format(ELEI.votos.psbCorte)}</b> votos (a régua interna real)`],
   ].map(([i,t])=>`<div class="vstep"><span class="vi">${i}</span><span class="vt">${t}</span></div>`).join('');
-  $('#votosNote').innerHTML='<b>Como funciona:</b> soma-se os votos válidos ÷ '+ELEI.votos.cadeiras+' = o "preço" de uma cadeira. O partido/federação leva cadeiras conforme seus votos, e dentro dele as vagas vão para os mais votados que fizerem ao menos 10% do quociente. Não precisa de 100 mil votos sozinho: mira-se o piso (~'+F.format(ELEI.votos.pisoMin)+') para habilitar e a faixa dos '+F.format(ELEI.votos.alvo)+' como segurança (o último eleito em 2022 fez '+F.format(ELEI.votos.ultimoEleito)+'). <b>O número final depende do desempenho de toda a chapa.</b> <i>Base: PE 2022 · fonte TSE / TRE-PE / ALEPE.</i>';
+  $('#votosNote').innerHTML='<b>Como funciona:</b> soma-se os votos válidos ÷ '+ELEI.votos.cadeiras+' = o "preço" de uma cadeira. O partido/federação leva cadeiras conforme seus votos, e dentro dele as vagas vão para os mais votados que fizerem ao menos 10% do quociente. Não precisa de 100 mil votos sozinho: mira-se o piso (~'+F.format(ELEI.votos.pisoMin)+') para habilitar e, NO PSB, a régua que valeu em 2022 foi a fatia interna da bancada: o 14º eleito do partido fez '+F.format(ELEI.votos.psbCorte)+' votos — daí o alvo de segurança de ~'+F.format(ELEI.votos.alvo)+'. (O último eleito GERAL fez '+F.format(ELEI.votos.ultimoEleito)+', mas em partido pequeno; bancada forte eleva o corte interno.) <b>O número final depende do desempenho de toda a chapa.</b> <i>Base: PE 2022 · fonte TSE / TRE-PE / ALEPE.</i>';
 
   // — regras (compliance, atualizado por IA) —
   const RT={pode:'pode',nao:'não pode',atencao:'atenção'};
@@ -1219,8 +1223,13 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       var demoPn=byId('demoPanel')||byId('mapCard');
       if(demoPn&&demoPn.parentNode)demoPn.parentNode.insertBefore(tpn,demoPn.nextSibling); else document.body.appendChild(tpn);
     }
-    // pautas / adversários: sem fonte real agora → "em coleta"
-    var pau=byId('pautas'); if(pau&&(!api.pautas||!api.pautas.disponivel))pau.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Em coleta — a classificação de temas por IA entra quando ligada.</div>';
+    // pautas: REAIS quando disponíveis (classificação IA dos posts dele); senão "em coleta".
+    // Antes o caso disponível ficava sem render e o DEMO (Saúde/Segurança...) vazava na tela.
+    var pau=byId('pautas');
+    if(pau&&api.pautas&&api.pautas.disponivel&&(api.pautas.itens||[]).length){
+      var its=api.pautas.itens.slice(0,6); var pmx=Math.max.apply(null,its.map(function(x){return x.pct||0;}))||1;
+      pau.innerHTML=its.map(function(x,i){return '<div class="pauta"><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(x.tema)+'</span><span class="mini"><i style="width:'+Math.round((x.pct||0)/pmx*100)+'%"></i></span><span class="pc tnum">'+(x.pct||0)+'%</span></div>';}).join('');
+    } else if(pau){ pau.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Em coleta — a classificação de temas por IA entra quando ligada.</div>'; }
     var adv=byId('advs');
     if(adv&&api.adversarios&&api.adversarios.disponivel){
       // Comparativo REAL por presença pública no IG (seguidores) — não alcance demo
@@ -1257,6 +1266,18 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     var gtg=document.querySelector('.gtag'); if(gtg&&IDX.valor!=null)gtg.innerHTML='▲ '+(IDX.valor>=70?'em alta':'estável');
     // mapa de calor real (Leaflet, pinos por bairro)
     if(M.disponivel&&M.pontos&&M.pontos.length){ if(window.L)desenharMapaReal(M.pontos); else setTimeout(function(){if(window.L)desenharMapaReal(M.pontos);},600); }
+    // Lista de impactados POR CIDADE e POR BAIRRO (pedido do Dinho) — embaixo do mapa
+    if(M.disponivel&&M.pontos&&M.pontos.length&&!byId('impactoLista')){
+      var cid={}, bai={};
+      M.pontos.forEach(function(p){ var alvo=(p.tipo==='bairro')?bai:cid; alvo[p.nome]=(alvo[p.nome]||0)+(p.reach||0); });
+      var linhas=function(mapa){ var arr=Object.keys(mapa).map(function(k){return [k,mapa[k]];}).sort(function(a,b){return b[1]-a[1];}); var tot=arr.reduce(function(s,x){return s+x[1];},0)||1;
+        return arr.map(function(x){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed var(--line);font-size:12.5px"><span>'+esc(x[0])+'</span><span class="tnum" style="font-weight:700;white-space:nowrap">'+kfmt(x[1])+' · '+Math.round(x[1]/tot*100)+'%</span></div>';}).join(''); };
+      var dv=document.createElement('div'); dv.id='impactoLista';
+      dv.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 26px;margin-top:12px';
+      dv.innerHTML='<div><div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">Impactados por cidade</div>'+(linhas(cid)||'<span style="color:var(--mut);font-size:12px">—</span>')+'</div>'
+        +'<div><div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">Por bairro (Recife)</div>'+(linhas(bai)||'<span style="color:var(--mut);font-size:12px">—</span>')+'</div>';
+      var mc=byId('mapCard'); if(mc)mc.appendChild(dv);
+    }
   }catch(e){ console.warn('aplicarReal falhou',e); } };
 
   paint('30d');
