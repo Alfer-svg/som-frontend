@@ -3639,7 +3639,8 @@
             <button class="btn btn-sm" @click="window.open('candidato.html?cliente='+encodeURIComponent(candSel),'_blank')" title="Abrir em tela cheia, numa aba própria"><i class="ph ph-arrow-square-out ic-ph"></i> Tela cheia</button>
           </div>
         </div>
-        <iframe x-show="candSel" :src="page==='candidato' && candSel ? ('candidato.html?cliente='+encodeURIComponent(candSel)) : ''" style="width:100%;height:calc(100vh - 150px);border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
+        <!-- altura casa com o viewport (topbar+título ≈ 215px): tudo cabe sem rolagem externa — o scroll fica só DENTRO do painel (sem faixa cinza sobrando embaixo) -->
+        <iframe x-show="candSel" :src="page==='candidato' && candSel ? ('candidato.html?cliente='+encodeURIComponent(candSel)) : ''" style="width:100%;height:calc(100vh - 215px);min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
       </section>
 
       <section x-show="page==='trafego'">
