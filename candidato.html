@@ -432,17 +432,17 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
 <div id="protegido"><span>Conteúdo protegido</span></div>
 <div id="painelRoot">
 <a class="fab-suporte" href="https://wa.me/5581999143099?text=Ol%C3%A1!%20Sou%20da%20campanha%20e%20preciso%20de%20suporte%20dedicado%20da%20Maracatu." target="_blank" rel="noopener" aria-label="Suporte no WhatsApp"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5z"/></svg></a>
-<div class="wrap"><div class="app">
+<div class="wrap" id="painelWrap" style="visibility:hidden"><div class="app">
 
   <!-- HEADER -->
   <header class="reveal">
     <div class="stripe4"></div>
     <div class="hd-row1">
       <div class="cand">
-        <div class="ava">MD<span class="num-badge">15</span></div>
+        <div class="ava">··<span class="num-badge"></span></div>
         <div style="min-width:0">
-          <h1>Marina Duarte</h1>
-          <div class="role">Candidata · Pernambuco · operado pela <b style="color:var(--blue)">Maracatu Digital</b></div>
+          <h1>Carregando…</h1>
+          <div class="role">Painel do candidato · operado pela <b style="color:var(--blue)">Maracatu Digital</b></div>
         </div>
       </div>
       <div class="menu-wrap">
@@ -702,7 +702,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     ['Mulheres na Política','Estadual',33000,'ativa','Instagram'],
     ['Educação em 1º Lugar','Recife · Z. Norte',29000,'ativa','Meta'],
     ['Mobilidade que Move','Reg. Metrop.',24000,'pausada','Meta'],
-    ['Recall — Marina 15','Estadual',37000,'ativa','YouTube']
+    ['Recall — institucional','Estadual',37000,'ativa','YouTube']
   ];
   // campanhas rodando por região (matching do local com aliases de mesorregião)
   const REG_ALIAS={recife:['recife','rmr','metrop','znorte'],olinda:['olinda','rmr','metrop'],jaboatao:['jaboatao','olinda','rmr','metrop'],vitoriadesa:['vitoria','rmr'],caruaru:['caruaru','agreste'],garanhuns:['garanhuns','agreste'],arcoverde:['arcoverde','agreste'],serratalhada:['serratalhada','sertao'],salgueiro:['salgueiro','sertao'],petrolina:['petrolina','sertao','saofrancisco']};
@@ -1081,6 +1081,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   }
   window.__aplicarReal=function(api){ try{
     if(!api)return;
+    var pw=document.getElementById('painelWrap'); if(pw)pw.style.visibility='visible'; // dado real chegou — revela (nada de demo piscando)
     var $=function(s){return document.querySelector(s);}, byId=function(i){return document.getElementById(i);};
     var K=api.kpis||{}, O=api.orcamento||{}, Fo=api.forca||{}, M=api.mapa||{}, IDX=api.indice||{}, C=api.campanhas||[];
     // DESLIGA o modo demo: mata os tickers que incrementam números sozinhos e
@@ -1281,6 +1282,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   }catch(e){ console.warn('aplicarReal falhou',e); } };
 
   paint('30d');
+  setTimeout(function(){var pw=document.getElementById('painelWrap'); if(pw)pw.style.visibility='visible';},8000); // fallback anti-tela-branca
 })();
 
 </script>
