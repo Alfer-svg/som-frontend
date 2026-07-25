@@ -1138,8 +1138,12 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       var vs=api.adversarios;
       var lista=[{nome:'Você',seguidores:(vs.voce||{}).seguidores,me:true}].concat((vs.concorrentes||[]).map(function(x){return {nome:x.nome||('@'+x.handle),seguidores:x.seguidores,me:false};}));
       var mxA=Math.max.apply(null,lista.map(function(x){return x.seguidores||0;}))||1;
+      var meuSeg=(vs.voce||{}).seguidores;
       adv.innerHTML=lista.map(function(x){var v=x.seguidores;var w=v?Math.round(v/mxA*100):0;
-        return '<div class="adv '+(x.me?'me':'')+'"><span class="nm">'+esc(x.nome)+'</span><span class="tk"><i style="width:'+w+'%"></i></span><span class="vl tnum">'+(v!=null?kfmt(v):'coletando')+'</span></div>';}).join('');
+        // seta vs. o candidato: ▲ rival na frente (tem mais) · ▼ rival atrás (tem menos)
+        var seta='';
+        if(!x.me&&v!=null&&meuSeg!=null)seta=v>meuSeg?'<span style="color:var(--red);font-size:11px;margin-right:4px">▲</span>':(v<meuSeg?'<span style="color:var(--grnink);font-size:11px;margin-right:4px">▼</span>':'');
+        return '<div class="adv '+(x.me?'me':'')+'"><span class="nm">'+esc(x.nome)+'</span><span class="tk"><i style="width:'+w+'%"></i></span><span class="vl tnum">'+seta+(v!=null?kfmt(v):'coletando')+'</span></div>';}).join('');
       var advChip=adv.parentNode&&adv.parentNode.querySelector('.chip'); if(advChip)advChip.textContent='seguidores · IG';
     }else if(adv){ adv.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Configure os @ dos adversários pra comparar presença.</div>'; }
     // Leitura do dia REAL (IA com guardrail do backend; tem fallback sem IA)
