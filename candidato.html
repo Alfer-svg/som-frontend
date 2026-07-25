@@ -164,6 +164,10 @@
   .ads-lbl{font-size:10.5px;font-weight:700;color:var(--mut2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
   .ads-row{display:flex;gap:9px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch}
   .ad-mini{flex:0 0 auto;width:104px}
+  .ad-mini.vid{width:172px}
+  .ad-read{font-size:10px;line-height:1.42;color:var(--ink);margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+  .ad-read .lbl{font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.03em;font-size:9px;display:block;margin-bottom:2px}
+  .ad-read .tx{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;color:var(--mut)}
   .ad-thumb{width:104px;height:104px;border-radius:10px;border:1px solid var(--line);background:#EEF0F2 center/cover no-repeat;position:relative;overflow:hidden}
   .ad-thumb .pz{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.6);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px}
   .ad-noimg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--mut2);font-size:26px}
@@ -1212,9 +1216,12 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
               var mxr=Math.max(1,rt.q25||0,rt.q50||0,rt.q75||0,rt.q100||0); // normaliza pela maior → mostra a forma da queda
               vid='<div class="ad-vid">▶ assistem <b>'+String(a.video.avgSeg).replace('.',',')+'s</b> em média · <b>'+(rt.q100||0)+'%</b> vão até o fim'
                 +'<div class="ret-bars">'+qs.map(function(q){return '<span class="rb" title="'+q[0]+' do vídeo: '+q[1]+'% de quem deu play chegou aqui" style="height:'+Math.max(3,Math.round((q[1]||0)/mxr*24))+'px"></span>';}).join('')+'</div>'
-                +'<div style="display:flex;gap:3px">'+qs.map(function(q){return '<span class="rl" style="flex:1">'+q[0]+'</span>';}).join('')+'</div></div>';
+                +'<div style="display:flex;gap:3px">'+qs.map(function(q){return '<span class="rl" style="flex:1">'+q[0]+'</span>';}).join('')+'</div>'
+                +(a.video.leitura?'<div class="ad-read"><span class="lbl">Leitura da equipe</span><span class="tx" title="'+esc(a.video.leitura)+'">'+esc(a.video.leitura)+'</span></div>':'')
+                +'</div>';
             }
-            return '<div class="ad-mini"><div class="ad-thumb"'+th+'>'+pz+inner+'</div>'
+            var ehVid=!!(a.video&&a.video.plays);
+            return '<div class="ad-mini'+(ehVid?' vid':'')+'"><div class="ad-thumb"'+th+'>'+pz+inner+'</div>'
               +'<div class="an">'+esc(a.nome)+'</div>'
               +(a.alcance?'<div class="av">'+kfmt(a.alcance)+' alcance</div>':'')+vid+'</div>';
           }).join('')+'</div></div>';
