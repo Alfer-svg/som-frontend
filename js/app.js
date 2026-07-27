@@ -3160,7 +3160,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       }
       // Abre o cadastro pré-preenchido pra você ESCOLHER O TIPO (site sugere Avulso) e revisar.
       // Nasce arquivado (Inativo) — vira ativo só ao fechar contrato. Ao salvar, marca o onboarding como convertido.
-      this.editing = { id: '', ...this._dadosDoOnboarding(o), empresa: o.empresa,
+      this.editing = { id: '', meta: { adAccountId: '' }, ...this._dadosDoOnboarding(o), empresa: o.empresa,
         tipoCliente: ((o.dados || {}).tipo === 'site') ? 'avulso' : 'recorrente', status: 'Ativo', desde: MD.today() };
       this._onbConvertendo = o.id;
       this.cnpjMsg = ''; this.cepMsg = ''; this.onbModal = false; this.modal = 'client';
@@ -3500,6 +3500,12 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       const cli = this._clientePorNome(c.cliente);
       if (cli && (cli.status || 'Ativo') === 'Inativo') return this.ativarCliente(cli);
     },
+    // Fechou/concluiu um projeto/serviço ⇒ ativa o cliente AVULSO ligado a ele (recorrente vira ativo pelo contrato).
+    // Reusa ativarCliente(); só promove clientes avulsos arquivados/inativos.
+    _ativarClienteAvulsoDoProjeto(p) {
+      const cli = this._clientePorNome(p && p.cliente);
+      if (cli && this.clienteTipo(cli) === 'avulso' && (cli.status || 'Ativo') === 'Inativo') return this.ativarCliente(cli);
+    },
     async puxarDoSite() {
       const url = (this.editing.site && this.editing.site.url) || '';
       if (!url) { this.enriqMsg = 'Informe a URL do site primeiro.'; this.enriqResult = null; return; }
@@ -3581,6 +3587,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         tarefas: [], // próximas ações do cliente (responsável/data/prioridade/status)
         adsManual: { leads: null, custoLead: null }, // Leads/Custo por lead lançados à mão (enquanto não há API do Google Ads)
         googleAdsId: '', // Customer ID da conta no Gerenciador (MCC) da Maracatu — pra puxar métricas quando a API ligar
+        meta: { adAccountId: '' }, // ID da conta Meta Ads (adAccountId) — o meta-ads.module.ts lê de dados.meta.adAccountId
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -3607,6 +3614,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         ads: { google: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).google || {}) }, meta: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).meta || {}) } },
         objetivos: (c.objetivos || []).map(o => ({ id: o.id || MD.uid(), nome: o.nome || '', alvo: +o.alvo || 0, atual: +o.atual || 0, unidade: o.unidade || '' })),
         slogan: c.slogan || '', briefing: briefingMerge(c.briefing), responsaveis: this._responsaveisComLegado(c), documentos: docMerge(c.documentos),
+        meta: { adAccountId: '', ...(c.meta || {}) }, // ID Meta Ads (dados.meta.adAccountId) — preserva bmId se houver
       };
       this.cnpjMsg = ''; this.cepMsg = '';
       // se semeamos o contato a partir de dado antigo "de topo", já abre a seção pra ficar visível
@@ -5664,7 +5672,7 @@ ${this._docFoot()}
       this.modelosFav = this.modelosFav.includes(n) ? this.modelosFav.filter(x => x !== n) : [...this.modelosFav, n];
       MD.set('som_modelos_fav', this.modelosFav);
     },
-    async moverProjeto(p, status) { const antes = p.status; p.status = status; if (status === 'Concluído') { p.progresso = 100; if (antes !== 'Concluído') p.concluidoEm = new Date().toISOString(); } try { await this.salvarProjetoApi(p); } catch {} if (status === 'Concluído' && antes !== 'Concluído') this.registrarProducao('projeto', p.nome || ''); },
+    async moverProjeto(p, status) { const antes = p.status; p.status = status; if (status === 'Concluído') { p.progresso = 100; if (antes !== 'Concluído') p.concluidoEm = new Date().toISOString(); } try { await this.salvarProjetoApi(p); } catch {} if (status === 'Concluído' && antes !== 'Concluído') { this.registrarProducao('projeto', p.nome || ''); this._ativarClienteAvulsoDoProjeto(p); } },
     async excluirProjeto(p) { if (!confirm('Excluir o projeto ' + p.nome + '?')) return; try { await this.api('DELETE', '/projetos/' + p.id); this.projects = this.projects.filter(x => x.id !== p.id); this.modal = null; } catch (err) { alert(err.message); } },
 
     // ───────────────── COMERCIAL: orçamentos (propostas) ─────────────────
@@ -5704,8 +5712,11 @@ ${this._docFoot()}
       this._aoAprovarProposta(o); // aprovou → se o cliente ainda é lead, vira cliente
     },
     orcStatusInfo(s) { return ORC_STATUS.find(x => x.id === s) || ORC_STATUS[0]; },
-    // Total mensal = soma dos serviços (fallback no campo valor legado de orçamentos antigos).
-    orcTotal(o) { const s = o && o.servicos; if (Array.isArray(s) && s.length) return s.reduce((a, x) => a + (+x.valor || 0), 0); return +(o && o.valor) || 0; },
+    // Subtotal de um item = valor unitário × quantidade − desconto (compatível com itens antigos: qtd=1, desconto=0).
+    itemQtd(s) { const q = s && s.quantidade; return (q == null || q === '') ? 1 : Math.max(0, +q || 0); },
+    itemSubtotal(s) { if (!s) return 0; const unit = +s.valor || 0, qtd = this.itemQtd(s), desc = +s.desconto || 0; return Math.max(0, Math.round((unit * qtd - desc) * 100) / 100); },
+    // Total mensal = soma dos subtotais dos serviços (fallback no campo valor legado de orçamentos antigos).
+    orcTotal(o) { const s = o && o.servicos; if (Array.isArray(s) && s.length) return Math.round(s.reduce((a, x) => a + this.itemSubtotal(x), 0) * 100) / 100; return +(o && o.valor) || 0; },
     // ── Valores (estilo Operand): subtotal → encargos/desconto/honorários → valor final ──
     orcEncargos(o) { return Math.round(this.orcTotal(o) * (+(o && o.encargoPct) || 0)) / 100; },
     orcFinal(o) { return Math.max(0, Math.round((this.orcTotal(o) - (+(o && o.desconto) || 0) + (+(o && o.honorarios) || 0) + this.orcEncargos(o)) * 100) / 100); },
@@ -5743,13 +5754,13 @@ ${this._docFoot()}
     removeParcela(i) { this.editing.faturamento.splice(i, 1); },
     addCustoExterno() { (this.editing.custosExternos = this.editing.custosExternos || []).push({ id: MD.uid(), descricao: '', valor: 0 }); },
     removeCustoExterno(i) { this.editing.custosExternos.splice(i, 1); },
-    servicoVazio() { return { id: MD.uid(), nome: '', valor: 0, escopo: '', _open: true }; },
+    servicoVazio() { return { id: MD.uid(), nome: '', valor: 0, quantidade: 1, desconto: 0, escopo: '', _open: true }; },
     // Acordeão dos serviços: recolher (salva o item visualmente) / abrir (1 por vez)
     recolherServico(s) { if (!s.nome) return alert('Dê um nome ao serviço antes de recolher.'); s._open = false; },
     abrirServico(s) { (this.editing.servicos || []).forEach(x => x._open = false); s._open = true; },
     _projSel(p) { return PROJETO_OPCOES.includes(p) ? p : (p ? 'Outros' : ''); }, // deriva o valor do dropdown a partir do texto salvo
     novoOrcamento() { this.editing = { id: '', numero: this.proximoNumero('ORC', this.proposals), cliente: '', contato: '', email: '', projeto: '', servicos: [this.servicoVazio()], vigenciaMeses: 6, formaPagamento: 'Pix', diaVencimento: 5, status: 'Rascunho', data: MD.today(), validade: 30, observacoes: '', modoAssinatura: 'presencial', desconto: 0, honorarios: 0, encargoPct: 0, condicao: 'À Vista', parcelas: 1, faturamento: [], custosExternos: [], consideracoes: '' }; this.projetoSel = ''; this.modal = 'orcamento'; },
-    editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Pix', diaVencimento: 5, validade: 30, modoAssinatura: 'presencial', desconto: 0, honorarios: 0, encargoPct: 0, condicao: 'À Vista', parcelas: 1, faturamento: [], custosExternos: [], consideracoes: '', ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, escopo: '', ...s, _open: false })); this.projetoSel = this._projSel(this.editing.projeto); this.modal = 'orcamento'; },
+    editarOrcamento(o) { this.editing = { servicos: [], contato: '', email: '', projeto: '', vigenciaMeses: 6, formaPagamento: 'Pix', diaVencimento: 5, validade: 30, modoAssinatura: 'presencial', desconto: 0, honorarios: 0, encargoPct: 0, condicao: 'À Vista', parcelas: 1, faturamento: [], custosExternos: [], consideracoes: '', ...o }; if (!Array.isArray(this.editing.servicos) || !this.editing.servicos.length) this.editing.servicos = [{ ...this.servicoVazio(), nome: o.descricao || '', valor: +o.valor || 0 }]; this.editing.servicos = this.editing.servicos.map(s => ({ id: MD.uid(), nome: '', valor: 0, quantidade: 1, desconto: 0, escopo: '', ...s, _open: false })); this.projetoSel = this._projSel(this.editing.projeto); this.modal = 'orcamento'; },
     addServicoOrc() { if (!Array.isArray(this.editing.servicos)) this.editing.servicos = []; this.editing.servicos.forEach(s => s._open = false); this.editing.servicos.push(this.servicoVazio()); },
     removeServicoOrc(i) { this.editing.servicos.splice(i, 1); if (!this.editing.servicos.length) this.editing.servicos.push(this.servicoVazio()); },
     // Preenche o máximo possível a partir do cliente selecionado (contato/e-mail, com fallback no 1º responsável).
@@ -5840,7 +5851,8 @@ ${this._docFoot()}
     // Texto detalhado dos serviços (nome, valor, plataformas e escopo) p/ o objeto do contrato.
     _servicosTexto(servicos) {
       return (servicos || []).filter(s => s.nome || +s.valor).map((s, i) => {
-        const head = (i + 1) + '. ' + (s.nome || '') + (+s.valor ? (' — ' + MD.fmtCur(s.valor) + '/mês') : '');
+        const _sub = this.itemSubtotal(s), _qtd = this.itemQtd(s);
+        const head = (i + 1) + '. ' + (s.nome || '') + (_sub ? (' — ' + MD.fmtCur(_sub) + (_qtd !== 1 ? (' (' + MD.fmtCur(+s.valor || 0) + ' × ' + _qtd + ')') : '/mês')) : '');
         const redes = (Array.isArray(s.redes) ? s.redes : []).map(id => { const r = REDES.find(x => x.id === id); return r ? r.label : null; }).filter(Boolean);
         const ads = (Array.isArray(s.ads) ? s.ads : []).map(id => { const a = ADS_PLATAFORMAS.find(x => x.id === id); return a ? a.label : null; }).filter(Boolean);
         const linhas = [head];
@@ -6153,7 +6165,9 @@ h2{break-after:avoid}.serv-head{break-after:avoid}.serv{break-inside:auto}
         const chips = (redeChips || adsChips) ? `<div class="chips">${redeChips}${adsChips}</div>` : '';
         const tot = this.verbaAdsTotal(s);
         const verbaNota = (Array.isArray(s.ads) && s.ads.length && tot) ? `<div class="midia-card">💡 <b>Investimento em mídia sugerido: ${e(MD.fmtCur(tot))}/mês</b> — pago <b>diretamente às plataformas</b> (${e(this.adsLabel(s.ads))}), à parte do fee da agência.</div>` : '';
-        return `<div class="serv"><div class="serv-head"><span class="n">${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(s.valor))}<small>/mês</small></span></div>${chips}${verbaNota}${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
+        const qtd = this.itemQtd(s), desc = +s.desconto || 0, sub = this.itemSubtotal(s);
+        const detVal = (qtd !== 1 || desc) ? `<small>${e(MD.fmtCur(+s.valor || 0))} × ${qtd}${desc ? ' − ' + e(MD.fmtCur(desc)) : ''}</small>` : '<small>/mês</small>';
+        return `<div class="serv"><div class="serv-head"><span class="n">${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(sub))}${detVal}</span></div>${chips}${verbaNota}${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
       }).join('');
       const cron = this.cronograma(o).map(p => `<tr><td>${p.n}º mês — ${e(MD.fmtDate(p.venc))}</td><td>${e(MD.fmtCur(p.valor))}</td><td>${e(o.formaPagamento || 'Boleto')}</td></tr>`).join('');
       // ── Valores e parcelas (padrão Operand) ──
@@ -6299,7 +6313,7 @@ ${this._docFoot()}
     // converte lead Ganho → cliente
     // Monta o `dados` do cliente a partir de um lead (nasce ATIVO; tipo escolhido).
     _dadosClienteDeLead(l, tipo) {
-      return { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, tipoCliente: tipo || 'recorrente', status: 'Ativo', desde: MD.today(), notas: l.notas };
+      return { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), meta: { adAccountId: '' }, objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, tipoCliente: tipo || 'recorrente', status: 'Ativo', desde: MD.today(), notas: l.notas };
     },
     // Botão "Tornar cliente": abre o cadastro pré-preenchido do lead (você ESCOLHE o tipo). Ao salvar, marca o lead como Ganho.
     transformarLeadEmCliente(l) {

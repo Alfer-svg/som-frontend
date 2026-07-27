@@ -4959,7 +4959,8 @@
       </div>
       <div @click="secCli=secCli==='trafego'?'':'trafego'" class="accH"><span><i class="ph ph-megaphone ic-ph"></i> Tráfego Pago (Google & Meta Ads)</span><span class="accX" x-text="secCli==='trafego'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='trafego'">
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">ID Google Ads (Customer ID) <span class="hq" data-tip="ID da conta deste cliente dentro do Gerenciador (MCC) da Maracatu — ex.: 123-456-7890. Serve pra puxar Leads/Custo automaticamente quando a API do Google Ads estiver ligada.">?</span></label><input class="form-input" x-model="editing.googleAdsId" placeholder="123-456-7890" inputmode="numeric"></div>
+      <div class="form-group"><label class="form-label">ID Google Ads (Customer ID) <span class="hq" data-tip="ID da conta deste cliente dentro do Gerenciador (MCC) da Maracatu — ex.: 123-456-7890. Serve pra puxar Leads/Custo automaticamente quando a API do Google Ads estiver ligada.">?</span></label><input class="form-input" x-model="editing.googleAdsId" placeholder="123-456-7890" inputmode="numeric"></div>
+      <div class="form-group"><label class="form-label">ID Conta Meta Ads (adAccountId) <span class="hq" data-tip="ID da conta de anúncios deste cliente no Gerenciador de Negócios da Meta — só os dígitos (ex.: 123456789012345). Serve pra puxar gasto/leads do Meta Ads automaticamente.">?</span></label><input class="form-input" x-model="editing.meta.adAccountId" placeholder="123456789012345" inputmode="numeric"></div>
       <template x-for="a in ADS" :key="a.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
           <label class="flex items-center gap-2" style="width:150px;cursor:pointer;font-size:13px"><input type="checkbox" x-model="editing.ads[a.id].ativo"> <img :src="redeIcon(a)" width="15" height="15" :alt="a.label"> <span x-text="a.label"></span></label>
@@ -5378,7 +5379,7 @@
               <div class="fs-12 text-3 truncate" x-show="s.escopo" x-text="(s.escopo||'').split('\n')[0]"></div>
             </div>
             <div class="flex items-center gap-2" style="flex-shrink:0">
-              <span class="fw-700 text-green" x-text="(+s.valor?fmtCur(s.valor)+'/mês':'—')"></span>
+              <span class="fw-700 text-green" x-text="(itemSubtotal(s)?fmtCur(itemSubtotal(s))+(itemQtd(s)!==1?(' ('+itemQtd(s)+'×)'):''):'—')"></span>
               <button type="button" class="btn btn-ghost btn-sm" @click.stop="abrirServico(s)">Editar</button>
               <button type="button" class="btn btn-icon btn-ghost btn-sm" @click.stop="removeServicoOrc(i)" title="Remover"><i class="ph ph-trash ic-ph"></i></button>
             </div>
@@ -5386,11 +5387,14 @@
           <!-- Aberto: editor -->
           <div x-show="s._open" style="padding:12px 14px">
             <div class="form-group" x-show="catalogo.length" style="margin-bottom:8px"><label class="form-label">Usar do catálogo <span class="hq" data-tip="Puxe um serviço já cadastrado para preencher rápido.">?</span></label><select class="form-select" @change="aplicarCatalogo(s, $event.target.value); $event.target.value=''"><option value="">— escolher serviço cadastrado —</option><template x-for="it in catalogo" :key="it.id"><option :value="it.id" x-text="it.nome + (it.valor?(' — '+fmtCur(it.valor)+'/mês'):'')"></option></template></select></div>
-            <div class="flex gap-2" style="align-items:flex-end">
-              <div class="form-group" style="flex:1"><label class="form-label">Serviço <span class="hq" data-tip="Serviço relacionado.">?</span></label><input class="form-input" x-model="s.nome" list="serv-list"></div>
-              <div class="form-group" style="width:150px"><label class="form-label">Mensalidade (R$) <span class="hq" data-tip="Valor da mensalidade do cliente, em reais.">?</span></label><input class="form-input" type="number" x-model="s.valor"></div>
-              <button class="btn btn-icon btn-ghost" @click="removeServicoOrc(i)" title="Remover serviço"><i class="ph ph-trash ic-ph"></i></button>
+            <div class="flex gap-2" style="align-items:flex-end;flex-wrap:wrap">
+              <div class="form-group" style="flex:1;min-width:160px"><label class="form-label">Serviço <span class="hq" data-tip="Serviço relacionado.">?</span></label><input class="form-input" x-model="s.nome" list="serv-list"></div>
+              <div class="form-group" style="width:130px"><label class="form-label">Valor unitário (R$) <span class="hq" data-tip="Valor de uma unidade do serviço, em reais.">?</span></label><input class="form-input" type="number" min="0" step="0.01" x-model.number="s.valor"></div>
+              <div class="form-group" style="width:80px"><label class="form-label">Qtd <span class="hq" data-tip="Quantidade de unidades deste serviço.">?</span></label><input class="form-input" type="number" min="0" step="1" x-model.number="s.quantidade"></div>
+              <div class="form-group" style="width:120px"><label class="form-label">Desconto (R$) <span class="hq" data-tip="Desconto aplicado neste item (subtraído do unitário × qtd).">?</span></label><input class="form-input" type="number" min="0" step="0.01" x-model.number="s.desconto"></div>
+              <button class="btn btn-icon btn-ghost" @click="removeServicoOrc(i)" title="Remover serviço" style="margin-bottom:2px"><i class="ph ph-trash ic-ph"></i></button>
             </div>
+            <div class="fs-12 text-2" style="margin-top:4px;text-align:right">Subtotal do item: <b class="text-green" x-text="fmtCur(itemSubtotal(s))"></b> <span x-show="itemQtd(s)!==1 || +s.desconto" x-text="'('+fmtCur(s.valor||0)+' × '+itemQtd(s)+(+s.desconto?(' − '+fmtCur(s.desconto)):'')+')'"></span></div>
             <div class="form-group" x-show="Array.isArray(s.redes)" style="margin-top:8px">
               <label class="form-label">Redes incluídas <span class="hq" data-tip="Redes sociais incluídas neste serviço.">?</span></label>
               <div class="flex" style="flex-wrap:wrap;gap:8px">
