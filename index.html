@@ -4667,11 +4667,15 @@
 
         <!-- ===== MATRIZ DE PERMISSÕES POR PERFIL (só admin) ===== -->
         <template x-if="ehAdmin">
-          <div class="card mb-4" style="padding:0;overflow:hidden">
-            <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
-              <div class="fw-800 fs-14"><i class="ph ph-lock-key ic-ph"></i> O que cada perfil acessa</div>
-              <div class="text-3 fs-12" style="margin-top:2px">Marque/desmarque as áreas do sistema que cada perfil pode abrir. <b>Admin</b> tem acesso total (não editável). A <b>própria ficha</b> (Pessoal) é sempre liberada.</div>
+          <div class="card mb-4" style="padding:0;overflow:hidden" x-data="{permAberto:false}">
+            <div style="padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px" @click="permAberto=!permAberto">
+              <div style="min-width:0">
+                <div class="fw-800 fs-14"><i class="ph ph-lock-key ic-ph"></i> O que cada perfil acessa</div>
+                <div class="text-3 fs-12" style="margin-top:2px">Marque/desmarque as áreas do sistema que cada perfil pode abrir. <b>Admin</b> tem acesso total (não editável). A <b>própria ficha</b> (Pessoal) é sempre liberada.</div>
+              </div>
+              <i class="ph ph-caret-down ic-ph" style="font-size:16px;flex-shrink:0;transition:transform .2s" :style="permAberto?'transform:rotate(180deg)':''"></i>
             </div>
+            <div x-show="permAberto">
             <div style="overflow-x:auto">
               <table class="perm-table" style="width:100%;border-collapse:collapse;font-size:12px">
                 <thead>
@@ -4705,6 +4709,7 @@
             </div>
             <div style="padding:12px 14px;border-top:1px solid var(--border)">
               <button class="btn btn-primary btn-sm" @click="salvarPermissoes()"><i class="ph ph-check ic-ph"></i> Salvar permissões</button>
+            </div>
             </div>
           </div>
         </template>
