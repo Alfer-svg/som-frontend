@@ -71,8 +71,8 @@
         <!-- ETAPA 1 · credenciais -->
         <template x-if="etapa==='cred'">
           <div>
-            <label class="kpi-label">E-mail</label>
-            <input type="email" x-model="lgEmail" placeholder="voce@empresa.com" style="margin:6px 0 14px" @keydown.enter="irParaFoto()">
+            <label class="kpi-label">Login</label>
+            <input type="text" autocapitalize="none" autocorrect="off" autocomplete="username" x-model="lgEmail" placeholder="seu login ou e-mail" style="margin:6px 0 14px" @keydown.enter="irParaFoto()">
             <label class="kpi-label">Senha</label>
             <input type="password" x-model="lgSenha" placeholder="sua senha" style="margin:6px 0 4px" @keydown.enter="irParaFoto()">
             <label style="display:flex;gap:8px;align-items:center;margin-top:12px;font-size:12.5px;color:var(--mut);cursor:pointer;user-select:none">
@@ -81,6 +81,19 @@
             </label>
             <div x-show="lgErro" style="color:var(--red);font-size:13px;margin:8px 0 0" x-text="lgErro"></div>
             <button class="btn btn-amber" style="width:100%;margin-top:16px" @click="irParaFoto()">Continuar</button>
+          </div>
+        </template>
+        <!-- ETAPA 3 · senha provisória: criar a senha definitiva (obrigatório no 1º acesso) -->
+        <template x-if="etapa==='senha'">
+          <div>
+            <div class="kpi-label" style="margin-bottom:4px">Crie sua senha</div>
+            <div class="muted" style="font-size:12.5px;line-height:1.5;margin-bottom:14px">Sua senha atual é provisória. Escolha agora a sua senha definitiva — só você vai conhecê-la.</div>
+            <label class="kpi-label">Nova senha</label>
+            <input type="password" autocomplete="new-password" x-model="novaSenha" placeholder="mínimo 6 caracteres" style="margin:6px 0 14px" @keydown.enter="salvarNovaSenha()">
+            <label class="kpi-label">Repita a nova senha</label>
+            <input type="password" autocomplete="new-password" x-model="novaSenha2" placeholder="repita a senha" style="margin:6px 0 4px" @keydown.enter="salvarNovaSenha()">
+            <div x-show="lgErro" style="color:var(--red);font-size:13px;margin:8px 0 0" x-text="lgErro"></div>
+            <button class="btn btn-amber" style="width:100%;margin-top:16px" @click="salvarNovaSenha()" :disabled="lgLoading"><span x-text="lgLoading?'Salvando…':'Salvar e entrar'"></span></button>
           </div>
         </template>
         <!-- ETAPA 2 · foto + consentimento -->
@@ -436,6 +449,7 @@
       aba:'inicio', rTab:'engaj',
       analise:{}, anLoading:false,
       lgEmail:'', lgSenha:'', lgErro:'', lgLoading:false, lembrar: localStorage.getItem('som_lembrar')==='1',
+      novaSenha:'', novaSenha2:'', _pend:null,
       etapa:'cred', camStream:null, camPronta:false, camErro:false, rostoOk:false, fdTimer:null, liberaSemRosto:false, fotoTirada:false, fotoData:'', lat:null, lng:null, geoOk:false, consentiu:false, hbTimer:null,
       alertaCaptura:false, protegido:false, alertaTimer:null, guardOn:false,
       ap:null, apLoading:false, apAcao:false, ajusteAberto:false, ajusteTxt:'',
@@ -462,7 +476,7 @@
       // ── acesso seguro: câmera + geolocalização + consentimento ──
       irParaFoto(){
         this.lgErro='';
-        if(!this.lgEmail||!this.lgSenha){ this.lgErro='Preencha e-mail e senha.'; return; }
+        if(!this.lgEmail||!this.lgSenha){ this.lgErro='Preencha login e senha.'; return; }
         this.etapa='foto'; this.fotoTirada=false; this.fotoData=''; this.consentiu=false; this.geoOk=false;
         this.rostoOk=false; this.liberaSemRosto=false;
         this.abrirCamera(); this.pegarLocal();
@@ -543,16 +557,35 @@
         try{
           const d=await this.api('POST','/cliente-portal/login',{email:this.lgEmail,senha:this.lgSenha,selfie:this.fotoData,lat:this.lat,lng:this.lng,consent:true});
           this.pararCamera();
-          this.token=d.token; this.cliente={...d.cliente, email:this.lgEmail};
-          localStorage.setItem('cliente_token',d.token); localStorage.setItem('cliente_info',JSON.stringify(this.cliente));
-          // "Lembrar meu acesso": guarda (ou apaga) e-mail+senha neste aparelho — a selfie continua obrigatória a cada acesso
-          if(this.lembrar){ localStorage.setItem('som_lembrar','1'); localStorage.setItem('som_cred', btoa(unescape(encodeURIComponent(JSON.stringify({email:this.lgEmail,senha:this.lgSenha}))))); }
-          else { localStorage.removeItem('som_lembrar'); localStorage.removeItem('som_cred'); }
-          this.etapa='cred'; this.lgSenha=''; this.fotoData=''; this.fotoTirada=false;
-          // candidato: o painel exclusivo é a Central de Campanha — leva pra lá reusando esta sessão
-          if((d.cliente&&d.cliente.perfil)==='candidato'){ location.replace('candidato.html'); return; }
-          this.aba='inicio'; this.iniciarSessao(); this.carregarAnalise(); this.carregarAprovacoes();
+          // senha provisória: NÃO entra no app antes de criar a senha definitiva
+          if(d.trocarSenha){ this._pend=d; this.etapa='senha'; this.novaSenha=''; this.novaSenha2=''; this.lgErro=''; this.lgLoading=false; return; }
+          this._finalizarLogin(d);
         }catch(e){ this.lgErro=(e.message||'Não foi possível entrar.'); }
+        this.lgLoading=false;
+      },
+      _finalizarLogin(d){
+        this.token=d.token; this.cliente={...d.cliente, email:this.lgEmail};
+        localStorage.setItem('cliente_token',d.token); localStorage.setItem('cliente_info',JSON.stringify(this.cliente));
+        // "Lembrar meu acesso": guarda (ou apaga) e-mail+senha neste aparelho — a selfie continua obrigatória a cada acesso
+        if(this.lembrar){ localStorage.setItem('som_lembrar','1'); localStorage.setItem('som_cred', btoa(unescape(encodeURIComponent(JSON.stringify({email:this.lgEmail,senha:this.lgSenha}))))); }
+        else { localStorage.removeItem('som_lembrar'); localStorage.removeItem('som_cred'); }
+        this.etapa='cred'; this.lgSenha=''; this.fotoData=''; this.fotoTirada=false;
+        // candidato: o painel exclusivo é a Central de Campanha — leva pra lá reusando esta sessão
+        if((d.cliente&&d.cliente.perfil)==='candidato'){ location.replace('candidato.html'); return; }
+        this.aba='inicio'; this.iniciarSessao(); this.carregarAnalise(); this.carregarAprovacoes();
+      },
+      async salvarNovaSenha(){
+        this.lgErro='';
+        if((this.novaSenha||'').length<6){ this.lgErro='A nova senha precisa de pelo menos 6 caracteres.'; return; }
+        if(this.novaSenha!==this.novaSenha2){ this.lgErro='As senhas não conferem.'; return; }
+        this.lgLoading=true;
+        try{
+          const r=await fetch(API+'/cliente-portal/trocar-senha',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+this._pend.token},body:JSON.stringify({senhaAtual:this.lgSenha,senha:this.novaSenha})});
+          const j=await r.json().catch(()=>null);
+          if(!r.ok) throw new Error((j&&j.message)||'Não foi possível trocar a senha.');
+          this.lgSenha=this.novaSenha; this.novaSenha=''; this.novaSenha2='';
+          this._finalizarLogin(this._pend); this._pend=null;
+        }catch(e){ this.lgErro=(e.message||'Não foi possível trocar a senha.'); }
         this.lgLoading=false;
       },
       // ── auditoria da sessão (tempo de uso + atividade) ──
