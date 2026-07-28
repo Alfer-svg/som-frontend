@@ -1177,6 +1177,24 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     if(K.engajamentoPct==null){ if(engD)engD.style.display='none'; var engV=eng&&eng.closest('.v'); if(engV)engV.textContent='—'; }
     else if(engD){ engD.textContent='média por post no Instagram'; } // "acima da média do setor" era claim do demo
     setV('[data-kpi=contatos]',K.contatos,function(v){return F.format(v);});
+    // Comparativo semana a semana (Δ% vs ~7 dias atrás) — vem do backend em api.kpisVar.
+    // null (filtro de período ativo ou sem histórico) → mantém o texto atual do card.
+    var KV=api.kpisVar||null;
+    var setVarBadge=function(sel,pct){
+      var el=$(sel); if(!el)return; var tile=el.closest('.tile'); if(!tile)return;
+      var dd=tile.querySelector('.d'); if(!dd||pct==null)return;
+      dd.style.display=''; // garante visível (o card de apoiadores fica oculto acima)
+      var flat=Math.abs(pct)<0.05, up=pct>0;
+      var cor=flat?'var(--mut)':(up?'#16a34a':'#dc2626'), seta=flat?'→':(up?'▲':'▼');
+      var txt=(pct>0?'+':'')+String(pct).replace('.',',')+'%';
+      dd.innerHTML='<b style="color:'+cor+'">'+seta+' '+txt+'</b> <span style="color:var(--mut)">vs semana passada</span>';
+    };
+    if(KV){
+      setVarBadge('[data-kpi=alcance]',KV.alcance);
+      setVarBadge('[data-kpi=apoiadores]',KV.apoiadores);
+      setVarBadge('[data-kpi=engaj]',KV.engajamentoPct);
+      setVarBadge('[data-kpi=contatos]',KV.contatos);
+    }
     // subtítulo honesto: é a métrica de conversas iniciadas pelos anúncios (Meta)
     var ctEl=$('[data-kpi=contatos]'); var ctTile=ctEl&&ctEl.closest('.tile'); var ctD=ctTile&&ctTile.querySelector('.d'); if(ctD&&K.contatos!=null)ctD.textContent='conversas iniciadas pelos anúncios';
     // orçamento / gasto
