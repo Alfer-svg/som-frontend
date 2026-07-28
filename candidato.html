@@ -1717,6 +1717,9 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     id('btnRefazer').addEventListener('click',refazer);
     id('btnEntrar').addEventListener('click',entrar);
     id('btnVoltar').addEventListener('click',voltar);
+    // liga o filtro de período AQUI (dentro deste IIFE, onde ligarFiltroPeriodo existe;
+    // o __aplicarReal está noutro escopo e não alcançava a função).
+    try{ ligarFiltroPeriodo(); }catch(e){}
     var qs=new URLSearchParams(location.search),cli=qs.get('cliente'),somTok=localStorage.getItem('som_token');
     if(cli&&somTok){ abrirComoAdmin(cli,somTok); return; }   // equipe do SOM abrindo o painel de um candidato
     if(token){ abrirPainel(); return; }                      // candidato já logado no app do SOM
