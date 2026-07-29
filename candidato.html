@@ -1221,9 +1221,18 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     if(camps)camps.innerHTML=C.length?C.map(function(c){
       var loc=c.local||'', pausada=c.status!=='ACTIVE';
       var ans=Array.isArray(c.anuncios)?c.anuncios:[];
+      // orçamento diário real (Meta): da campanha (CBO) ou soma dos conjuntos
+      var orc='';
+      if(c.orcDiario!=null){
+        var vd='R$ '+Number(c.orcDiario).toLocaleString('pt-BR',{minimumFractionDigits:Number.isInteger(c.orcDiario)?0:2,maximumFractionDigits:2});
+        orc='<div class="rc" title="Orçamento diário definido n'+(c.orcNivel==='conjuntos'?'os conjuntos de anúncios (soma)':'a campanha')+'"><div class="b tnum">'+vd+'</div><div class="s">por dia</div></div>';
+      } else if(c.orcTotal!=null){
+        orc='<div class="rc" title="Orçamento total (vitalício) da campanha"><div class="b tnum">R$ '+Number(c.orcTotal).toLocaleString('pt-BR',{maximumFractionDigits:0})+'</div><div class="s">orçamento total</div></div>';
+      }
       var head='<div class="camp-head"><span class="st '+(pausada?'pause':'')+'"></span>'
         +'<div class="in"><div class="nm">'+esc(c.nome)+'</div>'+(loc?'<div class="lo">'+esc(loc)+'</div>':'')+'</div>'
         +'<span class="cn">'+esc(c.canal||'')+'</span>'
+        +orc
         +'<div class="rc"><div class="b tnum">'+kfmt(c.alcance||0)+'</div><div class="s">alcance</div></div></div>';
       var strip='';
       if(ans.length){
