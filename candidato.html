@@ -1377,14 +1377,20 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     if(M.disponivel&&M.pontos&&M.pontos.length){ if(window.L)desenharMapaReal(M.pontos); else setTimeout(function(){if(window.L)desenharMapaReal(M.pontos);},600); }
     // Lista de impactados POR CIDADE e POR BAIRRO (pedido do Dinho) — embaixo do mapa
     if(M.disponivel&&M.pontos&&M.pontos.length&&!byId('impactoLista')){
+      // Agrega por nome guardando SE veio de rateio (estimado). A Meta não mede alcance
+      // por cidade; quando um conjunto mira várias cidades o alcance total é dividido
+      // igual entre elas (estimado=true). Marcamos essas com "≈ est." pra não parecer real.
       var cid={}, bai={};
-      M.pontos.forEach(function(p){ var alvo=(p.tipo==='bairro')?bai:cid; alvo[p.nome]=(alvo[p.nome]||0)+(p.reach||0); });
-      var linhas=function(mapa){ var arr=Object.keys(mapa).map(function(k){return [k,mapa[k]];}).sort(function(a,b){return b[1]-a[1];}); var tot=arr.reduce(function(s,x){return s+x[1];},0)||1;
-        return arr.map(function(x){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed var(--line);font-size:12.5px"><span>'+esc(x[0])+'</span><span class="tnum" style="font-weight:700;white-space:nowrap">'+kfmt(x[1])+' · '+Math.round(x[1]/tot*100)+'%</span></div>';}).join(''); };
-      var dv=document.createElement('div'); dv.id='impactoLista';
-      dv.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 26px;margin-top:12px';
-      dv.innerHTML='<div><div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">Impactados por cidade</div>'+(linhas(cid)||'<span style="color:var(--mut);font-size:12px">—</span>')+'</div>'
-        +'<div><div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">Por bairro (Recife)</div>'+(linhas(bai)||'<span style="color:var(--mut);font-size:12px">—</span>')+'</div>';
+      M.pontos.forEach(function(p){ var alvo=(p.tipo==='bairro')?bai:cid; if(!alvo[p.nome])alvo[p.nome]={reach:0,est:false}; alvo[p.nome].reach+=(p.reach||0); if(p.estimado)alvo[p.nome].est=true; });
+      var temEst=false;
+      var linhas=function(mapa){ var arr=Object.keys(mapa).map(function(k){return [k,mapa[k].reach,mapa[k].est];}).sort(function(a,b){return b[1]-a[1];}); var tot=arr.reduce(function(s,x){return s+x[1];},0)||1;
+        return arr.map(function(x){ if(x[2])temEst=true; var badge=x[2]?' <span style="font-size:9.5px;font-weight:600;color:var(--mut);border:1px solid var(--line);border-radius:4px;padding:0 4px;opacity:.85" title="Estimativa: a Meta não mede alcance por cidade. O alcance do conjunto de anúncios foi dividido igualmente entre as cidades que ele mira.">≈ est.</span>':''; return '<div style="display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed var(--line);font-size:12.5px"><span>'+esc(x[0])+badge+'</span><span class="tnum" style="font-weight:700;white-space:nowrap">'+kfmt(x[1])+' · '+Math.round(x[1]/tot*100)+'%</span></div>';}).join(''); };
+      var dv=document.createElement('div'); dv.id='impactoLista'; dv.style.cssText='margin-top:12px';
+      var cols='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 26px">'
+        +'<div><div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">Impactados por cidade</div>'+(linhas(cid)||'<span style="color:var(--mut);font-size:12px">—</span>')+'</div>'
+        +'<div><div style="font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">Por bairro (Recife)</div>'+(linhas(bai)||'<span style="color:var(--mut);font-size:12px">—</span>')+'</div>'
+        +'</div>';
+      dv.innerHTML=cols+(temEst?'<div style="font-size:10.5px;color:var(--mut);margin-top:8px;opacity:.9">≈ est. = estimativa. A Meta não fornece alcance por cidade; quando um conjunto de anúncios mira várias cidades, o alcance total dele é dividido igualmente entre elas. Número real por cidade só com um conjunto por cidade.</div>':'');
       var mc=byId('mapCard'); if(mc)mc.appendChild(dv);
     }
   }catch(e){ console.warn('aplicarReal falhou',e); } };
