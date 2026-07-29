@@ -163,22 +163,27 @@
   function mesLabel(ini){ var p=ini.split('-'); return MESES[+p[1]-1]+' '+p[0]; }
   function estado(html){ app.innerHTML='<div class="estado">'+html+'</div>'; }
 
-  // gráfico de barras vertical amarelo (estilo do PDF). itens=[{label,valor}]
-  function grafico(itens){
+  // gráfico de barras vertical amarelo em SVG (imprime certinho no PDF).
+  function grafico(itens, legenda){
     itens=(itens||[]).filter(function(x){return x.valor>0;});
     if(!itens.length) return '';
     var max=0; itens.forEach(function(x){ if(x.valor>max)max=x.valor; });
-    // escala "redonda" pro topo
     var step=Math.pow(10,Math.floor(Math.log10(max||1)));
     var topo=Math.ceil(max/step)*step; if(topo<=max)topo+=step;
-    var grid=''; for(var k=1;k<=4;k++){ grid+='<div class="gl" style="bottom:'+(k*25)+'%"></div>'; }
-    var cols=itens.map(function(x){
-      var h=Math.max(2,Math.round(x.valor/topo*100));
-      return '<div class="col"><div class="bar" style="height:'+h+'%" title="'+esc(x.label)+': '+fNum(x.valor)+'"></div></div>';
-    }).join('');
-    var labs=itens.map(function(x){ return '<span>'+esc(x.label)+'</span>'; }).join('');
-    return '<div class="chart"><div class="cv">'+grid+cols+'</div><div class="xl">'+labs+'</div>'+
-      '<div class="legend"><i></i> Conversões</div></div>';
+    var W=340,H=170,padB=26,padT=8,padL=6,plotH=H-padB-padT,plotW=W-padL-6;
+    var n=itens.length, slot=plotW/n, bw=Math.min(30,slot*0.56);
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block">';
+    // gridlines horizontais
+    for(var k=0;k<=4;k++){ var gy=padT+plotH*(k/4); svg+='<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(W-6)+'" y2="'+gy.toFixed(1)+'" stroke="#EAE6DC" stroke-width="1" stroke-dasharray="3 3"/>'; }
+    svg+='<line x1="'+padL+'" y1="'+(padT+plotH)+'" x2="'+(W-6)+'" y2="'+(padT+plotH)+'" stroke="#E2DDD1" stroke-width="1"/>';
+    itens.forEach(function(x,i){
+      var bh=Math.max(2,x.valor/topo*plotH);
+      var cx=padL+slot*i+slot/2, by=padT+plotH-bh;
+      svg+='<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+by.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+bh.toFixed(1)+'" rx="2" fill="#F4B400"/>';
+      svg+='<text x="'+cx.toFixed(1)+'" y="'+(H-9)+'" text-anchor="middle" font-size="8.5" fill="#6c7480">'+esc(x.label)+'</text>';
+    });
+    svg+='</svg>';
+    return '<div class="chart">'+svg+'<div class="legend"><i></i> '+esc(legenda||'Conversões')+'</div></div>';
   }
 
   function phead(nome, ini, fim){
