@@ -327,6 +327,27 @@
           '<div class="b3"><div class="lb">Custo por contato</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>'+
         '</div>';
 
+      // ── Campanhas ativas (Google + Meta) ──
+      var campAtivas=[];
+      var gc=(mid.google&&mid.google.resumo&&mid.google.resumo.campanhas)||[];
+      gc.filter(function(c){return String(c.status||'').toUpperCase()==='ENABLED';}).forEach(function(c){
+        campAtivas.push({canal:'Google',nome:c.nome,orc:c.orcamentoDia,gasto:c.gasto,cliques:c.cliques,conv:c.conversoes});
+      });
+      var mc=(mid.meta&&mid.meta.campanhas)||[];
+      mc.forEach(function(c){ campAtivas.push({canal:'Meta',nome:c.nome,orc:c.orcamentoDia,gasto:null,cliques:null,conv:null}); });
+      if(campAtivas.length){
+        h+='<div class="card"><h3>Campanhas ativas · '+campAtivas.length+'</h3>'+
+          '<table><tr><th>Campanha</th><th>Canal</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Contatos</th></tr>'+
+          campAtivas.map(function(c){
+            var cor=c.canal==='Google'?'#1a73e8':'#0866FF';
+            return '<tr><td class="k">'+esc(c.nome)+'</td>'+
+              '<td><span style="font-size:10.5px;font-weight:800;color:'+cor+'">'+esc(c.canal)+'</span></td>'+
+              '<td class="n">'+(c.orc!=null?fMoney(c.orc):'—')+'</td>'+
+              '<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td>'+
+              '<td class="n">'+(c.conv!=null?fNum(c.conv):'—')+'</td></tr>';
+          }).join('')+'</table></div>';
+      }
+
       // Google
       var g=mid.google;
       if(g&&g.resumo){var gr=g.resumo;
