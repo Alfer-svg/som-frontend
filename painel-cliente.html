@@ -126,6 +126,13 @@
   .b3 .em{font-size:11.5px;color:#9a9488;margin-top:5px}
 
   .mh{font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:10px}
+  .pie{display:flex;align-items:center;gap:16px}
+  .pie svg{flex:none}
+  .plg{display:flex;flex-direction:column;gap:8px;min-width:0}
+  .pl{display:flex;align-items:center;gap:8px;font-size:12.5px}
+  .pl .dot{width:11px;height:11px;border-radius:3px;flex:none}
+  .pl .pn{color:var(--ink);font-weight:600}
+  .pl .pp{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink2)}
   .mini{display:flex;flex-direction:column;gap:10px}
   .mr{display:grid;grid-template-columns:74px 1fr 40px;align-items:center;gap:10px}
   .mr .l{font-size:12.5px;font-weight:600;color:var(--ink)}
@@ -203,6 +210,23 @@
         '<span class="t"><span class="f" style="width:'+Math.max(3,pct)+'%;background:'+cor+'"></span></span>'+
         '<span class="v num">'+pct+'%</span></div>';
     }).join('')+'</div>';
+  }
+
+  // PIZZA (donut SVG) — itens=[{label,valor}], cores=mapa label→hex. Legenda com %.
+  function pizza(itens, cores){
+    itens=(itens||[]).filter(function(x){return x.valor>0;});
+    if(!itens.length)return '';
+    var tot=itens.reduce(function(s,x){return s+x.valor;},0)||1;
+    var r=54, cx=64, cy=64, C=2*Math.PI*r, off=0;
+    var segs=itens.map(function(x){
+      var frac=x.valor/tot, dash=frac*C, cor=(cores&&cores[x.label])||'#9aa0aa';
+      var el='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+cor+'" stroke-width="20" '+
+        'stroke-dasharray="'+dash.toFixed(2)+' '+(C-dash).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" transform="rotate(-90 '+cx+' '+cy+')"/>';
+      off+=dash; return el;
+    }).join('');
+    var leg=itens.map(function(x){var pct=Math.round(x.valor/tot*100),cor=(cores&&cores[x.label])||'#9aa0aa';
+      return '<div class="pl"><span class="dot" style="background:'+cor+'"></span><span class="pn">'+esc(x.label)+'</span><span class="pp">'+pct+'%</span></div>';}).join('');
+    return '<div class="pie"><svg viewBox="0 0 128 128" width="128" height="128">'+segs+'</svg><div class="plg">'+leg+'</div></div>';
   }
 
   var IC_IG='<span class="ic" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none"/></svg></span>';
@@ -387,11 +411,14 @@
         h+='</div>';
 
         // ── Quem sua campanha alcança: gênero × dispositivo × faixa etária ──
-        var dem=m.demografia||{}, gen=dem.genero||[], idade=dem.idade||[], disp=m.dispositivos||[];
+        var dem=m.demografia||{}, gen=dem.genero||[], idade=dem.idade||[];
+        // dispositivo: soma Meta + Google (mesma unidade = impressões) → PC aparece
+        var dispMap={}; ((m.dispositivos||[]).concat((mid.google&&mid.google.dispositivos)||[])).forEach(function(x){ dispMap[x.label]=(dispMap[x.label]||0)+x.valor; });
+        var disp=Object.keys(dispMap).map(function(k){return {label:k,valor:dispMap[k]};});
         if(gen.length||disp.length||idade.length){
           h+='<div class="card"><h3>Quem sua campanha alcança</h3><div class="two">';
-          if(gen.length) h+='<div><div class="mh">Gênero</div>'+mini(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
-          if(disp.length) h+='<div><div class="mh">Dispositivo</div>'+mini(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825'})+'</div>';
+          if(gen.length) h+='<div><div class="mh">Gênero</div>'+pizza(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
+          if(disp.length) h+='<div><div class="mh">Dispositivo</div>'+pizza(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825',TV:'#9aa0aa'})+'</div>';
           h+='</div>';
           if(idade.length) h+='<div style="margin-top:16px"><div class="mh">Faixa etária</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
           h+='</div>';
