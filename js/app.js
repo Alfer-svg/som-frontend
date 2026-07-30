@@ -622,6 +622,7 @@ document.addEventListener('alpine:init', () => {
     cronTick: 0, // tique de 1s pra o cronômetro ao vivo
     cronConfirm: null, // modal "ainda produzindo?": { id, nome, deadline, left } — pede confirmação a cada 1h
     prodAviso: null, // pop-up de advertência antes de iniciar o tempo: { c1, c2 } — só libera com os 2 aceites
+    iaAviso: null, // pop-up "usou IA nesta arte?" ao concluir (Pronto) — guarda o card a declarar
     CRON_HORA: 3600, // sessão pede confirmação a cada 1h aberta
     CRON_GRACA: 300, // após pedir, espera 5min a resposta; sem resposta, encerra
     quickAddCol: '', quickAddText: '', // adicionar cartão rápido
@@ -924,6 +925,8 @@ document.addEventListener('alpine:init', () => {
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
+    // Controles de monitoramento (aviso de tempo + declaração de IA) só valem pro Everton (usuário logado).
+    get ehEverton() { return (this.usuario && this.usuario.nome || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().includes('everton'); },
     // ── Painel compartilhado Matheus + Samara (visão decidida pelo papel) ──
     // colaborador = Matheus (Social Media) · conteudo = Samara (Produção) · admin/gestor = os dois.
     get visaoPainel() {
@@ -4913,13 +4916,27 @@ ${this._docFoot()}
     },
     async salvarCard() { if (!this.cardRef) return; try { await this.salvarProjetoApi(this.cardRef); } catch (e) { alert(e.message); } },
     fecharCard() { clearInterval(this._cronTick); this.cardModal = false; this.carregarProjetos(); },
+    // "Pronto" (concluir): antes de fechar uma arte (post/criativo) ainda não declarada,
+    // pergunta se usou IA. O X do topo só fecha (não pergunta).
+    concluirCard() {
+      const p = this.cardRef;
+      if (this.ehEverton && p && p.isPost && p.usouIa === undefined) { this.iaAviso = p; return; }
+      this.fecharCard();
+    },
+    async declararIa(v) {
+      const p = this.iaAviso; if (!p) return;
+      p.usouIa = !!v;            // marca a peça (selo "IA" só quando true)
+      this.iaAviso = null;
+      await this.salvarCard();   // persiste a declaração
+      this.fecharCard();         // usouIa já definido → fecha de fato
+    },
     // ── Cronômetro de produção (vira relatório de tempo) ──
     tempoSessao(p) { return p && p.cronInicio ? Math.max(0, Math.floor((Date.now() - new Date(p.cronInicio).getTime()) / 1000)) : 0; },
     tempoTotalCard(p) { return ((p && p.tempoTotal) || 0) + this.tempoSessao(p); },
     fmtDur(s) { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; const mm = String(m).padStart(2, '0'), xx = String(x).padStart(2, '0'); return h > 0 ? (h + ':' + mm + ':' + xx) : (mm + ':' + xx); },
     async iniciarProducao() {
       const p = this.cardRef; if (!p || p.cronInicio) return;
-      if (!this.prodAviso || !this.prodAviso.c1 || !this.prodAviso.c2) return; // trava: só libera com os 2 aceites do pop-up de advertência
+      if (this.prodAviso && !(this.prodAviso.c1 && this.prodAviso.c2)) return; // se o pop-up de advertência está aberto (Everton), exige os 2 aceites
       const agora = new Date().toISOString();
       p.cronInicio = agora; p.cronAutor = (this.usuario && this.usuario.nome) || '';
       p.cronConfirmadoEm = agora; // marco da última confirmação (pra pedir a cada 1h)

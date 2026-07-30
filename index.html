@@ -81,6 +81,21 @@
   </div>
 </div>
 
+<!-- Declaração de IA antes de concluir a arte (ao clicar "Pronto") -->
+<div x-show="iaAviso" x-cloak x-transition @click.self="iaAviso=null" style="position:fixed;inset:0;z-index:10001;background:rgba(20,18,16,.6);display:flex;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;max-width:430px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.35);padding:22px;text-align:center" @click.stop>
+    <div style="font-size:30px;line-height:1">✨</div>
+    <div style="font-weight:800;font-size:17px;margin-top:6px">Antes de concluir</div>
+    <div class="text-2 fs-13" style="margin-top:8px;line-height:1.55">Você utilizou <b>IA</b> em alguma etapa desta arte?</div>
+    <div class="flex gap-2" style="justify-content:center;margin-top:16px">
+      <button class="btn btn-primary" style="min-width:96px" @click="declararIa(true)">Sim</button>
+      <button class="btn btn-ghost" style="min-width:96px;border:1px solid var(--border)" @click="declararIa(false)">Não</button>
+    </div>
+    <div class="text-3 fs-12" style="margin-top:12px;line-height:1.5">Declarar não tem problema — serve só para marcar a peça no quadro.</div>
+    <button class="btn btn-ghost btn-sm" style="margin-top:6px;color:var(--text-3)" @click="iaAviso=null">voltar ao card</button>
+  </div>
+</div>
+
 <!-- ───────── LOGIN ───────── -->
 <style>
 .lg-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1200px 600px at 50% -10%,#23211d 0%,#0c0b0a 55%,#080807 100%)}
@@ -1453,6 +1468,7 @@
                       <span class="m" x-show="(p.comentarios||[]).length"><i class="ph ph-chat-circle"></i> <span x-text="(p.comentarios||[]).length"></span></span>
                       <span class="m" x-show="(p.anexos||[]).length || (p.isPost&&p.criativo)"><i class="ph ph-paperclip"></i> <span x-text="(p.anexos||[]).length + (p.isPost&&p.criativo?1:0)"></span></span>
                       <span class="m" x-show="(p.tempoTotal||0)>0 || p.cronInicio" :style="p.cronInicio?'color:#dc2626;font-weight:800':''"><i class="ph ph-timer"></i> <span x-text="fmtDur(p.tempoTotal||0)"></span></span>
+                      <span class="m" x-show="p.usouIa" title="Arte com uso de IA declarado" style="color:#7C3AED;font-weight:800"><i class="ph ph-sparkle"></i> IA</span>
                       <span style="margin-left:auto;display:inline-flex">
                         <template x-for="m in (p.membros&&p.membros.length ? p.membros : (p.responsavel?[p.responsavel]:[]))" :key="m">
                           <span class="tl-avatar" style="margin-left:-6px;border:2px solid #fff" :style="fotoDe(m)?('background-image:url('+fotoDe(m)+')'):('background:'+avatarBg(m)+';color:'+avatarFg(m))" :title="m" x-text="fotoDe(m)?'':iniciais(m)"></span>
@@ -5907,7 +5923,7 @@
         <div class="flex items-center gap-3" style="flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:10px 12px">
           <span x-show="cardRef.cronInicio" style="width:9px;height:9px;border-radius:50%;background:#dc2626;animation:cronpulse 1.2s infinite"></span>
           <div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px" :style="cardRef.cronInicio?'color:#dc2626':''" x-text="(cronTick, fmtDur(tempoTotalCard(cardRef)))"></div>
-          <button x-show="!cardRef.cronInicio" class="btn btn-primary btn-sm" @click="prodAviso={c1:false,c2:false}">▶ Iniciar produção</button>
+          <button x-show="!cardRef.cronInicio" class="btn btn-primary btn-sm" @click="ehEverton ? (prodAviso={c1:false,c2:false}) : iniciarProducao()">▶ Iniciar produção</button>
           <button x-show="cardRef.cronInicio" class="btn btn-danger btn-sm" @click="pararProducao()">■ Parar</button>
           <span x-show="cardRef.cronInicio" class="text-3 fs-12">por <b x-text="cardRef.cronAutor"></b></span>
         </div>
@@ -6119,7 +6135,7 @@
         <button class="btn btn-danger" @click="excluirProjeto(cardRef); cardModal=false">Excluir</button>
         <button class="btn btn-ghost" @click="arquivarCard()" x-text="cardRef&&cardRef.arquivado?'Desarquivar':'Arquivar'"></button>
       </div>
-      <button class="btn btn-primary" @click="fecharCard()">Pronto</button>
+      <button class="btn btn-primary" @click="concluirCard()">Pronto</button>
     </div>
   </div>
 </div>
@@ -6611,7 +6627,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=443"></script>
+<script src="js/app.js?v=444"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
