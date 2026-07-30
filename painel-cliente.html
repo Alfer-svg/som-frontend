@@ -182,14 +182,13 @@
   function ini2(s){s=String(s||'').trim();var p=s.split(/\s+/);return ((p[0]||'')[0]||'')+((p[1]||'')[0]||'');}
   function estado(h){app.innerHTML='<div class="estado">'+h+'</div>';}
 
-  // delta pill (up=verde bom / down=vermelho) — pra alcance/engaj/seguidores/posts (mais=melhor)
+  // selo de variação — pro CLIENTE, só aparece quando é ALTA (▲ verde). Queda não aparece.
   function delta(v, sufixo, pp){
-    if(v==null) return '';
-    var up=v>=0, arw=up?'▲':'▼', cls=up?'up':'down';
-    var val=(pp? (up?'+':'')+fNum(v)+' p.p.' : (up?'+':'')+fNum(v)+'%');
-    return '<span class="dl '+cls+'">'+arw+' '+val+(sufixo?' '+sufixo:'')+'</span>';
+    if(v==null || v<=0) return '';
+    var val=(pp? '+'+fNum(v)+' p.p.' : '+'+fNum(v)+'%');
+    return '<span class="dl up">▲ '+val+(sufixo?' '+sufixo:'')+'</span>';
   }
-  function deltaAbs(v){ if(v==null)return''; var up=v>=0; return '<span class="dl '+(up?'up':'down')+'">'+(up?'▲ +':'▼ ')+fInt(v)+'</span>'; }
+  function deltaAbs(v){ if(v==null || v<=0) return ''; return '<span class="dl up">▲ +'+fInt(v)+'</span>'; }
 
   // gráfico SVG barras amarelas (imprime e renderiza sempre)
   function chartSVG(itens, leg){
@@ -393,8 +392,11 @@
             '<div class="tl"><div class="lb">Custo/conversão</div><div class="vl num">'+(gr.custoLead!=null?fMoney(gr.custoLead):'—')+'</div></div>'+
           '</div>';
         var kw=(g.termos||[]).slice(0,6);
-        if(kw.length){ h+='<table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
+        if(kw.length){ h+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
           kw.map(function(x){return '<tr><td class="k">'+esc(x.termo)+'</td><td class="n">'+fInt(x.cliques)+'</td><td class="n">'+fNum(x.conversoes)+'</td><td class="n">'+fMoney(x.custo)+'</td></tr>';}).join('')+'</table>'; }
+        var cid=(g.cidades||[]).slice(0,6);
+        if(cid.length){ h+='<div class="mh" style="margin:18px 0 6px">Onde seu público está</div><table><tr><th>Cidade</th><th class="n">Cliques</th><th class="n">Impressões</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
+          cid.map(function(c){return '<tr><td class="k">'+esc(c.cidade)+'</td><td class="n">'+fInt(c.cliques)+'</td><td class="n">'+fInt(c.impressoes)+'</td><td class="n">'+fNum(c.conversoes)+'</td><td class="n">'+fMoney(c.custo)+'</td></tr>';}).join('')+'</table>'; }
         h+='</div>';
       }
 
@@ -409,6 +411,8 @@
             '<div class="tl"><div class="lb">CTR</div><div class="vl num">'+fPct(mr.ctr)+'</div></div>'+
             '<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(mr.gasto)+'</div></div>'+
             '<div class="tl"><div class="lb">Custo/conversa</div><div class="vl num">'+(mr.custoConversa!=null?fMoney(mr.custoConversa):'—')+'</div></div>'+
+            (mr.frequencia!=null?'<div class="tl"><div class="lb">Frequência</div><div class="vl num">'+fNum(mr.frequencia)+'x</div></div>':'')+
+            '<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(mr.impressoes)+'</div></div>'+
           '</div>';
         var an=(m.anuncios||[]).slice(0,5);
         if(an.length){ h+='<table><tr><th>Anúncio</th><th class="n">Alcance</th><th class="n">Cliques</th><th class="n">Conversas</th></tr>'+
@@ -419,8 +423,11 @@
         h+='</div>';
 
         // ── Quem sua campanha alcança: gênero × dispositivo × faixa etária ──
-        var dem=m.demografia||{}, gen=dem.genero||[], idade=dem.idade||[];
-        // dispositivo: soma Meta + Google (mesma unidade = impressões) → PC aparece
+        // soma Meta + Google (pessoas engajadas) pra dar o retrato dos DOIS canais
+        var gd=(mid.google&&mid.google.demografia)||{};
+        var somaLabel=function(a,b){var mp={};(a||[]).forEach(function(x){mp[x.label]=(mp[x.label]||0)+(x.valor||0);});(b||[]).forEach(function(x){mp[x.label]=(mp[x.label]||0)+(x.conversoes||x.cliques||0);});return Object.keys(mp).map(function(k){return {label:k,valor:mp[k]};});};
+        var gen=somaLabel(m.demografia&&m.demografia.genero, gd.genero);
+        var idade=somaLabel(m.demografia&&m.demografia.idade, gd.idade).sort(function(a,b){return b.valor-a.valor;});
         var dispMap={}; ((m.dispositivos||[]).concat((mid.google&&mid.google.dispositivos)||[])).forEach(function(x){ dispMap[x.label]=(dispMap[x.label]||0)+x.valor; });
         var disp=Object.keys(dispMap).map(function(k){return {label:k,valor:dispMap[k]};});
         if(gen.length||disp.length||idade.length){
