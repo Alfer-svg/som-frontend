@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Meu Painel · Maracatu</title>
 <link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   /* ── mesmo design system do painel do candidato ── */
   :root{
@@ -151,6 +153,10 @@
   .legend i{width:9px;height:9px;border-radius:2px;background:var(--yellow);display:inline-block}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .emcoleta{font-size:12.5px;color:var(--mut);background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center}
+  #mapaCli{height:300px;border-radius:12px;overflow:hidden;border:1px solid var(--line);z-index:0}
+  .leaflet-container{font:inherit}
+  .map-leg{font-size:11.5px;color:var(--mut);margin-top:10px;display:flex;align-items:center;gap:6px}
+  .map-leg i{width:11px;height:11px;border-radius:50%;background:rgba(66,133,244,.5);border:2px solid var(--blue);display:inline-block}
   .foot{margin-top:36px;text-align:center;font-size:11.5px;color:var(--mut2)}
 
   @media (max-width:720px){
@@ -171,6 +177,7 @@
   var qs=new URLSearchParams(location.search);
   var adminCli=qs.get('cliente'), somTok=localStorage.getItem('som_token');
   var cliTok=localStorage.getItem('cliente_token')||'';
+  var mapaPts=null;
   var modo = (adminCli&&somTok)?'admin':'cliente';
 
   function fInt(n){return Number(n||0).toLocaleString('pt-BR',{maximumFractionDigits:0});}
@@ -261,7 +268,30 @@
     }).then(render).catch(function(e){ estado('<b>Não consegui abrir o painel.</b>'+esc(e.message||e)+'<br><br><span class="chip" onclick="location.reload()">Tentar de novo</span>'); });
   }
 
+  // mapa das cidades (Leaflet) — círculos proporcionais aos cliques
+  var mapaObj=null;
+  function desenharMapa(pts){
+    try{
+      if(mapaObj){ mapaObj.remove(); mapaObj=null; }
+      var el=document.getElementById('mapaCli'); if(!el) return;
+      var mp=L.map('mapaCli',{zoomControl:true,attributionControl:false,scrollWheelZoom:false});
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:16}).addTo(mp);
+      var max=0; pts.forEach(function(p){ if(p.cliques>max)max=p.cliques; }); max=max||1;
+      var bounds=[];
+      pts.forEach(function(p){
+        var rad=8+Math.round(Math.sqrt(p.cliques/max)*22);
+        L.circleMarker([p.lat,p.lng],{radius:rad,color:'#1a73e8',weight:2,fillColor:'#4285F4',fillOpacity:.45})
+          .addTo(mp).bindTooltip('<b>'+esc(p.cidade)+'</b><br>'+fInt(p.cliques)+' cliques · '+fNum(p.conversoes)+' contatos',{direction:'top'});
+        bounds.push([p.lat,p.lng]);
+      });
+      if(bounds.length===1) mp.setView(bounds[0],11); else mp.fitBounds(bounds,{padding:[30,30],maxZoom:12});
+      setTimeout(function(){ mp.invalidateSize(); },120);
+      mapaObj=mp;
+    }catch(e){}
+  }
+
   function render(d){
+    mapaPts=null;
     var cli=d.cliente||{}, org=d.organico||{}, mid=d.midia||{}, ld=d.leituraDoDia||{};
     document.title='Meu Painel · '+(cli.nome||'Maracatu');
     var h='<div class="wrap">';
@@ -358,21 +388,24 @@
           '<div class="b3"><div class="lb">Custo por contato</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>'+
         '</div>';
 
-      // ── Campanhas ativas (Google + Meta) ──
-      var campAtivas=[];
+      // ── Campanhas (Google + Meta) — TODAS as que rodaram no período, ativas primeiro ──
+      var camps=[];
       var gc=(mid.google&&mid.google.resumo&&mid.google.resumo.campanhas)||[];
-      gc.filter(function(c){return String(c.status||'').toUpperCase()==='ENABLED';}).forEach(function(c){
-        campAtivas.push({canal:'Google',nome:c.nome,orc:c.orcamentoDia,gasto:c.gasto,cliques:c.cliques,conv:c.conversoes});
-      });
+      gc.forEach(function(c){ var on=String(c.status||'').toUpperCase()==='ENABLED';
+        camps.push({canal:'Google',nome:c.nome,ativa:on,orc:c.orcamentoDia,gasto:c.gasto,conv:c.conversoes}); });
       var mc=(mid.meta&&mid.meta.campanhas)||[];
-      mc.forEach(function(c){ campAtivas.push({canal:'Meta',nome:c.nome,orc:c.orcamentoDia,gasto:null,cliques:null,conv:null}); });
-      if(campAtivas.length){
-        h+='<div class="card"><h3>Campanhas ativas · '+campAtivas.length+'</h3>'+
-          '<table><tr><th>Campanha</th><th>Canal</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Contatos</th></tr>'+
-          campAtivas.map(function(c){
+      mc.forEach(function(c){ camps.push({canal:'Meta',nome:c.nome,ativa:true,orc:c.orcamentoDia,gasto:null,conv:null}); });
+      camps.sort(function(a,b){ return (b.ativa?1:0)-(a.ativa?1:0); });
+      if(camps.length){
+        var nAtivas=camps.filter(function(c){return c.ativa;}).length;
+        h+='<div class="card"><h3>Campanhas · '+nAtivas+' ativa'+(nAtivas!=1?'s':'')+' de '+camps.length+'</h3>'+
+          '<table><tr><th>Campanha</th><th>Canal</th><th>Status</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Contatos</th></tr>'+
+          camps.map(function(c){
             var cor=c.canal==='Google'?'#1a73e8':'#0866FF';
-            return '<tr><td class="k">'+esc(c.nome)+'</td>'+
+            var st=c.ativa?'<span style="font-size:10px;font-weight:800;color:#188038;background:var(--grnbg);padding:2px 8px;border-radius:99px">ATIVA</span>':'<span style="font-size:10px;font-weight:700;color:var(--mut2);background:var(--bg);padding:2px 8px;border-radius:99px">pausada</span>';
+            return '<tr style="'+(c.ativa?'':'opacity:.62')+'"><td class="k">'+esc(c.nome)+'</td>'+
               '<td><span style="font-size:10.5px;font-weight:800;color:'+cor+'">'+esc(c.canal)+'</span></td>'+
+              '<td>'+st+'</td>'+
               '<td class="n">'+(c.orc!=null?fMoney(c.orc):'—')+'</td>'+
               '<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td>'+
               '<td class="n">'+(c.conv!=null?fNum(c.conv):'—')+'</td></tr>';
@@ -394,9 +427,15 @@
         var kw=(g.termos||[]).slice(0,6);
         if(kw.length){ h+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
           kw.map(function(x){return '<tr><td class="k">'+esc(x.termo)+'</td><td class="n">'+fInt(x.cliques)+'</td><td class="n">'+fNum(x.conversoes)+'</td><td class="n">'+fMoney(x.custo)+'</td></tr>';}).join('')+'</table>'; }
-        var cid=(g.cidades||[]).slice(0,6);
-        if(cid.length){ h+='<div class="mh" style="margin:18px 0 6px">Onde seu público está</div><table><tr><th>Cidade</th><th class="n">Cliques</th><th class="n">Impressões</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
-          cid.map(function(c){return '<tr><td class="k">'+esc(c.cidade)+'</td><td class="n">'+fInt(c.cliques)+'</td><td class="n">'+fInt(c.impressoes)+'</td><td class="n">'+fNum(c.conversoes)+'</td><td class="n">'+fMoney(c.custo)+'</td></tr>';}).join('')+'</table>'; }
+        var cid=(g.cidades||[]).slice(0,10);
+        if(cid.length){
+          h+='<div class="mh" style="margin:18px 0 8px">Onde suas campanhas rodaram</div>';
+          // mapa se houver coordenadas geocodificadas
+          var comGeo=cid.filter(function(c){return c.lat&&c.lng;});
+          if(comGeo.length){ h+='<div id="mapaCli"></div><div class="map-leg"><i></i> tamanho do círculo = volume de cliques na cidade</div>'; mapaPts=comGeo; }
+          h+='<table style="margin-top:12px"><tr><th>Cidade</th><th class="n">Cliques</th><th class="n">Impressões</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
+          cid.map(function(c){return '<tr><td class="k">'+esc(c.cidade)+'</td><td class="n">'+fInt(c.cliques)+'</td><td class="n">'+fInt(c.impressoes)+'</td><td class="n">'+fNum(c.conversoes)+'</td><td class="n">'+fMoney(c.custo)+'</td></tr>';}).join('')+'</table>';
+        }
         h+='</div>';
       }
 
@@ -445,6 +484,8 @@
     h+='<div class="foot">Painel gerado pela Maracatu Digital · maracatumktdigital.com</div>';
     h+='</div>';
     app.innerHTML=h;
+    // desenha o mapa das cidades (Leaflet) depois que o DOM existe
+    if(mapaPts&&mapaPts.length&&window.L) desenharMapa(mapaPts);
     // liga o filtro de período
     Array.prototype.forEach.call(document.querySelectorAll('.chip[data-p]'),function(c){
       c.addEventListener('click',function(){ per=c.getAttribute('data-p'); carregar(); });
