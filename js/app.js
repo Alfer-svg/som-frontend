@@ -621,6 +621,7 @@ document.addEventListener('alpine:init', () => {
     cloudCfg: { cloud: '', preset: '' }, uploadando: false, // storage de arquivos (Cloudinary)
     cronTick: 0, // tique de 1s pra o cronômetro ao vivo
     cronConfirm: null, // modal "ainda produzindo?": { id, nome, deadline, left } — pede confirmação a cada 1h
+    prodAviso: null, // pop-up de advertência antes de iniciar o tempo: { c1, c2 } — só libera com os 2 aceites
     CRON_HORA: 3600, // sessão pede confirmação a cada 1h aberta
     CRON_GRACA: 300, // após pedir, espera 5min a resposta; sem resposta, encerra
     quickAddCol: '', quickAddText: '', // adicionar cartão rápido
@@ -4918,9 +4919,11 @@ ${this._docFoot()}
     fmtDur(s) { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; const mm = String(m).padStart(2, '0'), xx = String(x).padStart(2, '0'); return h > 0 ? (h + ':' + mm + ':' + xx) : (mm + ':' + xx); },
     async iniciarProducao() {
       const p = this.cardRef; if (!p || p.cronInicio) return;
+      if (!this.prodAviso || !this.prodAviso.c1 || !this.prodAviso.c2) return; // trava: só libera com os 2 aceites do pop-up de advertência
       const agora = new Date().toISOString();
       p.cronInicio = agora; p.cronAutor = (this.usuario && this.usuario.nome) || '';
       p.cronConfirmadoEm = agora; // marco da última confirmação (pra pedir a cada 1h)
+      this.prodAviso = null; // fecha o aviso
       await this.salvarCard();
     },
     async pararProducao() {

@@ -58,6 +58,29 @@
   </div>
 </div>
 
+<!-- Advertência antes de iniciar o tempo (tempo monitorado) -->
+<div x-show="prodAviso" x-cloak x-transition @click.self="prodAviso=null" style="position:fixed;inset:0;z-index:10001;background:rgba(20,18,16,.6);display:flex;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:16px;max-width:440px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.35);padding:22px" @click.stop>
+    <div class="flex items-center gap-2" style="color:#B45309">
+      <i class="ph ph-warning-circle ic-ph" style="font-size:24px"></i>
+      <div style="font-weight:800;font-size:17px">Antes de iniciar o tempo</div>
+    </div>
+    <div class="text-2 fs-13" style="margin-top:8px;line-height:1.55">O tempo registrado é acompanhado e comparado com a entrega. Ele deve refletir o seu <b>trabalho real</b> nesta arte.</div>
+    <label class="flex items-start gap-2" style="margin-top:14px;cursor:pointer;background:var(--surface-2);border-radius:10px;padding:11px 12px" x-show="prodAviso">
+      <input type="checkbox" x-model="prodAviso.c1" style="width:18px;height:18px;margin-top:1px;flex-shrink:0;cursor:pointer;accent-color:#B45309">
+      <span class="fs-13">Confirmo que o tempo registrado corresponde ao meu trabalho real.</span>
+    </label>
+    <label class="flex items-start gap-2" style="margin-top:8px;cursor:pointer;background:var(--surface-2);border-radius:10px;padding:11px 12px" x-show="prodAviso">
+      <input type="checkbox" x-model="prodAviso.c2" style="width:18px;height:18px;margin-top:1px;flex-shrink:0;cursor:pointer;accent-color:#B45309">
+      <span class="fs-13">Estou ciente de que o tempo é monitorado e que divergências podem gerar cobrança.</span>
+    </label>
+    <div class="flex gap-2" style="justify-content:flex-end;margin-top:18px">
+      <button class="btn btn-ghost" @click="prodAviso=null">Cancelar</button>
+      <button class="btn btn-primary" @click="iniciarProducao()" :disabled="!prodAviso || !(prodAviso.c1 && prodAviso.c2)" :style="(!prodAviso || !(prodAviso.c1 && prodAviso.c2))?'opacity:.5;cursor:not-allowed':''">▶ Iniciar tempo</button>
+    </div>
+  </div>
+</div>
+
 <!-- ───────── LOGIN ───────── -->
 <style>
 .lg-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1200px 600px at 50% -10%,#23211d 0%,#0c0b0a 55%,#080807 100%)}
@@ -5884,7 +5907,7 @@
         <div class="flex items-center gap-3" style="flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:10px 12px">
           <span x-show="cardRef.cronInicio" style="width:9px;height:9px;border-radius:50%;background:#dc2626;animation:cronpulse 1.2s infinite"></span>
           <div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px" :style="cardRef.cronInicio?'color:#dc2626':''" x-text="(cronTick, fmtDur(tempoTotalCard(cardRef)))"></div>
-          <button x-show="!cardRef.cronInicio" class="btn btn-primary btn-sm" @click="iniciarProducao()">▶ Iniciar produção</button>
+          <button x-show="!cardRef.cronInicio" class="btn btn-primary btn-sm" @click="prodAviso={c1:false,c2:false}">▶ Iniciar produção</button>
           <button x-show="cardRef.cronInicio" class="btn btn-danger btn-sm" @click="pararProducao()">■ Parar</button>
           <span x-show="cardRef.cronInicio" class="text-3 fs-12">por <b x-text="cardRef.cronAutor"></b></span>
         </div>
@@ -6588,7 +6611,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=442"></script>
+<script src="js/app.js?v=443"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
