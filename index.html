@@ -1541,6 +1541,7 @@
                   <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Ligação'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-phone ic-ph"></i> Registrar contato</button>
                   <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Reunião'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-calendar-plus ic-ph"></i> Registrar reunião</button>
                   <button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><i class="ph ph-pencil-simple ic-ph"></i> Editar cliente</button>
+                  <button class="btn btn-ghost btn-sm" @click="verPainelCliente(monitorCliente)" title="Abrir a Área do Cliente (o painel que o cliente vê) numa aba"><i class="ph ph-chart-donut ic-ph" style="color:#4285F4"></i> Ver painel</button>
                   <button class="btn btn-ghost btn-sm" x-show="ehAdmin" @click="abrirPortalCliente(monitorCliente)" title="Criar/gerenciar o acesso do cliente à Área do Cliente (app)"><i class="ph ph-identification-card ic-ph" style="color:#E0742A"></i> Portal do cliente</button>
                   <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
                 </div>
@@ -6451,6 +6452,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" @click="portalModal=false">Fechar</button>
+      <button class="btn btn-ghost" @click="verPainelCliente(portalForm)" title="Abrir o painel que o cliente vê"><i class="ph ph-chart-donut ic-ph" style="color:#4285F4"></i> Ver painel</button>
       <button class="btn btn-primary" @click="salvarPortalAcesso()"><i class="ph ph-check ic-ph"></i> Salvar acesso</button>
     </div>
   </div>
@@ -6547,7 +6549,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=438"></script>
+<script src="js/app.js?v=439"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

@@ -4200,6 +4200,13 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       this.portalModal = true;
       await this.carregarPortalAcessos(c.id);
     },
+    // Abre a Área do Cliente (painel-cliente) numa aba, em modo admin — usa o
+    // som_token do navegador (?cliente=<id>). É a MESMA tela que o cliente vê;
+    // serve pra equipe conferir antes de mandar o link pro cliente.
+    verPainelCliente(c) {
+      const id = c && (c.id || c.clienteId); if (!id) return;
+      window.open('painel-cliente.html?cliente=' + encodeURIComponent(id) + '&v=1', '_blank');
+    },
     // Logo/marca do cliente (aparece na bolinha do app do cliente). Redimensiona no navegador.
     lerLogoCliente(ev) {
       const f = ev.target.files && ev.target.files[0]; if (!f) return;
