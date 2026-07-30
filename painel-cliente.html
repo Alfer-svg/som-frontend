@@ -156,6 +156,9 @@
   .b3 .em{font-size:11.5px;color:var(--mut2);margin-top:7px}
 
   .mh{font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:10px}
+  /* nota "Leitura da equipe Maracatu" (IA) por bloco — estilo candidato */
+  .nota-eq{margin-top:14px;padding:11px 14px;background:var(--blsoft);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:11px;font-size:13px;line-height:1.62;color:var(--ink2)}
+  .nota-eq .lbl{display:block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin-bottom:4px}
   .pie{display:flex;align-items:center;gap:16px}
   .pie svg{flex:none}
   .plg{display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -207,6 +210,8 @@
   function fPct(n){return n==null?'—':Number(n).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';}
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function ini2(s){s=String(s||'').trim();var p=s.split(/\s+/);return ((p[0]||'')[0]||'')+((p[1]||'')[0]||'');}
+  // Nota "Leitura da equipe Maracatu" por bloco (IA) — estilo candidato. Vazio = não mostra.
+  function notaEquipe(txt){ txt=String(txt||'').trim(); return txt ? '<div class="nota-eq"><span class="lbl">Leitura da equipe Maracatu</span>'+esc(txt)+'</div>' : ''; }
   function estado(h){app.innerHTML='<div class="estado">'+h+'</div>';}
 
   // selo de variação — pro CLIENTE, só aparece quando é ALTA (▲ verde). Queda não aparece.
@@ -312,7 +317,7 @@
 
   function render(d){
     mapaPts=null;
-    var cli=d.cliente||{}, org=d.organico||{}, mid=d.midia||{}, ld=d.leituraDoDia||{};
+    var cli=d.cliente||{}, org=d.organico||{}, mid=d.midia||{}, ld=d.leituraDoDia||{}, lr=d.leituras||{};
     document.title='Meu Painel · '+(cli.nome||'Maracatu');
     var h='<div class="wrap">';
 
@@ -351,6 +356,7 @@
           '<div class="kpi a"><div class="lb">Seguidores</div><div class="vl num">'+fMil(r.seguidores)+'</div>'+(r.saldoSeguidores!=null?deltaAbs(r.saldoSeguidores):'')+'</div>'+
           '<div class="kpi"><div class="lb">Publicações</div><div class="vl num">'+fInt(r.posts)+'</div>'+(va.posts!=null?deltaAbs(va.posts):'')+'</div>'+
         '</div>';
+      h+=notaEquipe(lr.instagram);
 
       // qualidade das interações
       var e=org.engajamento||{};
@@ -375,6 +381,7 @@
             '<li><span>Compart. méd.</span><b>'+f.compartMedio+'</b></li>'+
             '<li><span>Comentários méd.</span><b>'+f.comentMedio+'</b></li></ul></div>';}).join('')+
         '</div></div>';
+        h+=notaEquipe(lr.formatos);
       }
 
       // top posts
@@ -388,6 +395,7 @@
             '<div class="met">'+fMil(p.alcance)+' alcançadas · '+fInt(p.likes)+' curtidas · '+fInt(p.comentarios)+' coment.</div></div>'+
             '<div class="eng"><b class="num">'+fPct(p.engajPct)+'</b><span>engaj.</span></div></a>';}).join('')+
         '</div></div>';
+        h+=notaEquipe(lr.mobilizou);
       }
 
       // leitura + direcionamentos
@@ -429,6 +437,7 @@
         (mr.alcance?'<div class="tl"><div class="lb">Alcance (Meta)</div><div class="vl num">'+fInt(mr.alcance)+'</div></div>':'')+
         '<div class="tl"><div class="lb">Contatos</div><div class="vl num">'+fInt(t.contatos)+'</div></div>'+
       '</div></div>';
+      h+=notaEquipe(lr.consolidado);
 
       // ── Quem sua campanha alcança: gênero × dispositivo × faixa etária (fusão dos 2 canais) ──
       var gd=(g&&g.demografia)||{};
@@ -444,6 +453,7 @@
         h+='</div>';
         if(idade.length) h+='<div style="margin-top:16px"><div class="mh">Faixa etária</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
         h+='</div>';
+        h+=notaEquipe(lr.publico);
       }
 
       // Google
@@ -483,6 +493,7 @@
           cid.map(function(c){return '<tr><td class="k">'+esc(c.cidade)+'</td><td class="n">'+fInt(c.cliques)+'</td><td class="n">'+fInt(c.impressoes)+'</td><td class="n">'+fNum(c.conversoes)+'</td><td class="n">'+fMoney(c.custo)+'</td></tr>';}).join('')+'</table>';
         }
         h+='</div>';
+        h+=notaEquipe(lr.google);
       }
 
       // Meta
@@ -513,7 +524,9 @@
         if(plat.length){ h+='<table style="margin-top:12px"><tr><th>Plataforma</th><th class="n">Cliques</th><th class="n">Alcance</th><th class="n">Investido</th></tr>'+
           plat.map(function(p){return '<tr><td class="k">'+esc(p.plataforma)+'</td><td class="n">'+fInt(p.cliques)+'</td><td class="n">'+fInt(p.alcance)+'</td><td class="n">'+fMoney(p.gasto)+'</td></tr>';}).join('')+'</table>'; }
         h+='</div>';
+        h+=notaEquipe(lr.meta);
       }
+      h+=notaEquipe(lr.fechamento);
       h+='</div>';
     }
 
