@@ -39,7 +39,23 @@
   /* marca da Maracatu (letterhead) no topo do painel */
   .brandbar{display:flex;align-items:center;gap:12px;padding:22px 2px 0}
   .brandbar img{height:30px;width:auto;display:block}
-  .brandbar .lbl{margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut2)}
+  .bb-actions{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .brandbar .lbl{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut2)}
+  .btn-print{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;background:var(--ink);color:#fff;font:600 12.5px Roboto,system-ui,sans-serif;padding:9px 15px;border-radius:11px;box-shadow:var(--shadow-sm);transition:opacity .15s}
+  .btn-print:hover{opacity:.88}
+  .btn-print svg{display:block}
+  @media (max-width:520px){ .brandbar .lbl{display:none} }
+  /* impressão / salvar como PDF — some com o que é interativo, cartões não quebram no meio */
+  @page{margin:13mm}
+  @media print{
+    body{background:#fff}
+    .no-print{display:none!important}
+    .top .per{display:none!important}
+    .brandbar{padding-top:0}
+    .wrap{max-width:none;padding:0 0 10px}
+    .card,.top,.hero,.sec,.fmt,.post{box-shadow:none!important;break-inside:avoid;page-break-inside:avoid}
+    #mapaCli{break-inside:avoid}
+  }
   /* topo — cartão de cabeçalho igual candidato */
   .top{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-top:14px}
   .top .ava{width:52px;height:52px;border-radius:15px;flex:none;display:grid;place-items:center;font-weight:700;font-size:19px;color:#fff;overflow:hidden;background:linear-gradient(135deg,var(--blue),#6FA8FF);box-shadow:0 8px 20px -8px rgba(66,133,244,.5)}
@@ -300,8 +316,12 @@
     document.title='Meu Painel · '+(cli.nome||'Maracatu');
     var h='<div class="wrap">';
 
-    // marca da Maracatu (quem entrega o relatório) — letterhead no topo
-    h+='<div class="brandbar"><img src="assets/logo-horizontal.png?v=7" alt="Maracatu Digital"><span class="lbl">Relatório de performance</span></div>';
+    // marca da Maracatu (quem entrega o relatório) — letterhead no topo + botão de PDF
+    h+='<div class="brandbar"><img src="assets/logo-horizontal.png?v=7" alt="Maracatu Digital">'+
+      '<div class="bb-actions"><span class="lbl">Relatório de performance</span>'+
+      '<button type="button" class="btn-print no-print" onclick="window.print()" title="Gerar PDF: escolha \'Salvar como PDF\' na janela de impressão">'+
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir PDF</button>'+
+      '</div></div>';
 
     // topo
     var perLabel=(d.periodo&&d.periodo.label)|| (curDe.split('-').reverse().join('/')+' a '+curAte.split('-').reverse().join('/'));
