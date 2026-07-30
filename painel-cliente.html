@@ -36,8 +36,12 @@
   .spin{width:34px;height:34px;border:3px solid var(--hair);border-top-color:var(--ink);border-radius:50%;margin:0 auto 18px;animation:g .9s linear infinite}
   @keyframes g{to{transform:rotate(360deg)}}
 
+  /* marca da Maracatu (letterhead) no topo do painel */
+  .brandbar{display:flex;align-items:center;gap:12px;padding:22px 2px 0}
+  .brandbar img{height:30px;width:auto;display:block}
+  .brandbar .lbl{margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut2)}
   /* topo — cartão de cabeçalho igual candidato */
-  .top{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-top:20px}
+  .top{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-top:14px}
   .top .ava{width:52px;height:52px;border-radius:15px;flex:none;display:grid;place-items:center;font-weight:700;font-size:19px;color:#fff;overflow:hidden;background:linear-gradient(135deg,var(--blue),#6FA8FF);box-shadow:0 8px 20px -8px rgba(66,133,244,.5)}
   .top .ava img{width:100%;height:100%;object-fit:cover}
   .top .nm{font-size:clamp(18px,2.4vw,23px);font-weight:700;letter-spacing:-.02em;line-height:1.1}
@@ -245,7 +249,7 @@
 
   var IC_IG='<span class="ic" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none"/></svg></span>';
   var IC_G='<span class="ic" style="background:#fff;border:1px solid #eee"><svg width="15" height="15" viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24c0-1.6-.1-2.8-.4-4H24v7.6h12c-.2 2-1.6 5-4.6 7l7 5.4C42.8 36.6 45 31 45 24z"/><path fill="#34A853" d="M24 46c6.2 0 11.4-2 15.2-5.6l-7-5.4c-2 1.4-4.6 2.2-8.2 2.2-6.3 0-11.6-4.2-13.5-10l-7.2 5.6C7 39.8 14.8 46 24 46z"/><path fill="#FBBC05" d="M10.5 27.2c-.5-1.4-.8-3-.8-4.2s.3-2.8.8-4.2l-7.2-5.6C1.8 16.2 1 20 1 24s.8 7.8 2.3 10.8l7.2-5.6z"/><path fill="#EA4335" d="M24 9.8c3.4 0 5.8 1.4 7.2 2.6l6.2-6C35.4 3 30.2 1 24 1 14.8 1 7 7.2 3.3 15.2l7.2 5.6C12.4 14 17.7 9.8 24 9.8z"/></svg></span>';
-  var IC_M='<span class="ic" style="background:#0866FF"><svg width="15" height="10" viewBox="0 0 32 20"><path d="M2 10c0-4.4 2.6-8 6-8 5.5 0 10.5 16 16 16 3.4 0 6-3.6 6-8s-2.6-8-6-8c-5.5 0-10.5 16-16 16-3.4 0-6-3.6-6-8z" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/></svg></span>';
+  var IC_M='<span class="ic" style="background:#fff;border:1px solid #eee"><svg width="15" height="15" viewBox="0 0 24 24" fill="#0081FB"><path d="M6.915 4.03c-1.968 0-3.683 1.28-4.871 3.113C.704 9.208 0 11.883 0 14.449c0 .706.07 1.369.21 1.973a6.624 6.624 0 0 0 .265.86 5.297 5.297 0 0 0 .371.761c.696 1.159 1.818 1.927 3.593 1.927 1.497 0 2.633-.671 3.965-2.444.76-1.012 1.144-1.626 2.663-4.32l.756-1.339.186-.325c.061.1.121.196.183.3l2.152 3.595c.724 1.21 1.665 2.556 2.47 3.314 1.046.987 1.992 1.22 3.06 1.22 1.075 0 1.876-.355 2.455-.843a3.743 3.743 0 0 0 .81-.973c.542-.939.861-2.127.861-3.745 0-2.72-.681-5.357-2.084-7.45-1.282-1.912-2.957-2.93-4.716-2.93-1.047 0-2.088.467-3.053 1.308-.652.57-1.257 1.29-1.82 2.05-.69-.875-1.335-1.547-1.958-2.056-1.182-.966-2.315-1.303-3.454-1.303zm10.16 2.053c1.147 0 2.188.758 2.992 1.999 1.132 1.748 1.647 4.195 1.647 6.4 0 1.548-.368 2.9-1.839 2.9-.58 0-1.027-.23-1.664-1.004-.496-.601-1.343-1.878-2.832-4.358l-.617-1.028a44.907 44.907 0 0 0-1.255-1.98c.07-.109.141-.224.211-.327 1.12-1.667 2.118-2.602 3.16-2.602zm-10.201.553c1.267 0 2.474.813 3.376 1.815-.377.513-.758 1.09-1.156 1.716-.694 1.09-1.155 1.887-1.756 2.941-1.482 2.61-1.937 3.201-2.622 3.201-.657 0-1.049-.404-1.049-1.813 0-2.665.746-5.166 1.667-6.657.542-.878 1.238-1.204 1.6-1.204z"/></svg></span>';
 
   var curDe='', curAte='', per='mespassado';
   function periodoParams(){
@@ -295,6 +299,9 @@
     var cli=d.cliente||{}, org=d.organico||{}, mid=d.midia||{}, ld=d.leituraDoDia||{};
     document.title='Meu Painel · '+(cli.nome||'Maracatu');
     var h='<div class="wrap">';
+
+    // marca da Maracatu (quem entrega o relatório) — letterhead no topo
+    h+='<div class="brandbar"><img src="assets/logo-horizontal.png?v=7" alt="Maracatu Digital"><span class="lbl">Relatório de performance</span></div>';
 
     // topo
     var perLabel=(d.periodo&&d.periodo.label)|| (curDe.split('-').reverse().join('/')+' a '+curAte.split('-').reverse().join('/'));
@@ -431,15 +438,13 @@
             '<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(gr.gasto)+'</div></div>'+
             '<div class="tl"><div class="lb">Custo/conversão</div><div class="vl num">'+(gr.custoLead!=null?fMoney(gr.custoLead):'—')+'</div></div>'+
           '</div>';
-        // campanhas do Google (junto dos números do Google) — ativas primeiro
-        var gcamps=(gr.campanhas||[]).slice().sort(function(a,b){return (String(b.status||'').toUpperCase()==='ENABLED'?1:0)-(String(a.status||'').toUpperCase()==='ENABLED'?1:0);});
+        // campanhas ATIVAS do Google (junto dos números do Google) — pausadas não aparecem
+        var gcamps=(gr.campanhas||[]).filter(function(c){return String(c.status||'').toUpperCase()==='ENABLED';});
         if(gcamps.length){
-          var gAtivas=gcamps.filter(function(c){return String(c.status||'').toUpperCase()==='ENABLED';}).length;
-          h+='<div class="mh" style="margin:16px 0 6px">Campanhas · '+gAtivas+' ativa'+(gAtivas!=1?'s':'')+' de '+gcamps.length+'</div>'+
-            '<table><tr><th>Campanha</th><th>Status</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Conversões</th></tr>'+
-            gcamps.map(function(c){ var on=String(c.status||'').toUpperCase()==='ENABLED';
-              var st=on?'<span style="font-size:10px;font-weight:800;color:#188038;background:var(--grnbg);padding:2px 8px;border-radius:99px">ATIVA</span>':'<span style="font-size:10px;font-weight:700;color:var(--mut2);background:var(--bg);padding:2px 8px;border-radius:99px">pausada</span>';
-              return '<tr style="'+(on?'':'opacity:.62')+'"><td class="k">'+esc(c.nome)+'</td><td>'+st+'</td>'+
+          h+='<div class="mh" style="margin:16px 0 6px">Campanhas ativas · '+gcamps.length+'</div>'+
+            '<table><tr><th>Campanha</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Conversões</th></tr>'+
+            gcamps.map(function(c){
+              return '<tr><td class="k">'+esc(c.nome)+'</td>'+
                 '<td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td>'+
                 '<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td>'+
                 '<td class="n">'+(c.conversoes!=null?fNum(c.conversoes):'—')+'</td></tr>';
