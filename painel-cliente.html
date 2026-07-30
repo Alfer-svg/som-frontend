@@ -388,28 +388,35 @@
           '<div class="b3"><div class="lb">Custo por contato</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>'+
         '</div>';
 
-      // ── Campanhas (Google + Meta) — TODAS as que rodaram no período, ativas primeiro ──
-      var camps=[];
-      var gc=(mid.google&&mid.google.resumo&&mid.google.resumo.campanhas)||[];
-      gc.forEach(function(c){ var on=String(c.status||'').toUpperCase()==='ENABLED';
-        camps.push({canal:'Google',nome:c.nome,ativa:on,orc:c.orcamentoDia,gasto:c.gasto,conv:c.conversoes}); });
-      var mc=(mid.meta&&mid.meta.campanhas)||[];
-      mc.forEach(function(c){ camps.push({canal:'Meta',nome:c.nome,ativa:true,orc:c.orcamentoDia,gasto:null,conv:null}); });
-      camps.sort(function(a,b){ return (b.ativa?1:0)-(a.ativa?1:0); });
-      if(camps.length){
-        var nAtivas=camps.filter(function(c){return c.ativa;}).length;
-        h+='<div class="card"><h3>Campanhas · '+nAtivas+' ativa'+(nAtivas!=1?'s':'')+' de '+camps.length+'</h3>'+
-          '<table><tr><th>Campanha</th><th>Canal</th><th>Status</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Contatos</th></tr>'+
-          camps.map(function(c){
-            var cor=c.canal==='Google'?'#1a73e8':'#0866FF';
-            var st=c.ativa?'<span style="font-size:10px;font-weight:800;color:#188038;background:var(--grnbg);padding:2px 8px;border-radius:99px">ATIVA</span>':'<span style="font-size:10px;font-weight:700;color:var(--mut2);background:var(--bg);padding:2px 8px;border-radius:99px">pausada</span>';
-            return '<tr style="'+(c.ativa?'':'opacity:.62')+'"><td class="k">'+esc(c.nome)+'</td>'+
-              '<td><span style="font-size:10.5px;font-weight:800;color:'+cor+'">'+esc(c.canal)+'</span></td>'+
-              '<td>'+st+'</td>'+
-              '<td class="n">'+(c.orc!=null?fMoney(c.orc):'—')+'</td>'+
-              '<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td>'+
-              '<td class="n">'+(c.conv!=null?fNum(c.conv):'—')+'</td></tr>';
-          }).join('')+'</table></div>';
+      // ── CONSOLIDADO (Google + Meta juntos): todos os campos somáveis dos dois canais ──
+      var g=mid.google, m=mid.meta;
+      var gr=(g&&g.resumo)||{}, mr=(m&&m.resumo)||{};
+      var impr=(gr.impressoes||0)+(mr.impressoes||0);
+      var clq=(gr.cliques||0)+(mr.cliques||0);
+      var ctrC=impr>0?(clq/impr*100):null;
+      h+='<div class="card"><h3>Totais Google + Meta</h3><div class="tiles">'+
+        '<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(t.investimento)+'</div></div>'+
+        '<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(impr)+'</div></div>'+
+        '<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(clq)+'</div></div>'+
+        '<div class="tl"><div class="lb">CTR combinado</div><div class="vl num">'+(ctrC!=null?fPct(ctrC):'—')+'</div></div>'+
+        (mr.alcance?'<div class="tl"><div class="lb">Alcance (Meta)</div><div class="vl num">'+fInt(mr.alcance)+'</div></div>':'')+
+        '<div class="tl"><div class="lb">Contatos</div><div class="vl num">'+fInt(t.contatos)+'</div></div>'+
+      '</div></div>';
+
+      // ── Quem sua campanha alcança: gênero × dispositivo × faixa etária (fusão dos 2 canais) ──
+      var gd=(g&&g.demografia)||{};
+      var somaLabel=function(a,b){var mp={};(a||[]).forEach(function(x){mp[x.label]=(mp[x.label]||0)+(x.valor||0);});(b||[]).forEach(function(x){mp[x.label]=(mp[x.label]||0)+(x.conversoes||x.cliques||0);});return Object.keys(mp).map(function(k){return {label:k,valor:mp[k]};});};
+      var gen=somaLabel(m&&m.demografia&&m.demografia.genero, gd.genero);
+      var idade=somaLabel(m&&m.demografia&&m.demografia.idade, gd.idade).sort(function(a,b){return b.valor-a.valor;});
+      var dispMap={}; (((m&&m.dispositivos)||[]).concat((g&&g.dispositivos)||[])).forEach(function(x){ dispMap[x.label]=(dispMap[x.label]||0)+x.valor; });
+      var disp=Object.keys(dispMap).map(function(k){return {label:k,valor:dispMap[k]};});
+      if(gen.length||disp.length||idade.length){
+        h+='<div class="card"><h3>Quem sua campanha alcança</h3><div class="two">';
+        if(gen.length) h+='<div><div class="mh">Gênero</div>'+pizza(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
+        if(disp.length) h+='<div><div class="mh">Dispositivo</div>'+pizza(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825',TV:'#9aa0aa'})+'</div>';
+        h+='</div>';
+        if(idade.length) h+='<div style="margin-top:16px"><div class="mh">Faixa etária</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
+        h+='</div>';
       }
 
       // Google
@@ -424,6 +431,20 @@
             '<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(gr.gasto)+'</div></div>'+
             '<div class="tl"><div class="lb">Custo/conversão</div><div class="vl num">'+(gr.custoLead!=null?fMoney(gr.custoLead):'—')+'</div></div>'+
           '</div>';
+        // campanhas do Google (junto dos números do Google) — ativas primeiro
+        var gcamps=(gr.campanhas||[]).slice().sort(function(a,b){return (String(b.status||'').toUpperCase()==='ENABLED'?1:0)-(String(a.status||'').toUpperCase()==='ENABLED'?1:0);});
+        if(gcamps.length){
+          var gAtivas=gcamps.filter(function(c){return String(c.status||'').toUpperCase()==='ENABLED';}).length;
+          h+='<div class="mh" style="margin:16px 0 6px">Campanhas · '+gAtivas+' ativa'+(gAtivas!=1?'s':'')+' de '+gcamps.length+'</div>'+
+            '<table><tr><th>Campanha</th><th>Status</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Conversões</th></tr>'+
+            gcamps.map(function(c){ var on=String(c.status||'').toUpperCase()==='ENABLED';
+              var st=on?'<span style="font-size:10px;font-weight:800;color:#188038;background:var(--grnbg);padding:2px 8px;border-radius:99px">ATIVA</span>':'<span style="font-size:10px;font-weight:700;color:var(--mut2);background:var(--bg);padding:2px 8px;border-radius:99px">pausada</span>';
+              return '<tr style="'+(on?'':'opacity:.62')+'"><td class="k">'+esc(c.nome)+'</td><td>'+st+'</td>'+
+                '<td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td>'+
+                '<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td>'+
+                '<td class="n">'+(c.conversoes!=null?fNum(c.conversoes):'—')+'</td></tr>';
+            }).join('')+'</table>';
+        }
         var kw=(g.termos||[]).slice(0,6);
         if(kw.length){ h+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
           kw.map(function(x){return '<tr><td class="k">'+esc(x.termo)+'</td><td class="n">'+fInt(x.cliques)+'</td><td class="n">'+fNum(x.conversoes)+'</td><td class="n">'+fMoney(x.custo)+'</td></tr>';}).join('')+'</table>'; }
@@ -453,6 +474,13 @@
             (mr.frequencia!=null?'<div class="tl"><div class="lb">Frequência</div><div class="vl num">'+fNum(mr.frequencia)+'x</div></div>':'')+
             '<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(mr.impressoes)+'</div></div>'+
           '</div>';
+        // campanhas do Meta (junto dos números do Meta)
+        var mcamps=(m.campanhas||[]);
+        if(mcamps.length){
+          h+='<div class="mh" style="margin:16px 0 6px">Campanhas · '+mcamps.length+' ativa'+(mcamps.length!=1?'s':'')+'</div>'+
+            '<table><tr><th>Campanha</th><th class="n">Orçamento/dia</th></tr>'+
+            mcamps.map(function(c){return '<tr><td class="k">'+esc(c.nome)+'</td><td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td></tr>';}).join('')+'</table>';
+        }
         var an=(m.anuncios||[]).slice(0,5);
         if(an.length){ h+='<table><tr><th>Anúncio</th><th class="n">Alcance</th><th class="n">Cliques</th><th class="n">Conversas</th></tr>'+
           an.map(function(a){return '<tr><td class="k"><span class="adn">'+(a.thumb?'<img src="'+esc(a.thumb)+'">':'')+'<span>'+esc(a.nome)+'</span></span></td><td class="n">'+fInt(a.alcance)+'</td><td class="n">'+fInt(a.cliques)+'</td><td class="n">'+fInt(a.conversas)+'</td></tr>';}).join('')+'</table>'; }
@@ -460,23 +488,6 @@
         if(plat.length){ h+='<table style="margin-top:12px"><tr><th>Plataforma</th><th class="n">Cliques</th><th class="n">Alcance</th><th class="n">Investido</th></tr>'+
           plat.map(function(p){return '<tr><td class="k">'+esc(p.plataforma)+'</td><td class="n">'+fInt(p.cliques)+'</td><td class="n">'+fInt(p.alcance)+'</td><td class="n">'+fMoney(p.gasto)+'</td></tr>';}).join('')+'</table>'; }
         h+='</div>';
-
-        // ── Quem sua campanha alcança: gênero × dispositivo × faixa etária ──
-        // soma Meta + Google (pessoas engajadas) pra dar o retrato dos DOIS canais
-        var gd=(mid.google&&mid.google.demografia)||{};
-        var somaLabel=function(a,b){var mp={};(a||[]).forEach(function(x){mp[x.label]=(mp[x.label]||0)+(x.valor||0);});(b||[]).forEach(function(x){mp[x.label]=(mp[x.label]||0)+(x.conversoes||x.cliques||0);});return Object.keys(mp).map(function(k){return {label:k,valor:mp[k]};});};
-        var gen=somaLabel(m.demografia&&m.demografia.genero, gd.genero);
-        var idade=somaLabel(m.demografia&&m.demografia.idade, gd.idade).sort(function(a,b){return b.valor-a.valor;});
-        var dispMap={}; ((m.dispositivos||[]).concat((mid.google&&mid.google.dispositivos)||[])).forEach(function(x){ dispMap[x.label]=(dispMap[x.label]||0)+x.valor; });
-        var disp=Object.keys(dispMap).map(function(k){return {label:k,valor:dispMap[k]};});
-        if(gen.length||disp.length||idade.length){
-          h+='<div class="card"><h3>Quem sua campanha alcança</h3><div class="two">';
-          if(gen.length) h+='<div><div class="mh">Gênero</div>'+pizza(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
-          if(disp.length) h+='<div><div class="mh">Dispositivo</div>'+pizza(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825',TV:'#9aa0aa'})+'</div>';
-          h+='</div>';
-          if(idade.length) h+='<div style="margin-top:16px"><div class="mh">Faixa etária</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
-          h+='</div>';
-        }
       }
       h+='</div>';
     }

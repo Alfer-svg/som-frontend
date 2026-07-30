@@ -214,6 +214,11 @@
         <span class="nav-icon"><i class="ph ph-flag-banner ic-ph" style="color:#7C3AED"></i></span><span>Candidato</span>
       </div>
 
+      <!-- Área do Cliente — o painel que o cliente vê (todos os clientes), DENTRO do SOM -->
+      <div class="nav-item" x-show="podeVer('areacliente') && acClientes().length" :class="page==='areacliente'?'active':''" @click="go('areacliente')" title="A Área do Cliente (painel que o cliente vê) — visão da equipe, dentro do SOM.">
+        <span class="nav-icon"><i class="ph ph-chart-donut ic-ph" style="color:#4285F4"></i></span><span>Área do Cliente</span>
+      </div>
+
       <!-- Agenda / Calendário de eventos (admin + Gestor de Tráfego) -->
       <div class="nav-item" x-show="podeVer('agenda')" :class="page==='agenda'?'active':''" @click="go('agenda')" title="Calendário de eventos, contatos e histórico dos clientes.">
         <span class="nav-icon"><i class="ph ph-calendar-dots ic-ph" style="color:#F9A825"></i></span><span>Agenda</span>
@@ -3665,6 +3670,39 @@
       })();
       </script>
 
+      <!-- Área do Cliente dentro do SOM (iframe do painel que o cliente vê) -->
+      <section x-show="page==='areacliente'" x-cloak>
+        <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:22px;font-weight:500;letter-spacing:-.3px"><i class="ph ph-chart-donut ic-ph" style="color:#4285F4"></i> Área do Cliente</div>
+            <div class="text-3" style="font-size:13px;margin-top:4px">Visão da equipe — o painel que o cliente vê (orgânico, mídia paga, campanhas e mapa).</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <select class="form-select fs-13" style="max-width:260px;font-weight:600" x-model="acSel" @change="localStorage.setItem('som_ac_sel', acSel)">
+              <template x-for="c in acClientes()" :key="'acsel'+c.id"><option :value="c.id" x-text="c.empresa || c.nome || '—'"></option></template>
+            </select>
+            <button class="btn btn-sm" @click="window.open('painel-cliente.html?cliente='+encodeURIComponent(acSel)+'&v=1','_blank')" title="Abrir em tela cheia, numa aba própria"><i class="ph ph-arrow-square-out ic-ph"></i> Tela cheia</button>
+          </div>
+        </div>
+        <!-- altura calculada em tempo real (script fitAc abaixo): o iframe termina exatamente no fim da janela -->
+        <iframe id="acFrame" allowfullscreen allow="fullscreen" x-show="acSel" :src="page==='areacliente' && acSel ? ('painel-cliente.html?cliente='+encodeURIComponent(acSel)+'&v=1') : ''" style="width:100%;height:60vh;min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
+      </section>
+      <script>
+      // Ajusta o iframe da Área do Cliente pra terminar EXATO no fim da janela (igual ao do Candidato).
+      (function(){
+        function fitAc(){
+          var f=document.getElementById('acFrame');
+          if(!f||!f.offsetParent) return;
+          var vh=window.innerHeight||document.documentElement.clientHeight||0;
+          if(vh<300) return;
+          var topo=f.getBoundingClientRect().top+window.scrollY;
+          f.style.height=Math.max(520, vh-topo-20)+'px';
+        }
+        window.addEventListener('resize', fitAc);
+        setInterval(fitAc, 800);
+      })();
+      </script>
+
       <section x-show="page==='trafego'">
         <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
           <div>
@@ -6550,7 +6588,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=439"></script>
+<script src="js/app.js?v=440"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
