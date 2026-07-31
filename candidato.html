@@ -1473,10 +1473,39 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     window.__panelCtx={modo:'cand'};
     try{ var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}});
       if(r.status===401||r.status===403){ localStorage.removeItem('cliente_token'); localStorage.removeItem('cand_token'); location.replace('cliente.html'); return; }
-      if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato); if(window.__aplicarReal)window.__aplicarReal(d); montarLiberadosCandidato(d);} }catch(e){}
+      if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato); if(window.__aplicarReal)window.__aplicarReal(d); montarLiberadosCandidato(d); mostrarAlertaVideo(d.alertaVideo);} }catch(e){}
     id('loginScreen').style.display='none';
     ligarProtecao(); iniciarSessao();
     if(window.__replay) setTimeout(window.__replay,60);
+  }
+  // ALERTA VERMELHO BLOQUEANTE — qualidade de CONTEÚDO dos vídeos (retenção fraca).
+  // Só libera o app quando o candidato clica no botão; o clique fica registrado
+  // (quem + quando) e aparece na visão interna da equipe.
+  function bipAlerta(){ try{ var ctx=new (window.AudioContext||window.webkitAudioContext)(); var t=ctx.currentTime;
+    [0,0.35,0.7].forEach(function(off){ var o=ctx.createOscillator(), g=ctx.createGain(); o.type='square'; o.frequency.value=880;
+      g.gain.setValueAtTime(0.0001,t+off); g.gain.exponentialRampToValueAtTime(0.18,t+off+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.28);
+      o.connect(g); g.connect(ctx.destination); o.start(t+off); o.stop(t+off+0.3); }); }catch(e){} }
+  function mostrarAlertaVideo(av){
+    if(!av||!av.bloquear) return;
+    if(document.getElementById('alertaVideoOv')) return;
+    var ov=document.createElement('div'); ov.id='alertaVideoOv';
+    ov.style.cssText='position:fixed;inset:0;z-index:99990;background:rgba(127,15,15,.97);display:flex;align-items:center;justify-content:center;padding:20px;';
+    var q25=(av.q25!=null?av.q25+'%':'—'), avg=(av.avgSeg!=null?av.avgSeg+'s':'—');
+    ov.innerHTML='<div style="max-width:480px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5);font-family:inherit;">'
+      +'<div style="background:#B91C1C;color:#fff;padding:16px 20px;display:flex;align-items:center;gap:10px;">'
+      +'<span style="font-size:22px;">&#9888;&#65039;</span><b style="font-size:15px;letter-spacing:.3px;">ALERTA DA EQUIPE — CONTE\u00daDO DOS V\u00cdDEOS</b></div>'
+      +'<div style="padding:18px 20px;color:#333;font-size:14px;line-height:1.55;">'
+      +'<p style="margin:0 0 10px;"><b>Seus an\u00fancios est\u00e3o alcan\u00e7ando muita gente, mas os v\u00eddeos n\u00e3o est\u00e3o prendendo aten\u00e7\u00e3o.</b></p>'
+      +'<p style="margin:0 0 10px;">De <b>'+Number(av.plays||0).toLocaleString('pt-BR')+'</b> reprodu\u00e7\u00f5es, s\u00f3 <b style="color:#B91C1C;">'+q25+'</b> passam de 1/4 do v\u00eddeo. Tempo m\u00e9dio assistido: <b style="color:#B91C1C;">'+avg+'</b>.</p>'
+      +'<p style="margin:0 0 10px;">N\u00e3o adianta alcan\u00e7ar e n\u00e3o reter: o problema \u00e9 o <b>conte\u00fado</b> (abertura fraca, v\u00eddeo longo, sem gancho nos 3 primeiros segundos). Precisamos gravar v\u00eddeos mais atraentes.</p>'
+      +'<p style="margin:0;color:#777;font-size:12px;">Fale com a equipe Maracatu Digital para alinhar os pr\u00f3ximos criativos.</p></div>'
+      +'<div style="padding:0 20px 20px;"><button id="alertaVideoOk" style="width:100%;padding:14px;border:0;border-radius:10px;background:#B91C1C;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">Entendi, vou providenciar novos v\u00eddeos</button></div></div>';
+    document.body.appendChild(ov);
+    bipAlerta();
+    document.getElementById('alertaVideoOk').addEventListener('click',function(){
+      this.disabled=true; this.textContent='Registrando...';
+      apiPost('/cliente-portal/cand/alerta-video-ack').catch(function(){}).then(function(){ ov.remove(); });
+    });
   }
   function ligarProtecao(){
     document.addEventListener('keyup',function(e){ if(token&&e.key==='PrintScreen')capturaDetectada('printscreen'); });
@@ -1504,6 +1533,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       var b=document.createElement('div'); b.id='badgeAdmin'; b.textContent='Visão da equipe · '+(info.nome); document.body.appendChild(b);
       montarAcessos(clienteId,somTok).then(function(){ montarLogOtimizacoes(clienteId,somTok,info.nome); }); // quadros da equipe, na ordem
       montarDiagnostico(clienteId,somTok); // diagnóstico interno no topo (só a equipe vê)
+      montarAlertaVideoEquipe(d); // status do alerta bloqueante de vídeo (quem clicou e quando)
       window.__cliId=clienteId; window.__somTok=somTok; window.__liberados=(d.liberados||[]).slice(); // pra a chave de liberação
       montarCardsEquipe(d,clienteId,somTok); // base de seguidores + menções + SEO (com chave "liberar pro cliente")
       if(window.__replay)setTimeout(window.__replay,60);
@@ -1658,6 +1688,26 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
           +'<div style="font-size:12px;margin-top:8px;padding:8px 10px;background:var(--bg);border-radius:9px"><b>Presença nas buscas (GEO):</b> '+esc(a.geo||'')+'</div>';
       }).catch(function(){var c3=cs.querySelector('.corpo'); if(c3)c3.innerHTML='<div style="color:var(--mut);font-size:12.5px">Falha na auditoria — tente recarregar.</div>';});
     }catch(e){console.warn('cards equipe',e);}
+  }
+  // Visão da equipe: status do ALERTA BLOQUEANTE de conteúdo dos vídeos —
+  // mostra se está ativo e QUEM/QUANDO clicou em "Entendi" no app do candidato.
+  function montarAlertaVideoEquipe(d){
+    var av=d&&d.alertaVideo; if(!av||!av.ativo) return;
+    var fmt=function(x){try{return new Date(x).toLocaleString('pt-BR',{timeZone:'America/Recife',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+    var esc=function(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
+    var ackHtml = av.ack && av.ack.em
+      ? '<span style="font-size:12px;color:#1E9E4F;font-weight:700">✔ Ciência registrada: '+esc(av.ack.por)+' em '+fmt(av.ack.em)+(av.bloquear?' (expirou — vai bloquear de novo)':'')+'</span>'
+      : '<span style="font-size:12px;color:#C5221F;font-weight:700">✖ Ainda não clicou em "Entendi" — app segue BLOQUEADO pelo alerta</span>';
+    var card=document.createElement('section');
+    card.className='card';
+    card.style.cssText='margin:0 0 14px;border:1px solid #C5221F55;background:linear-gradient(180deg,#FFF7F6,#fff)';
+    card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      +'<div style="font-weight:800;font-size:13px">🚨 Alerta bloqueante · conteúdo dos vídeos</div>'
+      +'<span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;padding:3px 9px;border-radius:99px;background:#FCEAE7;color:#C5221F">SÓ A EQUIPE VÊ</span></div>'
+      +'<div style="font-size:12.5px;color:#3b4048;margin-top:6px;line-height:1.55">'
+      +Number(av.plays||0).toLocaleString('pt-BR')+' plays · só '+(av.q25!=null?av.q25+'%':'—')+' passam de 25% do vídeo · média '+(av.avgSeg!=null?av.avgSeg+'s':'—')+' assistidos. O candidato vê a tela vermelha e o app só libera quando ele clicar.</div>'
+      +'<div style="margin-top:8px">'+ackHtml+'</div>';
+    var app=document.querySelector('.app'); if(app)app.prepend(card);
   }
   async function montarDiagnostico(clienteId,somTok){
     var escq=function(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
