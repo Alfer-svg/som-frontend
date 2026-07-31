@@ -4216,7 +4216,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     // serve pra equipe conferir antes de mandar o link pro cliente.
     verPainelCliente(c) {
       const id = c && (c.id || c.clienteId); if (!id) return;
-      window.open('painel-cliente.html?cliente=' + encodeURIComponent(id) + '&v=9', '_blank');
+      window.open('painel-cliente.html?cliente=' + encodeURIComponent(id) + '&v=10', '_blank');
     },
     // Logo/marca do cliente (aparece na bolinha do app do cliente). Redimensiona no navegador.
     lerLogoCliente(ev) {
