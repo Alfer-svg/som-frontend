@@ -243,6 +243,10 @@
        o que não pode partir no meio são as peças pequenas */
     .card,.sec{break-inside:auto;page-break-inside:auto}
     .kpi,.tl,.b3,.fmt,.post,.pie,.mini,.nota-eq,.dir,tr{break-inside:avoid;page-break-inside:avoid}
+    /* gráfico nunca se separa do próprio título (Faixa etária órfã no pé da página) */
+    .sub-graf,.two>div{break-inside:avoid;page-break-inside:avoid}
+    /* título de tabela/gráfico não fica sozinho no fim da folha */
+    .mh,h3,.sec-h{break-after:avoid;page-break-after:avoid}
     /* respiro menor entre blocos e dentro dos cartões */
     .wrap{padding:0}
     .sec{margin-top:14px}
@@ -584,7 +588,7 @@
         if(gen.length) pb+='<div><div class="mh">Gênero</div>'+pizza(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
         if(disp.length) pb+='<div><div class="mh">Dispositivo</div>'+pizza(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825',TV:'#9aa0aa'})+'</div>';
         pb+='</div>';
-        if(idade.length) pb+='<div style="margin-top:16px"><div class="mh">Faixa etária</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
+        if(idade.length) pb+='<div class="sub-graf" style="margin-top:16px"><div class="mh">Faixa etária</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
         pb+='</div>';
         bMid+=blk('midPublico',pb+notaEquipe(lr.publico));
       }
