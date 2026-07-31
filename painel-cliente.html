@@ -427,7 +427,8 @@
       }
       if(bIG) h+='<div class="sec"><div class="sec-h">'+IC_IG+'<h2>Engajamento no Instagram</h2>'+(org.username?'<span class="sub">@'+esc(org.username)+'</span>':'')+'</div>'+bIG+'</div>';
     } else {
-      h+='<div class="sec"><div class="sec-h">'+IC_IG+'<h2>Engajamento no Instagram</h2></div><div class="emcoleta">Seu Instagram ainda está sendo conectado. Assim que a coleta começar, seus números aparecem aqui.</div></div>';
+      // sem dados do IG ainda: o aviso "em coleta" também é gateável (mesma chave dos números)
+      h+=blk('igResumo','<div class="sec"><div class="sec-h">'+IC_IG+'<h2>Engajamento no Instagram</h2></div><div class="emcoleta">Seu Instagram ainda está sendo conectado. Assim que a coleta começar, seus números aparecem aqui.</div></div>');
     }
 
     // ═══ MÍDIA PAGA ═══
