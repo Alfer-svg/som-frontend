@@ -44,6 +44,7 @@
   .btn-print{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;background:var(--ink);color:#fff;font:600 12.5px Roboto,system-ui,sans-serif;padding:9px 15px;border-radius:11px;box-shadow:var(--shadow-sm);transition:opacity .15s}
   .btn-print:hover{opacity:.88}
   .btn-print svg{display:block}
+  .btn-print.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
   @media (max-width:520px){ .brandbar .lbl{display:none} }
   /* impressão / salvar como PDF — some com o que é interativo, cartões não quebram no meio */
   @page{margin:13mm}
@@ -62,7 +63,12 @@
   .top .ava img{width:100%;height:100%;object-fit:cover}
   .top .nm{font-size:clamp(18px,2.4vw,23px);font-weight:700;letter-spacing:-.02em;line-height:1.1}
   .top .pe{font-size:12px;color:var(--mut);margin-top:2px}
-  .top .per{margin-left:auto;display:flex;gap:3px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px}
+  .top .per{margin-left:auto;display:flex;flex-wrap:wrap;gap:3px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px}
+  /* período personalizado: calendário de/até */
+  .custom-per{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--mut);box-shadow:var(--shadow-sm)}
+  .custom-per input[type=date]{font:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)}
+  .custom-per .btn-apl{border:0;cursor:pointer;background:var(--ink);color:#fff;font:600 12px Roboto,system-ui,sans-serif;padding:8px 14px;border-radius:9px}
+  .custom-per .btn-apl:hover{opacity:.88}
   .chip{border:0;background:transparent;color:var(--mut);font:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:9px;cursor:pointer;white-space:nowrap;transition:.15s}
   .chip.on{background:var(--blue);color:#fff;box-shadow:0 5px 14px -6px rgba(66,133,244,.6)}
   .chip:not(.on):hover{color:var(--ink)}
@@ -286,11 +292,13 @@
   var IC_G='<span class="ic" style="background:#fff;border:1px solid #eee"><svg width="15" height="15" viewBox="0 0 48 48"><path fill="#4285F4" d="M45 24c0-1.6-.1-2.8-.4-4H24v7.6h12c-.2 2-1.6 5-4.6 7l7 5.4C42.8 36.6 45 31 45 24z"/><path fill="#34A853" d="M24 46c6.2 0 11.4-2 15.2-5.6l-7-5.4c-2 1.4-4.6 2.2-8.2 2.2-6.3 0-11.6-4.2-13.5-10l-7.2 5.6C7 39.8 14.8 46 24 46z"/><path fill="#FBBC05" d="M10.5 27.2c-.5-1.4-.8-3-.8-4.2s.3-2.8.8-4.2l-7.2-5.6C1.8 16.2 1 20 1 24s.8 7.8 2.3 10.8l7.2-5.6z"/><path fill="#EA4335" d="M24 9.8c3.4 0 5.8 1.4 7.2 2.6l6.2-6C35.4 3 30.2 1 24 1 14.8 1 7 7.2 3.3 15.2l7.2 5.6C12.4 14 17.7 9.8 24 9.8z"/></svg></span>';
   var IC_M='<span class="ic" style="background:#fff;border:1px solid #eee"><svg width="15" height="15" viewBox="0 0 24 24" fill="#0081FB"><path d="M6.915 4.03c-1.968 0-3.683 1.28-4.871 3.113C.704 9.208 0 11.883 0 14.449c0 .706.07 1.369.21 1.973a6.624 6.624 0 0 0 .265.86 5.297 5.297 0 0 0 .371.761c.696 1.159 1.818 1.927 3.593 1.927 1.497 0 2.633-.671 3.965-2.444.76-1.012 1.144-1.626 2.663-4.32l.756-1.339.186-.325c.061.1.121.196.183.3l2.152 3.595c.724 1.21 1.665 2.556 2.47 3.314 1.046.987 1.992 1.22 3.06 1.22 1.075 0 1.876-.355 2.455-.843a3.743 3.743 0 0 0 .81-.973c.542-.939.861-2.127.861-3.745 0-2.72-.681-5.357-2.084-7.45-1.282-1.912-2.957-2.93-4.716-2.93-1.047 0-2.088.467-3.053 1.308-.652.57-1.257 1.29-1.82 2.05-.69-.875-1.335-1.547-1.958-2.056-1.182-.966-2.315-1.303-3.454-1.303zm10.16 2.053c1.147 0 2.188.758 2.992 1.999 1.132 1.748 1.647 4.195 1.647 6.4 0 1.548-.368 2.9-1.839 2.9-.58 0-1.027-.23-1.664-1.004-.496-.601-1.343-1.878-2.832-4.358l-.617-1.028a44.907 44.907 0 0 0-1.255-1.98c.07-.109.141-.224.211-.327 1.12-1.667 2.118-2.602 3.16-2.602zm-10.201.553c1.267 0 2.474.813 3.376 1.815-.377.513-.758 1.09-1.156 1.716-.694 1.09-1.155 1.887-1.756 2.941-1.482 2.61-1.937 3.201-2.622 3.201-.657 0-1.049-.404-1.049-1.813 0-2.665.746-5.166 1.667-6.657.542-.878 1.238-1.204 1.6-1.204z"/></svg></span>';
 
-  var curDe='', curAte='', per='mespassado';
+  var curDe='', curAte='', per='mespassado', perDe='', perAte='', lastData=null, imprimirAposCarga=false;
   function periodoParams(){
-    var d=new Date();
-    if(per==='estemes'){ curDe=new Date(d.getFullYear(),d.getMonth(),1).toISOString().slice(0,10); curAte=d.toISOString().slice(0,10); }
-    else { var f=new Date(d.getFullYear(),d.getMonth(),0), i=new Date(d.getFullYear(),d.getMonth()-1,1); curDe=i.toISOString().slice(0,10); curAte=f.toISOString().slice(0,10); }
+    var d=new Date(), iso=function(x){return x.toISOString().slice(0,10);};
+    if(per==='estemes'){ curDe=iso(new Date(d.getFullYear(),d.getMonth(),1)); curAte=iso(d); }
+    else if(per==='7d'||per==='15d'||per==='30d'){ var n=parseInt(per,10); curDe=iso(new Date(d.getTime()-(n-1)*86400000)); curAte=iso(d); }
+    else if(per==='custom'&&perDe&&perAte){ curDe=perDe; curAte=perAte; }
+    else { var f=new Date(d.getFullYear(),d.getMonth(),0), i=new Date(d.getFullYear(),d.getMonth()-1,1); curDe=iso(i); curAte=iso(f); }
   }
 
   function carregar(){
@@ -304,7 +312,7 @@
       if(r.status===401||r.status===403){ if(modo==='cliente'){location.replace('cliente.html');return;} throw new Error('Sem acesso (403).'); }
       if(!r.ok) return r.json().catch(function(){return{};}).then(function(j){throw new Error(j.message||('HTTP '+r.status));});
       return r.json();
-    }).then(render).catch(function(e){ estado('<b>Não consegui abrir o painel.</b>'+esc(e.message||e)+'<br><br><span class="chip" onclick="location.reload()">Tentar de novo</span>'); });
+    }).then(function(d){ lastData=d; render(d); }).catch(function(e){ estado('<b>Não consegui abrir o painel.</b>'+esc(e.message||e)+'<br><br><span class="chip" onclick="location.reload()">Tentar de novo</span>'); });
   }
 
   // mapa das cidades (Leaflet) — círculos proporcionais aos cliques
@@ -358,6 +366,8 @@
     // marca da Maracatu (quem entrega o relatório) — letterhead no topo + botão de PDF
     h+='<div class="brandbar"><img src="assets/logo-horizontal.png?v=7" alt="Maracatu Digital">'+
       '<div class="bb-actions"><span class="lbl">Relatório de performance</span>'+
+      '<button type="button" id="btnMensal" class="btn-print sec no-print" title="Relatório do mês passado completo, direto pra impressão/PDF">'+
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Relatório mensal</button>'+
       '<button type="button" class="btn-print no-print" onclick="window.print()" title="Gerar PDF: escolha \'Salvar como PDF\' na janela de impressão">'+
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir PDF</button>'+
       '</div></div>';
@@ -368,9 +378,17 @@
       '<div class="ava">'+(cli.logo?'<img src="'+esc(cli.logo)+'">':esc(ini2(cli.nome)))+'</div>'+
       '<div><div class="nm">'+esc(cli.nome||'Meu painel')+'</div><div class="pe">Resultados · '+esc(perLabel)+'</div></div>'+
       '<div class="per">'+
-        '<span class="chip '+(per==='mespassado'?'on':'')+'" data-p="mespassado">Mês passado</span>'+
-        '<span class="chip '+(per==='estemes'?'on':'')+'" data-p="estemes">Este mês</span>'+
+        [['7d','7 dias'],['15d','15 dias'],['30d','30 dias'],['mespassado','Mês passado'],['estemes','Este mês'],['custom','Personalizado']].map(function(o){
+          return '<span class="chip '+(per===o[0]?'on':'')+'" data-p="'+o[0]+'">'+o[1]+'</span>';
+        }).join('')+
       '</div></div>';
+    // personalizado: calendário de/até + aplicar
+    if(per==='custom'){
+      h+='<div class="custom-per no-print"><span>Período:</span>'+
+        '<input type="date" id="perDe" value="'+esc(perDe)+'"><span>até</span>'+
+        '<input type="date" id="perAte" value="'+esc(perAte)+'">'+
+        '<button type="button" id="perAplicar" class="btn-apl">Aplicar</button></div>';
+    }
 
     // leitura do dia — leve, com a linha fina das 4 cores como assinatura
     if(ld&&(ld.headline||ld.texto)){
@@ -568,9 +586,25 @@
     app.innerHTML=h;
     // desenha o mapa das cidades (Leaflet) depois que o DOM existe
     if(mapaPts&&mapaPts.length&&window.L) desenharMapa(mapaPts);
-    // liga o filtro de período
+    // liga o filtro de período (7/15/30 dias, mês passado, este mês, personalizado)
     Array.prototype.forEach.call(document.querySelectorAll('.chip[data-p]'),function(c){
-      c.addEventListener('click',function(){ per=c.getAttribute('data-p'); carregar(); });
+      c.addEventListener('click',function(){
+        var p=c.getAttribute('data-p');
+        if(p==='custom'){ per='custom'; if(!perDe||!perAte){ perDe=curDe; perAte=curAte; } if(lastData)render(lastData); else carregar(); return; }
+        per=p; carregar();
+      });
+    });
+    // Relatório mensal: põe no mês passado e abre a impressão/PDF sozinho
+    var bm=document.getElementById('btnMensal');
+    if(bm) bm.addEventListener('click',function(){ per='mespassado'; imprimirAposCarga=true; carregar(); });
+    if(imprimirAposCarga){ imprimirAposCarga=false; setTimeout(function(){ window.print(); },700); }
+    // personalizado: aplicar o intervalo escolhido no calendário
+    var apl=document.getElementById('perAplicar');
+    if(apl) apl.addEventListener('click',function(){
+      var de=(document.getElementById('perDe')||{}).value, ate=(document.getElementById('perAte')||{}).value;
+      if(!de||!ate){ alert('Escolha as duas datas.'); return; }
+      if(de>ate){ alert('A data inicial não pode ser depois da final.'); return; }
+      perDe=de; perAte=ate; carregar();
     });
     // liga os quadradinhos "Cliente vê" (visão da equipe): salva no backend e atualiza o selo
     if(modo==='admin') Array.prototype.forEach.call(document.querySelectorAll('input[data-bk]'),function(chk){

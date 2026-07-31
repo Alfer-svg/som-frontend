@@ -3720,11 +3720,11 @@
             <select class="form-select fs-13" style="max-width:260px;font-weight:600" x-model="acSel" @change="localStorage.setItem('som_ac_sel', acSel)">
               <template x-for="c in acClientes()" :key="'acsel'+c.id"><option :value="c.id" x-text="c.empresa || c.nome || '—'"></option></template>
             </select>
-            <button class="btn btn-sm" @click="window.open('painel-cliente.html?cliente='+encodeURIComponent(acSel)+'&v=7','_blank')" title="Abrir em tela cheia, numa aba própria"><i class="ph ph-arrow-square-out ic-ph"></i> Tela cheia</button>
+            <button class="btn btn-sm" @click="window.open('painel-cliente.html?cliente='+encodeURIComponent(acSel)+'&v=8','_blank')" title="Abrir em tela cheia, numa aba própria"><i class="ph ph-arrow-square-out ic-ph"></i> Tela cheia</button>
           </div>
         </div>
         <!-- altura calculada em tempo real (script fitAc abaixo): o iframe termina exatamente no fim da janela -->
-        <iframe id="acFrame" allowfullscreen allow="fullscreen" x-show="acSel" :src="page==='areacliente' && acSel ? ('painel-cliente.html?cliente='+encodeURIComponent(acSel)+'&v=7') : ''" style="width:100%;height:60vh;min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
+        <iframe id="acFrame" allowfullscreen allow="fullscreen" x-show="acSel" :src="page==='areacliente' && acSel ? ('painel-cliente.html?cliente='+encodeURIComponent(acSel)+'&v=8') : ''" style="width:100%;height:60vh;min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
       </section>
       <script>
       // Ajusta o iframe da Área do Cliente pra terminar EXATO no fim da janela (igual ao do Candidato).
