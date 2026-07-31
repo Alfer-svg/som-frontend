@@ -48,7 +48,26 @@
   @media (max-width:520px){ .brandbar .lbl{display:none} }
   /* impressão / salvar como PDF — some com o que é interativo, cartões não quebram no meio */
   @page{margin:13mm}
+  @page :first{margin:0} /* capa em sangria total */
+  /* ── CAPA do relatório (só na impressão) — arte oficial Maracatu ── */
+  #capa{display:none}
+  #capa .cp-logo{position:absolute;left:8%;top:9%;width:31%}
+  #capa .cp-title{position:absolute;left:8%;top:38%;font-size:34pt;line-height:1.12;letter-spacing:-.01em;color:#141414;font-weight:300}
+  #capa .cp-title b{font-weight:800}
+  #capa .cp-bar{position:absolute;left:8%;top:52.5%;width:31%;height:5px;display:flex}
+  #capa .cp-bar i{flex:1}
+  #capa .cp-bar i:nth-child(1){background:#EA4335}
+  #capa .cp-bar i:nth-child(2){background:#F9A825}
+  #capa .cp-bar i:nth-child(3){background:#4285F4}
+  #capa .cp-bar i:nth-child(4){background:#34A853}
+  #capa .cp-per{position:absolute;left:8%;top:56.5%;font-size:14pt;font-weight:600;letter-spacing:.42em;color:#141414;white-space:nowrap}
+  #capa .cp-cli{position:absolute;left:8%;bottom:10%;width:40%;display:flex;align-items:center;gap:12px;font-size:11pt;color:#3c4043;border-bottom:1px solid #D9D6CF;padding-bottom:14px}
+  #capa .cp-cli .ico{width:38px;height:38px;border-radius:50%;border:1.5px solid #B9B5AC;display:flex;align-items:center;justify-content:center;flex:none;background:#fff}
+  /* lateral direita = recorte da arte oficial (foto + cortes + formas), aspecto idêntico ao A4 */
+  #capa .cp-lado{position:absolute;top:0;right:0;height:100%;width:auto}
   @media print{
+    #capa{display:block;position:relative;width:100%;height:99vh;background:#f8f8f8;overflow:hidden;page-break-after:always;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #capa *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     body{background:#fff}
     .no-print{display:none!important}
     .top .per{display:none!important}
@@ -210,6 +229,15 @@
 </style>
 </head>
 <body>
+<!-- CAPA (aparece só na impressão, como 1ª página do relatório) -->
+<div id="capa" aria-hidden="true">
+  <img class="cp-logo" src="assets/logo-horizontal.png?v=7" alt="Maracatu Digital">
+  <div class="cp-title">RELATÓRIO DE<br><b>CAMPANHAS</b></div>
+  <div class="cp-bar"><i></i><i></i><i></i><i></i></div>
+  <div class="cp-per" id="capaPer">&nbsp;</div>
+  <img class="cp-lado" src="assets/capa-lado.png" alt="">
+  <div class="cp-cli"><span class="ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5F6368" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 19c1.2-3.1 3.7-4.6 6.5-4.6s5.3 1.5 6.5 4.6"/></svg></span><span><b>Cliente:</b> <span id="capaCli"></span></span></div>
+</div>
 <div id="app"><div class="estado"><div class="spin"></div><b>Abrindo seu painel…</b>Puxando seus números do Instagram e das campanhas. Leva alguns segundos.</div></div>
 
 <script>
@@ -337,9 +365,21 @@
     }catch(e){}
   }
 
+  // Capa da impressão: cliente + período (a lateral é a arte oficial em assets/capa-lado.png)
+  var MESES_CAPA=['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+  function atualizarCapa(cli){
+    var cel=document.getElementById('capaCli'); if(cel) cel.textContent=cli.nome||'';
+    var pel=document.getElementById('capaPer');
+    if(pel&&curDe&&curAte){
+      var dd=curDe.split('-'), aa=curAte.split('-');
+      pel.textContent=(dd[0]===aa[0]&&dd[1]===aa[1]) ? (MESES_CAPA[parseInt(dd[1],10)-1]+' '+dd[0]) : (dd[2]+'/'+dd[1]+'/'+dd[0]+' — '+aa[2]+'/'+aa[1]+'/'+aa[0]);
+    }
+  }
+
   function render(d){
     mapaPts=null;
     var cli=d.cliente||{}, org=d.organico||{}, mid=d.midia||{}, ld=d.leituraDoDia||{}, lr=d.leituras||{};
+    atualizarCapa(cli);
     var oc=Array.isArray(d.ocultos)?d.ocultos.slice():[];
     // Um "quadradinho" por bloco de info: na visão da equipe cada bloco ganha a chave
     // "Cliente vê" (mesmo padrão do candidato); na visão do cliente, bloco desmarcado some.
