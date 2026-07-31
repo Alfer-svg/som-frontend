@@ -389,12 +389,12 @@ const PAPEIS_INFO = [
 const PERMISSOES = {
   admin: '*',
   // Dashboard: SÓ admin e "Master" (= perfil id 'comercial', renomeado p/ Master em ui.papeis). Admin vê as 2 abas; comercial/Master vê só a aba Comercial (ehAdmin gateia a Visão geral). 'pessoal' liberado a todos.
-  gestor: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'operacoes', 'monitoramento', 'onboarding', 'pessoal'],
-  comercial: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding', 'pessoal'],
-  colaborador: ['comercial', 'operacional', 'operacoes', 'monitoramento', 'onboarding', 'pessoal'],
+  gestor: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'operacoes', 'monitoramento', 'areacliente', 'onboarding', 'pessoal'],
+  comercial: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'candidato', 'areacliente', 'onboarding', 'pessoal'],
+  colaborador: ['comercial', 'operacional', 'operacoes', 'monitoramento', 'areacliente', 'onboarding', 'pessoal'],
   colaborador2: ['operacional', 'pessoal'], // Operacional (só os trabalhos em que está) + a própria ficha
-  financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'pessoal'],
-  gestortrafego: ['agenda', 'trafego', 'monitoramento', 'pessoal'], // painel exclusivo de agenda/tráfego + monitoramento
+  financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'areacliente', 'pessoal'],
+  gestortrafego: ['agenda', 'trafego', 'monitoramento', 'areacliente', 'pessoal'], // painel exclusivo de agenda/tráfego + monitoramento
 };
 // Páginas do sistema que o admin pode liberar/bloquear por perfil (checkboxes em Configurações).
 // 'pessoal' (a própria ficha) é sempre liberado e 'configuracoes' é sempre só-admin — por isso
@@ -410,6 +410,8 @@ const PAGINAS_SISTEMA = [
   { id: 'operacional', nome: 'Produção' },
   { id: 'operacoes', nome: 'Operacional (equipe)' },
   { id: 'monitoramento', nome: 'Monitoramento' },
+  { id: 'candidato', nome: 'Candidato' },
+  { id: 'areacliente', nome: 'Área do Cliente' },
   { id: 'relatorios', nome: 'Relatórios' },
   { id: 'agenda', nome: 'Agenda' },
   { id: 'trafego', nome: 'Tráfego' },
@@ -982,8 +984,8 @@ document.addEventListener('alpine:init', () => {
       if (this.papel === 'admin') return true;        // admin sempre vê tudo
       if (p === 'pessoal') return true;               // a própria ficha é de todos
       if (p === 'infostatus') return this.podeCofre;  // Info/Status: admin ou acesso individual ao cofre
-      if (p === 'candidato') return this.ehAdmin || this.papel === 'comercial'; // mesma regra do item na sidebar
-      if (p === 'areacliente') return this.podeVer('comercial') || this.podeVer('monitoramento'); // quem cuida de clientes vê a Área do Cliente
+      // 'candidato' e 'areacliente' agora são páginas da matriz "o que cada perfil acessa"
+      // (Configurações): sem regra fixa aqui — caem no permsDoPapel abaixo.
       if (p === 'configuracoes') return false;        // Configurações é só-admin
       if (p === 'onboarding') p = 'comercial';        // onboarding anda com Clientes
       return this.permsDoPapel(this.papel).includes(p);
@@ -4214,7 +4216,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     // serve pra equipe conferir antes de mandar o link pro cliente.
     verPainelCliente(c) {
       const id = c && (c.id || c.clienteId); if (!id) return;
-      window.open('painel-cliente.html?cliente=' + encodeURIComponent(id) + '&v=6', '_blank');
+      window.open('painel-cliente.html?cliente=' + encodeURIComponent(id) + '&v=7', '_blank');
     },
     // Logo/marca do cliente (aparece na bolinha do app do cliente). Redimensiona no navegador.
     lerLogoCliente(ev) {

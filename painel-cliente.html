@@ -189,6 +189,12 @@
   .blk-ctl .selo{font-size:10px;font-weight:800;letter-spacing:.05em;padding:3px 8px;border-radius:99px}
   .blk-ctl label{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--mut);cursor:pointer;user-select:none}
   .blk-ctl input{width:16px;height:16px;cursor:pointer;accent-color:var(--grn);margin:0}
+  /* mini-quadradinho POR CAIXINHA (tile de métrica) — só na visão da equipe */
+  .cxw{position:relative;display:flex}
+  .cxw>div{flex:1;min-width:0}
+  .cxw.off-eq{opacity:.5}
+  .cx-chk{position:absolute;top:7px;right:8px;z-index:2;cursor:pointer;line-height:0}
+  .cx-chk input{width:14px;height:14px;cursor:pointer;accent-color:var(--grn);margin:0}
 
   @media (max-width:720px){
     .kpis{grid-template-columns:1fr 1fr} .fmts{grid-template-columns:1fr} .tiles{grid-template-columns:1fr 1fr}
@@ -337,6 +343,15 @@
         '<div class="blk-ctl no-print"><span class="selo" style="background:'+(on?'#EAF3DE':'#FEE2E2')+';color:'+(on?'#27500A':'#991B1B')+'">'+(on?'VISÍVEL PRO CLIENTE':'OCULTO PRO CLIENTE')+'</span>'+
         '<label>Cliente vê <input type="checkbox" data-bk="'+key+'" '+(on?'checked':'')+'></label></div></div>';
     }
+    // Mini-quadradinho POR CAIXINHA (tile): chave "bloco.caixinha". Na visão do cliente,
+    // caixinha desmarcada some e as outras se reacomodam; na da equipe, checkbox no canto.
+    function cx(bloco,sub,html){
+      if(!html) return '';
+      var key=bloco+'.'+sub, on=oc.indexOf(key)<0;
+      if(modo!=='admin') return on?html:'';
+      return '<span class="cxw'+(on?'':' off-eq')+'">'+html+
+        '<label class="cx-chk no-print" title="Cliente vê esta caixinha"><input type="checkbox" data-bk="'+key+'" '+(on?'checked':'')+'></label></span>';
+    }
     document.title='Meu Painel · '+(cli.nome||'Maracatu');
     var h='<div class="wrap">';
 
@@ -370,10 +385,10 @@
       var r=org.resumo, va=r.vsAnterior||{};
       var bIG='';
       bIG+=blk('igResumo','<div class="kpis">'+
-          '<div class="kpi b"><div class="lb">Contas alcançadas</div><div class="vl num">'+fMil(r.alcance)+'</div>'+delta(va.alcance)+'</div>'+
-          '<div class="kpi g"><div class="lb">Engajamento</div><div class="vl num">'+fPct(r.taxaEngajamento)+'</div>'+delta(va.engaj,'vs. anterior',true)+'</div>'+
-          '<div class="kpi a"><div class="lb">Seguidores</div><div class="vl num">'+fMil(r.seguidores)+'</div>'+(r.saldoSeguidores!=null?deltaAbs(r.saldoSeguidores):'')+'</div>'+
-          '<div class="kpi"><div class="lb">Publicações</div><div class="vl num">'+fInt(r.posts)+'</div>'+(va.posts!=null?deltaAbs(va.posts):'')+'</div>'+
+          cx('igResumo','alcance','<div class="kpi b"><div class="lb">Contas alcançadas</div><div class="vl num">'+fMil(r.alcance)+'</div>'+delta(va.alcance)+'</div>')+
+          cx('igResumo','engajamento','<div class="kpi g"><div class="lb">Engajamento</div><div class="vl num">'+fPct(r.taxaEngajamento)+'</div>'+delta(va.engaj,'vs. anterior',true)+'</div>')+
+          cx('igResumo','seguidores','<div class="kpi a"><div class="lb">Seguidores</div><div class="vl num">'+fMil(r.seguidores)+'</div>'+(r.saldoSeguidores!=null?deltaAbs(r.saldoSeguidores):'')+'</div>')+
+          cx('igResumo','publicacoes','<div class="kpi"><div class="lb">Publicações</div><div class="vl num">'+fInt(r.posts)+'</div>'+(va.posts!=null?deltaAbs(va.posts):'')+'</div>')+
         '</div>'+notaEquipe(lr.instagram));
 
       // qualidade das interações
@@ -436,9 +451,9 @@
       var t=mid.totais||{};
       var bMid='';
       bMid+=blk('midResumo','<div class="big3">'+
-          '<div class="b3"><div class="lb">Investimento</div><div class="vl num">'+fMoney(t.investimento)+'</div><div class="em">no período</div></div>'+
-          '<div class="b3"><div class="lb">Contatos gerados</div><div class="vl num">'+fInt(t.contatos)+'</div><div class="em">'+fInt(t.contatosGoogle)+' Google · '+fInt(t.contatosMeta)+' Meta</div></div>'+
-          '<div class="b3"><div class="lb">Custo por contato</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>'+
+          cx('midResumo','investimento','<div class="b3"><div class="lb">Investimento</div><div class="vl num">'+fMoney(t.investimento)+'</div><div class="em">no período</div></div>')+
+          cx('midResumo','contatos','<div class="b3"><div class="lb">Contatos gerados</div><div class="vl num">'+fInt(t.contatos)+'</div><div class="em">'+fInt(t.contatosGoogle)+' Google · '+fInt(t.contatosMeta)+' Meta</div></div>')+
+          cx('midResumo','custoContato','<div class="b3"><div class="lb">Custo por contato</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>')+
         '</div>');
 
       // ── CONSOLIDADO (Google + Meta juntos): todos os campos somáveis dos dois canais ──
@@ -448,12 +463,12 @@
       var clq=(gr.cliques||0)+(mr.cliques||0);
       var ctrC=impr>0?(clq/impr*100):null;
       bMid+=blk('midTotais','<div class="card"><h3>Totais Google + Meta</h3><div class="tiles">'+
-        '<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(t.investimento)+'</div></div>'+
-        '<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(impr)+'</div></div>'+
-        '<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(clq)+'</div></div>'+
-        '<div class="tl"><div class="lb">CTR combinado</div><div class="vl num">'+(ctrC!=null?fPct(ctrC):'—')+'</div></div>'+
-        (mr.alcance?'<div class="tl"><div class="lb">Alcance (Meta)</div><div class="vl num">'+fInt(mr.alcance)+'</div></div>':'')+
-        '<div class="tl"><div class="lb">Contatos</div><div class="vl num">'+fInt(t.contatos)+'</div></div>'+
+        cx('midTotais','investido','<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(t.investimento)+'</div></div>')+
+        cx('midTotais','impressoes','<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(impr)+'</div></div>')+
+        cx('midTotais','cliques','<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(clq)+'</div></div>')+
+        cx('midTotais','ctr','<div class="tl"><div class="lb">CTR combinado</div><div class="vl num">'+(ctrC!=null?fPct(ctrC):'—')+'</div></div>')+
+        (mr.alcance?cx('midTotais','alcanceMeta','<div class="tl"><div class="lb">Alcance (Meta)</div><div class="vl num">'+fInt(mr.alcance)+'</div></div>'):'')+
+        cx('midTotais','contatos','<div class="tl"><div class="lb">Contatos</div><div class="vl num">'+fInt(t.contatos)+'</div></div>')+
       '</div></div>'+notaEquipe(lr.consolidado));
 
       // ── Quem sua campanha alcança: gênero × dispositivo × faixa etária (fusão dos 2 canais) ──
@@ -478,12 +493,12 @@
       if(g&&g.resumo){var gr=g.resumo;
         var gc='<div class="card"><h3 style="display:flex;align-items:center;gap:8px">'+IC_G+' Google Ads</h3>'+
           '<div class="tiles">'+
-            '<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(gr.cliques)+'</div></div>'+
-            '<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(gr.impressoes)+'</div></div>'+
-            '<div class="tl"><div class="lb">CTR</div><div class="vl num">'+fPct(gr.ctr)+'</div></div>'+
-            '<div class="tl"><div class="lb">Conversões</div><div class="vl num">'+fNum(gr.leads)+'</div></div>'+
-            '<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(gr.gasto)+'</div></div>'+
-            '<div class="tl"><div class="lb">Custo/conversão</div><div class="vl num">'+(gr.custoLead!=null?fMoney(gr.custoLead):'—')+'</div></div>'+
+            cx('midGoogle','cliques','<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(gr.cliques)+'</div></div>')+
+            cx('midGoogle','impressoes','<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(gr.impressoes)+'</div></div>')+
+            cx('midGoogle','ctr','<div class="tl"><div class="lb">CTR</div><div class="vl num">'+fPct(gr.ctr)+'</div></div>')+
+            cx('midGoogle','conversoes','<div class="tl"><div class="lb">Conversões</div><div class="vl num">'+fNum(gr.leads)+'</div></div>')+
+            cx('midGoogle','investido','<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(gr.gasto)+'</div></div>')+
+            cx('midGoogle','custoConversao','<div class="tl"><div class="lb">Custo/conversão</div><div class="vl num">'+(gr.custoLead!=null?fMoney(gr.custoLead):'—')+'</div></div>')+
           '</div>';
         // campanhas ATIVAS do Google (junto dos números do Google) — pausadas não aparecem
         var gcamps=(gr.campanhas||[]).filter(function(c){return String(c.status||'').toUpperCase()==='ENABLED';});
@@ -519,14 +534,14 @@
       if(m&&m.resumo){var mr=m.resumo;
         var mc='<div class="card"><h3 style="display:flex;align-items:center;gap:8px">'+IC_M+' Facebook & Instagram Ads</h3>'+
           '<div class="tiles">'+
-            '<div class="tl"><div class="lb">Alcance</div><div class="vl num">'+fInt(mr.alcance)+'</div></div>'+
-            '<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(mr.cliques)+'</div></div>'+
-            '<div class="tl"><div class="lb">Conversas</div><div class="vl num">'+fInt(mr.conversas)+'</div></div>'+
-            '<div class="tl"><div class="lb">CTR</div><div class="vl num">'+fPct(mr.ctr)+'</div></div>'+
-            '<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(mr.gasto)+'</div></div>'+
-            '<div class="tl"><div class="lb">Custo/conversa</div><div class="vl num">'+(mr.custoConversa!=null?fMoney(mr.custoConversa):'—')+'</div></div>'+
-            (mr.frequencia!=null?'<div class="tl"><div class="lb">Frequência</div><div class="vl num">'+fNum(mr.frequencia)+'x</div></div>':'')+
-            '<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(mr.impressoes)+'</div></div>'+
+            cx('midMeta','alcance','<div class="tl"><div class="lb">Alcance</div><div class="vl num">'+fInt(mr.alcance)+'</div></div>')+
+            cx('midMeta','cliques','<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(mr.cliques)+'</div></div>')+
+            cx('midMeta','conversas','<div class="tl"><div class="lb">Conversas</div><div class="vl num">'+fInt(mr.conversas)+'</div></div>')+
+            cx('midMeta','ctr','<div class="tl"><div class="lb">CTR</div><div class="vl num">'+fPct(mr.ctr)+'</div></div>')+
+            cx('midMeta','investido','<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(mr.gasto)+'</div></div>')+
+            cx('midMeta','custoConversa','<div class="tl"><div class="lb">Custo/conversa</div><div class="vl num">'+(mr.custoConversa!=null?fMoney(mr.custoConversa):'—')+'</div></div>')+
+            (mr.frequencia!=null?cx('midMeta','frequencia','<div class="tl"><div class="lb">Frequência</div><div class="vl num">'+fNum(mr.frequencia)+'x</div></div>'):'')+
+            cx('midMeta','impressoes','<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(mr.impressoes)+'</div></div>')+
           '</div>';
         // campanhas do Meta (junto dos números do Meta)
         var mcamps=(m.campanhas||[]);
@@ -564,8 +579,9 @@
         fetch(API+'/cliente-portal/admin/painel-bloco/'+encodeURIComponent(adminCli),{method:'POST',headers:{'Authorization':'Bearer '+somTok,'Content-Type':'application/json'},body:JSON.stringify({bloco:key,on:on})})
           .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
           .then(function(res){ if(res&&Array.isArray(res.ocultos))oc=res.ocultos.slice();
-            var w=chk.closest('.blk'); if(w)w.classList.toggle('off-eq',!on);
-            var s=w&&w.querySelector('.selo');
+            // caixinha (tile) atualiza só a si; bloco atualiza selo + esmaecido
+            var w=chk.closest('.cxw')||chk.closest('.blk'); if(w)w.classList.toggle('off-eq',!on);
+            var s=w?w.querySelector('.selo'):null;
             if(s){s.textContent=on?'VISÍVEL PRO CLIENTE':'OCULTO PRO CLIENTE';s.style.background=on?'#EAF3DE':'#FEE2E2';s.style.color=on?'#27500A':'#991B1B';}
           }).catch(function(){chk.checked=!on;}).then(function(){chk.disabled=false;});
       });
