@@ -182,6 +182,14 @@
   .map-leg i{width:11px;height:11px;border-radius:50%;background:rgba(66,133,244,.5);border:2px solid var(--blue);display:inline-block}
   .foot{margin-top:36px;text-align:center;font-size:11.5px;color:var(--mut2)}
 
+  /* quadradinho "Cliente vê" por bloco — só na visão da equipe (mesmo padrão do candidato) */
+  .blk+.blk{margin-top:14px}
+  .blk.off-eq{opacity:.55}
+  .blk-ctl{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;padding:7px 12px;border:1px dashed var(--line);border-radius:11px;background:var(--card)}
+  .blk-ctl .selo{font-size:10px;font-weight:800;letter-spacing:.05em;padding:3px 8px;border-radius:99px}
+  .blk-ctl label{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--mut);cursor:pointer;user-select:none}
+  .blk-ctl input{width:16px;height:16px;cursor:pointer;accent-color:var(--grn);margin:0}
+
   @media (max-width:720px){
     .kpis{grid-template-columns:1fr 1fr} .fmts{grid-template-columns:1fr} .tiles{grid-template-columns:1fr 1fr}
     .two{grid-template-columns:1fr} .big3{grid-template-columns:1fr} .ir{grid-template-columns:100px 1fr auto}
@@ -318,6 +326,17 @@
   function render(d){
     mapaPts=null;
     var cli=d.cliente||{}, org=d.organico||{}, mid=d.midia||{}, ld=d.leituraDoDia||{}, lr=d.leituras||{};
+    var oc=Array.isArray(d.ocultos)?d.ocultos.slice():[];
+    // Um "quadradinho" por bloco de info: na visão da equipe cada bloco ganha a chave
+    // "Cliente vê" (mesmo padrão do candidato); na visão do cliente, bloco desmarcado some.
+    function blk(key,html){
+      if(!html) return '';
+      var on=oc.indexOf(key)<0;
+      if(modo!=='admin') return on?('<div class="blk">'+html+'</div>'):'';
+      return '<div class="blk'+(on?'':' off-eq')+'" data-b="'+key+'">'+html+
+        '<div class="blk-ctl no-print"><span class="selo" style="background:'+(on?'#EAF3DE':'#FEE2E2')+';color:'+(on?'#27500A':'#991B1B')+'">'+(on?'VISÍVEL PRO CLIENTE':'OCULTO PRO CLIENTE')+'</span>'+
+        '<label>Cliente vê <input type="checkbox" data-bk="'+key+'" '+(on?'checked':'')+'></label></div></div>';
+    }
     document.title='Meu Painel · '+(cli.nome||'Maracatu');
     var h='<div class="wrap">';
 
@@ -340,75 +359,73 @@
 
     // leitura do dia — leve, com a linha fina das 4 cores como assinatura
     if(ld&&(ld.headline||ld.texto)){
-      h+='<div class="hero"><div class="band4"><i></i><i></i><i></i><i></i></div>'+
+      h+=blk('leituraDia','<div class="hero"><div class="band4"><i></i><i></i><i></i><i></i></div>'+
         '<div class="k">Leitura da equipe</div>'+
         '<h1>'+esc(ld.headline||'')+'</h1>'+
-        '<p>'+esc(ld.texto||'')+'</p></div>';
+        '<p>'+esc(ld.texto||'')+'</p></div>');
     }
 
     // ═══ ENGAJAMENTO ORGÂNICO ═══
     if(org&&org.resumo){
       var r=org.resumo, va=r.vsAnterior||{};
-      h+='<div class="sec"><div class="sec-h">'+IC_IG+'<h2>Engajamento no Instagram</h2>'+(org.username?'<span class="sub">@'+esc(org.username)+'</span>':'')+'</div>'+
-        '<div class="kpis">'+
+      var bIG='';
+      bIG+=blk('igResumo','<div class="kpis">'+
           '<div class="kpi b"><div class="lb">Contas alcançadas</div><div class="vl num">'+fMil(r.alcance)+'</div>'+delta(va.alcance)+'</div>'+
           '<div class="kpi g"><div class="lb">Engajamento</div><div class="vl num">'+fPct(r.taxaEngajamento)+'</div>'+delta(va.engaj,'vs. anterior',true)+'</div>'+
           '<div class="kpi a"><div class="lb">Seguidores</div><div class="vl num">'+fMil(r.seguidores)+'</div>'+(r.saldoSeguidores!=null?deltaAbs(r.saldoSeguidores):'')+'</div>'+
           '<div class="kpi"><div class="lb">Publicações</div><div class="vl num">'+fInt(r.posts)+'</div>'+(va.posts!=null?deltaAbs(va.posts):'')+'</div>'+
-        '</div>';
-      h+=notaEquipe(lr.instagram);
+        '</div>'+notaEquipe(lr.instagram));
 
       // qualidade das interações
       var e=org.engajamento||{};
       var maxi=Math.max(e.curtidas||0,e.comentarios||0,e.compartilhamentos||0,e.salvamentos||0)||1;
       var irow=function(l,v,cor){var w=Math.max(3,Math.round((v||0)/maxi*100));return '<div class="ir"><span class="l">'+l+'</span><span class="t"><span class="f" style="width:'+w+'%;background:'+cor+'"></span></span><span class="v num">'+fInt(v)+'</span></div>';};
       if((e.curtidas||e.comentarios||e.salvamentos||e.compartilhamentos)){
-        h+='<div class="card" style="margin-top:14px"><h3>Qualidade das interações</h3><div class="ibar">'+
+        bIG+=blk('igInteracoes','<div class="card"><h3>Qualidade das interações</h3><div class="ibar">'+
           irow('Curtidas',e.curtidas,'#EA4335')+irow('Comentários',e.comentarios,'#F9A825')+
           irow('Compartilhamentos',e.compartilhamentos,'#188038')+irow('Salvamentos',e.salvamentos,'#1a73e8')+
-        '</div></div>';
+        '</div></div>');
       }
 
       // formatos
       var fc={'Reels':'#EA4335','Carrossel':'#188038','Estático':'#8a8a8a'};
       var fmts=(org.formatos||[]).filter(function(f){return f.publicados>0;});
       if(fmts.length){
-        h+='<div class="card"><h3>Desempenho por formato'+(org.melhorFormato?' · <span style="color:var(--grnink)">'+esc(org.melhorFormato)+' na frente</span>':'')+'</h3><div class="fmts">'+
+        bIG+=blk('igFormatos','<div class="card"><h3>Desempenho por formato'+(org.melhorFormato?' · <span style="color:var(--grnink)">'+esc(org.melhorFormato)+' na frente</span>':'')+'</h3><div class="fmts">'+
           fmts.map(function(f){return '<div class="fmt"><div class="top"><span class="tag" style="background:'+(fc[f.label]||'#666')+'">'+esc(f.label)+'</span></div>'+
             '<div class="big num">'+fMil(f.alcanceMedio)+' <small>alcance médio</small></div>'+
             '<ul><li><span>Publicados</span><b>'+f.publicados+'</b></li>'+
             '<li><span>Salvamentos méd.</span><b>'+f.salvamentosMedio+'</b></li>'+
             '<li><span>Compart. méd.</span><b>'+f.compartMedio+'</b></li>'+
             '<li><span>Comentários méd.</span><b>'+f.comentMedio+'</b></li></ul></div>';}).join('')+
-        '</div></div>';
-        h+=notaEquipe(lr.formatos);
+        '</div></div>'+notaEquipe(lr.formatos));
       }
 
       // top posts
       var tops=(org.melhores||[]).slice(0,3);
       if(tops.length){
-        h+='<div class="card"><h3>O que mais mobilizou</h3><div class="posts">'+
+        bIG+=blk('igTop','<div class="card"><h3>O que mais mobilizou</h3><div class="posts">'+
           tops.map(function(p,i){return '<a class="post" href="'+esc(p.link||'#')+'" target="_blank" rel="noopener">'+
             '<span class="rk">'+(i+1)+'</span>'+
             (p.img?'<img class="th" src="'+esc(p.img)+'">':'<span class="th"></span>')+
             '<div class="mid"><div class="tp">'+esc(p.tipoLabel||'')+'</div><div class="tx">'+esc(p.texto||'')+'</div>'+
             '<div class="met">'+fMil(p.alcance)+' alcançadas · '+fInt(p.likes)+' curtidas · '+fInt(p.comentarios)+' coment.</div></div>'+
             '<div class="eng"><b class="num">'+fPct(p.engajPct)+'</b><span>engaj.</span></div></a>';}).join('')+
-        '</div></div>';
-        h+=notaEquipe(lr.mobilizou);
+        '</div></div>'+notaEquipe(lr.mobilizou));
       }
 
       // leitura + direcionamentos
       if(org.leitura||( (org.proximos||[]).length)){
-        h+='<div class="card"><h3>Leitura do período</h3>';
-        if(org.leitura) h+='<p style="font-size:13.5px;line-height:1.7;color:var(--ink2);margin:0 0 4px">'+esc(org.leitura)+'</p>';
+        var lc='<div class="card"><h3>Leitura do período</h3>';
+        if(org.leitura) lc+='<p style="font-size:13.5px;line-height:1.7;color:var(--ink2);margin:0 0 4px">'+esc(org.leitura)+'</p>';
         if((org.proximos||[]).length){
-          h+='<h3 style="margin-top:18px">Direcionamentos para o próximo mês</h3>'+
+          lc+='<h3 style="margin-top:18px">Direcionamentos para o próximo mês</h3>'+
             org.proximos.map(function(p,i){return '<div class="dir"><span class="n">'+(i+1)+'</span><div><b>'+esc(p.titulo||'')+'</b><p>'+esc(p.descricao||'')+'</p></div></div>';}).join('');
         }
-        h+='</div>';
+        lc+='</div>';
+        bIG+=blk('igLeitura',lc);
       }
-      h+='</div>';
+      if(bIG) h+='<div class="sec"><div class="sec-h">'+IC_IG+'<h2>Engajamento no Instagram</h2>'+(org.username?'<span class="sub">@'+esc(org.username)+'</span>':'')+'</div>'+bIG+'</div>';
     } else {
       h+='<div class="sec"><div class="sec-h">'+IC_IG+'<h2>Engajamento no Instagram</h2></div><div class="emcoleta">Seu Instagram ainda está sendo conectado. Assim que a coleta começar, seus números aparecem aqui.</div></div>';
     }
@@ -416,12 +433,12 @@
     // ═══ MÍDIA PAGA ═══
     if(mid&&(mid.google||mid.meta)){
       var t=mid.totais||{};
-      h+='<div class="sec"><div class="sec-h"><span class="ic" style="background:#111"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><h2>Campanhas (mídia paga)</h2></div>'+
-        '<div class="big3">'+
+      var bMid='';
+      bMid+=blk('midResumo','<div class="big3">'+
           '<div class="b3"><div class="lb">Investimento</div><div class="vl num">'+fMoney(t.investimento)+'</div><div class="em">no período</div></div>'+
           '<div class="b3"><div class="lb">Contatos gerados</div><div class="vl num">'+fInt(t.contatos)+'</div><div class="em">'+fInt(t.contatosGoogle)+' Google · '+fInt(t.contatosMeta)+' Meta</div></div>'+
           '<div class="b3"><div class="lb">Custo por contato</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>'+
-        '</div>';
+        '</div>');
 
       // ── CONSOLIDADO (Google + Meta juntos): todos os campos somáveis dos dois canais ──
       var g=mid.google, m=mid.meta;
@@ -429,15 +446,14 @@
       var impr=(gr.impressoes||0)+(mr.impressoes||0);
       var clq=(gr.cliques||0)+(mr.cliques||0);
       var ctrC=impr>0?(clq/impr*100):null;
-      h+='<div class="card"><h3>Totais Google + Meta</h3><div class="tiles">'+
+      bMid+=blk('midTotais','<div class="card"><h3>Totais Google + Meta</h3><div class="tiles">'+
         '<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(t.investimento)+'</div></div>'+
         '<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(impr)+'</div></div>'+
         '<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(clq)+'</div></div>'+
         '<div class="tl"><div class="lb">CTR combinado</div><div class="vl num">'+(ctrC!=null?fPct(ctrC):'—')+'</div></div>'+
         (mr.alcance?'<div class="tl"><div class="lb">Alcance (Meta)</div><div class="vl num">'+fInt(mr.alcance)+'</div></div>':'')+
         '<div class="tl"><div class="lb">Contatos</div><div class="vl num">'+fInt(t.contatos)+'</div></div>'+
-      '</div></div>';
-      h+=notaEquipe(lr.consolidado);
+      '</div></div>'+notaEquipe(lr.consolidado));
 
       // ── Quem sua campanha alcança: gênero × dispositivo × faixa etária (fusão dos 2 canais) ──
       var gd=(g&&g.demografia)||{};
@@ -447,19 +463,19 @@
       var dispMap={}; (((m&&m.dispositivos)||[]).concat((g&&g.dispositivos)||[])).forEach(function(x){ dispMap[x.label]=(dispMap[x.label]||0)+x.valor; });
       var disp=Object.keys(dispMap).map(function(k){return {label:k,valor:dispMap[k]};});
       if(gen.length||disp.length||idade.length){
-        h+='<div class="card"><h3>Quem sua campanha alcança</h3><div class="two">';
-        if(gen.length) h+='<div><div class="mh">Gênero</div>'+pizza(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
-        if(disp.length) h+='<div><div class="mh">Dispositivo</div>'+pizza(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825',TV:'#9aa0aa'})+'</div>';
-        h+='</div>';
-        if(idade.length) h+='<div style="margin-top:16px"><div class="mh">Faixa etária</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
-        h+='</div>';
-        h+=notaEquipe(lr.publico);
+        var pb='<div class="card"><h3>Quem sua campanha alcança</h3><div class="two">';
+        if(gen.length) pb+='<div><div class="mh">Gênero</div>'+pizza(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
+        if(disp.length) pb+='<div><div class="mh">Dispositivo</div>'+pizza(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825',TV:'#9aa0aa'})+'</div>';
+        pb+='</div>';
+        if(idade.length) pb+='<div style="margin-top:16px"><div class="mh">Faixa etária</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
+        pb+='</div>';
+        bMid+=blk('midPublico',pb+notaEquipe(lr.publico));
       }
 
       // Google
       var g=mid.google;
       if(g&&g.resumo){var gr=g.resumo;
-        h+='<div class="card"><h3 style="display:flex;align-items:center;gap:8px">'+IC_G+' Google Ads</h3>'+
+        var gc='<div class="card"><h3 style="display:flex;align-items:center;gap:8px">'+IC_G+' Google Ads</h3>'+
           '<div class="tiles">'+
             '<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(gr.cliques)+'</div></div>'+
             '<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(gr.impressoes)+'</div></div>'+
@@ -471,7 +487,7 @@
         // campanhas ATIVAS do Google (junto dos números do Google) — pausadas não aparecem
         var gcamps=(gr.campanhas||[]).filter(function(c){return String(c.status||'').toUpperCase()==='ENABLED';});
         if(gcamps.length){
-          h+='<div class="mh" style="margin:16px 0 6px">Campanhas ativas · '+gcamps.length+'</div>'+
+          gc+='<div class="mh" style="margin:16px 0 6px">Campanhas ativas · '+gcamps.length+'</div>'+
             '<table><tr><th>Campanha</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Conversões</th></tr>'+
             gcamps.map(function(c){
               return '<tr><td class="k">'+esc(c.nome)+'</td>'+
@@ -481,25 +497,26 @@
             }).join('')+'</table>';
         }
         var kw=(g.termos||[]).slice(0,6);
-        if(kw.length){ h+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
+        if(kw.length){ gc+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
           kw.map(function(x){return '<tr><td class="k">'+esc(x.termo)+'</td><td class="n">'+fInt(x.cliques)+'</td><td class="n">'+fNum(x.conversoes)+'</td><td class="n">'+fMoney(x.custo)+'</td></tr>';}).join('')+'</table>'; }
         var cid=(g.cidades||[]).slice(0,10);
+        var gOculto=(modo!=='admin'&&oc.indexOf('midGoogle')>=0);
         if(cid.length){
-          h+='<div class="mh" style="margin:18px 0 8px">Onde suas campanhas rodaram</div>';
-          // mapa se houver coordenadas geocodificadas
+          gc+='<div class="mh" style="margin:18px 0 8px">Onde suas campanhas rodaram</div>';
+          // mapa se houver coordenadas geocodificadas (só quando o bloco vai aparecer)
           var comGeo=cid.filter(function(c){return c.lat&&c.lng;});
-          if(comGeo.length){ h+='<div id="mapaCli"></div><div class="map-leg"><i></i> tamanho do círculo = volume de cliques na cidade</div>'; mapaPts=comGeo; }
-          h+='<table style="margin-top:12px"><tr><th>Cidade</th><th class="n">Cliques</th><th class="n">Impressões</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
+          if(comGeo.length){ gc+='<div id="mapaCli"></div><div class="map-leg"><i></i> tamanho do círculo = volume de cliques na cidade</div>'; if(!gOculto) mapaPts=comGeo; }
+          gc+='<table style="margin-top:12px"><tr><th>Cidade</th><th class="n">Cliques</th><th class="n">Impressões</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
           cid.map(function(c){return '<tr><td class="k">'+esc(c.cidade)+'</td><td class="n">'+fInt(c.cliques)+'</td><td class="n">'+fInt(c.impressoes)+'</td><td class="n">'+fNum(c.conversoes)+'</td><td class="n">'+fMoney(c.custo)+'</td></tr>';}).join('')+'</table>';
         }
-        h+='</div>';
-        h+=notaEquipe(lr.google);
+        gc+='</div>';
+        bMid+=blk('midGoogle',gc+notaEquipe(lr.google));
       }
 
       // Meta
       var m=mid.meta;
       if(m&&m.resumo){var mr=m.resumo;
-        h+='<div class="card"><h3 style="display:flex;align-items:center;gap:8px">'+IC_M+' Facebook & Instagram Ads</h3>'+
+        var mc='<div class="card"><h3 style="display:flex;align-items:center;gap:8px">'+IC_M+' Facebook & Instagram Ads</h3>'+
           '<div class="tiles">'+
             '<div class="tl"><div class="lb">Alcance</div><div class="vl num">'+fInt(mr.alcance)+'</div></div>'+
             '<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(mr.cliques)+'</div></div>'+
@@ -513,21 +530,21 @@
         // campanhas do Meta (junto dos números do Meta)
         var mcamps=(m.campanhas||[]);
         if(mcamps.length){
-          h+='<div class="mh" style="margin:16px 0 6px">Campanhas · '+mcamps.length+' ativa'+(mcamps.length!=1?'s':'')+'</div>'+
+          mc+='<div class="mh" style="margin:16px 0 6px">Campanhas · '+mcamps.length+' ativa'+(mcamps.length!=1?'s':'')+'</div>'+
             '<table><tr><th>Campanha</th><th class="n">Orçamento/dia</th></tr>'+
             mcamps.map(function(c){return '<tr><td class="k">'+esc(c.nome)+'</td><td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td></tr>';}).join('')+'</table>';
         }
         var an=(m.anuncios||[]).slice(0,5);
-        if(an.length){ h+='<table><tr><th>Anúncio</th><th class="n">Alcance</th><th class="n">Cliques</th><th class="n">Conversas</th></tr>'+
+        if(an.length){ mc+='<table><tr><th>Anúncio</th><th class="n">Alcance</th><th class="n">Cliques</th><th class="n">Conversas</th></tr>'+
           an.map(function(a){return '<tr><td class="k"><span class="adn">'+(a.thumb?'<img src="'+esc(a.thumb)+'">':'')+'<span>'+esc(a.nome)+'</span></span></td><td class="n">'+fInt(a.alcance)+'</td><td class="n">'+fInt(a.cliques)+'</td><td class="n">'+fInt(a.conversas)+'</td></tr>';}).join('')+'</table>'; }
         var plat=(m.plataformas||[]).filter(function(p){return p.gasto>0||p.cliques>0;});
-        if(plat.length){ h+='<table style="margin-top:12px"><tr><th>Plataforma</th><th class="n">Cliques</th><th class="n">Alcance</th><th class="n">Investido</th></tr>'+
+        if(plat.length){ mc+='<table style="margin-top:12px"><tr><th>Plataforma</th><th class="n">Cliques</th><th class="n">Alcance</th><th class="n">Investido</th></tr>'+
           plat.map(function(p){return '<tr><td class="k">'+esc(p.plataforma)+'</td><td class="n">'+fInt(p.cliques)+'</td><td class="n">'+fInt(p.alcance)+'</td><td class="n">'+fMoney(p.gasto)+'</td></tr>';}).join('')+'</table>'; }
-        h+='</div>';
-        h+=notaEquipe(lr.meta);
+        mc+='</div>';
+        bMid+=blk('midMeta',mc+notaEquipe(lr.meta));
       }
-      h+=notaEquipe(lr.fechamento);
-      h+='</div>';
+      bMid+=blk('fechamento',notaEquipe(lr.fechamento));
+      if(bMid) h+='<div class="sec"><div class="sec-h"><span class="ic" style="background:#111"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><h2>Campanhas (mídia paga)</h2></div>'+bMid+'</div>';
     }
 
     h+='<div class="foot">Painel gerado pela Maracatu Digital · maracatumktdigital.com</div>';
@@ -538,6 +555,19 @@
     // liga o filtro de período
     Array.prototype.forEach.call(document.querySelectorAll('.chip[data-p]'),function(c){
       c.addEventListener('click',function(){ per=c.getAttribute('data-p'); carregar(); });
+    });
+    // liga os quadradinhos "Cliente vê" (visão da equipe): salva no backend e atualiza o selo
+    if(modo==='admin') Array.prototype.forEach.call(document.querySelectorAll('input[data-bk]'),function(chk){
+      chk.addEventListener('change',function(){
+        var key=chk.getAttribute('data-bk'), on=chk.checked; chk.disabled=true;
+        fetch(API+'/cliente-portal/admin/painel-bloco/'+encodeURIComponent(adminCli),{method:'POST',headers:{'Authorization':'Bearer '+somTok,'Content-Type':'application/json'},body:JSON.stringify({bloco:key,on:on})})
+          .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+          .then(function(res){ if(res&&Array.isArray(res.ocultos))oc=res.ocultos.slice();
+            var w=chk.closest('.blk'); if(w)w.classList.toggle('off-eq',!on);
+            var s=w&&w.querySelector('.selo');
+            if(s){s.textContent=on?'VISÍVEL PRO CLIENTE':'OCULTO PRO CLIENTE';s.style.background=on?'#EAF3DE':'#FEE2E2';s.style.color=on?'#27500A':'#991B1B';}
+          }).catch(function(){chk.checked=!on;}).then(function(){chk.disabled=false;});
+      });
     });
   }
 
