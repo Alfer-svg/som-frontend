@@ -497,6 +497,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     </div>
     <div class="toggle" id="toggle" style="display:flex">
       <button data-per="tudo" class="on">Tudo</button>
+      <button data-per="mes">Mês</button>
       <button data-per="hoje">Hoje</button>
       <button data-per="custom">Período…</button>
     </div>
@@ -1455,25 +1456,26 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     if(tg) tg.addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b)return; var per=b.dataset.per;
       if(per==='custom'){ if(cb)cb.style.display='flex'; marcar('custom'); return; }
       if(cb)cb.style.display='none'; marcar(per);
-      if(per==='tudo') window.__recarregarPainel(null,null);
+      if(per==='tudo') window.__recarregarPainel(null,null,'tudo');
+      else if(per==='mes') window.__recarregarPainel(null,null,'mes');
       else if(per==='hoje'){ var h=new Date().toISOString().slice(0,10); window.__recarregarPainel(h,h); }
     });
     var ap=document.getElementById('cApply');
     if(ap) ap.addEventListener('click',function(){ var a=ci&&ci.value, z=cf&&cf.value; if(!a||!z)return; if(a>z){var t=a;a=z;z=t;} marcar('custom'); window.__recarregarPainel(a,z); });
   }
-  window.__recarregarPainel=async function(de,ate){
+  window.__recarregarPainel=async function(de,ate,periodo){
     var ctx=window.__panelCtx||{modo:'cand'};
-    var qs=(de&&ate)?('?de='+encodeURIComponent(de)+'&ate='+encodeURIComponent(ate)):'';
+    var qs=(de&&ate)?('?de='+encodeURIComponent(de)+'&ate='+encodeURIComponent(ate)):(periodo?('?periodo='+periodo):'');
     var url,headers;
     if(ctx.modo==='admin'){ url=API+'/cliente-portal/admin/painel-candidato/'+ctx.clienteId+qs; headers={'Authorization':'Bearer '+ctx.somTok}; }
     else { url=API+'/cliente-portal/painel-candidato'+qs; headers={'Authorization':'Bearer '+token}; }
-    try{ var r=await fetch(url,{headers:headers}); if(r.ok){ var d=await r.json(); if(window.__aplicarReal)window.__aplicarReal(d); } }catch(e){}
+    try{ var r=await fetch(url,{headers:headers}); if(r.ok){ var d=await r.json(); if(window.__aplicarReal)window.__aplicarReal(d); montarComparativoMensal(d); } }catch(e){}
   };
   async function abrirPainel(){
     window.__panelCtx={modo:'cand'};
-    try{ var r=await fetch(API+'/cliente-portal/painel-candidato',{headers:{'Authorization':'Bearer '+token}});
+    try{ var r=await fetch(API+'/cliente-portal/painel-candidato?periodo=tudo',{headers:{'Authorization':'Bearer '+token}});
       if(r.status===401||r.status===403){ localStorage.removeItem('cliente_token'); localStorage.removeItem('cand_token'); location.replace('cliente.html'); return; }
-      if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato); if(window.__aplicarReal)window.__aplicarReal(d); montarLiberadosCandidato(d); mostrarAlertaVideo(d.alertaVideo);} }catch(e){}
+      if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato); if(window.__aplicarReal)window.__aplicarReal(d); montarLiberadosCandidato(d); montarComparativoMensal(d); mostrarAlertaVideo(d.alertaVideo);} }catch(e){}
     id('loginScreen').style.display='none';
     ligarProtecao(); iniciarSessao();
     if(window.__replay) setTimeout(window.__replay,60);
@@ -1507,6 +1509,37 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       apiPost('/cliente-portal/cand/alerta-video-ack').catch(function(){}).then(function(){ ov.remove(); });
     });
   }
+  // COMPARATIVO MÊS A MÊS (Dinho 01/08) — barras dos últimos 6 meses + variação
+  // do mês corrente (parcial) contra o mês fechado anterior.
+  function montarComparativoMensal(d){
+    var cm=d&&d.comparativoMensal; if(!cm||!cm.meses||!cm.meses.length) return;
+    var el=document.getElementById('cardComparativoMes');
+    if(!el){ el=document.createElement('section'); el.className='card'; el.id='cardComparativoMes'; el.style.cssText='margin:0 0 14px';
+      var app=document.querySelector('.app'); if(app) app.appendChild(el); }
+    var nf=function(n){return Number(n||0).toLocaleString('pt-BR')};
+    var brl=function(n){return 'R$ '+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})};
+    var max=Math.max.apply(null,cm.meses.map(function(m){return m.alcance||0}))||1;
+    var barras=cm.meses.map(function(m){
+      var h=Math.max(4,Math.round((m.alcance/max)*110));
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px">'
+        +'<div style="font-size:11px;color:#6c7480">'+nf(m.alcance)+'</div>'
+        +'<div title="'+brl(m.gasto)+' · '+nf(m.contatos)+' contatos" style="width:100%;max-width:46px;height:'+h+'px;border-radius:6px 6px 0 0;background:'+(m.parcial?'#F4B400':'#1E9E4F')+'"></div>'
+        +'<div style="font-size:11px;color:#3b4048;font-weight:600">'+m.rotulo+(m.parcial?'*':'')+'</div></div>';
+    }).join('');
+    var v=cm.variacao||{};
+    var chip=function(rot,val,inverso){
+      if(val==null) return '';
+      var bom=inverso?val<0:val>0;
+      var cor=val===0?'#6c7480':(bom?'#1E9E4F':'#C5221F');
+      return '<span style="font-size:12px;color:'+cor+';font-weight:700;margin-right:14px">'+rot+' '+(val>0?'+':'')+val+'%</span>';
+    };
+    el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+      +'<div style="font-weight:800;font-size:13px">📊 Mês a mês</div>'
+      +'<div style="font-size:11.5px;color:#9aa0aa">'+(cm.atual?cm.atual.rotulo:'')+' vs '+(cm.anterior?cm.anterior.rotulo:'—')+'</div></div>'
+      +'<div style="display:flex;align-items:flex-end;gap:8px;height:150px;margin:14px 0 4px">'+barras+'</div>'
+      +'<div style="margin-top:6px">'+chip('Alcance',v.alcance)+chip('Contatos',v.contatos)+chip('Investimento',v.gasto)+chip('Custo por pessoa',v.custoPessoa,true)+'</div>'
+      +'<div style="font-size:11px;color:#9aa0aa;margin-top:8px">* mês corrente ainda em andamento. '+(cm.aviso||'')+'</div>';
+  }
   function ligarProtecao(){
     document.addEventListener('keyup',function(e){ if(token&&e.key==='PrintScreen')capturaDetectada('printscreen'); });
     document.addEventListener('keydown',function(e){ if(token&&e.metaKey&&e.shiftKey&&['Digit3','Digit4','Digit5'].indexOf(e.code)>=0)capturaDetectada('tela-mac'); });
@@ -1522,7 +1555,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   async function abrirComoAdmin(clienteId,somTok){
     window.__panelCtx={modo:'admin',clienteId:clienteId,somTok:somTok};
     try{
-      var r=await fetch(API+'/cliente-portal/admin/painel-candidato/'+clienteId,{headers:{'Authorization':'Bearer '+somTok}});
+      var r=await fetch(API+'/cliente-portal/admin/painel-candidato/'+clienteId+'?periodo=tudo',{headers:{'Authorization':'Bearer '+somTok}});
       if(!r.ok)throw new Error('sem acesso');
       var d=await r.json();
       info={nome:(d.candidato||{}).nome||'Candidato',email:''};
@@ -1532,6 +1565,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       document.body.classList.add('equipe'); // esconde botões de suporte (são canal do candidato, não da equipe)
       var b=document.createElement('div'); b.id='badgeAdmin'; b.textContent='Visão da equipe · '+(info.nome); document.body.appendChild(b);
       montarAcessos(clienteId,somTok).then(function(){ montarLogOtimizacoes(clienteId,somTok,info.nome); }); // quadros da equipe, na ordem
+      montarComparativoMensal(d);
       montarDiagnostico(clienteId,somTok); // diagnóstico interno no topo (só a equipe vê)
       montarAlertaVideoEquipe(d); // status do alerta bloqueante de vídeo (quem clicou e quando)
       window.__cliId=clienteId; window.__somTok=somTok; window.__liberados=(d.liberados||[]).slice(); // pra a chave de liberação

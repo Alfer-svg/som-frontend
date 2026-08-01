@@ -2365,7 +2365,7 @@
           <div class="modal-body">
             <div class="text-3 fs-12 mb-2">Escolha o candidato pra abrir a visão da equipe:</div>
             <template x-for="c in candClientes()" :key="'cand'+c.id">
-              <div class="nav-item" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px" @click="candModal=false; window.open('candidato.html?cliente='+encodeURIComponent(c.id)+'&v=261','_blank')">
+              <div class="nav-item" style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px" @click="candModal=false; window.open('candidato.html?cliente='+encodeURIComponent(c.id)+'&v=262','_blank')">
                 <span class="nav-icon"><i class="ph ph-user ic-ph"></i></span><span x-text="c.empresa || c.nome || '—'"></span>
               </div>
             </template>
@@ -3685,11 +3685,11 @@
             <select class="form-select fs-13" style="max-width:240px;font-weight:600" x-show="candClientes().length>1" x-model="candSel">
               <template x-for="c in candClientes()" :key="'candsel'+c.id"><option :value="c.id" x-text="c.empresa || c.nome || '—'"></option></template>
             </select>
-            <button class="btn btn-sm" @click="window.open('candidato.html?cliente='+encodeURIComponent(candSel)+'&v=261','_blank')" title="Abrir em tela cheia, numa aba própria"><i class="ph ph-arrow-square-out ic-ph"></i> Tela cheia</button>
+            <button class="btn btn-sm" @click="window.open('candidato.html?cliente='+encodeURIComponent(candSel)+'&v=262','_blank')" title="Abrir em tela cheia, numa aba própria"><i class="ph ph-arrow-square-out ic-ph"></i> Tela cheia</button>
           </div>
         </div>
         <!-- altura calculada em tempo real (script fitCand abaixo): o iframe termina exatamente no fim da janela — sem faixa cinza sobrando e sem rolagem externa -->
-        <iframe id="candFrame" allowfullscreen allow="fullscreen" x-show="candSel" :src="page==='candidato' && candSel ? ('candidato.html?cliente='+encodeURIComponent(candSel)+'&v=261') : ''" style="width:100%;height:60vh;min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
+        <iframe id="candFrame" allowfullscreen allow="fullscreen" x-show="candSel" :src="page==='candidato' && candSel ? ('candidato.html?cliente='+encodeURIComponent(candSel)+'&v=262') : ''" style="width:100%;height:60vh;min-height:520px;border:1px solid var(--border);border-radius:14px;background:#fff"></iframe>
       </section>
       <script>
       // Ajusta o iframe do Painel do Candidato pra terminar EXATO no fim da janela.
