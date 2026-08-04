@@ -605,13 +605,17 @@
             cx('midGoogle','investido','<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(gr.gasto)+'</div></div>')+
             cx('midGoogle','custoConversao','<div class="tl"><div class="lb">Custo/conversão</div><div class="vl num">'+(gr.custoLead!=null?fMoney(gr.custoLead):'—')+'</div></div>')+
           '</div>';
-        // campanhas ATIVAS do Google (junto dos números do Google) — pausadas não aparecem
-        var gcamps=(gr.campanhas||[]).filter(function(c){return String(c.status||'').toUpperCase()==='ENABLED';});
+        // campanhas DO PERÍODO (Google): quem teve entrega no intervalo entra, ativa OU
+        // pausada (regra da Joana 03/08 — pausada no meio do mês tem que sair no relatório);
+        // ativa sem entrega também aparece (zerada).
+        var stBadge=function(st){st=String(st||'').toUpperCase();if(st==='ENABLED'||st==='ACTIVE')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#EAF3DE;color:#27500A">ATIVA</span>';if(st==='PAUSED')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#FEF3E2;color:#92400E">PAUSADA</span>';return st?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--hair);color:var(--mut)">'+esc(st)+'</span>':'—';};
+        var gcamps=(gr.campanhas||[]).filter(function(c){var st=String(c.status||'').toUpperCase();return st==='ENABLED'||(c.gasto||0)>0||(c.impressoes||0)>0||(c.conversoes||0)>0;});
         if(gcamps.length){
-          gc+='<div class="mh" style="margin:16px 0 6px">Campanhas ativas · '+gcamps.length+'</div>'+
-            '<table><tr><th>Campanha</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Conversões</th></tr>'+
+          gc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+gcamps.length+'</div>'+
+            '<table><tr><th>Campanha</th><th>Status</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Conversões</th></tr>'+
             gcamps.map(function(c){
               return '<tr><td class="k">'+esc(c.nome)+'</td>'+
+                '<td style="text-align:center">'+stBadge(c.status)+'</td>'+
                 '<td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td>'+
                 '<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td>'+
                 '<td class="n">'+(c.conversoes!=null?fNum(c.conversoes):'—')+'</td></tr>';
@@ -648,12 +652,18 @@
             (mr.frequencia!=null?cx('midMeta','frequencia','<div class="tl"><div class="lb">Frequência</div><div class="vl num">'+fNum(mr.frequencia)+'x</div></div>'):'')+
             cx('midMeta','impressoes','<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(mr.impressoes)+'</div></div>')+
           '</div>';
-        // campanhas do Meta (junto dos números do Meta)
+        // campanhas do Meta DO PERÍODO (com entrega no intervalo, ativas ou pausadas)
+        var stBadgeM=function(st){st=String(st||'').toUpperCase();if(st==='ACTIVE'||st==='ENABLED')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#EAF3DE;color:#27500A">ATIVA</span>';if(st==='PAUSED'||st==='CAMPAIGN_PAUSED')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#FEF3E2;color:#92400E">PAUSADA</span>';return st?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--hair);color:var(--mut)">'+esc(st)+'</span>':'—';};
         var mcamps=(m.campanhas||[]);
+        var mTemMetrica=mcamps.some(function(c){return c.gasto!=null||c.status;});
         if(mcamps.length){
-          mc+='<div class="mh" style="margin:16px 0 6px">Campanhas · '+mcamps.length+' ativa'+(mcamps.length!=1?'s':'')+'</div>'+
-            '<table><tr><th>Campanha</th><th class="n">Orçamento/dia</th></tr>'+
-            mcamps.map(function(c){return '<tr><td class="k">'+esc(c.nome)+'</td><td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td></tr>';}).join('')+'</table>';
+          mc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+mcamps.length+'</div>'+
+            '<table><tr><th>Campanha</th>'+(mTemMetrica?'<th>Status</th>':'')+'<th class="n">Orçamento/dia</th>'+(mTemMetrica?'<th class="n">Investido</th><th class="n">Conversas</th>':'')+'</tr>'+
+            mcamps.map(function(c){return '<tr><td class="k">'+esc(c.nome)+'</td>'+
+              (mTemMetrica?'<td style="text-align:center">'+stBadgeM(c.status)+'</td>':'')+
+              '<td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td>'+
+              (mTemMetrica?'<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td><td class="n">'+(c.conversas!=null?fInt(c.conversas):'—')+'</td>':'')+
+              '</tr>';}).join('')+'</table>';
         }
         var an=(m.anuncios||[]).slice(0,5);
         if(an.length){ mc+='<table><tr><th>Anúncio</th><th class="n">Alcance</th><th class="n">Cliques</th><th class="n">Conversas</th></tr>'+
