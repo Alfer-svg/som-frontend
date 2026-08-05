@@ -1091,7 +1091,16 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   addEventListener('resize',()=>{drawMom(1);$$('.spark').forEach(c=>drawSpark(c,DATA[cur].mom));});
 
   window.__replay=function(){try{paint(cur);}catch(e){}try{tickCamp();}catch(e){}};
-  window.__setCand=function(c){try{if(!c)return;var nm=c.nome||c.empresa;if(nm){var h1=document.querySelector('.cand h1');if(h1)h1.textContent=nm;var av=document.querySelector('.ava');if(av){var ini=String(nm).trim().split(/\s+/).map(function(x){return x[0]||''}).slice(0,2).join('').toUpperCase();if(av.childNodes[0])av.childNodes[0].nodeValue=ini;}}if(c.numero){var nb=document.querySelector('.num-badge');if(nb)nb.textContent=c.numero;}var role=document.querySelector('.cand .role');if(role){role.innerHTML=(c.cargo?c.cargo:'Candidato')+' · '+(c.uf||'Pernambuco')+' · operado pela <b style="color:var(--blue)">Maracatu Digital</b>';}}catch(e){}};
+  window.__setCand=function(c){try{if(!c)return;var nm=c.nome||c.empresa;if(nm){var h1=document.querySelector('.cand h1');if(h1)h1.textContent=nm;var av=document.querySelector('.ava');if(av){var ini=String(nm).trim().split(/\s+/).map(function(x){return x[0]||''}).slice(0,2).join('').toUpperCase();if(av.childNodes[0])av.childNodes[0].nodeValue=ini;}}if(c.numero){var nb=document.querySelector('.num-badge');if(nb)nb.textContent=c.numero;}var role=document.querySelector('.cand .role');if(role){role.innerHTML=(c.cargo?c.cargo:'Candidato')+' · '+(c.uf||'Pernambuco')+' · operado pela <b style="color:var(--blue)">Maracatu Digital</b>';}
+  // A régua de votos do card é da eleição ESTADUAL (ALEPE/PSB, base 2022). Pra outro
+  // cargo (ex.: Deputada Federal) esconde o card e generaliza o cenário — régua errada
+  // é pior que nenhuma; a régua federal entra quando os números reais forem configurados.
+  var cg=String(c.cargo||'').toLowerCase();
+  if(cg&&cg.indexOf('estadual')<0){
+    var vA=document.getElementById('vAlvo');var pv=vA?vA.closest('.panel'):null;if(pv)pv.style.display='none';
+    var cen=document.getElementById('cenario');if(cen){var ct=cen.querySelector('.cen-txt');if(ct)ct.textContent='A eleição é proporcional, não majoritária: deputado raramente tem pesquisa própria. O termômetro é o topo da chapa e a força do partido/federação — a equipe da Maracatu acompanha as pesquisas registradas no TSE.';}
+  }
+  }catch(e){}};
 
   // ── DADOS REAIS: sobrescreve os cards demo com o que a API do painel entrega ──
   var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
