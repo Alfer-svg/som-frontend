@@ -609,6 +609,16 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     </div>
   </div>
 
+  <!-- BASE ELEITORAL 2022 (só candidato que já concorreu; preenchido pelo TSE) -->
+  <div class="panel reveal" id="baseEleCard" style="animation-delay:.34s;display:none">
+    <div class="p-head"><h3><span class="dot"></span>Base eleitoral 2022 — onde ela fez votos</h3><span class="chip">TSE</span></div>
+    <div id="baseEleResumo" style="font-size:13px;color:var(--mut);line-height:1.55;margin-bottom:12px"></div>
+    <div id="mapaEleitoral" style="height:380px;border-radius:12px;border:1px solid var(--line);margin-bottom:14px"></div>
+    <div style="font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Maiores redutos</div>
+    <div id="baseEleRank"></div>
+    <div id="baseEleFonte" style="font-size:11px;color:var(--mut);margin-top:12px"></div>
+  </div>
+
   <!-- PAUTAS + ADVERSÁRIOS -->
   <div class="row even">
     <div class="panel reveal" style="animation-delay:.38s"><div class="p-head"><h3><span class="dot"></span>Pautas que mais mobilizam</h3></div><div id="pautas"></div></div>
@@ -1160,6 +1170,32 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     var fs=document.getElementById('mapFs'); if(fs)fs.addEventListener('click',function(){setTimeout(function(){mp.invalidateSize();},60);});
     document.addEventListener('fullscreenchange',function(){setTimeout(function(){mp.invalidateSize();},150);}); // fullscreen nativo tb reajusta o Leaflet
   }
+  // BASE ELEITORAL 2022 — mapa Leaflet de redutos (círculo = votos por município, TSE).
+  function desenharMapaEleitoral(base){
+    var host=document.getElementById('mapaEleitoral'); if(!host||!window.L)return;
+    if(host._leaflet_id)return; // já desenhado
+    var pts=(base.pontos||[]).filter(function(p){return p.lat&&p.lng;});
+    if(!pts.length)return;
+    var mp=L.map('mapaEleitoral',{zoomControl:true,attributionControl:false,scrollWheelZoom:false});
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(mp);
+    var mx=Math.max.apply(null,pts.map(function(p){return p.votos;}))||1, bounds=[];
+    pts.forEach(function(p){
+      var rad=6+Math.sqrt(p.votos/mx)*26, col=heatColor(p.votos/mx*100);
+      L.circleMarker([p.lat,p.lng],{radius:rad,color:col,weight:2,fillColor:col,fillOpacity:.5}).addTo(mp)
+        .bindTooltip('<b>'+esc(p.nome)+'</b> · '+Number(p.votos).toLocaleString('pt-BR')+' votos ('+p.pct+'%)',{direction:'auto',opacity:.96});
+      bounds.push([p.lat,p.lng]);
+    });
+    if(bounds.length)mp.fitBounds(bounds,{padding:[30,30],maxZoom:10});
+    setTimeout(function(){mp.invalidateSize();},250);
+  }
+  function renderBaseEleitoral(base){
+    var host=document.getElementById('baseEleRank'); if(!host)return;
+    var pts=(base.pontos||[]).slice().sort(function(a,b){return b.votos-a.votos;});
+    var mx=pts.length?pts[0].votos:1;
+    host.innerHTML=pts.slice(0,12).map(function(p,i){
+      return '<div class="bar-row"><span class="nm" style="min-width:160px">'+(i+1)+'. '+esc(p.nome)+'</span><span class="bar-track"><i class="bar-fill" style="width:'+Math.round(p.votos/mx*100)+'%"></i></span><span class="vl tnum">'+Number(p.votos).toLocaleString('pt-BR')+' · '+p.pct+'%</span></div>';
+    }).join('');
+  }
   window.__aplicarReal=function(api){ try{
     if(!api)return;
     var pw=document.getElementById('painelWrap'); if(pw)pw.style.visibility='visible'; // dado real chegou — revela (nada de demo piscando)
@@ -1435,6 +1471,15 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     var gtg=document.querySelector('.gtag'); if(gtg&&IDX.valor!=null)gtg.innerHTML='▲ '+(IDX.valor>=70?'em alta':'estável');
     // mapa de calor real (Leaflet, pinos por bairro)
     if(M.disponivel&&M.pontos&&M.pontos.length){ if(window.L)desenharMapaReal(M.pontos); else setTimeout(function(){if(window.L)desenharMapaReal(M.pontos);},600); }
+    // BASE ELEITORAL 2022 (candidato que já concorreu) — mostra o card e desenha o mapa de redutos.
+    var BE=api.baseEleitoral||{};
+    if(BE.disponivel&&BE.pontos&&BE.pontos.length){
+      var beC=byId('baseEleCard'); if(beC)beC.style.display='';
+      var beR=byId('baseEleResumo'); if(beR)beR.innerHTML='<b>'+Number(BE.totalVotos).toLocaleString('pt-BR')+' votos</b> em '+BE.municipiosTotal+' municípios · '+esc(BE.cargo)+' ('+esc(BE.partido)+', nº '+BE.numero+'). Maior reduto: <b>'+esc(BE.pontos[0].nome)+'</b>, '+BE.pontos[0].pct+'% dos votos dela.';
+      renderBaseEleitoral(BE);
+      if(window.L)desenharMapaEleitoral(BE); else setTimeout(function(){if(window.L)desenharMapaEleitoral(BE);},700);
+      var beF=byId('baseEleFonte'); if(beF)beF.textContent='Fonte: '+(BE.fonte||'TSE');
+    }
     // Lista de impactados POR CIDADE e POR BAIRRO (pedido do Dinho) — embaixo do mapa
     if(M.disponivel&&M.pontos&&M.pontos.length&&!byId('impactoLista')){
       // Agrega por nome guardando SE veio de rateio (estimado). A Meta não mede alcance
