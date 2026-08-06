@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/som-frontend/:path*", "destination": "/:path*" }
+  ]
+}
