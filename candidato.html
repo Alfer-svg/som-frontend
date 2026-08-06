@@ -536,6 +536,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     <h2 id="iaH">—</h2>
     <p id="iaP">—</p>
     <div class="tags" id="iaTags"></div>
+    <div id="iaData" style="margin-top:12px;font-size:11px;color:var(--mut)"></div>
   </div>
 
   <!-- HERO: índice + momentum -->
@@ -1406,7 +1407,15 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     }else if(adv){ adv.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Configure os @ dos adversários pra comparar presença.</div>'; }
     // Leitura do dia REAL (IA com guardrail do backend; tem fallback sem IA)
     var AN=api.analise||{};
-    if(AN.headline){ var iaH=byId('iaH'); if(iaH)iaH.textContent=AN.headline; var iaP=byId('iaP'); if(iaP)iaP.textContent=AN.texto||''; var iaT=byId('iaTags'); if(iaT)iaT.innerHTML=(AN.destaques||[]).map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join(''); }
+    if(AN.headline){ var iaH=byId('iaH'); if(iaH)iaH.textContent=AN.headline; var iaP=byId('iaP'); if(iaP)iaP.textContent=AN.texto||''; var iaT=byId('iaTags'); if(iaT)iaT.innerHTML=(AN.destaques||[]).map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('');
+      var iaD=byId('iaData');
+      if(iaD){
+        var g=AN.geradoEm||null, txt='';
+        if(g){ var dt=new Date(g); if(!isNaN(dt.getTime())) txt='Última leitura gerada em '+dt.toLocaleString('pt-BR',{timeZone:'America/Recife',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+        else if(AN.data){ var p=String(AN.data).split('-'); if(p.length===3) txt='Última leitura gerada em '+p[2]+'/'+p[1]+'/'+p[0]; }
+        iaD.textContent=txt;
+      }
+    }
     // Dicas CURADAS pela equipe (sem curadoria = aviso, não dica inventada)
     var dic=byId('dicas');
     if(dic){ var DC=api.dicas||[];
