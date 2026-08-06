@@ -1373,7 +1373,22 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     var pau=byId('pautas');
     if(pau&&api.pautas&&api.pautas.disponivel&&(api.pautas.itens||[]).length){
       var its=api.pautas.itens.slice(0,6); var pmx=Math.max.apply(null,its.map(function(x){return x.pct||0;}))||1;
-      pau.innerHTML=its.map(function(x,i){return '<div class="pauta"><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(x.tema)+'</span><span class="mini"><i style="width:'+Math.round((x.pct||0)/pmx*100)+'%"></i></span><span class="pc tnum">'+(x.pct||0)+'%</span></div>';}).join('');
+      var ehRotina=function(t){return /agenda|bastidor|cotidian|rotina|outros/i.test(t||'');};
+      var temRotina=false;
+      var htmlGeral=its.map(function(x,i){var rot=ehRotina(x.tema);if(rot)temRotina=true;var selo=rot?' <span style="font-size:9.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 5px;vertical-align:middle">rotina</span>':'';return '<div class="pauta"><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(x.tema)+selo+'</span><span class="mini"><i style="width:'+Math.round((x.pct||0)/pmx*100)+'%"></i></span><span class="pc tnum">'+(x.pct||0)+'%</span></div>';}).join('');
+      // Bandeiras: só os temas temáticos (fora rotina), re-normalizados entre si por engajamento.
+      var bandeiras=(api.pautas.itens||[]).filter(function(x){return !ehRotina(x.tema);});
+      var somaBand=bandeiras.reduce(function(s,x){return s+(x.engaj||x.pct||0);},0)||1;
+      bandeiras=bandeiras.map(function(x){return {tema:x.tema,rel:Math.round(((x.engaj||x.pct||0)/somaBand)*100)};}).sort(function(a,b){return b.rel-a.rel;}).slice(0,5);
+      var bmx=bandeiras.length?(Math.max.apply(null,bandeiras.map(function(x){return x.rel;}))||1):1;
+      var htmlBand='';
+      if(bandeiras.length){
+        htmlBand='<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)"><div style="font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">Bandeiras que mais engajam</div>'+
+          bandeiras.map(function(x,i){return '<div class="pauta"><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(x.tema)+'</span><span class="mini"><i style="width:'+Math.round(x.rel/bmx*100)+'%"></i></span><span class="pc tnum">'+x.rel+'%</span></div>';}).join('')+
+          '<div style="color:var(--mut);font-size:11px;line-height:1.5;padding-top:5px">Ranking só das pautas temáticas (fora agenda/bastidores), pelo engajamento relativo entre elas.</div></div>';
+      }
+      var notaRot=temRotina?'<div style="color:var(--mut);font-size:11.5px;line-height:1.5;padding:8px 0 2px;border-top:1px solid var(--line);margin-top:6px">Itens <b style="color:var(--mut)">rotina</b> são formato de conteúdo (agenda, bastidores), não bandeira.</div>':'';
+      pau.innerHTML=htmlGeral+notaRot+htmlBand;
     } else if(pau){ pau.innerHTML='<div style="color:var(--mut);font-size:12.5px;padding:6px 0">Em coleta — a classificação por tema entra quando o monitoramento estiver ligado.</div>'; }
     var adv=byId('advs');
     if(adv&&api.adversarios&&api.adversarios.disponivel){
