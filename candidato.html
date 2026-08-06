@@ -619,6 +619,13 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     <div id="baseEleFonte" style="font-size:11px;color:var(--mut);margin-top:12px"></div>
   </div>
 
+  <!-- CONCORRÊNCIA ELEITORAL (quem disputa voto; federal p/ Iza, estadual p/ Túlio) -->
+  <div class="panel reveal" id="concEleCard" style="animation-delay:.35s;display:none">
+    <div class="p-head"><h3><span class="dot"></span>Quem disputa voto com você <span id="concEleCargo" style="font-weight:600;color:var(--mut)"></span></h3><span class="chip">TSE 2022</span></div>
+    <div id="concEleBlocos"></div>
+    <div id="concEleFonte" style="font-size:11px;color:var(--mut);margin-top:10px"></div>
+  </div>
+
   <!-- PAUTAS + ADVERSÁRIOS -->
   <div class="row even">
     <div class="panel reveal" style="animation-delay:.38s"><div class="p-head"><h3><span class="dot"></span>Pautas que mais mobilizam</h3></div><div id="pautas"></div></div>
@@ -1486,6 +1493,29 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       renderBaseEleitoral(BE);
       if(window.L)desenharMapaEleitoral(BE); else setTimeout(function(){if(window.L)desenharMapaEleitoral(BE);},700);
       var beF=byId('baseEleFonte'); if(beF)beF.textContent='Fonte: '+(BE.fonte||'TSE');
+    }
+    // CONCORRÊNCIA ELEITORAL (quem disputa voto) — blocos: reduto, partido, território.
+    var CE=api.concorrenciaEleitoral||{};
+    if(CE.disponivel&&Array.isArray(CE.blocos)&&CE.blocos.length){
+      var ceC=byId('concEleCard'); if(ceC)ceC.style.display='';
+      var ceCg=byId('concEleCargo'); if(ceCg)ceCg.textContent=CE.cargo?('· '+CE.cargo):'';
+      var ceH=byId('concEleBlocos');
+      if(ceH){
+        ceH.innerHTML=CE.blocos.map(function(b){
+          var itens=b.itens||[]; var mx=Math.max.apply(null,itens.map(function(x){return x.votos||0;}))||1;
+          var linhas=itens.map(function(x){
+            var part=x.partido?' <span style="font-size:10.5px;color:var(--mut)">('+esc(x.partido)+')</span>':'';
+            var nota=x.nota?'<div style="font-size:11px;color:var(--mut);margin-top:2px;line-height:1.45">'+esc(x.nota)+'</div>':'';
+            return '<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div style="display:flex;align-items:center;gap:8px">'
+              +'<span style="flex:1;font-size:13px;font-weight:'+(x.voce?'800':'600')+';color:'+(x.voce?'var(--blue)':'var(--ink)')+'">'+esc(x.nome)+part+(x.voce?' · você':'')+'</span>'
+              +'<span style="width:74px;height:6px;background:var(--bg);border-radius:99px;overflow:hidden;flex:none"><i style="display:block;height:100%;width:'+Math.round((x.votos||0)/mx*100)+'%;background:'+(x.voce?'var(--blue)':'var(--mut)')+';border-radius:99px"></i></span>'
+              +'<span style="width:58px;text-align:right;font-size:12px;font-weight:800" class="tnum">'+Number(x.votos||0).toLocaleString('pt-BR')+'</span></div>'+nota+'</div>';
+          }).join('');
+          var bnota=b.nota?'<div style="font-size:12px;color:var(--mut);line-height:1.5;margin:2px 0 8px">'+esc(b.nota)+'</div>':'';
+          return '<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);margin-bottom:6px">'+esc(b.titulo)+'</div>'+bnota+linhas+'</div>';
+        }).join('');
+      }
+      var ceF=byId('concEleFonte'); if(ceF)ceF.textContent='Fonte: '+(CE.fonte||'TSE');
     }
     // Lista de impactados POR CIDADE e POR BAIRRO (pedido do Dinho) — embaixo do mapa
     if(M.disponivel&&M.pontos&&M.pontos.length&&!byId('impactoLista')){
