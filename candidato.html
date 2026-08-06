@@ -616,7 +616,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
 
   <!-- VOTOS PARA SE ELEGER -->
   <div class="panel reveal" style="animation-delay:.43s">
-    <div class="p-head"><h3><span class="dot"></span>Votos para se eleger — Deputado Estadual · PE</h3><span class="chip amb" id="votosChip">estimativa</span></div>
+    <div class="p-head"><h3 id="votosTitulo"><span class="dot"></span>Votos para se eleger — Deputado Estadual · PE</h3><span class="chip amb" id="votosChip">estimativa</span></div>
     <div class="votos-grid">
       <div class="votos-hero">
         <div class="vk">alvo de segurança</div>
@@ -931,6 +931,10 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     fimPropaganda:new Date('2026-10-03T22:00:00-03:00'),
     eleicao:new Date('2026-10-04T08:00:00-03:00'),
     votos:{cadeiras:49,qe:102318,pisoMin:11000,ultimoEleito:24851,alvo:52000,psbEleitos:14,psbCorte:51924},
+    // Régua FEDERAL (Câmara dos Deputados · PE) — dados reais 2022 (TSE/TRE-PE):
+    // 25 cadeiras · quociente ~199.672 (≈5M válidos÷25) · último eleito geral 59.681
+    // (Renildo Calheiros/PCdoB) · MDB fez 1 cadeira em PE: Iza Arruda, 103.950 votos.
+    votosFed:{cadeiras:25,qe:199672,pisoMin:19967,ultimoEleito:59681,alvo:104000,partido:'MDB',partidoEleitos:1,proprioVotos:103950},
     regras:[
       ['pode','Impulsionar conteúdo pago é a ÚNICA propaganda paga on-line permitida — com CNPJ/CPF do responsável visível.'],
       ['atencao','Todo conteúdo feito ou alterado por IA precisa de aviso destacado de que é sintético (rotulagem obrigatória).'],
@@ -1098,7 +1102,19 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   // é pior que nenhuma; a régua federal entra quando os números reais forem configurados.
   var cg=String(c.cargo||'').toLowerCase();
   if(cg&&cg.indexOf('estadual')<0){
-    var vA=document.getElementById('vAlvo');var pv=vA?vA.closest('.panel'):null;if(pv)pv.style.display='none';
+    if(cg.indexOf('federal')>=0){
+      // Régua FEDERAL (Câmara/PE) com números reais 2022 — MOSTRA o card (não esconde)
+      var vf=ELEI.votosFed,ff=function(n){return F.format(n)};
+      var tit=document.getElementById('votosTitulo');if(tit)tit.innerHTML='<span class="dot"></span>Votos para se eleger — '+(c.cargo||'Deputada Federal')+' · '+(c.uf||'PE');
+      var vA=document.getElementById('vAlvo');if(vA)vA.textContent='~'+ff(vf.alvo);
+      var hero=vA&&vA.parentNode?vA.parentNode.querySelector('.vh'):null;if(hero)hero.textContent='votos que te elegeram em 2022 — única cadeira do '+vf.partido+' em PE';
+      var st=document.getElementById('votosSteps');if(st)st.innerHTML=[['1','<b>'+vf.cadeiras+' cadeiras</b> na Câmara dos Deputados (PE) em disputa'],['2','Quociente eleitoral: <b>~'+ff(vf.qe)+'</b> votos "valem" 1 cadeira (base 2022)'],['3','Piso para habilitar: <b>~'+ff(vf.pisoMin)+'</b> votos próprios (10% do quociente)'],['4','É proporcional: quem elege é <b>partido + candidato</b> passarem do quociente, não o voto isolado'],['5','<b>Recorte '+vf.partido+'</b>: em 2022 o '+vf.partido+' fez <b>1 cadeira</b> federal em PE — a SUA, com <b>'+ff(vf.proprioVotos)+'</b> votos (1ª deputada federal do interior). Você é a régua do partido.']].map(function(x){return '<div class="vstep"><span class="vi">'+x[0]+'</span><span class="vt">'+x[1]+'</span></div>'}).join('');
+      var nt=document.getElementById('votosNote');if(nt)nt.innerHTML='<b>Como funciona:</b> soma-se os votos válidos ÷ '+vf.cadeiras+' = o "preço" de uma cadeira (quociente ~'+ff(vf.qe)+'). O partido leva cadeiras conforme seus votos totais, e dentro dele as vagas vão para os mais votados que fizerem ao menos 10% do quociente (~'+ff(vf.pisoMin)+'). Em 2022 você fez <b>'+ff(vf.proprioVotos)+'</b> votos — a única cadeira do '+vf.partido+' em PE — enquanto o último eleito GERAL fez '+ff(vf.ultimoEleito)+'. O alvo de ~'+ff(vf.alvo)+' é <b>manter e ampliar</b> essa base para garantir a reeleição. <b>O número final depende do desempenho de toda a chapa do '+vf.partido+'.</b> <i>Base: PE 2022 · fonte TSE / TRE-PE.</i>';
+      var pvf=vA?vA.closest('.panel'):null;if(pvf)pvf.style.display='';
+    }else{
+      // outro cargo sem régua real configurada → esconde (régua errada é pior que nenhuma)
+      var vA0=document.getElementById('vAlvo');var pv0=vA0?vA0.closest('.panel'):null;if(pv0)pv0.style.display='none';
+    }
     var cen=document.getElementById('cenario');if(cen){var ct=cen.querySelector('.cen-txt');if(ct)ct.textContent='A eleição é proporcional, não majoritária: deputado raramente tem pesquisa própria. O termômetro é o topo da chapa e a força do partido/federação — a equipe da Maracatu acompanha as pesquisas registradas no TSE.';}
   }
   }catch(e){}};
