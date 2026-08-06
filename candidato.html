@@ -1180,9 +1180,16 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(mp);
     var mx=Math.max.apply(null,pts.map(function(p){return p.votos;}))||1, bounds=[];
     pts.forEach(function(p){
-      var rad=6+Math.sqrt(p.votos/mx)*26, col=heatColor(p.votos/mx*100);
-      L.circleMarker([p.lat,p.lng],{radius:rad,color:col,weight:2,fillColor:col,fillOpacity:.5}).addTo(mp)
-        .bindTooltip('<b>'+esc(p.nome)+'</b> · '+Number(p.votos).toLocaleString('pt-BR')+' votos ('+p.pct+'%)',{direction:'auto',opacity:.96});
+      var tip='<b>'+esc(p.nome)+'</b> · '+Number(p.votos).toLocaleString('pt-BR')+' votos ('+p.pct+'%)';
+      if(p.votos<50){
+        // Reduto fraco (< 50 votos): triângulo preto no lugar da bolinha.
+        var tri=L.divIcon({className:'tri-eleitoral',html:'<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #111"></div>',iconSize:[12,11],iconAnchor:[6,6]});
+        L.marker([p.lat,p.lng],{icon:tri}).addTo(mp).bindTooltip(tip,{direction:'auto',opacity:.96});
+      } else {
+        var rad=6+Math.sqrt(p.votos/mx)*26, col=heatColor(p.votos/mx*100);
+        L.circleMarker([p.lat,p.lng],{radius:rad,color:col,weight:2,fillColor:col,fillOpacity:.5}).addTo(mp)
+          .bindTooltip(tip,{direction:'auto',opacity:.96});
+      }
       bounds.push([p.lat,p.lng]);
     });
     if(bounds.length)mp.fitBounds(bounds,{padding:[30,30],maxZoom:10});
