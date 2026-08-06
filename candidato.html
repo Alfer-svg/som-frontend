@@ -354,6 +354,9 @@
   .panel.mapa-cheia #map{flex:1;height:auto!important;min-height:0;border-radius:12px} /* !important vence o height inline do mapa real (Leaflet) */
   .panel.mapa-cheia .legend{flex:none;margin-top:14px}
   .panel.mapa-cheia .map-tip{z-index:210}
+  .panel.mapa-cheia #mapaEleitoral{flex:1;height:auto!important;min-height:0;border-radius:12px}
+  .panel.mapa-cheia #baseEleResumo,.panel.mapa-cheia #baseEleRank,.panel.mapa-cheia #baseEleFonte{display:none}
+  .panel.mapa-cheia #baseEleLegenda{flex:none;margin-top:12px}
   .reveal{opacity:0;transform:translateY(12px);animation:rise .6s cubic-bezier(.2,.8,.2,1) forwards}
   @keyframes rise{to{opacity:1;transform:none}}
 
@@ -612,9 +615,13 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
 
   <!-- BASE ELEITORAL 2022 (só candidato que já concorreu; preenchido pelo TSE) -->
   <div class="panel reveal" id="baseEleCard" style="animation-delay:.34s;display:none">
-    <div class="p-head"><h3><span class="dot"></span>Base eleitoral 2022 — onde ela fez votos</h3><span class="chip">TSE</span></div>
+    <div class="p-head"><h3><span class="dot"></span>Base eleitoral 2022 — onde ela fez votos</h3><div style="display:flex;align-items:center;gap:8px"><span class="chip">TSE</span><button class="fs-btn" id="baseEleFs" title="Tela cheia" aria-label="Ver mapa em tela cheia">⛶</button></div></div>
     <div id="baseEleResumo" style="font-size:13px;color:var(--mut);line-height:1.55;margin-bottom:12px"></div>
-    <div id="mapaEleitoral" style="height:380px;border-radius:12px;border:1px solid var(--line);margin-bottom:14px"></div>
+    <div id="mapaEleitoral" style="height:380px;border-radius:12px;border:1px solid var(--line);margin-bottom:10px"></div>
+    <div id="baseEleLegenda" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--mut);margin-bottom:14px">
+      <span style="display:inline-flex;align-items:center;gap:7px"><span style="width:15px;height:15px;border-radius:50%;background:#4285F4;opacity:.5;border:2px solid #4285F4;flex:none"></span> município onde fez votos (quanto maior o círculo, mais votos)</span>
+      <span style="display:inline-flex;align-items:center;gap:7px"><svg width="14" height="12" viewBox="0 0 16 14" style="flex:none"><polygon points="8,0 16,14 0,14" fill="#111"/></svg> menos de 50 votos (voto fraco)</span>
+    </div>
     <div style="font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);margin-bottom:8px">Maiores redutos</div>
     <div id="baseEleRank"></div>
     <div id="baseEleFonte" style="font-size:11px;color:var(--mut);margin-top:12px"></div>
@@ -1111,6 +1118,25 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     document.addEventListener('fullscreenchange',function(){aplicarEstado(document.fullscreenElement===mapCard);});
     document.addEventListener('keydown',function(e){if(e.key==='Escape'&&mapCard.classList.contains('mapa-cheia')&&!document.fullscreenElement)aplicarEstado(false);});
   }
+  // Tela cheia do MAPA ELEITORAL (mesma mecânica do mapa de calor).
+  var beFs=$('#baseEleFs'),beCard=$('#baseEleCard');
+  if(beFs&&beCard){
+    var beEstado=function(cheia){
+      beCard.classList.toggle('mapa-cheia',cheia);
+      beFs.textContent=cheia?'✕':'⛶';
+      beFs.title=cheia?'Fechar tela cheia':'Tela cheia';
+      document.body.style.overflow=cheia?'hidden':'';
+      setTimeout(function(){if(window.__mapEleInst)window.__mapEleInst.invalidateSize();},80);
+    };
+    beFs.addEventListener('click',function(){
+      if(document.fullscreenElement){document.exitFullscreen().catch(function(){});return;}
+      if(beCard.classList.contains('mapa-cheia')){beEstado(false);return;}
+      if(beCard.requestFullscreen){beCard.requestFullscreen().catch(function(){beEstado(true);});}
+      else beEstado(true);
+    });
+    document.addEventListener('fullscreenchange',function(){beEstado(document.fullscreenElement===beCard);});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&beCard.classList.contains('mapa-cheia')&&!document.fullscreenElement)beEstado(false);});
+  }
 
   addEventListener('resize',()=>{drawMom(1);$$('.spark').forEach(c=>drawSpark(c,DATA[cur].mom));});
 
@@ -1185,6 +1211,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     var pts=(base.pontos||[]).filter(function(p){return p.lat&&p.lng;});
     if(!pts.length)return;
     var mp=L.map('mapaEleitoral',{zoomControl:true,attributionControl:false,scrollWheelZoom:false});
+    window.__mapEleInst=mp; // referência p/ o botão de tela cheia reajustar o tamanho
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(mp);
     var mx=Math.max.apply(null,pts.map(function(p){return p.votos;}))||1, bounds=[];
     pts.forEach(function(p){
