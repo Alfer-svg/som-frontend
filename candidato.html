@@ -1190,8 +1190,8 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     pts.forEach(function(p){
       var tip='<b>'+esc(p.nome)+'</b> · '+Number(p.votos).toLocaleString('pt-BR')+' votos ('+p.pct+'%)';
       if(p.votos<50){
-        // Reduto fraco (< 50 votos): triângulo preto no lugar da bolinha.
-        var tri=L.divIcon({className:'tri-eleitoral',html:'<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #111"></div>',iconSize:[12,11],iconAnchor:[6,6]});
+        // Reduto fraco (< 50 votos): triângulo preto (SVG) no lugar da bolinha.
+        var tri=L.divIcon({className:'tri-eleitoral',html:'<svg width="16" height="14" viewBox="0 0 16 14" xmlns="http://www.w3.org/2000/svg"><polygon points="8,0 16,14 0,14" fill="#111"/></svg>',iconSize:[16,14],iconAnchor:[8,7]});
         L.marker([p.lat,p.lng],{icon:tri}).addTo(mp).bindTooltip(tip,{direction:'auto',opacity:.96});
       } else {
         var rad=6+Math.sqrt(p.votos/mx)*26, col=heatColor(p.votos/mx*100);

@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>.tri-eleitoral{background:transparent!important;border:0!important}</style>
+</head><body style="margin:0">
+<div id="mapaEleitoral" style="height:100vh"></div>
+<script>
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function heatColor(p){return p>66?'#EA4335':p>33?'#F9A825':'#4285F4'}
+var pts=[
+ {nome:'Vitória',votos:31987,pct:30.8,lat:-8.128,lng:-35.298},
+ {nome:'Recife',votos:4767,pct:4.6,lat:-8.047,lng:-34.877},
+ {nome:'Cidade A (<50)',votos:30,pct:0,lat:-8.3,lng:-35.5},
+ {nome:'Cidade B (<50)',votos:12,pct:0,lat:-8.5,lng:-36.0},
+ {nome:'Cidade C (<50)',votos:45,pct:0,lat:-7.9,lng:-35.2},
+];
+var mp=L.map('mapaEleitoral',{zoomControl:true,attributionControl:false}).setView([-8.2,-35.4],9);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}).addTo(mp);
+var mx=31987;
+pts.forEach(function(p){
+  var tip='<b>'+esc(p.nome)+'</b> · '+p.votos+' votos';
+  if(p.votos<50){
+    var tri=L.divIcon({className:'tri-eleitoral',html:'<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:11px solid #111"></div>',iconSize:[12,11],iconAnchor:[6,6]});
+    L.marker([p.lat,p.lng],{icon:tri}).addTo(mp).bindTooltip(tip);
+  }else{
+    var rad=6+Math.sqrt(p.votos/mx)*26, col=heatColor(p.votos/mx*100);
+    L.circleMarker([p.lat,p.lng],{radius:rad,color:col,weight:2,fillColor:col,fillOpacity:.5}).addTo(mp).bindTooltip(tip);
+  }
+});
+</script></body></html>
