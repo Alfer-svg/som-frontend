@@ -44,6 +44,12 @@
 
   .card,.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:17px;position:relative;box-shadow:var(--shadow-sm)}
   .panel{overflow:hidden}
+  /* Campanhas rodando: cabeçalho fixo, lista rola DENTRO do card (muitos anúncios não esticam a tela) */
+  #campanhas{max-height:min(78vh,720px);overflow-y:auto;overflow-x:hidden;margin-right:-7px;padding-right:7px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  #campanhas::-webkit-scrollbar{width:8px}
+  #campanhas::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+  #campanhas::-webkit-scrollbar-thumb:hover{background:var(--mut)}
+  #campanhas::-webkit-scrollbar-track{background:transparent}
   /* tooltip do ⓘ era engolido pelo overflow do painel (caso do Índice) — enquanto o
      balão está aberto/hover, o painel libera o overflow; fecha, volta a cortar */
   .panel:has(.info:hover),.panel:has(.info.show){overflow:visible}
