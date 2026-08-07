@@ -44,7 +44,9 @@
   .btn-print{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;background:var(--ink);color:#fff;font:600 12.5px Roboto,system-ui,sans-serif;padding:9px 15px;border-radius:11px;box-shadow:var(--shadow-sm);transition:opacity .15s}
   .btn-print:hover{opacity:.88}
   .btn-print svg{display:block}
-  .btn-print.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  /* modificador do botão secundário: era ".sec", que colidia com a classe das
+     SEÇÕES (.sec{margin-top:32px}) e empurrava os botões 32px pra baixo. */
+  .btn-print.claro{background:#fff;color:var(--ink);border:1px solid var(--line)}
   @media (max-width:520px){ .brandbar .lbl{display:none} }
   /* impressão / salvar como PDF — some com o que é interativo, cartões não quebram no meio */
   @page{margin:10mm 12mm}
@@ -530,13 +532,13 @@
     // marca da Maracatu (quem entrega o relatório) — letterhead no topo + botão de PDF
     h+='<div class="brandbar"><img src="assets/logo-horizontal.png?v=7" alt="Maracatu Digital">'+
       '<div class="bb-actions"><span class="lbl">Relatório de performance</span>'+
-      '<button type="button" id="btnMensal" class="btn-print sec no-print" title="Relatório do mês passado completo, direto pra impressão/PDF">'+
+      '<button type="button" id="btnMensal" class="btn-print claro no-print" title="Relatório do mês passado completo, direto pra impressão/PDF">'+
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Relatório mensal</button>'+
       '<button type="button" class="btn-print no-print" onclick="window.print()" title="Gerar PDF: escolha \'Salvar como PDF\' na janela de impressão">'+
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir PDF</button>'+
       // VOLTAR/SAIR (Dinho 07/08): o cliente entrava no painel e ficava preso — não
       // havia como voltar pra área do cliente nem encerrar a sessão.
-      (modo==='cliente' ? '<button type="button" id="btnVoltarArea" class="btn-print sec no-print" title="Voltar para a área do cliente">'+
+      (modo==='cliente' ? '<button type="button" id="btnVoltarArea" class="btn-print claro no-print" title="Voltar para a área do cliente">'+
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Voltar</button>' : '')+
       '</div></div>';
 
