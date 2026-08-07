@@ -3138,10 +3138,11 @@
                           </template>
                           <template x-if="!r.docUrl">
                             <div class="flex items-center gap-2">
-                              <button class="btn btn-sm btn-primary" @click="samRoteiroCriarDoc(r)"><i class="ph ph-file-plus ic-ph"></i> Criar no Docs</button>
+                              <button class="btn btn-sm btn-ghost" @click="samRoteiroCriarDoc(r)"><i class="ph ph-file-plus ic-ph"></i> Criar no Docs</button>
                               <button class="btn btn-icon btn-ghost btn-sm" @click="samRoteiroVincular(r)" title="Já tenho o doc — colar o link" style="color:#4285F4"><i class="ph ph-link ic-ph"></i></button>
                             </div>
                           </template>
+                          <button class="btn btn-sm btn-primary" @click="samRotEditar(r)" title="Preencher o documento e gerar o PDF do cliente"><i class="ph ph-file-pdf ic-ph"></i> Documento / PDF</button>
                         </div>
                       </div>
                     </div>
@@ -6647,7 +6648,104 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=450"></script>
+  <!-- ═══ EDITOR DO ROTEIRO → PDF DO CLIENTE (Dinho 07/08) ═══════════════════
+       Campos do documento oficial (RT-…): identificação, sumário das peças e,
+       por peça, ficha técnica + direção geral + cenas. O PDF sai idêntico ao
+       modelo aprovado — mesma faixa, régua dourada e tabelas. -->
+  <div x-show="samRotRef" x-cloak class="modal-back" @click.self="samRotFechar()" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;overflow:auto;padding:18px">
+    <div class="card rot-ed" style="max-width:900px;margin:0 auto;padding:0" @click.stop>
+      <style>
+        .rot-ed label{display:block;margin:0}
+        .rot-ed label>span.lb{display:block;margin-bottom:3px;color:var(--text-3);font-size:11px}
+        .rot-ed .input,.rot-ed textarea.input{width:100%}
+        .rot-ed textarea.input{resize:vertical;font-family:inherit}
+      </style>
+      <template x-if="samRotRef">
+        <div>
+          <div class="flex items-center justify-between" style="padding:14px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:2">
+            <div>
+              <div class="fw-700 fs-15">Roteiro do cliente · documento</div>
+              <div class="text-3 fs-11" x-text="(samRotRef.cliente||'—')+' · '+(samRotRef.titulo||'')"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="btn btn-sm" @click="samRotSalvar()"><i class="ph ph-floppy-disk ic-ph"></i> Salvar</button>
+              <button class="btn btn-sm btn-primary" @click="samRotSalvar(); samRotGerarPdf(samRotRef)"><i class="ph ph-file-pdf ic-ph"></i> Gerar PDF</button>
+              <button class="btn btn-icon btn-ghost btn-sm" @click="samRotFechar()"><i class="ph ph-x ic-ph"></i></button>
+            </div>
+          </div>
+
+          <div style="padding:16px;display:grid;gap:14px">
+            <!-- identificação -->
+            <div style="border:1px solid var(--border);border-radius:12px;padding:12px">
+              <div class="fw-700 fs-12 mb-2" style="text-transform:uppercase;letter-spacing:.5px">Identificação</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <label class="rot-l"><span class="lb">Nº do roteiro</span><input class="input fs-13" x-model="samRotRef.doc.numero" placeholder="RT-2026-518-03"></label>
+                <label class="rot-l"><span class="lb">Roteiro de</span><input class="input fs-13" x-model="samRotRef.doc.roteiroDe" placeholder="PRODUÇÃO DE CONTEÚDO AUDIOVISUAL"></label>
+                <label class="rot-l"><span class="lb">Cliente</span><input class="input fs-13" x-model="samRotRef.doc.cliente" placeholder="MOURA E SERAK ARQUITETURA E DESIGN"></label>
+                <label class="rot-l"><span class="lb">Projeto</span><input class="input fs-13" x-model="samRotRef.doc.projeto" placeholder="Conteúdo audiovisual para redes sociais · Reels"></label>
+                <label class="rot-l"><span class="lb">Peças</span><input class="input fs-13" x-model="samRotRef.doc.pecasResumo" placeholder="3 roteiros de gravação · Vídeos 01, 02 e 03"></label>
+                <label class="rot-l"><span class="lb">Emissão</span><input class="input fs-13" x-model="samRotRef.doc.emissao" placeholder="Julho de 2026"></label>
+                <label class="rot-l"><span class="lb">Vínculo</span><input class="input fs-13" x-model="samRotRef.doc.vinculo" placeholder="Contrato de prestação de serviços Nº CT-2026-518"></label>
+                <label class="rot-l"><span class="lb">Status</span><input class="input fs-13" x-model="samRotRef.doc.status" placeholder="Versão 01 · para aprovação do cliente"></label>
+              </div>
+              <label class="rot-l" style="display:block;margin-top:8px"><span class="lb">Nota abaixo do sumário</span><textarea class="input fs-12" rows="2" x-model="samRotRef.doc.nota"></textarea></label>
+            </div>
+
+            <!-- peças -->
+            <template x-for="(p,pi) in samRotRef.doc.pecas" :key="'rp'+pi">
+              <div style="border:1px solid var(--border);border-radius:12px;padding:12px">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="fw-700 fs-12" style="text-transform:uppercase;letter-spacing:.5px">Vídeo <span x-text="String(pi+1).padStart(2,'0')"></span></div>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="samRotRemPeca(samRotRef.doc,pi)" title="Remover peça" style="color:var(--text-3)"><i class="ph ph-trash ic-ph"></i></button>
+                </div>
+                <label class="rot-l" style="display:block"><span class="lb">Título da peça</span><input class="input fs-13" x-model="p.nome" placeholder="Papo de Arquiteta · Episódio 05 · Garimpo para clientes"></label>
+                <div class="text-3 fs-11" style="margin:9px 0 3px">Linha do sumário</div>
+                <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px">
+                  <input class="input fs-12" x-model="p.resumoFormato" placeholder="Reel falado · entrevista entre as sócias">
+                  <input class="input fs-12" x-model="p.resumoDuracao" placeholder="até 60s">
+                  <input class="input fs-12" x-model="p.resumoElenco" placeholder="Erika e Mariana">
+                </div>
+                <div class="text-3 fs-11" style="margin:9px 0 3px">Ficha técnica do vídeo</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px">
+                  <input class="input fs-12" x-model="p.formato" placeholder="Reel vertical 9:16">
+                  <input class="input fs-12" x-model="p.duracao" placeholder="até 60 segundos">
+                  <input class="input fs-12" x-model="p.elenco" placeholder="Erika e Mariana">
+                  <input class="input fs-12" x-model="p.locacao" placeholder="Escritório Moura & Serak">
+                </div>
+                <label class="rot-l" style="display:block;margin-top:9px"><span class="lb">Direção geral <span class="text-3">(um item por linha)</span></span><textarea class="input fs-12" rows="3" x-model="p.direcao" placeholder="Linguagem descontraída, um bate-papo entre as sócias…"></textarea></label>
+
+                <div class="text-3 fs-11" style="margin:10px 0 4px">Cenas</div>
+                <template x-for="(c,ci) in p.cenas" :key="'rc'+pi+'_'+ci">
+                  <div style="border:1px dashed var(--border);border-radius:10px;padding:9px;margin-bottom:7px">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="badge fs-10 fw-700" x-text="'CENA '+String(ci+1).padStart(2,'0')"></span>
+                      <button class="btn btn-icon btn-ghost btn-sm" @click="samRotRemCena(p,ci)" style="color:var(--text-3)"><i class="ph ph-x ic-ph"></i></button>
+                    </div>
+                    <div style="display:grid;grid-template-columns:90px 1fr;gap:8px">
+                      <input class="input fs-12" x-model="c.tempo" placeholder="0-5s">
+                      <input class="input fs-12" x-model="c.acao" placeholder="Abertura em cortes rápidos">
+                    </div>
+                    <textarea class="input fs-12" rows="2" style="margin-top:7px" x-model="c.desc" placeholder="Ação e câmera: Montagem com 3 ou 4 respostas curiosas…"></textarea>
+                    <textarea class="input fs-12" rows="4" style="margin-top:7px" x-model="c.fala" placeholder="Fala da cena"></textarea>
+                    <div class="text-3 fs-10" style="margin-top:4px;line-height:1.5">
+                      Como escrever a fala (uma linha por parágrafo):<br>
+                      <b>NOTA:</b> texto → sai como <i>NOTA DE GRAVAÇÃO</i> · <b>PERGUNTA 1:</b> texto → rótulo dourado · <b>Mariana:</b> "fala" → nome em negrito · linha solta → fala em itálico
+                    </div>
+                  </div>
+                </template>
+                <button class="btn btn-sm" @click="samRotAddCena(p)"><i class="ph ph-plus ic-ph"></i> Cena</button>
+              </div>
+            </template>
+            <div><button class="btn btn-sm" @click="samRotAddPeca(samRotRef.doc)"><i class="ph ph-plus ic-ph"></i> Adicionar vídeo/peça</button></div>
+
+            <label class="rot-l" style="display:block"><span class="lb">Próximos passos <span class="text-3">(um item por linha)</span></span><textarea class="input fs-12" rows="4" x-model="samRotRef.doc.proximos"></textarea></label>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+<script src="js/app.js?v=451"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

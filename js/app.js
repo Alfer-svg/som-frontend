@@ -1742,6 +1742,7 @@ document.addEventListener('alpine:init', () => {
     // Tudo persistido no store genérico de coleções (operacoes.samara.*).
     samLoaded: false, samLoading: false,
     samVideos: [], samStories: [], samGmn: [], samRoteiros: [], samCaptacoes: [], samLog: [],
+    samRotRef: null,
     samStoryDraft: {}, // rascunho de quantidade por cliente (só efetiva ao clicar no check)
     samVForm: { titulo: '', cliente: '', tipo: 'Edição' },
     samRForm: { titulo: '', cliente: '', captacao: '' }, samRAberto: false,
@@ -1956,6 +1957,164 @@ document.addEventListener('alpine:init', () => {
         `<p style="margin:26px 0 0;text-align:center;font:700 10pt Arial;letter-spacing:3px;color:${CINZA}">${esp('MARACATU DIGITAL INTELLIGENCE')}</p>` +
         `</div>`
       );
+    },
+    // ═══ ROTEIRO DE CAPTAÇÃO → PDF DO CLIENTE (Dinho 07/08) ═══════════════
+    // Antes o roteiro daqui era só um registro (título/cliente/status) e o
+    // documento vivia solto num Google Docs. Agora os campos do documento são
+    // preenchidos AQUI e o PDF sai com o layout oficial da Maracatu — o mesmo do
+    // RT-2026-518-03 (faixa, logo, régua dourada, faixa preta por vídeo, tabelas
+    // de cena). Fonte, corpo e cores foram tiradas do próprio PDF de referência.
+    samRotDocPadrao(r) {
+      const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const h = new Date();
+      return {
+        numero: 'RT-' + h.getFullYear() + '-___-__',
+        roteiroDe: 'PRODUÇÃO DE CONTEÚDO AUDIOVISUAL',
+        cliente: (r && r.cliente ? String(r.cliente) : '').toUpperCase(),
+        projeto: (r && r.titulo) || '',
+        pecasResumo: '',
+        emissao: MESES[h.getMonth()] + ' de ' + h.getFullYear(),
+        vinculo: '',
+        status: 'Versão 01 · para aprovação do cliente',
+        nota: 'As falas deste documento são guias de conteúdo. As apresentadoras podem adaptá-las com naturalidade, desde que o conceito e a mensagem de cada cena sejam mantidos.',
+        pecas: [this.samRotPecaPadrao()],
+        proximos: 'Validar as falas, as perguntas e a ordem das cenas deste documento.\nAgendar as captações com antecedência ideal de 7 dias, conforme o contrato.',
+      };
+    },
+    samRotPecaPadrao() {
+      return { nome: '', resumoFormato: '', resumoDuracao: 'até 60s', resumoElenco: '', formato: 'Reel vertical 9:16', duracao: 'até 60 segundos', elenco: '', locacao: '', direcao: '', cenas: [{ tempo: '', acao: '', desc: '', fala: '' }] };
+    },
+    samRotEditar(r) {
+      if (!r.doc) r.doc = this.samRotDocPadrao(r);
+      if (!Array.isArray(r.doc.pecas) || !r.doc.pecas.length) r.doc.pecas = [this.samRotPecaPadrao()];
+      this.samRotRef = r;
+    },
+    samRotFechar() { this.samRotRef = null; },
+    samRotSalvar() { this._samSave('roteiros', this.samRoteiros); this.mostrarToast('Roteiro salvo.'); },
+    samRotAddPeca(d) { d.pecas.push(this.samRotPecaPadrao()); },
+    samRotRemPeca(d, i) { if (d.pecas.length > 1 && confirm('Remover esta peça?')) d.pecas.splice(i, 1); },
+    samRotAddCena(p) { p.cenas.push({ tempo: '', acao: '', desc: '', fala: '' }); },
+    samRotRemCena(p, i) { if (p.cenas.length > 1) p.cenas.splice(i, 1); },
+
+    // FALA: texto livre com convenções simples (uma linha por parágrafo).
+    //   NOTA: …            → "NOTA DE GRAVAÇÃO ·" dourado + texto cinza itálico
+    //   PERGUNTA 1: …      → rótulo dourado (qualquer coisa em MAIÚSCULAS) + texto
+    //   Mariana: "…"       → nome em negrito + fala em itálico
+    //   texto solto        → itálico
+    _rotFalaHtml(txt) {
+      const esc = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+      const OURO = '#c9a93d', CINZA = '#777';
+      return String(txt || '').split(/\n/).map((linha) => {
+        const l = linha.trim();
+        if (!l) return '';
+        let m = l.match(/^nota(?:\s+de\s+grava[çc][ãa]o)?\s*[:·]\s*(.+)$/i);
+        if (m) return `<p class="fl"><span style="color:${OURO};font-weight:700">NOTA DE GRAVAÇÃO</span> <span style="color:${CINZA};font-style:italic">· ${esc(m[1])}</span></p>`;
+        m = l.match(/^([0-9A-ZÀ-ÿ][0-9A-ZÀ-Ý ··]{1,38}?)\s*[:·]\s+(.+)$/);
+        if (m && m[1] === m[1].toUpperCase()) return `<p class="fl"><span style="color:${OURO};font-weight:700">${esc(m[1].trim())}</span> · ${esc(m[2])}</p>`;
+        m = l.match(/^([A-ZÀ-Ý][\wÀ-ÿ]{1,18}(?:\s+[A-ZÀ-Ýa-zà-ÿ]{1,18})?)\s*:\s+(.+)$/);
+        if (m) return `<p class="fl"><b>${esc(m[1])}:</b> <i>${esc(m[2])}</i></p>`;
+        return `<p class="fl"><i>${esc(l)}</i></p>`;
+      }).join('');
+    },
+    // HTML do PDF — espelho do documento oficial (Letter, margem 1in, Inter).
+    samRotPdfHtml(r) {
+      const d = r.doc || this.samRotDocPadrao(r);
+      const esc = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+      // "ROTEIRO DE" → "R O T E I R O&nbsp;&nbsp;&nbsp;D E": sem os &nbsp; o HTML
+      // colapsa o espaço entre as palavras e sai "R O T E I R O D E".
+      const esp = (t) => esc(t).split(' ').map((w) => w.split('').join(' ')).join('&nbsp;&nbsp;&nbsp;');
+      const nn = (n) => String(n).padStart(2, '0');
+      const lista = (txt) => String(txt || '').split(/\n/).map((s) => s.trim()).filter(Boolean).map((s) => `<li>${esc(s)}</li>`).join('');
+      const ident = (rot, val, forte) => val ? `<tr><td class="rot">${esp(rot)}</td><td class="val${forte ? ' forte' : ''}">${esc(val)}</td></tr>` : '';
+      const pecas = (d.pecas || []);
+      const sumario = pecas.map((p, i) => `<tr><td class="c">${nn(i + 1)}</td><td><b>${esc(p.nome)}</b></td><td>${esc(p.resumoFormato)}</td><td>${esc(p.resumoDuracao)}</td><td>${esc(p.resumoElenco)}</td></tr>`).join('');
+      const blocos = pecas.map((p, i) => {
+        const cenas = (p.cenas || []).map((c, j) => `<tr>
+          <td class="cn">${nn(j + 1)}</td><td class="tp">${esc(c.tempo)}</td>
+          <td><b>${esc(c.acao)}</b>${c.desc ? '<br>' + esc(c.desc) : ''}</td>
+          <td>${this._rotFalaHtml(c.fala)}</td></tr>`).join('');
+        return `<section class="pc">
+          <div class="faixa"><div class="vn">${esp('VÍDEO')} &nbsp; ${nn(i + 1)}</div><h2>${esc(p.nome)}</h2></div>
+          <table class="ficha"><tr><td class="rot">${esp('FORMATO')}</td><td class="rot">${esp('DURAÇÃO')}</td><td class="rot">${esp('ELENCO')}</td><td class="rot">${esp('LOCAÇÃO')}</td></tr>
+          <tr><td>${esc(p.formato)}</td><td>${esc(p.duracao)}</td><td>${esc(p.elenco)}</td><td>${esc(p.locacao)}</td></tr></table>
+          ${p.direcao ? `<h3>DIREÇÃO GERAL</h3><ul>${lista(p.direcao)}</ul>` : ''}
+          <table class="cenas"><tr><th>CENA</th><th>TEMPO</th><th>AÇÃO E CÂMERA</th><th>FALA</th></tr>${cenas}</table>
+        </section>`;
+      }).join('');
+      return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<title>${esc(d.numero)} · ${esc(d.cliente)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  @page{size:letter;margin:1in}
+  *{box-sizing:border-box}
+  body{margin:0;font:400 9pt/1.45 Inter,Roboto,Arial,sans-serif;color:#1f1f1f;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .capa{width:100%;display:block}
+  .cab{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}
+  .cab img{height:52px;width:auto;display:block}
+  .cab .num{text-align:right}
+  .cab .num .lb{font:700 10pt Inter;letter-spacing:3px;color:#1f1f1f}
+  .cab .num .n{font:700 26pt Inter;letter-spacing:-.5px;color:#2b2b2b;margin-top:2px}
+  .contato{font:400 7pt Inter;color:#777;margin:10px 0 0;line-height:1.5}
+  .regua{border:0;border-top:2px solid #a98f2f;margin:8px 0 16px}
+  .tit-lb{text-align:center;font:700 10pt Inter;letter-spacing:3px;color:#1f1f1f}
+  .tit{text-align:center;font:700 20pt Inter;letter-spacing:-.3px;margin:2px 0 20px}
+  table{border-collapse:collapse;width:100%}
+  .ident td{padding:3px 0;vertical-align:top}
+  .ident .rot{width:150px;font:700 7pt Inter;letter-spacing:2.2px;color:#777;padding-top:5px}
+  .ident .val{font:400 9pt Inter}
+  .ident .val.forte{font-weight:700;text-transform:uppercase}
+  h1.sec{font:700 11pt Inter;margin:20px 0 6px}
+  .sum th,.cenas th{background:#141414;color:#fff;font:700 7pt Inter;letter-spacing:1.2px;text-align:left;padding:5px 8px}
+  .sum td,.cenas td{border:1px solid #ddd;padding:7px 8px;vertical-align:top;font:400 9pt Inter}
+  .sum .c,.cenas .cn{font-weight:700;width:44px}
+  .cenas .tp{color:#777;font-size:8pt;width:62px}
+  .cenas td:nth-child(3){width:34%}
+  .nota{font:italic 8pt Inter;color:#777;margin:8px 0 0;line-height:1.5}
+  .pc{margin-top:26px;break-inside:auto}
+  .faixa{background:#141414;color:#fff;padding:10px 14px;margin-bottom:14px}
+  .faixa .vn{font:700 7pt Inter;letter-spacing:2.5px;color:#c9a93d}
+  .faixa h2{font:700 13pt Inter;margin:3px 0 0;color:#fff;text-transform:uppercase}
+  .ficha td{padding:2px 10px 6px 0;font:400 9pt Inter;vertical-align:top}
+  .ficha .rot{font:700 7pt Inter;letter-spacing:2.2px;color:#777}
+  h3{font:700 10pt Inter;margin:14px 0 4px}
+  ul{margin:0 0 12px 16px;padding:0}
+  li{margin:0 0 3px;font:400 9pt Inter;line-height:1.5}
+  .fl{margin:0 0 5px;line-height:1.5}
+  .rodape{margin-top:26px}
+  .rodape .txt{text-align:center;font:700 8pt Inter;letter-spacing:3px;color:#777;margin-top:8px}
+  tr{break-inside:avoid;page-break-inside:avoid}
+  .faixa,.ficha{break-after:avoid;page-break-after:avoid}
+  @media screen{body{background:#eceff1}.folha{background:#fff;max-width:816px;margin:20px auto;padding:1in;box-shadow:0 2px 14px rgba(0,0,0,.18)}}
+</style></head><body><div class="folha">
+  <img class="capa" src="${location.origin}${location.pathname.replace(/[^/]*$/, '')}assets/faixa-roteiro.jpg" alt="">
+  <div class="cab">
+    <img src="${location.origin}${location.pathname.replace(/[^/]*$/, '')}assets/logo-horizontal.png" alt="Maracatu Digital">
+    <div class="num"><div class="lb">${esp('ROTEIRO')}</div><div class="n">Nº ${esc(d.numero)}</div></div>
+  </div>
+  <p class="contato">CNPJ 44.258.426/0001-15 · laura@maracatumktdigital.com · (11) 96624-9876 · Av. A, 4165 - Torre 6, Sl 611 e 612 - Paiva, Cabo de Santo Agostinho - PE · CEP 54522-005</p>
+  <hr class="regua">
+  <div class="tit-lb">${esp('ROTEIRO DE')}</div>
+  <div class="tit">${esc(d.roteiroDe)}</div>
+  <table class="ident">
+    ${ident('CLIENTE', d.cliente, true)}${ident('PROJETO', d.projeto)}${ident('PEÇAS', d.pecasResumo)}
+    ${ident('EMISSÃO', d.emissao)}${ident('VÍNCULO', d.vinculo)}${ident('STATUS', d.status)}
+  </table>
+  <h1 class="sec">SUMÁRIO DAS PEÇAS</h1>
+  <table class="sum"><tr><th>Nº</th><th>PEÇA</th><th>FORMATO</th><th>DURAÇÃO</th><th>ELENCO</th></tr>${sumario}</table>
+  ${d.nota ? `<p class="nota">${esc(d.nota)}</p>` : ''}
+  ${blocos}
+  ${d.proximos ? `<h1 class="sec">PRÓXIMOS PASSOS</h1><ul>${lista(d.proximos)}</ul>` : ''}
+  <div class="rodape"><hr class="regua" style="margin-bottom:0"><div class="txt">${esp('MARACATU DIGITAL INTELLIGENCE')}</div></div>
+</div></body></html>`;
+    },
+    samRotGerarPdf(r) {
+      const w = window.open('', '_blank');
+      if (!w) { alert('O navegador bloqueou a janela. Libere o pop-up e tente de novo.'); return; }
+      w.document.write(this.samRotPdfHtml(r));
+      w.document.close();
+      // espera a fonte/imagens antes de chamar a impressão (senão sai sem a faixa)
+      w.onload = () => setTimeout(() => w.print(), 600);
     },
     // Cria um Google Docs NOVO já com o MODELO no clipboard: abre docs.new e a
     // Samara só dá Ctrl/Cmd+V — o layout inteiro cola formatado (tabelas inclusive).
