@@ -236,6 +236,13 @@
             <div style="flex:1"><div style="font-weight:800;font-size:14px">Seus resultados</div><div class="muted" style="font-size:12px">Redes e tráfego, por dentro</div></div>
             <span style="color:var(--mut2)">›</span>
           </div>
+          <!-- PAINEL COMPLETO (Dinho 07/08): o painel rico já existia e o cliente
+               não tinha como chegar nele pela área — só por link avulso. -->
+          <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer" @click="location.href='painel-cliente.html'">
+            <div style="width:40px;height:40px;border-radius:12px;background:var(--ambbg);display:flex;align-items:center;justify-content:center;flex:none"><span style="font-size:19px">📊</span></div>
+            <div style="flex:1"><div style="font-weight:800;font-size:14px">Painel completo</div><div class="muted" style="font-size:12px">Gráficos, mapa, campanhas e relatório</div></div>
+            <span style="color:var(--mut2)">›</span>
+          </div>
           <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer" @click="aba='agenda'; if(!agLoaded) carregarAgenda()">
             <div style="width:40px;height:40px;border-radius:12px;background:#F1EDE5;display:flex;align-items:center;justify-content:center;flex:none"><span style="font-size:19px">📅</span></div>
             <div style="flex:1"><div style="font-weight:800;font-size:14px">Próximas ações</div><div class="muted" style="font-size:12px">Reuniões e gravações</div></div>

@@ -195,6 +195,16 @@
   .pl .dot{width:11px;height:11px;border-radius:3px;flex:none}
   .pl .pn{color:var(--ink);font-weight:600}
   .pl .pp{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink2)}
+  /* gráfico de linha (evolução) + rótulo auxiliar das caixas novas — 07/08 */
+  .graf{margin-top:10px}
+  .graf svg{display:block;overflow:visible}
+  .lg{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px}
+  .lg-i{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut);font-weight:600}
+  .lg-i b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .lg-d{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+  .sub-graf{margin-top:14px}
+  .sub-graf h3{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 2px}
+  .sub-l{font-size:12px;color:var(--mut);line-height:1.5;margin-top:6px}
   .mini{display:flex;flex-direction:column;gap:10px}
   .mr{display:grid;grid-template-columns:74px 1fr 40px;align-items:center;gap:10px}
   .mr .l{font-size:12.5px;font-weight:600;color:var(--ink)}
@@ -343,6 +353,57 @@
         '<span class="t"><span class="f" style="width:'+Math.max(3,pct)+'%;background:'+cor+'"></span></span>'+
         '<span class="v num">'+pct+'%</span></div>';
     }).join('')+'</div>';
+  }
+
+  // LINHA (SVG) — evolução no tempo. series=[{nome,cor,campo}], pts=[{data,...}].
+  // Eixo Y por série (escalas diferentes convivem: alcance na casa dos milhares e
+  // engajamento em %), então cada linha é normalizada pelo próprio máximo e a
+  // legenda mostra o valor REAL do último ponto — sem eixo mentiroso.
+  function linha(pts, series, alt){
+    pts=(pts||[]).filter(function(p){return p&&p.data;});
+    if(pts.length<2) return '';
+    var W=760, H=alt||190, padL=8, padR=8, padT=14, padB=26;
+    var plotW=W-padL-padR, plotH=H-padT-padB;
+    var usadas=series.filter(function(s){ return pts.some(function(p){ return p[s.campo]!=null && !isNaN(p[s.campo]); }); });
+    if(!usadas.length) return '';
+    // X proporcional à DATA (não ao índice): as séries têm dias faltando, e
+    // espaçar por índice faria 9 dias sem dado parecerem 1 (tempo distorcido).
+    var t0=new Date(pts[0].data+'T12:00:00').getTime();
+    var t1=new Date(pts[pts.length-1].data+'T12:00:00').getTime();
+    var span=(t1-t0)||1;
+    var paths=usadas.map(function(s){
+      var vals=pts.map(function(p){ return p[s.campo]==null?null:Number(p[s.campo]); });
+      var max=Math.max.apply(null,vals.filter(function(v){return v!=null;}).concat([0]))||1;
+      var d='', started=false;
+      vals.forEach(function(v,i){
+        if(v==null) return;
+        var x=padL+((new Date(pts[i].data+'T12:00:00').getTime()-t0)/span)*plotW;
+        var y=padT+plotH-(v/max)*plotH;
+        d+=(started?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' '; started=true;
+      });
+      return '<path d="'+d.trim()+'" fill="none" stroke="'+s.cor+'" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>';
+    }).join('');
+    // grade horizontal discreta
+    var grade=[0,.25,.5,.75,1].map(function(f){ var y=padT+plotH*f; return '<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#EEF0F3" stroke-width="1"/>'; }).join('');
+    var dBR=function(s){ var p=String(s).slice(0,10).split('-'); return p[2]+'/'+p[1]; };
+    var eixo='<text x="'+padL+'" y="'+(H-7)+'" font-size="10" fill="#9aa0aa">'+dBR(pts[0].data)+'</text>'+
+      '<text x="'+(W-padR)+'" y="'+(H-7)+'" font-size="10" fill="#9aa0aa" text-anchor="end">'+dBR(pts[pts.length-1].data)+'</text>';
+    // Legenda: séries de FLUXO (gasto/contatos por dia) mostram o TOTAL do período;
+    // séries de ESTADO (seguidores, alcance, engajamento) mostram o valor ATUAL.
+    var leg=usadas.map(function(s){
+      var v=null;
+      if(s.somar){
+        var t=0, achou=false;
+        pts.forEach(function(p){ if(p[s.campo]!=null){ t+=Number(p[s.campo]); achou=true; } });
+        if(achou) v=t;
+      } else {
+        for(var i=pts.length-1;i>=0;i--){ if(pts[i][s.campo]!=null){ v=Number(pts[i][s.campo]); break; } }
+      }
+      return '<span class="lg-i"><span class="lg-d" style="background:'+s.cor+'"></span>'+esc(s.nome)+
+        (v!=null?' <b class="num">'+(s.fmt?s.fmt(v):fInt(v))+'</b>':'')+'</span>';
+    }).join('');
+    return '<div class="graf"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="width:100%;height:'+H+'px">'+
+      grade+paths+eixo+'</svg><div class="lg">'+leg+'</div></div>';
   }
 
   // PIZZA (donut SVG) — itens=[{label,valor}], cores=mapa label→hex. Legenda com %.
@@ -680,6 +741,81 @@
       }
       bMid+=blk('fechamento',notaEquipe(lr.fechamento));
       if(bMid) h+='<div class="sec"><div class="sec-h"><span class="ic" style="background:#111"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><h2>Campanhas (mídia paga)</h2></div>'+bMid+'</div>';
+    }
+
+    // ───── EVOLUÇÃO (Dinho 07/08): o histórico já existia no cadastro e nunca
+    // chegava ao cliente. Linha do tempo do orgânico e do investimento. ─────
+    var ev=d.evolucao;
+    if(ev){
+      var gOrg=linha(ev.organico,[
+        {nome:'Alcance',cor:'#4285F4',campo:'alcance'},
+        {nome:'Seguidores',cor:'#34A853',campo:'seguidores'},
+        {nome:'Engajamento',cor:'#F9A825',campo:'engaj',fmt:function(v){return fNum(v)+'%';}}
+      ]);
+      // ⚠️ adsHist/adsMetaHist são ACUMULADOS NO MÊS (01/07=37,88 · 02/07=74,80 …
+      // e zeram no dia 1º do mês seguinte). Pra mostrar "por dia" é preciso
+      // DIFERENCIAR — senão o gráfico vira uma rampa e mente sobre o gasto diário.
+      // Mantemos o ACUMULADO (é o que o dado é). Diferenciar pra "por dia" criava
+      // picos falsos: a série do Meta tem buracos de até 9 dias, e a diferença
+      // jogava o gasto do período inteiro num único dia.
+      var ptsAds=[], mapAds={};
+      (ev.google||[]).forEach(function(p){ mapAds[p.data]=mapAds[p.data]||{data:p.data}; mapAds[p.data].gGasto=p.gasto; mapAds[p.data].gLeads=p.leads; });
+      (ev.meta||[]).forEach(function(p){ mapAds[p.data]=mapAds[p.data]||{data:p.data}; mapAds[p.data].mGasto=p.gasto; mapAds[p.data].mLeads=p.leads; });
+      Object.keys(mapAds).sort().forEach(function(k){ ptsAds.push(mapAds[k]); });
+      var moeda=function(v){return 'R$ '+fNum(v);};
+      var gAds=linha(ptsAds,[
+        {nome:'Investido · Google',cor:'#4285F4',campo:'gGasto',fmt:moeda},
+        {nome:'Investido · Meta',cor:'#7E57C2',campo:'mGasto',fmt:moeda},
+        {nome:'Contatos · Google',cor:'#34A853',campo:'gLeads'},
+        {nome:'Contatos · Meta',cor:'#EA4335',campo:'mLeads'}
+      ]);
+      var bEv='';
+      if(gOrg) bEv+='<div class="sub-graf"><h3>Suas redes ao longo do tempo</h3>'+gOrg+'</div>';
+      if(gAds) bEv+='<div class="sub-graf"><h3>Investimento e contatos <span style="font-weight:400;color:var(--mut)">· acumulado no mês (cada mês recomeça do zero)</span></h3>'+gAds+'</div>';
+      bEv=blk('evolucao',bEv);
+      if(bEv) h+='<div class="sec"><div class="sec-h"><span class="ic" style="background:#1E8E4E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg></span><h2>Evolução</h2><span class="sub">como os números caminharam</span></div>'+bEv+'</div>';
+    }
+
+    // ───── PRESENÇA DIGITAL: ficha do Google Meu Negócio + saúde do site ─────
+    var pr=d.presenca;
+    if(pr){
+      var bPr='';
+      if(pr.google){
+        var estrelas=function(n){ n=Number(n||0); var s=''; for(var i=1;i<=5;i++) s+='<span style="color:'+(i<=Math.round(n)?'#F9A825':'#DDE1E6')+'">★</span>'; return s; };
+        bPr+='<div class="kpi b" style="flex:1;min-width:270px"><div class="lb">Google Meu Negócio</div>'+
+          '<div class="vl num">'+(pr.google.nota!=null?fNum(pr.google.nota):'—')+' <span style="font-size:15px">'+estrelas(pr.google.nota)+'</span></div>'+
+          '<div class="sub-l">'+(pr.google.avaliacoes!=null?fInt(pr.google.avaliacoes)+' avaliações':'sem avaliações')+
+          (pr.google.endereco?'<br>'+esc(pr.google.endereco):'')+'</div>'+
+          (pr.google.mapsUrl?'<a class="sub-l" style="color:#4285F4;text-decoration:none;display:block;margin-top:6px" href="'+esc(pr.google.mapsUrl)+'" target="_blank" rel="noopener">ver no Google Maps →</a>':'')+
+          '</div>';
+      }
+      if(pr.site){
+        var barra=function(rot,v){
+          if(v==null) return '';
+          var cor=v>=90?'#34A853':(v>=50?'#F9A825':'#EA4335');
+          return '<div class="mr"><span class="l">'+rot+'</span><span class="t"><span class="f" style="width:'+Math.max(3,v)+'%;background:'+cor+'"></span></span><span class="v num">'+v+'</span></div>';
+        };
+        var cwv=pr.site.cwv||{};
+        bPr+='<div class="kpi g" style="flex:1;min-width:300px"><div class="lb">Saúde do seu site</div>'+
+          '<div class="mini" style="margin-top:8px">'+barra('Performance',pr.site.performance)+barra('SEO',pr.site.seo)+
+          barra('Acessibilidade',pr.site.acessibilidade)+barra('Boas práticas',pr.site.boasPraticas)+'</div>'+
+          ((cwv.lcp||cwv.cls||cwv.inp)?'<div class="sub-l" style="margin-top:8px">Carregamento '+esc(cwv.lcp||'—')+' · estabilidade '+esc(cwv.cls||'—')+' · resposta '+esc(cwv.inp||'—')+'</div>':'')+
+          (pr.site.url?'<a class="sub-l" style="color:#4285F4;text-decoration:none;display:block;margin-top:6px" href="'+esc(pr.site.url)+'" target="_blank" rel="noopener">'+esc(String(pr.site.url).replace(/^https?:\/\//,''))+' →</a>':'')+
+          '</div>';
+      }
+      bPr=blk('presenca', bPr?('<div class="two" style="display:flex;gap:14px;flex-wrap:wrap">'+bPr+'</div>'):'');
+      if(bPr) h+='<div class="sec"><div class="sec-h"><span class="ic" style="background:#4285F4"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg></span><h2>Presença digital</h2><span class="sub">como o mercado te encontra</span></div>'+bPr+'</div>';
+    }
+
+    // ───── CONCORRENTES monitorados ─────
+    var cc=d.concorrentes;
+    if(cc && cc.lista && cc.lista.length){
+      var bCc=blk('concorrentes',
+        '<div style="display:flex;flex-wrap:wrap;gap:8px">'+cc.lista.map(function(n){
+          return '<span style="display:inline-block;padding:7px 13px;border-radius:20px;background:#FCE8E6;color:#8B1A10;font-size:13px;font-weight:600">'+esc(n)+'</span>';
+        }).join('')+'</div>'+
+        '<div class="sub-l" style="margin-top:9px">A equipe acompanha esses perfis para comparar linguagem, frequência e ofertas — e ajustar sua estratégia.</div>');
+      if(bCc) h+='<div class="sec"><div class="sec-h"><span class="ic" style="background:#EA4335"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span><h2>Concorrentes</h2><span class="sub">quem disputa atenção com você</span></div>'+bCc+'</div>';
     }
 
     h+='<div class="foot">Painel gerado pela Maracatu Digital · maracatumktdigital.com</div>';
