@@ -98,8 +98,13 @@
   }
   /* topo — cartão de cabeçalho igual candidato */
   .top{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);margin-top:14px}
-  .top .ava{width:52px;height:52px;border-radius:15px;flex:none;display:grid;place-items:center;font-weight:700;font-size:19px;color:#fff;overflow:hidden;background:linear-gradient(135deg,var(--blue),#6FA8FF);box-shadow:0 8px 20px -8px rgba(66,133,244,.5)}
+  .top .ava{width:60px;height:60px;border-radius:16px;flex:none;display:grid;place-items:center;font-weight:700;font-size:19px;color:#fff;overflow:hidden;background:linear-gradient(135deg,var(--blue),#6FA8FF);box-shadow:0 8px 20px -8px rgba(66,133,244,.5)}
   .top .ava img{width:100%;height:100%;object-fit:cover}
+  /* COM LOGO (Dinho 07/08): fundo branco, marca INTEIRA e maior no PC — o cover
+     sobre o gradiente azul cortava a arte e virava um quadradinho ilegível. */
+  .top .ava.tem-logo{background:#fff;border:1px solid var(--line);box-shadow:var(--shadow-sm);padding:5px}
+  .top .ava.tem-logo img{object-fit:contain}
+  @media (min-width:900px){ .top .ava{width:88px;height:88px;border-radius:22px} }
   .top .nm{font-size:clamp(18px,2.4vw,23px);font-weight:700;letter-spacing:-.02em;line-height:1.1}
   .top .pe{font-size:12px;color:var(--mut);margin-top:2px}
   .top .per{margin-left:auto;display:flex;flex-wrap:wrap;gap:3px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px}
@@ -583,7 +588,7 @@
     // topo
     var perLabel=(d.periodo&&d.periodo.label)|| (curDe.split('-').reverse().join('/')+' a '+curAte.split('-').reverse().join('/'));
     h+='<div class="top">'+
-      '<div class="ava">'+(cli.logo?'<img src="'+esc(cli.logo)+'">':esc(ini2(cli.nome)))+'</div>'+
+      '<div class="ava'+(cli.logo?' tem-logo':'')+'">'+(cli.logo?'<img src="'+esc(cli.logo)+'" alt="'+esc(cli.nome||'')+'">':esc(ini2(cli.nome)))+'</div>'+
       '<div><div class="nm">'+esc(cli.nome||'Meu painel')+'</div><div class="pe">Resultados · '+esc(perLabel)+'</div></div>'+
       '<div class="per">'+
         [['7d','7 dias'],['15d','15 dias'],['30d','30 dias'],['mespassado','Mês passado'],['estemes','Este mês'],['custom','Personalizado']].map(function(o){

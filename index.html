@@ -1811,6 +1811,26 @@
                 </div>
               </div>
 
+              <!-- MARCA DO CLIENTE (logo que aparece na área do cliente e no painel) -->
+              <div class="card" style="box-shadow:none;border:1px solid var(--border);padding:12px;margin-bottom:10px">
+                <div class="flex items-center gap-2" style="margin-bottom:8px">
+                  <span class="fw-800 fs-12" style="text-transform:uppercase;letter-spacing:.5px"><i class="ph ph-image-square ic-ph"></i> Marca do cliente</span>
+                  <span class="text-3 fs-12" style="margin-left:auto">aparece na área do cliente e no painel de resultados</span>
+                </div>
+                <div class="flex items-center gap-3" style="flex-wrap:wrap">
+                  <div style="width:72px;height:72px;border-radius:14px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none">
+                    <template x-if="logoCli(monitorCliente)"><img :src="logoCli(monitorCliente)" style="width:100%;height:100%;object-fit:contain"></template>
+                    <template x-if="!logoCli(monitorCliente)"><span class="text-3 fs-11">sem logo</span></template>
+                  </div>
+                  <div class="flex gap-2" style="flex-wrap:wrap">
+                    <label class="btn btn-sm" style="cursor:pointer" :class="logoBusy?'is-disabled':''"><i class="ph ph-upload-simple ic-ph"></i> <span x-text="logoBusy?'…':'Subir logo'"></span><input type="file" accept="image/*" @change="subirLogoCliente($event, monitorCliente)" style="display:none"></label>
+                    <button class="btn btn-sm" :disabled="logoBusy" @click="logoDoInstagram(monitorCliente)"><i class="ph ph-instagram-logo ic-ph"></i> Puxar da conta vinculada</button>
+                    <button class="btn btn-sm" style="color:#dc2626" x-show="logoCli(monitorCliente)" :disabled="logoBusy" @click="removerLogoCliente(monitorCliente)">remover</button>
+                  </div>
+                </div>
+                <div class="text-3 fs-11" style="margin-top:7px">Prefira o arquivo oficial da marca (PNG quadrado, fundo claro). A foto de perfil do Instagram serve de quebra-galho — costuma vir com moldura e a marca pequena no meio.</div>
+              </div>
+
               <!-- REDES SOCIAIS — MÉTRICAS REAIS (Meta / OAuth por cliente) -->
               <div class="card" style="box-shadow:none;border:1px solid var(--border);padding:12px;margin-bottom:10px">
                 <div class="flex items-center gap-2" style="margin-bottom:8px">
@@ -6627,7 +6647,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=449"></script>
+<script src="js/app.js?v=450"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

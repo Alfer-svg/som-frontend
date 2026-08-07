@@ -526,6 +526,7 @@ document.addEventListener('alpine:init', () => {
     metaStatus: {},   // {clienteId: {conectado, igUsername, pageName, ...}} — conexão Meta por cliente
     metaMetricas: {}, // {clienteId: {instagram, facebook, posts}} — métricas reais puxadas da Meta
     metaBusy: false,
+    logoBusy: false,
     adsLive: {},      // {clienteId: {configurado, leads, custoLead, gasto, ...}} — Google Ads (MCC) puxado ao vivo na ficha
     adsConfig: null,  // {configurado, mcc} — há credencial da agência? (carregado 1x)
     radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
@@ -4129,6 +4130,46 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       const m = (c && c.adsManual) || {};
       return { fonte: 'manual', leads: m.leads, custoLead: m.custoLead };
     },
+    // ── MARCA DO CLIENTE (Dinho 07/08) ──────────────────────────────────
+    // `dados.logo` alimenta a bolinha da área do cliente e do painel. Existia no
+    // banco e não tinha tela: 2 de 539 cadastros tinham logo. A foto do IG é o
+    // automático; aqui a equipe sobe o arquivo oficial, que é o que fica bom.
+    logoCli(c) { return (c && c.dados && c.dados.logo) || ''; },
+    async salvarLogoCliente(c, valor) {
+      this.logoBusy = true;
+      try {
+        await this.api('POST', '/cliente-portal/admin/logo', { clienteId: c.id, logo: valor || '' });
+        if (!c.dados) c.dados = {};
+        if (valor) c.dados.logo = valor; else delete c.dados.logo;
+      } catch (e) { alert('Não deu pra salvar a logo: ' + (e.message || e)); }
+      finally { this.logoBusy = false; }
+    },
+    async subirLogoCliente(e, c) {
+      const file = e.target.files && e.target.files[0]; e.target.value = '';
+      if (!file) return;
+      if (!this.cloudOk) await this.carregarCloud();
+      if (!this.cloudOk) { alert('Configure o Cloudinary primeiro (Pessoal › Armazenamento de arquivos).'); return; }
+      this.logoBusy = true;
+      let url = '';
+      try { url = await this.uploadArquivo(file); }
+      catch (err) { alert('Falha no upload: ' + (err.message || err)); }
+      finally { this.logoBusy = false; }
+      if (url) await this.salvarLogoCliente(c, url);
+    },
+    async logoDoInstagram(c) {
+      this.logoBusy = true;
+      try {
+        const r = await this.api('POST', '/monitoramento/meta/logo/' + c.id, { forcar: true });
+        if (!r || r.ok === false) { alert('Não deu pra puxar: ' + ((r && r.motivo) || 'conta sem foto')); return; }
+        if (r.logo) { if (!c.dados) c.dados = {}; c.dados.logo = r.logo; }
+      } catch (e) { alert('Não deu pra puxar a logo: ' + (e.message || e)); }
+      finally { this.logoBusy = false; }
+    },
+    async removerLogoCliente(c) {
+      if (!confirm('Remover a logo deste cliente? A bolinha volta a mostrar as iniciais.')) return;
+      await this.salvarLogoCliente(c, '');
+    },
+
     // ── Monitoramento Meta (Instagram/Facebook) — OAuth por cliente ──
     async conectarMeta(clienteId) {
       if (!clienteId) return;
