@@ -46,6 +46,38 @@
     .tab svg{width:22px;height:22px}
     .ring{transform:rotate(-90deg)}
     [x-cloak]{display:none!important}
+    /* ───── DESKTOP (Dinho 07/08) ─────
+       A área do cliente nasceu mobile-first: no monitor virava uma coluna de
+       460px com duas faixas cinza gigantes e a navegação colada no rodapé, cara
+       de "app de celular esticado". Aqui ela vira layout de PC de verdade:
+       navegação NO TOPO (order:-1 sobe a tabbar, que no HTML vem por último),
+       conteúdo mais largo e atalhos em 3 colunas. O mobile fica intacto. */
+    @media (min-width:900px){
+      .wrap{max-width:1080px;padding:0 28px 40px}
+      /* o app fica num div SEM classe dentro do .wrap — é ELE o container flex
+         (aplicar no .wrap não funcionava: a tabbar não é filha direta dele) */
+      .wrap>div:has(>.tabbar){display:flex;flex-direction:column}
+      /* a tabbar vem no fim do HTML — order a leva pro topo, sem mexer no Alpine */
+      .tabbar{order:-1;position:sticky;top:0;left:auto;right:auto;border-top:none;
+              border-bottom:1px solid var(--line);margin:0 -28px 4px;padding:0 28px;
+              background:rgba(255,255,255,.92)}
+      .tabbar-in{max-width:none;justify-content:flex-start;gap:6px}
+      .tab{flex:none;flex-direction:row;gap:8px;padding:14px 18px;font-size:13.5px;
+           border-bottom:2.5px solid transparent;border-radius:0}
+      .tab.on{border-bottom-color:var(--red)}
+      .tab svg{width:18px;height:18px}
+      .topo-cli{order:-2;padding:20px 0 6px}
+      .topo-cli + div{order:-2;padding-left:0!important;padding-right:0!important}
+      /* corpo das abas: tira o padding de celular e respira */
+      .wrap [x-show^="aba==="]{padding:14px 0 0!important}
+      /* atalhos lado a lado em vez de empilhados */
+      .atalhos{grid-template-columns:repeat(3,1fr);gap:14px}
+      .atalhos .card{align-items:flex-start;flex-direction:column;gap:10px;min-height:118px}
+      .atalhos .card>span:last-child{display:none}
+      /* leitura do dia: cartão largo, texto com medida legível */
+      .hero{padding:26px 28px}
+      .hero .btn{width:auto!important;min-width:320px}
+    }
     /* hero = card CLARO com faixa colorida Google no topo (nada de preto) */
     .hero{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;color:var(--ink);position:relative;overflow:hidden;box-shadow:0 2px 10px rgba(60,64,67,.08)}
     .hero::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#4285F4 0 25%,#EA4335 25% 50%,#F9A825 50% 75%,#34A853 75% 100%)}
@@ -155,7 +187,7 @@
         </div>
       </div>
       <!-- topo -->
-      <div style="padding:16px 18px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div class="topo-cli" style="padding:16px 18px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px">
         <div class="row" style="gap:11px;min-width:0">
           <div class="brand" :style="cliente.logo?('background-image:url('+cliente.logo+');background-size:cover;background-position:center'):('background:'+brandBg())"><span x-show="!cliente.logo" x-text="iniciais()"></span></div>
           <div style="min-width:0">
@@ -192,7 +224,7 @@
 
         <!-- atalhos -->
         <div class="sec-label" style="color:var(--mut)">Atalhos</div>
-        <div style="display:grid;gap:10px;margin-top:8px">
+        <div class="atalhos" style="display:grid;gap:10px;margin-top:8px">
           <div class="card" style="display:flex;align-items:center;gap:12px;cursor:pointer" @click="aba='conteudo'">
             <div style="width:40px;height:40px;border-radius:12px;background:var(--bluebg);display:flex;align-items:center;justify-content:center;flex:none"><span style="font-size:19px">🗓️</span></div>
             <div style="flex:1"><div style="font-weight:800;font-size:14px">Seu conteúdo da semana</div><div class="muted" style="font-size:12px" x-text="(ap&&ap.disponivel)?(ap.status==='APROVADO_CLIENTE'?'Você já aprovou ✓':'Tem conteúdo pra você aprovar'):'Nada pendente agora'"></div></div>
