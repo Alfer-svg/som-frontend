@@ -45,6 +45,31 @@
     .tab.on{color:var(--red)}
     .tab svg{width:22px;height:22px}
     .ring{transform:rotate(-90deg)}
+    /* botão "Assistir o vídeo" sobre a capa do post (display vem de CLASSE — ver
+       comentário do x-show no card do conteúdo) */
+    .btn-play{width:100%;height:100%;border:0;background:rgba(0,0,0,.30);color:#fff;
+      display:flex;align-items:center;justify-content:center;gap:9px;
+      font:600 14px inherit;cursor:pointer;transition:background .15s}
+    .btn-play:hover{background:rgba(0,0,0,.42)}
+    .btn-play .pl-ic{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.94);
+      color:#111;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+    /* ───── PEÇAS no formato original da rede (Dinho 07/08) ─────
+       Antes toda peça virava uma faixa de 200px cortada no object-fit:cover — o
+       cliente aprovava sem ver a arte inteira, e o carrossel só mostrava a 1ª
+       peça. Agora: a proporção vem da PRÓPRIA arte (medida no onload) e o
+       carrossel mostra até 3 peças lado a lado; passando disso, rola pro lado. */
+    .pecas{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;background:#0b0b0c;
+      -webkit-overflow-scrolling:touch}
+    .pecas::-webkit-scrollbar{height:7px}
+    .pecas::-webkit-scrollbar-thumb{background:#5a5f66;border-radius:4px}
+    .peca{position:relative;flex:0 0 auto;scroll-snap-align:start;background:#0b0b0c;overflow:hidden}
+    .peca img,.peca video{width:100%;height:100%;object-fit:contain;display:block;background:#0b0b0c}
+    .peca-ov{position:absolute;inset:0}
+    .peca-n{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.62);color:#fff;font-size:11px;
+      font-weight:700;padding:3px 8px;border-radius:999px}
+    .peca-x{position:absolute;top:8px;left:8px;border:0;border-radius:9px;background:rgba(0,0,0,.62);
+      color:#fff;font-size:12px;padding:5px 10px;cursor:pointer}
+    .peca-hint{font-size:12px;padding:7px 15px 0;color:var(--mut)}
     [x-cloak]{display:none!important}
     /* ───── DESKTOP (Dinho 07/08) ─────
        A área do cliente nasceu mobile-first: no monitor virava uma coluna de
@@ -280,7 +305,39 @@
 
             <template x-for="(p,i) in (ap.posts||[])" :key="'ap'+i">
               <div class="card" style="margin-bottom:10px;padding:0;overflow:hidden">
-                <img x-show="postImg(p)" :src="postImg(p)" style="width:100%;height:200px;object-fit:cover;display:block" onerror="this.style.display='none'">
+                <!-- peças no formato original + carrossel (até 3 visíveis) -->
+                <template x-if="pecas(p).length">
+                  <div>
+                    <div class="pecas" :style="'justify-content:'+(pecas(p).length<=3?'center':'flex-start')">
+                      <template x-for="(pc,j) in pecas(p)" :key="'pc'+i+'_'+j">
+                        <div class="peca" :style="estiloPeca(p,i)">
+                          <template x-if="!(pc.video && aberto(i,j))">
+                            <img :src="pc.video ? posterDe(pc.url,p) : pc.url" loading="lazy"
+                                 @load="medirPeca(i,$event)" onerror="this.style.visibility='hidden'">
+                          </template>
+                          <template x-if="pc.video && aberto(i,j)">
+                            <video :src="pc.url" :poster="posterDe(pc.url,p)" controls autoplay playsinline
+                                   @loadedmetadata="medirPeca(i,$event)"></video>
+                          </template>
+                          <!-- ⚠️ o x-show do Alpine APAGA o display inline (memória
+                               alpine-xshow-display-grid): o x-show fica no WRAPPER e o
+                               flex do botão vem de classe, senão o ▶ desalinha. -->
+                          <div x-show="pc.video && !aberto(i,j)" class="peca-ov">
+                            <button class="btn-play" @click="assistir(i,j)" type="button">
+                              <span class="pl-ic">▶</span> Assistir o vídeo
+                            </button>
+                          </div>
+                          <button x-show="pc.video && aberto(i,j)" @click="assistir(i,j)" type="button"
+                                  class="peca-x">Fechar</button>
+                          <span x-show="pecas(p).length>1" class="peca-n" x-text="(j+1)+'/'+pecas(p).length"></span>
+                        </div>
+                      </template>
+                    </div>
+                    <div x-show="pecas(p).length>3" class="peca-hint">
+                      → arraste para o lado para ver as <span x-text="pecas(p).length"></span> peças
+                    </div>
+                  </div>
+                </template>
                 <div style="padding:13px 15px">
                   <div class="row" style="justify-content:space-between">
                     <span class="pill" style="background:var(--bluebg);color:var(--blue)" x-text="p.tipoPost||'Post'"></span>
@@ -498,7 +555,7 @@
       novaSenha:'', novaSenha2:'', _pend:null,
       etapa:'cred', camStream:null, camPronta:false, camErro:false, rostoOk:false, fdTimer:null, liberaSemRosto:false, fotoTirada:false, fotoData:'', lat:null, lng:null, geoOk:false, consentiu:false, hbTimer:null,
       alertaCaptura:false, protegido:false, alertaTimer:null, guardOn:false,
-      ap:null, apLoading:false, apAcao:false, ajusteAberto:false, ajusteTxt:'',
+      ap:null, apLoading:false, apAcao:false, ajusteAberto:false, ajusteTxt:'', videoAberto:null, ratios:{},
       res:{}, resLoading:false, eng:{}, traf:{},
       ag:{}, agLoading:false, agLoaded:false,
       init(){
@@ -723,6 +780,44 @@
       mesN(d){ const m=+String(d||'').slice(5,7); return ['','JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'][m]||''; },
       fmtSemana(a,b){ return this.fmtDia(a)+' a '+this.fmtDia(b); },
       postImg(p){ const c=(Array.isArray(p.criativos)&&p.criativos[0])||p.criativo; return (c&&/^https?:/.test(c))?c:''; },
+      ehVideo(u){ return /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(u) || /res\.cloudinary\.com\/[^/]+\/video\/upload\//.test(u); },
+      // TODAS as peças do post (carrossel), sem repetir: `criativo` costuma ser
+      // cópia do 1º item de `criativos`.
+      pecas(p){
+        const lista=(Array.isArray(p.criativos)?p.criativos:[]).concat(p.criativo?[p.criativo]:[]);
+        const vistos=[], out=[];
+        for(const u of lista){
+          if(typeof u!=='string'||!/^https?:/.test(u)||vistos.includes(u)) continue;
+          vistos.push(u); out.push({url:u, video:this.ehVideo(u)});
+        }
+        return out;
+      },
+      // Capa do player: frame 0 do próprio vídeo no Cloudinary; senão a 1ª imagem do post.
+      posterDe(u,p){
+        if(/res\.cloudinary\.com\/[^/]+\/video\/upload\//.test(u)){
+          let s=u.replace('/video/upload/','/video/upload/so_0/');
+          return /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(s) ? s.replace(/\.(mp4|mov|webm|m4v)(\?|#|$)/i,'.jpg$2') : s+'.jpg';
+        }
+        const img=this.pecas(p).find(x=>!x.video); return img?img.url:'';
+      },
+      // FORMATO ORIGINAL: a proporção é medida na própria arte assim que ela
+      // carrega (como o Instagram faz) — nada de cortar em faixa de 200px.
+      medirPeca(i,ev){
+        const el=ev.target, w=el.naturalWidth||el.videoWidth, h=el.naturalHeight||el.videoHeight;
+        if(!w||!h||this.ratios[i]) return;
+        this.ratios = Object.assign({}, this.ratios, {[i]: Math.round((w/h)*1000)/1000});
+      },
+      // Até 3 peças aparecem juntas; da 4ª em diante o carrossel rola pro lado.
+      estiloPeca(p,i){
+        const n=this.pecas(p).length, r=this.ratios[i]||0.8;
+        const cap = 'calc(62vh * '+r+')';   // nenhuma peça passa de ~62% da tela em altura
+        const larg = n===1 ? 'min(100%, '+cap+')'
+                   : n===2 ? 'min(calc(50% - 3px), '+cap+')'
+                           : 'min(calc((100% - 12px) / 3), '+cap+')';
+        return 'aspect-ratio:'+r+';width:'+larg;
+      },
+      aberto(i,j){ return this.videoAberto === i+'_'+j; },
+      assistir(i,j){ const k=i+'_'+j; this.videoAberto = (this.videoAberto===k ? null : k); },
       statusLabel(s){ return {ENVIADO:'Aguardando você',APROVADO_CLIENTE:'Aprovado',AJUSTE:'Ajuste pedido'}[s]||s; },
       statusStyle(s){ return s==='APROVADO_CLIENTE'?'background:var(--grnbg);color:var(--grnink)':(s==='AJUSTE'?'background:var(--ambbg);color:var(--amb)':'background:var(--bluebg);color:var(--blue)'); },
     };

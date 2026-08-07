@@ -5795,7 +5795,7 @@
               <div class="flex gap-2 items-center">
                 <input class="form-input" style="flex:1" x-model="po._novoCriativo" @keydown.enter.prevent="addCriativoLink(po)" placeholder="Cole um link e Enter, ou suba vários — opcional">
                 <button type="button" class="btn btn-ghost btn-sm" x-show="po._novoCriativo" @click="addCriativoLink(po)">+ link</button>
-                <label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><i class="ph ph-export ic-ph"></i> <span x-text="uploadando?'…':'subir vários'"></span><input type="file" multiple accept="image/*,application/pdf" @change="uploadCriativos($event, po)" style="display:none"></label>
+                <label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><i class="ph ph-export ic-ph"></i> <span x-text="uploadando?'…':'subir vários'"></span><input type="file" multiple accept="image/*,video/*,application/pdf" @change="uploadCriativos($event, po)" style="display:none"></label>
               </div>
             </div>
           </div>
