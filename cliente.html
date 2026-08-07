@@ -83,7 +83,7 @@
               <span>Lembrar meu acesso neste aparelho</span>
             </label>
             <div x-show="lgErro" style="color:var(--red);font-size:13px;margin:8px 0 0" x-text="lgErro"></div>
-            <button class="btn btn-amber" style="width:100%;margin-top:16px" @click="irParaFoto()">Continuar</button>
+            <button class="btn btn-amber" style="width:100%;margin-top:16px" @click="irParaFoto()" :disabled="lgLoading"><span x-text="lgLoading?'Entrando…':'Entrar'"></span></button>
           </div>
         </template>
         <!-- ETAPA 3 · senha provisória: criar a senha definitiva (obrigatório no 1º acesso) -->
@@ -480,10 +480,26 @@
         const d=await r.json().catch(()=>null);
         if(!r.ok) throw new Error((d&&d.message)||'Erro'); return d;
       },
-      // ── acesso seguro: câmera + geolocalização + consentimento ──
-      irParaFoto(){
+      // ── entrada: tenta o login LEVE primeiro ──
+      // Foto + localização são exigência de CANDIDATO (dado sensível de campanha) —
+      // cliente comum entra só com login e senha (Dinho 07/08: "para os clientes
+      // comuns não captar foto e localização... isso é apenas para os candidatos").
+      // Quem decide é o SERVIDOR: se ele responder que a foto é obrigatória, aí sim
+      // abrimos a câmera. Assim a regra vive num lugar só e o portal a obedece.
+      async irParaFoto(){
         this.lgErro='';
         if(!this.lgEmail||!this.lgSenha){ this.lgErro='Preencha login e senha.'; return; }
+        this.lgLoading=true;
+        try{
+          const d=await this.api('POST','/cliente-portal/login',{email:this.lgEmail,senha:this.lgSenha});
+          if(d.trocarSenha){ this._pend=d; this.etapa='senha'; this.novaSenha=''; this.novaSenha2=''; this.lgErro=''; this.lgLoading=false; return; }
+          this._finalizarLogin(d); this.lgLoading=false; return;
+        }catch(e){
+          const msg=String(e.message||'');
+          // Só cai pra biometria quando o servidor EXIGE (candidato / segurança forte).
+          if(!/foto|biometri|localiza/i.test(msg)){ this.lgErro=msg||'Não foi possível entrar.'; this.lgLoading=false; return; }
+        }
+        this.lgLoading=false;
         this.etapa='foto'; this.fotoTirada=false; this.fotoData=''; this.consentiu=false; this.geoOk=false;
         this.rostoOk=false; this.liberaSemRosto=false;
         this.abrirCamera(); this.pegarLocal();
