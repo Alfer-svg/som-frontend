@@ -207,6 +207,8 @@
   .sub-l{font-size:12px;color:var(--mut);line-height:1.5;margin-top:6px}
   .mini{display:flex;flex-direction:column;gap:10px}
   .mr{display:grid;grid-template-columns:74px 1fr 40px;align-items:center;gap:10px}
+  /* rótulos longos ("Acessibilidade", "Boas práticas") encostavam na barra */
+  .mini.lbl-lg .mr{grid-template-columns:104px 1fr 40px}
   .mr .l{font-size:12.5px;font-weight:600;color:var(--ink)}
   .mr .t{height:10px;background:var(--hair);border-radius:99px;overflow:hidden;display:block}
   .mr .f{height:100%;border-radius:99px;display:block}
@@ -359,7 +361,7 @@
   // Eixo Y por série (escalas diferentes convivem: alcance na casa dos milhares e
   // engajamento em %), então cada linha é normalizada pelo próprio máximo e a
   // legenda mostra o valor REAL do último ponto — sem eixo mentiroso.
-  function linha(pts, series, alt){
+  function linha(pts, series, alt, escalaComum){
     pts=(pts||[]).filter(function(p){return p&&p.data;});
     if(pts.length<2) return '';
     var W=760, H=alt||190, padL=8, padR=8, padT=14, padB=26;
@@ -371,14 +373,28 @@
     var t0=new Date(pts[0].data+'T12:00:00').getTime();
     var t1=new Date(pts[pts.length-1].data+'T12:00:00').getTime();
     var span=(t1-t0)||1;
+    // escalaComum: séries de MESMA unidade (R$ com R$, contatos com contatos)
+    // dividem o mesmo máximo — só assim a comparação entre elas é honesta.
+    var maxComum=1;
+    if(escalaComum){
+      usadas.forEach(function(s){ pts.forEach(function(p){ var v=p[s.campo]; if(v!=null&&Number(v)>maxComum) maxComum=Number(v); }); });
+    }
     var paths=usadas.map(function(s){
       var vals=pts.map(function(p){ return p[s.campo]==null?null:Number(p[s.campo]); });
-      var max=Math.max.apply(null,vals.filter(function(v){return v!=null;}).concat([0]))||1;
+      var ok=vals.filter(function(v){return v!=null;});
+      // escalaComum (mesma unidade): base ZERO, pra comparar magnitude entre séries.
+      // Sem escala comum (unidades diferentes na mesma caixa): cada série usa o
+      // próprio MIN..MAX, senão uma série quase estável (seguidores 13.642→13.725)
+      // vira uma reta grudada no topo e parece defeito, escondendo a variação real.
+      var max=escalaComum?maxComum:(Math.max.apply(null,ok.concat([0]))||1);
+      var min=escalaComum?0:Math.min.apply(null,ok.concat([max]));
+      var amp=(max-min)||1;
       var d='', started=false;
       vals.forEach(function(v,i){
         if(v==null) return;
         var x=padL+((new Date(pts[i].data+'T12:00:00').getTime()-t0)/span)*plotW;
-        var y=padT+plotH-(v/max)*plotH;
+        var frac=escalaComum?(v/max):((v-min)/amp);
+        var y=padT+plotH-(0.08+frac*0.84)*plotH;   // 8% de folga em cima e embaixo
         d+=(started?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' '; started=true;
       });
       return '<path d="'+d.trim()+'" fill="none" stroke="'+s.cor+'" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>';
@@ -542,8 +558,17 @@
         '<button type="button" id="perAplicar" class="btn-apl">Aplicar</button></div>';
     }
 
-    // leitura do dia — leve, com a linha fina das 4 cores como assinatura
-    if(ld&&(ld.headline||ld.texto)){
+    // Leitura da equipe — leve, com a linha fina das 4 cores como assinatura.
+    // ⚠️ CONTRADIÇÃO CORRIGIDA (Dinho 07/08): a "leitura do dia" é escrita sobre a
+    // janela de HOJE, e o painel é um relatório de PERÍODO. Com o filtro em "mês
+    // passado" o topo dizia "21 mil pessoas · 0,8%" e os KPIs logo abaixo, do mesmo
+    // relatório, diziam "34,3 mil · 9,0%" — dois números pra mesma coisa na mesma
+    // tela. Agora só aparece quando a janela do texto CAI DENTRO do período do
+    // painel; fora disso é omitida (ela continua na área do cliente, onde é "hoje").
+    var ldData=String(ld.data||'').slice(0,10);
+    var pIni=(d.periodo&&d.periodo.ini)||'', pFim=(d.periodo&&d.periodo.fim)||'';
+    var leituraCabe = !!ldData && (!pIni || !pFim || (ldData>=pIni && ldData<=pFim));
+    if(ld&&(ld.headline||ld.texto)&&leituraCabe){
       h+=blk('leituraDia','<div class="hero"><div class="band4"><i></i><i></i><i></i><i></i></div>'+
         '<div class="k">Leitura da equipe</div>'+
         '<h1>'+esc(ld.headline||'')+'</h1>'+
@@ -763,15 +788,18 @@
       (ev.meta||[]).forEach(function(p){ mapAds[p.data]=mapAds[p.data]||{data:p.data}; mapAds[p.data].mGasto=p.gasto; mapAds[p.data].mLeads=p.leads; });
       Object.keys(mapAds).sort().forEach(function(k){ ptsAds.push(mapAds[k]); });
       var moeda=function(v){return 'R$ '+fNum(v);};
-      var gAds=linha(ptsAds,[
-        {nome:'Investido · Google',cor:'#4285F4',campo:'gGasto',fmt:moeda},
-        {nome:'Investido · Meta',cor:'#7E57C2',campo:'mGasto',fmt:moeda},
-        {nome:'Contatos · Google',cor:'#34A853',campo:'gLeads'},
-        {nome:'Contatos · Meta',cor:'#EA4335',campo:'mLeads'}
-      ]);
+      var gInv=linha(ptsAds,[
+        {nome:'Google',cor:'#4285F4',campo:'gGasto',fmt:moeda},
+        {nome:'Meta',cor:'#7E57C2',campo:'mGasto',fmt:moeda}
+      ],170,true);
+      var gCtt=linha(ptsAds,[
+        {nome:'Google',cor:'#34A853',campo:'gLeads'},
+        {nome:'Meta',cor:'#EA4335',campo:'mLeads'}
+      ],170,true);
       var bEv='';
       if(gOrg) bEv+='<div class="sub-graf"><h3>Suas redes ao longo do tempo</h3>'+gOrg+'</div>';
-      if(gAds) bEv+='<div class="sub-graf"><h3>Investimento e contatos <span style="font-weight:400;color:var(--mut)">· acumulado no mês (cada mês recomeça do zero)</span></h3>'+gAds+'</div>';
+      if(gInv) bEv+='<div class="sub-graf"><h3>Investimento <span style="font-weight:400;color:var(--mut)">· acumulado no mês, em reais (cada mês recomeça do zero)</span></h3>'+gInv+'</div>';
+      if(gCtt) bEv+='<div class="sub-graf"><h3>Contatos gerados <span style="font-weight:400;color:var(--mut)">· acumulado no mês</span></h3>'+gCtt+'</div>';
       bEv=blk('evolucao',bEv);
       if(bEv) h+='<div class="sec"><div class="sec-h"><span class="ic" style="background:#1E8E4E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg></span><h2>Evolução</h2><span class="sub">como os números caminharam</span></div>'+bEv+'</div>';
     }
@@ -797,7 +825,7 @@
         };
         var cwv=pr.site.cwv||{};
         bPr+='<div class="kpi g" style="flex:1;min-width:300px"><div class="lb">Saúde do seu site</div>'+
-          '<div class="mini" style="margin-top:8px">'+barra('Performance',pr.site.performance)+barra('SEO',pr.site.seo)+
+          '<div class="mini lbl-lg" style="margin-top:8px">'+barra('Performance',pr.site.performance)+barra('SEO',pr.site.seo)+
           barra('Acessibilidade',pr.site.acessibilidade)+barra('Boas práticas',pr.site.boasPraticas)+'</div>'+
           ((cwv.lcp||cwv.cls||cwv.inp)?'<div class="sub-l" style="margin-top:8px">Carregamento '+esc(cwv.lcp||'—')+' · estabilidade '+esc(cwv.cls||'—')+' · resposta '+esc(cwv.inp||'—')+'</div>':'')+
           (pr.site.url?'<a class="sub-l" style="color:#4285F4;text-decoration:none;display:block;margin-top:6px" href="'+esc(pr.site.url)+'" target="_blank" rel="noopener">'+esc(String(pr.site.url).replace(/^https?:\/\//,''))+' →</a>':'')+
