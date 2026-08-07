@@ -8,6 +8,8 @@
 <title>Central de Campanha — Painel do Candidato · Maracatu Digital</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   .leaflet-container{font:inherit}
   .tri-eleitoral{background:transparent!important;border:0!important} /* triângulo dos <50 votos: sem a caixinha branca padrão do divIcon */
@@ -1641,7 +1643,7 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     window.__panelCtx={modo:'cand'};
     try{ var r=await fetch(API+'/cliente-portal/painel-candidato?periodo=tudo',{headers:{'Authorization':'Bearer '+token}});
       if(r.status===401||r.status===403){ localStorage.removeItem('cliente_token'); localStorage.removeItem('cand_token'); location.replace('cliente.html'); return; }
-      if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato); if(window.__aplicarReal)window.__aplicarReal(d); montarLiberadosCandidato(d); montarComparativoMensal(d); mostrarAlertaVideo(d.alertaVideo);} }catch(e){}
+      if(r.ok){var d=await r.json(); if(!info.nome&&d.candidato)info.nome=d.candidato.nome; if(window.__setCand)window.__setCand(d.candidato); if(window.__aplicarReal)window.__aplicarReal(d); montarLiberadosCandidato(d); montarComparativoMensal(d); mostrarAlertaVideo(d.alertaVideo); if(!(d.alertaVideo&&d.alertaVideo.bloquear)) mostrarBaseVivaOferta(d.baseViva);} }catch(e){}
     id('loginScreen').style.display='none';
     ligarProtecao(); iniciarSessao();
     if(window.__replay) setTimeout(window.__replay,60);
@@ -1674,6 +1676,58 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       this.disabled=true; this.textContent='Registrando...';
       apiPost('/cliente-portal/cand/alerta-video-ack').catch(function(){}).then(function(){ ov.remove(); });
     });
+  }
+
+  // ── OFERTA BASE VIVA (Maracatu Lab) — popup UMA VEZ no login do candidato. ──
+  // Registra visto/seguiu/recusou (visão interna da equipe mostra). ?bvdemo=1 força
+  // a exibição p/ pré-visualizar (sem gravar nada).
+  function bvEvento(ev){ apiPost('/cliente-portal/cand/base-viva-evento',{evento:ev}).catch(function(){}); }
+  function mostrarBaseVivaOferta(estado){
+    var force=new URLSearchParams(location.search).get('bvdemo')==='1';
+    if(window.__bvMostrado) return;
+    if(!force && estado) return;                 // já viu/agiu antes → não repete
+    window.__bvMostrado=true;
+    if(document.getElementById('bvOfertaOv')) return;
+    var FITA='<svg viewBox="0 0 200 130" style="width:40px;height:26px" aria-hidden="true"><g fill="none" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"><path d="M150 104 L182 24" stroke="#3B82F6"/><path d="M84 104 L116 18 L150 104" stroke="#EF4444"/><path d="M50 24 L84 104" stroke="#F59E0B"/><path d="M18 106 L50 24" stroke="#22C55E"/></g></svg>';
+    var ov=document.createElement('div'); ov.id='bvOfertaOv';
+    ov.style.cssText='position:fixed;inset:0;z-index:99992;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;padding:20px';
+    ov.innerHTML='<div style="width:100%;max-width:452px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 30px 70px rgba(15,23,42,.4)">'
+      +'<div style="padding:24px 26px 8px">'
+      +'<div style="display:flex;align-items:center;gap:11px;margin-bottom:16px">'+FITA
+      +'<span style="font:700 10.5px Inter,system-ui,Arial;letter-spacing:1.4px;text-transform:uppercase;color:#16A34A">Maracatu Lab · Exclusivo</span></div>'
+      +'<div style="font:800 22px/1.24 Poppins,system-ui,Arial;letter-spacing:-.02em;color:#0F172A">E se o eleitor <span style="color:#16A34A">não esquecesse de você</span> depois da eleição?</div>'
+      +'<div style="margin-top:12px;font:400 14.5px/1.6 Inter,system-ui,Arial;color:#6B7280">Todo mundo some quando a campanha acaba. Quem continua presente é quem o eleitor lembra lá na frente.</div>'
+      +'</div>'
+      +'<div style="padding:18px 26px 22px;display:flex;flex-direction:column;gap:11px">'
+      +'<button id="bvSaber" style="width:100%;border:0;border-radius:12px;background:#16A34A;color:#fff;font:600 15px Inter,system-ui,Arial;padding:14px;cursor:pointer">Saber mais&nbsp; →</button>'
+      +'<button id="bvNao" style="background:none;border:0;color:#9CA3AF;font:600 13px Inter,system-ui,Arial;cursor:pointer">Agora não</button>'
+      +'<div style="text-align:center;font:700 12px Inter,system-ui,Arial;color:#DC2626;letter-spacing:.02em">Oportunidade única. Aparece só uma vez.</div>'
+      +'</div></div>';
+    document.body.appendChild(ov);
+    if(!force) bvEvento('visto');
+    document.getElementById('bvSaber').addEventListener('click',function(){ if(!force)bvEvento('seguiu'); location.href='base-viva.html'; });
+    document.getElementById('bvNao').addEventListener('click',function(){ if(!force)bvEvento('recusou'); ov.remove(); });
+  }
+
+  // Visão da equipe (modo admin): status da oferta Base Viva do candidato.
+  function montarBaseVivaEquipe(d){
+    try{
+      var bv=d&&d.baseViva;
+      var fmt=function(x){try{return new Date(x).toLocaleString('pt-BR',{timeZone:'America/Recife',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+      var esc=function(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')};
+      var st;
+      if(!bv||!bv.vistoEm){ st='<span style="color:#6c7480;font-weight:700">Ainda não viu a oferta.</span>'; }
+      else if(bv.acao==='seguiu'){ st='<span style="color:#1E9E4F;font-weight:700">✔ SEGUIU — clicou em “Saber mais” ('+esc(bv.por||'candidato')+') em '+fmt(bv.acaoEm)+'</span>'; }
+      else if(bv.acao==='recusou'){ st='<span style="color:#C5221F;font-weight:700">✖ RECUSOU — clicou em “Agora não” ('+esc(bv.por||'candidato')+') em '+fmt(bv.acaoEm)+'</span>'; }
+      else { st='<span style="color:#B45309;font-weight:700">👁 Viu o popup em '+fmt(bv.vistoEm)+', mas não clicou em nada ainda.</span>'; }
+      var card=document.createElement('section'); card.className='card';
+      card.style.cssText='margin:0 0 14px;border:1px solid #16A34A55;background:linear-gradient(180deg,#F4FBF6,#fff)';
+      card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'
+        +'<div style="font-weight:800;font-size:13px">Oferta Base Viva · Maracatu Lab</div>'
+        +'<span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;padding:3px 9px;border-radius:99px;background:#E7F4EC;color:#16A34A">SÓ A EQUIPE VÊ</span></div>'
+        +'<div style="font-size:12.5px;margin-top:8px;line-height:1.55">'+st+'</div>';
+      var app=document.querySelector('.app'); if(app)app.prepend(card);
+    }catch(e){}
   }
   // COMPARATIVO MÊS A MÊS (Dinho 01/08) — barras dos últimos 6 meses + variação
   // do mês corrente (parcial) contra o mês fechado anterior.
@@ -1734,6 +1788,8 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
       montarComparativoMensal(d);
       montarDiagnostico(clienteId,somTok); // diagnóstico interno no topo (só a equipe vê)
       montarAlertaVideoEquipe(d); // status do alerta bloqueante de vídeo (quem clicou e quando)
+      montarBaseVivaEquipe(d); // status da oferta Base Viva (viu / seguiu / recusou)
+      if(new URLSearchParams(location.search).get('bvdemo')==='1') mostrarBaseVivaOferta(null); // pré-visualizar o popup
       window.__cliId=clienteId; window.__somTok=somTok; window.__liberados=(d.liberados||[]).slice(); // pra a chave de liberação
       montarCardsEquipe(d,clienteId,somTok); // base de seguidores + menções + SEO (com chave "liberar pro cliente")
       if(window.__replay)setTimeout(window.__replay,60);

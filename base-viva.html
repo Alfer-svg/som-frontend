@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<title>Base Viva · Maracatu Lab</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 130'%3E%3Cg fill='none' stroke-width='32' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M150 104 L182 24' stroke='%233B82F6'/%3E%3Cpath d='M84 104 L116 18 L150 104' stroke='%23EF4444'/%3E%3Cpath d='M50 24 L84 104' stroke='%23F59E0B'/%3E%3Cpath d='M18 106 L50 24' stroke='%2322C55E'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--green:#22C55E;--green-d:#16A34A;--red:#EF4444;--orange:#F59E0B;--blue:#3B82F6;
+    --ink:#0F172A;--gray:#9CA3AF;--line:#ECECE9;--text:#1E2430;--muted:#6B7280;--soft:#FAFAF8}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;color:var(--text);background:#EEF0F3;
+    line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+  h1,.logo,.prod{font-family:'Poppins','Helvetica Neue',Arial,sans-serif;color:var(--ink)}
+  .mmark path{stroke-linecap:round;stroke-linejoin:round}
+  .hl{color:var(--green-d)}
+  .land{width:100%;max-width:820px;background:#fff;border-radius:18px;overflow:hidden;border:1px solid #E6E8EC;box-shadow:0 18px 50px rgba(16,24,40,.10)}
+  .land-in{padding:32px 40px 28px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:.5px}
+  .logo .mmark{width:44px;height:29px}.logo b{color:var(--orange);font-weight:800}
+  .kicker{display:inline-block;margin-top:22px;font:700 12px 'Inter';letter-spacing:1.4px;text-transform:uppercase;color:var(--green-d)}
+  .prod{margin-top:14px;font:800 40px/1.02 'Poppins',Arial;letter-spacing:-.02em}
+  .prod small{display:block;font:500 16px 'Inter',Arial;color:var(--muted);margin-top:9px}
+  .head{margin-top:18px;font:700 22px/1.32 'Poppins',Arial;color:var(--ink);max-width:660px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:28px}
+  .col h4{font:700 11px 'Inter',Arial;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);margin-bottom:14px}
+  .li{display:flex;gap:11px;margin-bottom:13px;font:400 14.5px/1.45 'Inter',Arial;color:#374151}
+  .li .ic{flex:none;width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 12px Arial;margin-top:1px}
+  .li.bad .ic{background:#FEECEC;color:#DC2626}.li.good .ic{background:#E7F8EE;color:#16A34A}
+  .li b{color:var(--ink);font-weight:600}
+  .close{margin-top:26px;padding:17px 22px;background:var(--soft);border:1px solid var(--line);border-radius:12px;font:700 17px/1.4 'Poppins',Arial;color:var(--ink);text-align:center}
+  .cta{margin-top:24px;display:flex;gap:12px;flex-wrap:wrap}
+  .btn{flex:1;min-width:220px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:15px;border-radius:12px;padding:15px 22px;text-decoration:none;cursor:pointer;border:0;font-family:'Inter',Arial,sans-serif;transition:transform .12s,box-shadow .12s}
+  .btn:hover{transform:translateY(-1px)}
+  .btn-grn{background:var(--green-d);color:#fff;box-shadow:0 8px 20px rgba(22,163,74,.22)}
+  .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .stripe{height:7px;background:linear-gradient(90deg,var(--green),var(--red),var(--orange),var(--blue))}
+  .land-ft{padding:13px 40px;display:flex;justify-content:space-between;align-items:center;font:500 11.5px 'Inter',Arial;color:var(--gray)}
+  @media(max-width:640px){.land-in{padding:26px 22px 22px}.grid{grid-template-columns:1fr;gap:22px}.prod{font-size:30px}.land-ft{padding:12px 22px;font-size:10.5px}}
+</style></head>
+<body>
+  <div class="land">
+    <div class="land-in">
+      <div class="logo"><svg class="mmark" viewBox="0 0 200 130" aria-hidden="true"><g fill="none" stroke-width="32"><path d="M150 104 L182 24" stroke="#3B82F6"/><path d="M84 104 L116 18 L150 104" stroke="#EF4444"/><path d="M50 24 L84 104" stroke="#F59E0B"/><path d="M18 106 L50 24" stroke="#22C55E"/></g></svg>MARACATU<b>LAB</b></div>
+
+      <div class="kicker">Exclusivo para quem está na disputa</div>
+      <h1 class="prod">Base <span class="hl">Viva</span><small>Seus eleitores na palma da mão, onde você estiver.</small></h1>
+      <div class="head">A eleição é de 4 em 4 anos. A memória do eleitor, você constrói o tempo todo. É ela que decide a urna.</div>
+
+      <div class="grid">
+        <div class="col">
+          <h4>O que acontece hoje</h4>
+          <div class="li bad"><span class="ic">✕</span><div>Passada a eleição, você <b>some da vida do eleitor</b> e ele esquece.</div></div>
+          <div class="li bad"><span class="ic">✕</span><div>Quem te procurou uma vez, <b>você perde o contato.</b></div></div>
+          <div class="li bad"><span class="ic">✕</span><div>Na próxima campanha, <b>recomeça do zero</b>, disputando atenção com todo mundo.</div></div>
+        </div>
+        <div class="col">
+          <h4>O que a Base Viva faz</h4>
+          <div class="li good"><span class="ic">✓</span><div><b>Mantém você lembrado.</b> Presente todo dia, entre uma eleição e outra.</div></div>
+          <div class="li good"><span class="ic">✓</span><div><b>Ninguém se perde.</b> Cada contato fica registrado e cuidado.</div></div>
+          <div class="li good"><span class="ic">✓</span><div><b>Você sabe o que a base quer</b> e entrega, o que fortalece o seu nome.</div></div>
+          <div class="li good"><span class="ic">✓</span><div><b>Chega na próxima com a base pronta</b>, não do zero.</div></div>
+        </div>
+      </div>
+
+      <div class="close">Quando a urna chegar, <span class="hl">ele lembra de você.</span></div>
+
+      <div class="cta">
+        <a class="btn btn-grn" id="btnDemo" href="#">Agendar uma demo</a>
+        <a class="btn btn-ghost" id="btnVoltar" href="candidato.html">← Voltar ao relatório</a>
+      </div>
+    </div>
+    <div class="stripe"></div>
+    <div class="land-ft"><span>Uma solução Maracatu Lab</span><span>Tecnologia que move negócios</span></div>
+  </div>
+
+  <script>
+    (function(){
+      var msg=encodeURIComponent('Oi! Quero agendar uma demo da Base Viva pra minha campanha.');
+      document.getElementById('btnDemo').href='https://wa.me/558171094000?text='+msg;
+      // Voltar ao relatório preservando o contexto se veio da equipe (?cliente=&som_token=)
+      var qs=new URLSearchParams(location.search), cli=qs.get('cliente'), tok=qs.get('som_token');
+      var back='candidato.html'+(cli?('?cliente='+encodeURIComponent(cli)+(tok?('&som_token='+encodeURIComponent(tok)):'')):'');
+      document.getElementById('btnVoltar').href=back;
+    })();
+  </script>
+</body></html>
