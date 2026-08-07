@@ -5793,7 +5793,7 @@
                 </template>
               </div>
               <div class="flex gap-2 items-center">
-                <input class="form-input" style="flex:1" x-model="po._novoCriativo" @keydown.enter.prevent="addCriativoLink(po)" placeholder="Cole um link e Enter, ou suba vários — opcional">
+                <input class="form-input" style="flex:1" x-model="po._novoCriativo" @keydown.enter.prevent="addCriativoLink(po)" placeholder="Cole um link (vídeo do YouTube, Drive ou MP4 também) e Enter, ou suba vários">
                 <button type="button" class="btn btn-ghost btn-sm" x-show="po._novoCriativo" @click="addCriativoLink(po)">+ link</button>
                 <label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><i class="ph ph-export ic-ph"></i> <span x-text="uploadando?'…':'subir vários'"></span><input type="file" multiple accept="image/*,video/*,application/pdf" @change="uploadCriativos($event, po)" style="display:none"></label>
               </div>
@@ -6037,7 +6037,7 @@
               <template x-for="(u,ci) in criativosDe(cardRef)" :key="ci">
                 <div class="criativo-thumb" draggable="true" @dragstart="criDragStart(cardRef,ci)" @dragover.prevent="criDragOver(cardRef,ci)" @drop.prevent="criDrop(cardRef,ci,()=>salvarCard())" @dragend="criDragEnd()" title="Arraste pra mudar a ordem" :class="criAlvoE(cardRef,ci)?'cri-alvo':''" :style="(criativosDe(cardRef).length>1 && criativoOn(cardRef,u))?'border:2px solid #16a34a':'border:1px solid var(--border)'">
                   <template x-if="ehImagem(u)"><img :src="u" draggable="false" @click="abrirLightbox(u)" title="Clique para ampliar / baixar" style="cursor:zoom-in" :style="(criativosDe(cardRef).length>1 && !criativoOn(cardRef,u))?'opacity:.35;filter:grayscale(1)':''"></template>
-                  <template x-if="!ehImagem(u)"><a :href="u" target="_blank" draggable="false" class="flex items-center justify-center" style="width:100%;height:100%;font-size:11px;color:var(--text-2);text-decoration:none" :style="(criativosDe(cardRef).length>1 && !criativoOn(cardRef,u))?'opacity:.4':''">arquivo ↗</a></template>
+                  <template x-if="!ehImagem(u)"><a :href="u" target="_blank" draggable="false" class="flex items-center justify-center" style="width:100%;height:100%;font-size:11px;color:var(--text-2);text-decoration:none" :style="(criativosDe(cardRef).length>1 && !criativoOn(cardRef,u))?'opacity:.4':''" x-text="ehVideoUrl(u)?'vídeo ▶':'arquivo ↗'"></a></template>
                   <span style="position:absolute;top:2px;left:2px;background:rgba(20,20,20,.78);color:#fff;font-size:10px;font-weight:700;border-radius:5px;padding:1px 5px" x-text="ci+1"></span>
                   <button type="button" @click="removeCriativo(cardRef,ci,()=>salvarCard())" title="Remover" style="position:absolute;top:2px;right:2px;background:rgba(220,38,38,.92);color:#fff;border:0;border-radius:5px;width:18px;height:18px;cursor:pointer;line-height:16px;font-size:13px;padding:0">×</button>
                   <label x-show="criativosDe(cardRef).length>1" :title="criativoOn(cardRef,u)?'Sai da programação':'Entra na programação'" style="position:absolute;bottom:2px;left:2px;display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.92);border-radius:5px;padding:1px 4px;cursor:pointer">
@@ -6048,7 +6048,7 @@
               </template>
             </div>
             <div class="flex gap-2 items-center">
-              <input class="form-input" style="flex:1" x-model="cardRef._novoCriativo" @keydown.enter.prevent="addCriativoLink(cardRef,()=>salvarCard())" placeholder="Cole um link e Enter, ou suba vários →">
+              <input class="form-input" style="flex:1" x-model="cardRef._novoCriativo" @keydown.enter.prevent="addCriativoLink(cardRef,()=>salvarCard())" placeholder="Cole um link (vídeo do YouTube, Drive ou MP4 também) e Enter →">
               <button type="button" class="btn btn-ghost btn-sm" x-show="cardRef._novoCriativo" @click="addCriativoLink(cardRef,()=>salvarCard())">+ link</button>
               <label class="btn btn-ghost btn-sm" style="cursor:pointer;white-space:nowrap"><i class="ph ph-export ic-ph"></i> <span x-text="uploadando?'enviando…':'subir vários'"></span><input type="file" multiple accept="image/*,application/pdf" @change="uploadCriativos($event, cardRef, ()=>salvarCard())" style="display:none"></label>
             </div>
@@ -6627,7 +6627,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=448"></script>
+<script src="js/app.js?v=449"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

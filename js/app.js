@@ -5639,6 +5639,8 @@ ${this._docFoot()}
       catch (e) { alert(e.message); }
     },
     ehImagem(url) { return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url || ''); },
+    // Link de vídeo cola igual imagem no carrossel — o cliente assiste na área dele.
+    ehVideoUrl(url) { const u = url || ''; return /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(u) || /res\.cloudinary\.com\/[^/]+\/video\/upload\//.test(u) || /(youtube\.com|youtu\.be|vimeo\.com|drive\.google\.com\/file\/d\/)/i.test(u); },
     // Abre o criativo (imagem) num lightbox/popup — em vez de nova aba.
     abrirLightbox(u) { this.lightbox = u || null; },
     // Baixa o criativo. Cloudinary: injeta fl_attachment (força download, dispensa CORS).

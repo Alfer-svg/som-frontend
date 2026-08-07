@@ -58,7 +58,7 @@
        cliente aprovava sem ver a arte inteira, e o carrossel só mostrava a 1ª
        peça. Agora: a proporção vem da PRÓPRIA arte (medida no onload) e o
        carrossel mostra até 3 peças lado a lado; passando disso, rola pro lado. */
-    .pecas{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;background:transparent;
+    .pecas{display:flex;align-items:flex-start;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;background:transparent;
       padding:10px 10px 4px;-webkit-overflow-scrolling:touch}
     .pecas{scrollbar-width:none}
     .pecas::-webkit-scrollbar{display:none}   /* trilho cinza atravessando o card */
@@ -311,20 +311,26 @@
                   <div>
                     <div class="pecas" :style="'justify-content:'+(pecas(p).length<=3?'center':'flex-start')">
                       <template x-for="(pc,j) in pecas(p)" :key="'pc'+i+'_'+j">
-                        <div class="peca" :style="estiloPeca(p,i)">
+                        <div class="peca" x-show="!soPlayer(p,i) || aberto(i,j)" :style="estiloPeca(p,i,j,pc)">
                           <template x-if="!(pc.video && aberto(i,j))">
                             <img :src="pc.video ? posterDe(pc.url,p) : pc.url" loading="lazy"
                                  @load="medirPeca(i,j,$event)" onerror="this.style.visibility='hidden'">
                           </template>
-                          <template x-if="pc.video && aberto(i,j)">
+                          <template x-if="pc.video && aberto(i,j) && !pc.embed">
                             <video :src="pc.url" :poster="posterDe(pc.url,p)" controls autoplay playsinline
                                    @loadedmetadata="medirPeca(i,j,$event)"></video>
+                          </template>
+                          <!-- vídeo por LINK (YouTube, Vimeo, Drive): toca no próprio card -->
+                          <template x-if="pc.video && aberto(i,j) && pc.embed">
+                            <iframe :src="pc.embed" allow="autoplay; encrypted-media; fullscreen"
+                                    allowfullscreen referrerpolicy="strict-origin-when-cross-origin"
+                                    style="width:100%;height:100%;border:0;display:block;background:#000"></iframe>
                           </template>
                           <!-- ⚠️ o x-show do Alpine APAGA o display inline (memória
                                alpine-xshow-display-grid): o x-show fica no WRAPPER e o
                                flex do botão vem de classe, senão o ▶ desalinha. -->
                           <div x-show="pc.video && !aberto(i,j)" class="peca-ov">
-                            <button class="btn-play" @click="assistir(i,j)" type="button">
+                            <button class="btn-play" @click="assistir(i,j,$event)" type="button">
                               <span class="pl-ic">▶</span> Assistir o vídeo
                             </button>
                           </div>
@@ -568,6 +574,7 @@
           // login direciona o conteúdo: candidato já logado vai pra Central de Campanha
           if((this.cliente&&this.cliente.perfil)==='candidato'){ location.replace('candidato.html'); return; }
           this.aba='inicio'; this.iniciarSessao(); this.carregarAnalise(); this.carregarAprovacoes();
+          this.atualizarPerfil();   // pega logo/nome atualizados sem precisar sair e entrar
         }
       },
       async api(method, path, body){
@@ -576,6 +583,17 @@
         if(r.status===401){ this.sair(); throw new Error('Sessão expirada.'); }
         const d=await r.json().catch(()=>null);
         if(!r.ok) throw new Error((d&&d.message)||'Erro'); return d;
+      },
+      // A logo do cliente (e o nome) podem mudar depois do login — o objeto ficava
+      // congelado no localStorage e a bolinha só trocava se o cliente saísse e
+      // entrasse de novo. /me devolve o cadastro atual.
+      async atualizarPerfil(){
+        try{
+          const m=await this.api('GET','/cliente-portal/me');
+          if(!m) return;
+          this.cliente={...this.cliente, empresa:m.empresa||this.cliente.empresa, logo:m.logo||null, site:m.site||this.cliente.site};
+          localStorage.setItem('cliente_info', JSON.stringify(this.cliente));
+        }catch(e){}
       },
       // ── entrada: tenta o login LEVE primeiro ──
       // Foto + localização são exigência de CANDIDATO (dado sensível de campanha) —
@@ -781,7 +799,21 @@
       mesN(d){ const m=+String(d||'').slice(5,7); return ['','JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'][m]||''; },
       fmtSemana(a,b){ return this.fmtDia(a)+' a '+this.fmtDia(b); },
       postImg(p){ const c=(Array.isArray(p.criativos)&&p.criativos[0])||p.criativo; return (c&&/^https?:/.test(c))?c:''; },
-      ehVideo(u){ return /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(u) || /res\.cloudinary\.com\/[^/]+\/video\/upload\//.test(u); },
+      ehVideo(u){ return /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(u) || /res\.cloudinary\.com\/[^/]+\/video\/upload\//.test(u) || !!this.embedDe(u); },
+      // VÍDEO POR LINK (Dinho 07/08): nem todo vídeo vira arquivo no Cloudinary —
+      // a equipe cola o link do YouTube, do Vimeo ou do Drive. Aqui ele vira o
+      // endereço que toca dentro do card, sem tirar o cliente da tela.
+      embedDe(u){
+        if(typeof u!=='string') return '';
+        var m;
+        if((m=u.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{6,})/i)))
+          return 'https://www.youtube.com/embed/'+m[1]+'?autoplay=1&rel=0&modestbranding=1';
+        if((m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/i)))
+          return 'https://player.vimeo.com/video/'+m[1]+'?autoplay=1';
+        if((m=u.match(/drive\.google\.com\/file\/d\/([\w-]+)/i)))
+          return 'https://drive.google.com/file/d/'+m[1]+'/preview';
+        return '';
+      },
       // TODAS as peças do post (carrossel), sem repetir: `criativo` costuma ser
       // cópia do 1º item de `criativos`.
       pecas(p){
@@ -789,7 +821,8 @@
         const vistos=[], out=[];
         for(const u of lista){
           if(typeof u!=='string'||!/^https?:/.test(u)||vistos.includes(u)) continue;
-          vistos.push(u); out.push({url:u, video:this.ehVideo(u)});
+          const emb=this.embedDe(u);
+          vistos.push(u); out.push({url:u, embed:emb, video:emb?true:this.ehVideo(u)});
         }
         return out;
       },
@@ -799,6 +832,8 @@
           let s=u.replace('/video/upload/','/video/upload/so_0/');
           return /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(s) ? s.replace(/\.(mp4|mov|webm|m4v)(\?|#|$)/i,'.jpg$2') : s+'.jpg';
         }
+        var m=u.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{6,})/i);
+        if(m) return 'https://img.youtube.com/vi/'+m[1]+'/hqdefault.jpg';
         const img=this.pecas(p).find(x=>!x.video); return img?img.url:'';
       },
       // FORMATO ORIGINAL: a proporção é medida na própria arte assim que ela
@@ -812,7 +847,10 @@
         this.ratios = Object.assign({}, this.ratios, {[i]: Math.round((w/h)*1000)/1000});
       },
       // Até 3 peças aparecem juntas; da 4ª em diante o carrossel rola pro lado.
-      estiloPeca(p,i){
+      estiloPeca(p,i,j,pc){
+        // vídeo por link aberto: ocupa o card inteiro em 16:9 (é o formato que
+        // YouTube/Vimeo entregam) — num slot 9:16 ficaria uma tarja minúscula.
+        if(pc && pc.embed && this.aberto(i,j)) return 'aspect-ratio:1.777;width:100%';
         const n=this.pecas(p).length, r=this.ratios[i]||0.8;
         const cap = 'calc(62vh * '+r+')';   // nenhuma peça passa de ~62% da tela em altura
         const larg = n===1 ? 'min(100%, '+cap+')'
@@ -821,7 +859,13 @@
         return 'aspect-ratio:'+r+';width:'+larg;
       },
       aberto(i,j){ return this.videoAberto === i+'_'+j; },
-      assistir(i,j){ const k=i+'_'+j; this.videoAberto = (this.videoAberto===k ? null : k); },
+      // Com o player de link aberto, as outras peças saem da frente (o trilho
+      // ficava com a altura da peça vertical e sobrava um vazio embaixo do vídeo).
+      soPlayer(p,i){ const k=this.videoAberto; if(!k||k.indexOf(i+'_')!==0) return false;
+        const pc=this.pecas(p)[+k.split('_')[1]]; return !!(pc&&pc.embed); },
+      assistir(i,j,ev){ const k=i+'_'+j; this.videoAberto = (this.videoAberto===k ? null : k);
+        if(ev&&ev.target){ const el=ev.target.closest('.peca');
+          if(el) setTimeout(()=>el.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}),60); } },
       statusLabel(s){ return {ENVIADO:'Aguardando você',APROVADO_CLIENTE:'Aprovado',AJUSTE:'Ajuste pedido'}[s]||s; },
       statusStyle(s){ return s==='APROVADO_CLIENTE'?'background:var(--grnbg);color:var(--grnink)':(s==='AJUSTE'?'background:var(--ambbg);color:var(--amb)':'background:var(--bluebg);color:var(--blue)'); },
     };
