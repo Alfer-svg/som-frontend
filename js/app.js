@@ -4955,7 +4955,9 @@ ${this._docFoot()}
     async uploadArquivo(file) {
       if (!file || !this.cloudOk) return null;
       const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', this.cloudCfg.preset);
-      const r = await fetch('https://api.cloudinary.com/v1_1/' + this.cloudCfg.cloud + '/upload', { method: 'POST', body: fd });
+      // /auto/upload (e não /upload, que é só imagem): sem isso o Cloudinary
+      // recusa MP4/MOV e o criativo de vídeo nunca chegava ao cliente.
+      const r = await fetch('https://api.cloudinary.com/v1_1/' + this.cloudCfg.cloud + '/auto/upload', { method: 'POST', body: fd });
       if (!r.ok) throw new Error('Falha no upload (' + r.status + ')');
       const d = await r.json(); return d.secure_url;
     },
