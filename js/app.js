@@ -1894,11 +1894,98 @@ document.addEventListener('alpine:init', () => {
     samRoteiroStatus(r, s) { r.status = s; this._samSave('roteiros', this.samRoteiros); },
     // Abre o doc já vinculado
     samRoteiroDoc(r) { if (r.docUrl) window.open(r.docUrl, '_blank'); },
-    // Cria um Google Docs NOVO (docs.new) e já move o roteiro pra "escrevendo"
-    samRoteiroCriarDoc(r) {
+    // MODELO DO ROTEIRO (Laura 07/08): o doc não nasce mais em branco — vem com o
+    // LAYOUT PADRÃO da Maracatu (cabeçalho, identificação, sumário das peças, blocos
+    // de vídeo com cena/tempo/ação/fala, próximos passos), SEM conteúdo: só o
+    // esqueleto pra Samara preencher. Cliente/título/data vêm do próprio roteiro.
+    _samRoteiroModeloHtml(r) {
+      const esc = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+      const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const hoje = new Date();
+      const emissao = MESES[hoje.getMonth()] + ' de ' + hoje.getFullYear();
+      // "ROTEIRO DE" → "R O T E I R O&nbsp;&nbsp;D E": o espaço ENTRE palavras precisa
+      // de &nbsp; senão o HTML colapsa os espaços e cola as palavras ("ROTEIRODE").
+      const esp = (t) => String(t).split(' ').map((p) => p.split('').join(' ')).join('&nbsp;&nbsp;&nbsp;');
+      const CINZA = '#6b7280', LINHA = '1px solid #d9d9d9';
+      const rot = (t) => `<p style="margin:0;font:600 9pt Arial;letter-spacing:1.5px;color:${CINZA}">${esp(t)}</p>`;
+      const linhaIdent = (label, valor) =>
+        `<tr><td style="padding:6px 10px 6px 0;border-bottom:${LINHA};width:32%">${rot(label)}</td>` +
+        `<td style="padding:6px 0;border-bottom:${LINHA};font:11pt Arial">${esc(valor) || '&nbsp;'}</td></tr>`;
+      const th = (t) => `<td style="padding:6px 8px;border:${LINHA};background:#f3f4f6;font:700 9pt Arial;letter-spacing:1px;color:${CINZA}">${esp(t)}</td>`;
+      const td = (t, w) => `<td style="padding:8px;border:${LINHA};font:10.5pt Arial;vertical-align:top${w ? ';width:' + w : ''}">${t || '&nbsp;'}</td>`;
+      // Sumário: 3 linhas em branco (quantidade típica de peças por roteiro).
+      const linhasSumario = [1, 2, 3].map((n) =>
+        `<tr>${td(String(n).padStart(2, '0'), '6%')}${td('', '40%')}${td('', '22%')}${td('', '14%')}${td('')}</tr>`).join('');
+      // Cada vídeo: ficha técnica + tabela de cenas com 5 cenas em branco.
+      const blocoVideo = (n) => {
+        const cenas = [1, 2, 3, 4, 5].map((i) =>
+          `<tr>${td(String(i).padStart(2, '0'), '6%')}${td('', '12%')}${td('', '38%')}${td('')}</tr>`).join('');
+        return (
+          `<p style="margin:22px 0 2px;font:700 13pt Arial;letter-spacing:3px">${esp('VÍDEO')} &nbsp;${String(n).padStart(2, '0')}</p>` +
+          `<p style="margin:0 0 10px;font:700 12pt Arial;text-transform:uppercase;color:#111">&nbsp;</p>` +
+          `<table style="border-collapse:collapse;width:100%;margin-bottom:10px"><tr>${th('FORMATO')}${th('DURAÇÃO')}${th('ELENCO')}${th('LOCAÇÃO')}</tr>` +
+          `<tr>${td('')}${td('')}${td('')}${td('')}</tr></table>` +
+          `<p style="margin:10px 0 4px;font:700 10pt Arial;letter-spacing:1px;color:${CINZA}">DIREÇÃO GERAL</p>` +
+          `<ul style="margin:0 0 10px 18px;font:10.5pt Arial"><li>&nbsp;</li><li>&nbsp;</li><li>&nbsp;</li></ul>` +
+          `<table style="border-collapse:collapse;width:100%"><tr>${th('CENA')}${th('TEMPO')}${th('AÇÃO E CÂMERA')}${th('FALA')}</tr>${cenas}</table>`
+        );
+      };
+      return (
+        `<div style="font-family:Arial,sans-serif;color:#111">` +
+        `<p style="margin:0;font:700 12pt Arial">Maracatu Digital Intelligence</p>` +
+        `<p style="margin:10px 0 0;font:700 16pt Arial;letter-spacing:4px">${esp('ROTEIRO')}</p>` +
+        `<p style="margin:0;font:11pt Arial">Nº RT-${hoje.getFullYear()}-____-__</p>` +
+        `<p style="margin:4px 0 16px;font:8.5pt Arial;color:${CINZA}">CNPJ 44.258.426/0001-15 · laura@maracatumktdigital.com · (11) 96624-9876 · Av. A, 4165 - Torre 6, Sl 611 e 612 - Paiva, Cabo de Santo Agostinho - PE · CEP 54522-005</p>` +
+        `<table style="border-collapse:collapse;width:100%;margin-bottom:18px">` +
+        linhaIdent('ROTEIRO DE', 'PRODUÇÃO DE CONTEÚDO AUDIOVISUAL') +
+        linhaIdent('CLIENTE', r && r.cliente ? String(r.cliente).toUpperCase() : '') +
+        linhaIdent('PROJETO', r && r.titulo ? r.titulo : '') +
+        linhaIdent('PEÇAS', '') +
+        linhaIdent('EMISSÃO', emissao) +
+        linhaIdent('VÍNCULO', '') +
+        linhaIdent('STATUS', 'Versão 01 · para aprovação do cliente') +
+        `</table>` +
+        `<p style="margin:0 0 6px;font:700 11pt Arial;letter-spacing:2px">${esp('SUMÁRIO DAS PEÇAS')}</p>` +
+        `<table style="border-collapse:collapse;width:100%"><tr>${th('Nº')}${th('PEÇA')}${th('FORMATO')}${th('DURAÇÃO')}${th('ELENCO')}</tr>${linhasSumario}</table>` +
+        `<p style="margin:10px 0 0;font:italic 9.5pt Arial;color:${CINZA}">As falas deste documento são guias de conteúdo. As apresentadoras podem adaptá-las com naturalidade, desde que o conceito e a mensagem de cada cena sejam mantidos.</p>` +
+        blocoVideo(1) + blocoVideo(2) + blocoVideo(3) +
+        `<p style="margin:22px 0 4px;font:700 11pt Arial;letter-spacing:2px">${esp('PRÓXIMOS PASSOS')}</p>` +
+        `<ul style="margin:0 0 18px 18px;font:10.5pt Arial"><li>Validar as falas, as perguntas e a ordem das cenas deste documento.</li>` +
+        `<li>Agendar as captações com antecedência ideal de 7 dias, conforme o contrato.</li><li>&nbsp;</li></ul>` +
+        `<p style="margin:26px 0 0;text-align:center;font:700 10pt Arial;letter-spacing:3px;color:${CINZA}">${esp('MARACATU DIGITAL INTELLIGENCE')}</p>` +
+        `</div>`
+      );
+    },
+    // Cria um Google Docs NOVO já com o MODELO no clipboard: abre docs.new e a
+    // Samara só dá Ctrl/Cmd+V — o layout inteiro cola formatado (tabelas inclusive).
+    async samRoteiroCriarDoc(r) {
+      const html = this._samRoteiroModeloHtml(r);
+      let copiou = false;
+      try {
+        const texto = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+        await navigator.clipboard.write([new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([texto], { type: 'text/plain' }),
+        })]);
+        copiou = true;
+      } catch (e) {
+        // Fallback (navegador sem ClipboardItem): seleciona um nó oculto e copia.
+        try {
+          const d = document.createElement('div');
+          d.innerHTML = html;
+          d.setAttribute('style', 'position:fixed;left:-9999px;top:0;white-space:normal');
+          document.body.appendChild(d);
+          const sel = window.getSelection(); const range = document.createRange();
+          range.selectNodeContents(d); sel.removeAllRanges(); sel.addRange(range);
+          copiou = document.execCommand('copy');
+          sel.removeAllRanges(); document.body.removeChild(d);
+        } catch (_) { copiou = false; }
+      }
       window.open('https://docs.new', '_blank');
       if (r.status === 'nao_iniciado') { r.status = 'escrevendo'; this._samSave('roteiros', this.samRoteiros); }
-      this.mostrarToast('Abri um Google Docs novo. Depois é só clicar no 🔗 pra colar o link e salvar no roteiro.');
+      this.mostrarToast(copiou
+        ? 'Abri um Docs novo com o MODELO copiado — é só colar (Ctrl+V / Cmd+V). Depois clique no 🔗 pra salvar o link aqui.'
+        : 'Abri um Google Docs novo. Não consegui copiar o modelo automaticamente — clique de novo ou monte pelo layout padrão.');
     },
     // Vincula um link de doc já existente
     samRoteiroVincular(r) {
