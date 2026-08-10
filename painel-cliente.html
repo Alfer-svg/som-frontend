@@ -803,10 +803,10 @@
             cx('midGoogle','ctr','<div class="tl"><div class="lb">CTR</div><div class="vl num">'+fPct(gr.ctr)+'</div></div>')+
             // CONTATO ≠ COMPRA (caso Circo Portugal): "Comprar Ingresso" é PURCHASE
             // e não pode entrar no mesmo balde do WhatsApp. Cada um no seu quadro.
-            cx('midGoogle','conversoes','<div class="tl"><div class="lb">'+(gr.compras>0?'Contatos':'Conversões')+'</div><div class="vl num">'+fNum(gr.leads)+'</div></div>')+
+            cx('midGoogle','conversoes','<div class="tl"><div class="lb">Contatos</div><div class="vl num">'+fNum(gr.leads)+'</div></div>')+
             (gr.compras>0?cx('midGoogle','compras','<div class="tl"><div class="lb">Compras</div><div class="vl num">'+fNum(gr.compras)+'</div><div class="sub-l">'+(gr.custoCompra!=null?fMoney(gr.custoCompra)+' cada':'')+'</div></div>'):'')+
             cx('midGoogle','investido','<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(gr.gasto)+'</div></div>')+
-            cx('midGoogle','custoConversao','<div class="tl"><div class="lb">Custo/conversão</div><div class="vl num">'+(gr.custoLead!=null?fMoney(gr.custoLead):'—')+'</div></div>')+
+            cx('midGoogle','custoConversao','<div class="tl"><div class="lb">Custo/contato</div><div class="vl num">'+(gr.custoLead!=null?fMoney(gr.custoLead):'—')+'</div></div>')+
           '</div>';
         // campanhas DO PERÍODO (Google): quem teve entrega no intervalo entra, ativa OU
         // pausada (regra da Joana 03/08 — pausada no meio do mês tem que sair no relatório);
@@ -815,19 +815,30 @@
         var gcamps=(gr.campanhas||[]).filter(function(c){var st=String(c.status||'').toUpperCase();return st==='ENABLED'||(c.gasto||0)>0||(c.impressoes||0)>0||(c.conversoes||0)>0;});
         if(gcamps.length){
           gc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+gcamps.length+'</div>'+
-            '<table><tr><th>Campanha</th><th>Status</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Conversões</th></tr>'+
-            gcamps.map(function(c){
-              return '<tr><td class="k">'+esc(c.nome)+'</td>'+
-                '<td style="text-align:center">'+stBadge(c.status)+'</td>'+
-                '<td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td>'+
-                '<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td>'+
-                '<td class="n">'+(c.conversoes!=null?fNum(c.conversoes):'—')+'</td></tr>';
-            }).join('')+'</table>';
+            // COERÊNCIA (Dinho 07/08): a coluna tem que falar a MESMA língua do card
+            // de cima. Antes o card mostrava 5 contatos e a tabela 16.956 conversões
+            // (page view contada como conversão no Hospital Evangélico).
+            (function(){
+              var temCompra=gcamps.some(function(c){return c.compras>0;});
+              var temOutras=gcamps.some(function(c){return c.outrasConversoes>0;});
+              return '<table><tr><th>Campanha</th><th>Status</th><th class="n">Orçamento/dia</th><th class="n">Investido</th><th class="n">Contatos</th>'+
+                (temCompra?'<th class="n">Compras</th>':'')+(temOutras?'<th class="n">Outras conv.</th>':'')+'</tr>'+
+              gcamps.map(function(c){
+                return '<tr><td class="k">'+esc(c.nome)+'</td>'+
+                  '<td style="text-align:center">'+stBadge(c.status)+'</td>'+
+                  '<td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td>'+
+                  '<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td>'+
+                  '<td class="n">'+(c.contatos!=null?fNum(c.contatos):(c.conversoes!=null?fNum(c.conversoes):'—'))+'</td>'+
+                  (temCompra?'<td class="n">'+fNum(c.compras||0)+'</td>':'')+
+                  (temOutras?'<td class="n" style="color:#777">'+fNum(c.outrasConversoes||0)+'</td>':'')+
+                  '</tr>';
+              }).join('')+'</table>';
+            })();
         }
         // sem corte (classe "corte silencioso"): o servidor já manda o que converteu
         // primeiro e agrega o resto numa linha com a lista no hover.
         var kw=(g.termos||[]);
-        if(kw.length){ gc+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
+        if(kw.length){ gc+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Contatos</th><th class="n">Custo</th></tr>'+
           kw.map(function(x,ki){
             var tem=!!(x.detalhe&&x.detalhe.length);
             if(tem) LISTAS['kw'+ki]='<b>'+x.detalhe.length+' termos</b> · cliques no período'
