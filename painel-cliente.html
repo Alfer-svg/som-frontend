@@ -751,11 +751,13 @@
               : 'em mídia, no período')+
             // imposto que a Meta repassa na fatura (a API devolve o gasto líquido)
             (t.impostoMeta>0
-              ? '<br><span style="color:#8A6D1F">+ '+fMoney(t.impostoMeta)+' de imposto Meta ('+fNum(t.impostoMetaPct)+'%) · total pago '+fMoney(t.investimentoComImposto)+'</span>'
+              ? '<br><span style="color:#8A6D1F">+ '+fMoney(t.impostoMeta)+' de imposto Meta ('+(Number(t.impostoMetaPct).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}))+'%) · total pago '+fMoney(t.investimentoComImposto)+'</span>'
               : '')+'</div></div>')+
           cx('midResumo','contatos','<div class="b3"><div class="lb">Contatos gerados</div><div class="vl num">'+fInt(t.contatos)+'</div><div class="em">'+fInt(t.contatosGoogle)+' Google · '+fInt(t.contatosMeta)+' Meta</div></div>')+
           // compras (ex.: "Comprar Ingresso") não entram em contatos — quadro próprio
           (t.compras>0?cx('midResumo','compras','<div class="b3"><div class="lb">Compras registradas</div><div class="vl num">'+fInt(t.compras)+'</div><div class="em">'+(t.custoCompra!=null?fMoney(t.custoCompra)+' cada · Google':'Google')+'</div></div>'):'')+
+          // clique de saída: quem realmente foi do anúncio pra página externa
+          (t.saidasMeta>0?cx('midResumo','saidas','<div class="b3"><div class="lb">Foram para a página</div><div class="vl num">'+fInt(t.saidasMeta)+'</div><div class="em">'+fInt(t.saidasPessoasMeta)+' pessoas · '+(t.custoSaidaMeta!=null?fMoney(t.custoSaidaMeta)+' cada':'')+' · Meta</div></div>'):'')+
           cx('midResumo','custoContato','<div class="b3"><div class="lb">Custo por contato</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>')+
         '</div>');
 
