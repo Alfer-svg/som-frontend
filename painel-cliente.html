@@ -809,9 +809,16 @@
                 '<td class="n">'+(c.conversoes!=null?fNum(c.conversoes):'—')+'</td></tr>';
             }).join('')+'</table>';
         }
-        var kw=(g.termos||[]).slice(0,6);
+        // sem corte (classe "corte silencioso"): o servidor já manda o que converteu
+        // primeiro e agrega o resto numa linha com a lista no hover.
+        var kw=(g.termos||[]);
         if(kw.length){ gc+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
-          kw.map(function(x){return '<tr><td class="k">'+esc(x.termo)+'</td><td class="n">'+fInt(x.cliques)+'</td><td class="n">'+fNum(x.conversoes)+'</td><td class="n">'+fMoney(x.custo)+'</td></tr>';}).join('')+'</table>'; }
+          kw.map(function(x,ki){
+            var tem=!!(x.detalhe&&x.detalhe.length);
+            if(tem) LISTAS['kw'+ki]='<b>'+x.detalhe.length+' termos</b> · cliques no período'
+              + x.detalhe.map(function(y){return '<span class="cl"><span>'+esc(y.cidade)+'</span><span>'+fInt(y.cliques)+' cliq · '+fMoney(y.custo)+'</span></span>';}).join('');
+            return '<tr'+(x.agregado?' style="color:#777"':'')+'><td class="k'+(tem?' temlista" data-lista="kw'+ki+'':'')+'">'+esc(x.termo)+(tem?' <span class="marca">(ver lista)</span>':'')+'</td><td class="n">'+fInt(x.cliques)+'</td><td class="n">'+fNum(x.conversoes)+'</td><td class="n">'+fMoney(x.custo)+'</td></tr>';
+          }).join('')+'</table>'; }
         // TODAS as cidades (Dinho 07/08): cortar em 10 escondia a maior parte das
         // conversões — o servidor já manda as que converteram primeiro e agrega o resto.
         var cid=(g.cidades||[]);
@@ -860,9 +867,14 @@
               (mTemMetrica?'<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td><td class="n">'+(c.conversas!=null?fInt(c.conversas):'—')+'</td>':'')+
               '</tr>';}).join('')+'</table>';
         }
-        var an=(m.anuncios||[]).slice(0,5);
+        var an=(m.anuncios||[]);
         if(an.length){ mc+='<table><tr><th>Anúncio</th><th class="n">Alcance</th><th class="n">Cliques</th><th class="n">Conversas</th></tr>'+
-          an.map(function(a){return '<tr><td class="k"><span class="adn">'+(a.thumb?'<img src="'+esc(a.thumb)+'">':'')+'<span>'+esc(a.nome)+'</span></span></td><td class="n">'+fInt(a.alcance)+'</td><td class="n">'+fInt(a.cliques)+'</td><td class="n">'+fInt(a.conversas)+'</td></tr>';}).join('')+'</table>'; }
+          an.map(function(a,ai){
+            var tem=!!(a.detalhe&&a.detalhe.length);
+            if(tem) LISTAS['an'+ai]='<b>'+a.detalhe.length+' anúncios</b> · alcance e conversas no período'
+              + a.detalhe.map(function(y){return '<span class="cl"><span>'+esc(y.cidade)+'</span><span>'+fInt(y.cliques)+' cliq · '+fInt(y.conversoes)+' conv</span></span>';}).join('');
+            return '<tr'+(a.agregado?' style="color:#777"':'')+'><td class="k'+(tem?' temlista" data-lista="an'+ai+'':'')+'"><span class="adn">'+(a.thumb?'<img src="'+esc(a.thumb)+'">':'')+'<span>'+esc(a.nome)+(tem?' <span class="marca">(ver lista)</span>':'')+'</span></span></td><td class="n">'+fInt(a.alcance)+'</td><td class="n">'+fInt(a.cliques)+'</td><td class="n">'+fInt(a.conversas)+'</td></tr>';
+          }).join('')+'</table>'; }
         var plat=(m.plataformas||[]).filter(function(p){return p.gasto>0||p.cliques>0;});
         if(plat.length){ mc+='<table style="margin-top:12px"><tr><th>Plataforma</th><th class="n">Cliques</th><th class="n">Alcance</th><th class="n">Investido</th></tr>'+
           plat.map(function(p){return '<tr><td class="k">'+esc(p.plataforma)+'</td><td class="n">'+fInt(p.cliques)+'</td><td class="n">'+fInt(p.alcance)+'</td><td class="n">'+fMoney(p.gasto)+'</td></tr>';}).join('')+'</table>'; }
