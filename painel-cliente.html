@@ -747,6 +747,8 @@
       bMid+=blk('midResumo','<div class="big3">'+
           cx('midResumo','investimento','<div class="b3"><div class="lb">Investimento</div><div class="vl num">'+fMoney(t.investimento)+'</div><div class="em">no período</div></div>')+
           cx('midResumo','contatos','<div class="b3"><div class="lb">Contatos gerados</div><div class="vl num">'+fInt(t.contatos)+'</div><div class="em">'+fInt(t.contatosGoogle)+' Google · '+fInt(t.contatosMeta)+' Meta</div></div>')+
+          // compras (ex.: "Comprar Ingresso") não entram em contatos — quadro próprio
+          (t.compras>0?cx('midResumo','compras','<div class="b3"><div class="lb">Compras registradas</div><div class="vl num">'+fInt(t.compras)+'</div><div class="em">'+(t.custoCompra!=null?fMoney(t.custoCompra)+' cada · Google':'Google')+'</div></div>'):'')+
           cx('midResumo','custoContato','<div class="b3"><div class="lb">Custo por contato</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>')+
         '</div>');
 
@@ -790,7 +792,10 @@
             cx('midGoogle','cliques','<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(gr.cliques)+'</div></div>')+
             cx('midGoogle','impressoes','<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(gr.impressoes)+'</div></div>')+
             cx('midGoogle','ctr','<div class="tl"><div class="lb">CTR</div><div class="vl num">'+fPct(gr.ctr)+'</div></div>')+
-            cx('midGoogle','conversoes','<div class="tl"><div class="lb">Conversões</div><div class="vl num">'+fNum(gr.leads)+'</div></div>')+
+            // CONTATO ≠ COMPRA (caso Circo Portugal): "Comprar Ingresso" é PURCHASE
+            // e não pode entrar no mesmo balde do WhatsApp. Cada um no seu quadro.
+            cx('midGoogle','conversoes','<div class="tl"><div class="lb">'+(gr.compras>0?'Contatos':'Conversões')+'</div><div class="vl num">'+fNum(gr.leads)+'</div></div>')+
+            (gr.compras>0?cx('midGoogle','compras','<div class="tl"><div class="lb">Compras</div><div class="vl num">'+fNum(gr.compras)+'</div><div class="sub-l">'+(gr.custoCompra!=null?fMoney(gr.custoCompra)+' cada':'')+'</div></div>'):'')+
             cx('midGoogle','investido','<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(gr.gasto)+'</div></div>')+
             cx('midGoogle','custoConversao','<div class="tl"><div class="lb">Custo/conversão</div><div class="vl num">'+(gr.custoLead!=null?fMoney(gr.custoLead):'—')+'</div></div>')+
           '</div>';
