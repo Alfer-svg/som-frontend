@@ -244,6 +244,7 @@
   .sub-graf{margin-top:14px}
   .sub-graf h3{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 2px}
   .sub-l{font-size:12px;color:var(--mut);line-height:1.5;margin-top:6px}
+  .tl .sub-l{font-size:10.5px;margin-top:3px}
   .mini{display:flex;flex-direction:column;gap:10px}
   .mr{display:grid;grid-template-columns:74px 1fr 40px;align-items:center;gap:10px}
   /* rótulos longos ("Acessibilidade", "Boas práticas") encostavam na barra */
@@ -853,6 +854,11 @@
             cx('midMeta','custoConversa','<div class="tl"><div class="lb">Custo/conversa</div><div class="vl num">'+(mr.custoConversa!=null?fMoney(mr.custoConversa):'—')+'</div></div>')+
             (mr.frequencia!=null?cx('midMeta','frequencia','<div class="tl"><div class="lb">Frequência</div><div class="vl num">'+fNum(mr.frequencia)+'x</div></div>'):'')+
             cx('midMeta','impressoes','<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(mr.impressoes)+'</div></div>')+
+            // CLIQUE DE SAÍDA (Dinho 07/08): só aparece quando a campanha manda pra
+            // fora do Facebook/Instagram (bilheteria, site de compra). "Cliques"
+            // acima inclui curtida/ver mais; este é quem realmente saiu.
+            (mr.cliquesSaida>0?cx('midMeta','saidas','<div class="tl"><div class="lb">Foram para a página</div><div class="vl num">'+fInt(mr.cliquesSaida)+'</div><div class="sub-l">'+fInt(mr.cliquesSaidaPessoas)+' pessoas · '+fMoney(mr.custoCliqueSaida)+' cada</div></div>'):'')+
+            (mr.visitasPagina>0?cx('midMeta','visitas','<div class="tl"><div class="lb">Abriram a página</div><div class="vl num">'+fInt(mr.visitasPagina)+'</div></div>'):'')+
           '</div>';
         // campanhas do Meta DO PERÍODO (com entrega no intervalo, ativas ou pausadas)
         var stBadgeM=function(st){st=String(st||'').toUpperCase();if(st==='ACTIVE'||st==='ENABLED')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#EAF3DE;color:#27500A">ATIVA</span>';if(st==='PAUSED'||st==='CAMPAIGN_PAUSED')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#FEF3E2;color:#92400E">PAUSADA</span>';return st?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--hair);color:var(--mut)">'+esc(st)+'</span>':'—';};
