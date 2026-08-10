@@ -193,6 +193,20 @@
   .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
   .tw::-webkit-scrollbar{height:6px}
   .tw::-webkit-scrollbar-thumb{background:#d6d3cc;border-radius:3px}
+  /* LISTA DAS "OUTRAS CIDADES" (Dinho 07/08): agrupar era necessário pra tabela
+     não virar 364 linhas, mas o nome de cada uma continua disponível — aparece
+     ao passar o mouse (ou tocar) na linha agregada.
+     ⚠️ a caixinha é POSITION:FIXED e posicionada por JS: a tabela vive dentro do
+     .tw (overflow-x:auto) e um popover absoluto ali dentro sairia cortado. */
+  td.temlista{cursor:help}
+  td.temlista .marca{font-size:10px;color:#9aa0a6}
+  .cidlista{display:none;position:fixed;z-index:60;min-width:290px;max-width:360px;max-height:280px;
+    overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 12px 34px -10px rgba(0,0,0,.3);padding:9px 11px;font-size:11.5px;line-height:1.5;color:var(--ink)}
+  .cidlista.on{display:block}
+  .cidlista .cl{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--hair);padding:2px 0}
+  .cidlista .cl:last-child{border-bottom:0}
+  .cidlista .cl span:last-child{color:var(--mut);white-space:nowrap}
   .tw-hint{font-size:11px;color:var(--mut);margin-top:5px}
   table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;margin-top:6px}
   th{text-align:left;font-size:10.5px;font-weight:700;color:var(--mut);background:#F3F1EC;padding:8px 10px}
@@ -310,6 +324,7 @@
     table{font-size:11px}
     .tw{overflow:visible!important} /* no papel a tabela não pode ficar cortada */
     .tw-hint{display:none!important}
+    td.temlista .cidlista{display:none!important}
     th,td{padding:5px 8px}
     #mapaCli{height:220px}
     .foot{margin-top:14px}
@@ -337,6 +352,8 @@
   var adminCli=qs.get('cliente'), somTok=localStorage.getItem('som_token');
   var cliTok=localStorage.getItem('cliente_token')||'';
   var mapaPts=null;
+  var LISTAS={};   // html das listas de cidades agrupadas, por id da linha
+
   var modo = (adminCli&&somTok)?'admin':'cliente';
 
   function fInt(n){return Number(n||0).toLocaleString('pt-BR',{maximumFractionDigits:0});}
@@ -528,6 +545,42 @@
       var dd=curDe.split('-'), aa=curAte.split('-');
       pel.textContent=(dd[0]===aa[0]&&dd[1]===aa[1]) ? (MESES_CAPA[parseInt(dd[1],10)-1]+' '+dd[0]) : (dd[2]+'/'+dd[1]+'/'+dd[0]+' — '+aa[2]+'/'+aa[1]+'/'+aa[0]);
     }
+  }
+
+  // Caixinha com as cidades agrupadas: fica no BODY (position:fixed) porque a
+  // tabela vive dentro do .tw, que recorta qualquer popover absoluto.
+  function ligarListaCidades(){
+    var cx=document.getElementById('cidlistaBox');
+    if(!cx){ cx=document.createElement('div'); cx.id='cidlistaBox'; cx.className='cidlista'; document.body.appendChild(cx); }
+    var dentro=false, alvo=null;
+    function abrir(td){
+      var html=LISTAS[td.getAttribute('data-lista')]; if(!html) return;
+      cx.innerHTML=html; cx.classList.add('on');
+      var r=td.getBoundingClientRect(), lg=Math.min(340, innerWidth-24);
+      cx.style.width=lg+'px';
+      cx.style.left=Math.max(12, Math.min(r.left, innerWidth-lg-12))+'px';
+      var alt=cx.offsetHeight, abaixo=innerHeight-r.bottom;
+      cx.style.top=(abaixo>alt+16 ? r.bottom+6 : Math.max(12, r.top-alt-6))+'px';
+      alvo=td;
+    }
+    function fechar(){ if(!dentro){ cx.classList.remove('on'); alvo=null; } }
+    document.addEventListener('mouseover', function(e){
+      var td=e.target.closest && e.target.closest('td.temlista');
+      if(td && td!==alvo) abrir(td);
+    });
+    document.addEventListener('mouseout', function(e){
+      var td=e.target.closest && e.target.closest('td.temlista');
+      if(td) setTimeout(fechar, 180);
+    });
+    cx.addEventListener('mouseenter', function(){ dentro=true; });
+    cx.addEventListener('mouseleave', function(){ dentro=false; fechar(); });
+    // celular: toque abre e o toque fora fecha
+    document.addEventListener('click', function(e){
+      var td=e.target.closest && e.target.closest('td.temlista');
+      if(td){ if(alvo===td && cx.classList.contains('on')){ dentro=false; fechar(); } else abrir(td); return; }
+      if(!e.target.closest || !e.target.closest('.cidlista')){ dentro=false; fechar(); }
+    });
+    addEventListener('scroll', function(){ if(alvo) abrir(alvo); }, {passive:true});
   }
 
   // Avisa (só quando é o caso) que a tabela rola de lado dentro da caixa.
@@ -769,7 +822,12 @@
           var comGeo=cid.filter(function(c){return c.lat&&c.lng;});
           if(comGeo.length){ gc+='<div id="mapaCli"></div><div class="map-leg"><i></i> tamanho do círculo = volume de cliques na cidade</div>'; if(!gOculto) mapaPts=comGeo; }
           gc+='<table style="margin-top:12px"><tr><th>Cidade</th><th class="n">Cliques</th><th class="n">Impressões</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
-          cid.map(function(c){return '<tr'+(c.agregado?' style="color:#777"':'')+'><td class="k">'+esc(c.cidade)+'</td><td class="n">'+fInt(c.cliques)+'</td><td class="n">'+fInt(c.impressoes)+'</td><td class="n">'+fNum(c.conversoes)+'</td><td class="n">'+fMoney(c.custo)+'</td></tr>';}).join('')+'</table>';
+          cid.map(function(c,ci){
+            var tem=!!(c.detalhe&&c.detalhe.length);
+            if(tem) LISTAS['cid'+ci]='<b>'+c.detalhe.length+' cidades</b> · cliques no período'
+              + c.detalhe.map(function(x){return '<span class="cl"><span>'+esc(x.cidade)+'</span><span>'+fInt(x.cliques)+' cliq · '+fMoney(x.custo)+'</span></span>';}).join('');
+            return '<tr'+(c.agregado?' style="color:#777"':'')+'><td class="k'+(tem?' temlista" data-lista="cid'+ci+'':'')+'">'+esc(c.cidade)+(tem?' <span class="marca">(ver lista)</span>':'')+'</td><td class="n">'+fInt(c.cliques)+'</td><td class="n">'+fInt(c.impressoes)+'</td><td class="n">'+fNum(c.conversoes)+'</td><td class="n">'+fMoney(c.custo)+'</td></tr>';
+          }).join('')+'</table>';
         }
         gc+='</div>';
         bMid+=blk('midGoogle',gc+notaEquipe(lr.google));
@@ -905,6 +963,7 @@
       t.parentNode.insertBefore(w,t); w.appendChild(t);
     });
     marcarTabelasRolaveis();
+    ligarListaCidades();
     // desenha o mapa das cidades (Leaflet) depois que o DOM existe
     if(mapaPts&&mapaPts.length&&window.L) desenharMapa(mapaPts);
     // liga o filtro de período (7/15/30 dias, mês passado, este mês, personalizado)
