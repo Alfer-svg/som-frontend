@@ -527,6 +527,7 @@ document.addEventListener('alpine:init', () => {
     metaMetricas: {}, // {clienteId: {instagram, facebook, posts}} — métricas reais puxadas da Meta
     metaBusy: false,
     logoBusy: false,
+    adsMcc: null, adsMccLoading: false,
     adsLive: {},      // {clienteId: {configurado, leads, custoLead, gasto, ...}} — Google Ads (MCC) puxado ao vivo na ficha
     adsConfig: null,  // {configurado, mcc} — há credencial da agência? (carregado 1x)
     radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
@@ -2884,6 +2885,7 @@ document.addEventListener('alpine:init', () => {
       this.trafContasLoading = true; this.trafContasErro = ''; this.trafContasLive = null;
       try {
         const r = await this.api('GET', '/google-ads/consolidado' + qs);
+        void this.carregarAdsMcc();   // avisa se alguma conta do MCC ficou sem cliente
         if (!r || r.configurado === false) { this.trafContasErro = 'Google Ads ainda não configurado nesta conta.'; }
         else this.trafContasLive = r;
       } catch (e) { this.trafContasErro = e.message || 'Falha ao consultar o Google Ads.'; }
@@ -4327,6 +4329,16 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     async removerLogoCliente(c) {
       if (!confirm('Remover a logo deste cliente? A bolinha volta a mostrar as iniciais.')) return;
       await this.salvarLogoCliente(c, '');
+    },
+
+    // Cruza as contas do gerenciador do Google com os cadastros. Sem vínculo, o
+    // painel do cliente esconde o Google inteiro (caso Circo Portugal, 07/08).
+    async carregarAdsMcc(forcar) {
+      if (this.adsMccLoading || (this.adsMcc && !forcar)) return;
+      this.adsMccLoading = true;
+      try { this.adsMcc = await this.api('GET', '/google-ads/contas-mcc?dias=30'); }
+      catch (e) { this.adsMcc = null; }
+      finally { this.adsMccLoading = false; }
     },
 
     // ── Monitoramento Meta (Instagram/Facebook) — OAuth por cliente ──

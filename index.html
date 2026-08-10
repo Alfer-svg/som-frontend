@@ -739,6 +739,35 @@
             </template>
           </div>
         </div>
+        <!-- CONTAS SEM CLIENTE VINCULADO (Dinho 07/08, caso Circo Portugal):
+             sem vínculo o painel do cliente omite o Google INTEIRO em silêncio.
+             Este bloco cruza o gerenciador com o cadastro e mostra quem está solto. -->
+        <div class="card mb-4" x-show="adsMcc && (adsMcc.gastandoSemVinculo||[]).length" x-cloak
+             style="border-left:4px solid #EA4335">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="fw-700 fs-14" style="color:#B3261E"><i class="ph ph-warning-circle ic-ph"></i> Contas do gerenciador SEM cliente vinculado</span>
+            <button class="btn btn-sm" style="margin-left:auto" @click="carregarAdsMcc(true)" :disabled="adsMccLoading"><i class="ph ph-arrows-clockwise ic-ph"></i> <span x-text="adsMccLoading?'…':'Atualizar'"></span></button>
+          </div>
+          <div class="text-3 fs-12 mb-2">Essas contas estão gastando e não aparecem em nenhum painel de cliente. Cole o Customer ID na ficha do cliente (Clientes › editar › ID Google Ads) para religar.</div>
+          <table class="table" style="width:100%">
+            <thead><tr class="fs-12 text-3" style="text-align:left"><th style="padding:6px 8px">Conta</th><th style="padding:6px 8px">Customer ID</th><th style="padding:6px 8px;text-align:right">Gasto (30d)</th></tr></thead>
+            <tbody>
+              <template x-for="c in (adsMcc.gastandoSemVinculo||[])" :key="'mcc'+c.id">
+                <tr class="fs-13" style="border-top:1px solid var(--border)">
+                  <td style="padding:7px 8px" class="fw-600" x-text="c.nome"></td>
+                  <td style="padding:7px 8px"><span style="font-family:monospace" x-text="c.id"></span>
+                    <button class="btn btn-icon btn-ghost btn-sm" title="Copiar" @click="navigator.clipboard.writeText(c.id); mostrarToast('ID copiado.')"><i class="ph ph-copy ic-ph"></i></button></td>
+                  <td style="padding:7px 8px;text-align:right;font-weight:700" x-text="mascCur(c.gasto)"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <div class="text-3 fs-11" style="margin-top:8px" x-show="(adsMcc.cadastrosOrfaos||[]).length">
+            ⚠️ Cadastro apontando pra conta que não está no gerenciador:
+            <template x-for="o in (adsMcc.cadastrosOrfaos||[])" :key="'orf'+o.id"><span x-text="o.cliente+' ('+o.id+') '"></span></template>
+          </div>
+        </div>
+
         <div class="card mb-4">
           <div class="card-title mb-3">Google Ads por cliente — este mês</div>
           <template x-if="!dtfAds.rows.length"><div class="empty">Nenhum cliente com Google Ads vinculado (o snapshot diário alimenta este painel).</div></template>
@@ -6745,7 +6774,7 @@
     </div>
   </div>
 
-<script src="js/app.js?v=451"></script>
+<script src="js/app.js?v=452"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
