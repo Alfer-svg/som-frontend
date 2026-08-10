@@ -745,7 +745,10 @@
       var t=mid.totais||{};
       var bMid='';
       bMid+=blk('midResumo','<div class="big3">'+
-          cx('midResumo','investimento','<div class="b3"><div class="lb">Investimento</div><div class="vl num">'+fMoney(t.investimento)+'</div><div class="em">no período</div></div>')+
+          cx('midResumo','investimento','<div class="b3"><div class="lb">Investimento</div><div class="vl num">'+fMoney(t.investimento)+'</div><div class="em">'+
+            ((t.investidoMeta>0&&t.investidoGoogle>0)
+              ? fMoney(t.investidoMeta)+' Meta + '+fMoney(t.investidoGoogle)+' Google = '+fMoney(t.investimento)
+              : 'no período')+'</div></div>')+
           cx('midResumo','contatos','<div class="b3"><div class="lb">Contatos gerados</div><div class="vl num">'+fInt(t.contatos)+'</div><div class="em">'+fInt(t.contatosGoogle)+' Google · '+fInt(t.contatosMeta)+' Meta</div></div>')+
           // compras (ex.: "Comprar Ingresso") não entram em contatos — quadro próprio
           (t.compras>0?cx('midResumo','compras','<div class="b3"><div class="lb">Compras registradas</div><div class="vl num">'+fInt(t.compras)+'</div><div class="em">'+(t.custoCompra!=null?fMoney(t.custoCompra)+' cada · Google':'Google')+'</div></div>'):'')+
