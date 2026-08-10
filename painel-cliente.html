@@ -759,7 +759,9 @@
         var kw=(g.termos||[]).slice(0,6);
         if(kw.length){ gc+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
           kw.map(function(x){return '<tr><td class="k">'+esc(x.termo)+'</td><td class="n">'+fInt(x.cliques)+'</td><td class="n">'+fNum(x.conversoes)+'</td><td class="n">'+fMoney(x.custo)+'</td></tr>';}).join('')+'</table>'; }
-        var cid=(g.cidades||[]).slice(0,10);
+        // TODAS as cidades (Dinho 07/08): cortar em 10 escondia a maior parte das
+        // conversões — o servidor já manda as que converteram primeiro e agrega o resto.
+        var cid=(g.cidades||[]);
         var gOculto=(modo!=='admin'&&oc.indexOf('midGoogle')>=0);
         if(cid.length){
           gc+='<div class="mh" style="margin:18px 0 8px">Onde suas campanhas rodaram</div>';
@@ -767,7 +769,7 @@
           var comGeo=cid.filter(function(c){return c.lat&&c.lng;});
           if(comGeo.length){ gc+='<div id="mapaCli"></div><div class="map-leg"><i></i> tamanho do círculo = volume de cliques na cidade</div>'; if(!gOculto) mapaPts=comGeo; }
           gc+='<table style="margin-top:12px"><tr><th>Cidade</th><th class="n">Cliques</th><th class="n">Impressões</th><th class="n">Conversões</th><th class="n">Custo</th></tr>'+
-          cid.map(function(c){return '<tr><td class="k">'+esc(c.cidade)+'</td><td class="n">'+fInt(c.cliques)+'</td><td class="n">'+fInt(c.impressoes)+'</td><td class="n">'+fNum(c.conversoes)+'</td><td class="n">'+fMoney(c.custo)+'</td></tr>';}).join('')+'</table>';
+          cid.map(function(c){return '<tr'+(c.agregado?' style="color:#777"':'')+'><td class="k">'+esc(c.cidade)+'</td><td class="n">'+fInt(c.cliques)+'</td><td class="n">'+fInt(c.impressoes)+'</td><td class="n">'+fNum(c.conversoes)+'</td><td class="n">'+fMoney(c.custo)+'</td></tr>';}).join('')+'</table>';
         }
         gc+='</div>';
         bMid+=blk('midGoogle',gc+notaEquipe(lr.google));
