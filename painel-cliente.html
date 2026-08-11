@@ -890,21 +890,31 @@
         var mcamps=(m.campanhas||[]);
         var mTemMetrica=mcamps.some(function(c){return c.gasto!=null||c.status;});
         if(mcamps.length){
+          // COLUNA QUE SÓ TEM ZERO É RUÍDO (Joana, relatório do Hospital Evangélico):
+          // campanha de tráfego não gera conversa — o resultado dela é a SAÍDA para
+          // a página. Mostra a coluna que existe de verdade em cada conta.
+          var temConversa=mcamps.some(function(c){return (c.conversas||0)>0;});
+          var temSaida=mcamps.some(function(c){return (c.saidas||0)>0;});
+          var colRes=temConversa?'Conversas':(temSaida?'Foram para a página':'Conversas');
+          var valRes=function(c){ return temConversa?(c.conversas!=null?fInt(c.conversas):'—'):(temSaida?fInt(c.saidas||0):'—'); };
           mc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+mcamps.length+'</div>'+
-            '<table><tr><th>Campanha</th>'+(mTemMetrica?'<th>Status</th>':'')+'<th class="n">Orçamento/dia</th>'+(mTemMetrica?'<th class="n">Investido</th><th class="n">Conversas</th>':'')+'</tr>'+
+            '<table><tr><th>Campanha</th>'+(mTemMetrica?'<th>Status</th>':'')+'<th class="n">Orçamento/dia</th>'+(mTemMetrica?'<th class="n">Investido</th><th class="n">'+colRes+'</th>':'')+'</tr>'+
             mcamps.map(function(c){return '<tr><td class="k">'+esc(c.nome)+'</td>'+
               (mTemMetrica?'<td style="text-align:center">'+stBadgeM(c.status)+'</td>':'')+
               '<td class="n">'+(c.orcamentoDia!=null?fMoney(c.orcamentoDia):'—')+'</td>'+
-              (mTemMetrica?'<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td><td class="n">'+(c.conversas!=null?fInt(c.conversas):'—')+'</td>':'')+
+              (mTemMetrica?'<td class="n">'+(c.gasto!=null?fMoney(c.gasto):'—')+'</td><td class="n">'+valRes(c)+'</td>':'')+
               '</tr>';}).join('')+'</table>';
         }
         var an=(m.anuncios||[]);
-        if(an.length){ mc+='<table><tr><th>Anúncio</th><th class="n">Alcance</th><th class="n">Cliques</th><th class="n">Conversas</th></tr>'+
+        var anConversa=an.some(function(a){return (a.conversas||0)>0;});
+        var anSaida=an.some(function(a){return (a.saidas||0)>0;});
+        var anCol=anConversa?'Conversas':(anSaida?'Foram para a página':'Conversas');
+        if(an.length){ mc+='<table><tr><th>Anúncio</th><th class="n">Alcance</th><th class="n">Cliques</th><th class="n">'+anCol+'</th></tr>'+
           an.map(function(a,ai){
             var tem=!!(a.detalhe&&a.detalhe.length);
             if(tem) LISTAS['an'+ai]='<b>'+a.detalhe.length+' anúncios</b> · alcance e conversas no período'
               + a.detalhe.map(function(y){return '<span class="cl"><span>'+esc(y.cidade)+'</span><span>'+fInt(y.cliques)+' cliq · '+fInt(y.conversoes)+' conv</span></span>';}).join('');
-            return '<tr'+(a.agregado?' style="color:#777"':'')+'><td class="k'+(tem?' temlista" data-lista="an'+ai+'':'')+'"><span class="adn">'+(a.thumb?'<img src="'+esc(a.thumb)+'">':'')+'<span>'+esc(a.nome)+(tem?' <span class="marca">(ver lista)</span>':'')+'</span></span></td><td class="n">'+fInt(a.alcance)+'</td><td class="n">'+fInt(a.cliques)+'</td><td class="n">'+fInt(a.conversas)+'</td></tr>';
+            return '<tr'+(a.agregado?' style="color:#777"':'')+'><td class="k'+(tem?' temlista" data-lista="an'+ai+'':'')+'"><span class="adn">'+(a.thumb?'<img src="'+esc(a.thumb)+'">':'')+'<span>'+esc(a.nome)+(tem?' <span class="marca">(ver lista)</span>':'')+'</span></span></td><td class="n">'+fInt(a.alcance)+'</td><td class="n">'+fInt(a.cliques)+'</td><td class="n">'+(anConversa?fInt(a.conversas):(anSaida?fInt(a.saidas||0):fInt(a.conversas)))+'</td></tr>';
           }).join('')+'</table>'; }
         var plat=(m.plataformas||[]).filter(function(p){return p.gasto>0||p.cliques>0;});
         if(plat.length){ mc+='<table style="margin-top:12px"><tr><th>Plataforma</th><th class="n">Cliques</th><th class="n">Alcance</th><th class="n">Investido</th></tr>'+
