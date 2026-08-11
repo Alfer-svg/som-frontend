@@ -527,7 +527,7 @@ document.addEventListener('alpine:init', () => {
     metaMetricas: {}, // {clienteId: {instagram, facebook, posts}} — métricas reais puxadas da Meta
     metaBusy: false,
     logoBusy: false,
-    adsMcc: null, adsMccLoading: false,
+    adsMcc: null, adsMccLoading: false, metaSemVinculo: [],
     adsLive: {},      // {clienteId: {configurado, leads, custoLead, gasto, ...}} — Google Ads (MCC) puxado ao vivo na ficha
     adsConfig: null,  // {configurado, mcc} — há credencial da agência? (carregado 1x)
     radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
@@ -4338,6 +4338,10 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       this.adsMccLoading = true;
       try { this.adsMcc = await this.api('GET', '/google-ads/contas-mcc?dias=30'); }
       catch (e) { this.adsMcc = null; }
+      // mesma checagem no Meta: conta gastando sem cliente = mídia paga sumida do
+      // painel dele (caso Moura & Serak, 10/08 — só o orgânico aparecia).
+      try { this.metaSemVinculo = await this.api('GET', '/meta-ads/contas-sem-vinculo') || []; }
+      catch (e) { this.metaSemVinculo = []; }
       finally { this.adsMccLoading = false; }
     },
 
