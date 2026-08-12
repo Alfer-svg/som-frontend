@@ -529,6 +529,7 @@ document.addEventListener('alpine:init', () => {
     logoBusy: false,
     adsMcc: null, adsMccLoading: false, metaSemVinculo: [],
     rotIaBusy: '',
+    rotArquivos: {},   // roteiro.id -> {b64, mime, nome} — só na memória da aba
     adsLive: {},      // {clienteId: {configurado, leads, custoLead, gasto, ...}} — Google Ads (MCC) puxado ao vivo na ficha
     adsConfig: null,  // {configurado, mcc} — há credencial da agência? (carregado 1x)
     radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
@@ -4295,27 +4296,38 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     // ── ROTEIRO PRONTO → DOCUMENTO (Dinho 12/08) ────────────────────────
     // A equipe recebe o roteiro escrito (PDF do Docs) e reescrevia tudo à mão no
     // formulário. Aqui o arquivo é carregado e a IA devolve os campos preenchidos.
+    // ⚠️ NÃO voltar a subir pro Cloudinary: ele aceita o PDF mas a ENTREGA volta
+    // 401 (trava "delivery of PDF files" da conta) — o arquivo subia e ninguém
+    // conseguia baixar. O arquivo fica na memória da aba e vai direto pra API.
     async carregarRoteiroArquivo(e, r) {
       const file = e.target.files && e.target.files[0]; e.target.value = '';
       if (!file) return;
-      if (!this.cloudOk) await this.carregarCloud();
-      if (!this.cloudOk) { alert('Configure o Cloudinary primeiro (Pessoal › Armazenamento de arquivos).'); return; }
+      if (file.size > 8 * 1024 * 1024) { alert('Arquivo grande demais (máx. 8 MB).'); return; }
       this.rotIaBusy = r.id + ':up';
       try {
-        const url = await this.uploadArquivo(file);
-        if (!url) throw new Error('upload falhou');
-        r.arquivoUrl = url; r.arquivoNome = file.name || 'roteiro';
+        const b64 = await new Promise((ok, err) => {
+          const fr = new FileReader();
+          fr.onload = () => ok(String(fr.result).split(',')[1] || '');
+          fr.onerror = () => err(new Error('não consegui ler o arquivo'));
+          fr.readAsDataURL(file);
+        });
+        if (!b64) throw new Error('arquivo vazio');
+        this.rotArquivos[r.id] = { b64, mime: file.type || '', nome: file.name || 'roteiro' };
+        r.arquivoNome = file.name || 'roteiro';
         this._samSave('roteiros', this.samRoteiros);
         this.mostrarToast('Roteiro carregado. Agora clique em "IA preencher".');
       } catch (err) { alert('Não consegui carregar: ' + (err.message || err)); }
       finally { this.rotIaBusy = ''; }
     },
     async roteiroIaPreencher(r) {
-      if (!r.arquivoUrl) { alert('Carregue o arquivo do roteiro primeiro.'); return; }
+      const arq = this.rotArquivos[r.id];
+      if (!arq && !r.arquivoUrl) { alert('Carregue o arquivo do roteiro primeiro.'); return; }
       if (r.doc && !confirm('Isto substitui o que já está preenchido no documento. Continuar?')) return;
       this.rotIaBusy = r.id + ':ia';
       try {
-        const resp = await this.api('POST', '/ia/roteiro-extrair', { url: r.arquivoUrl });
+        const resp = arq
+          ? await this.api('POST', '/ia/roteiro-extrair', { arquivoBase64: arq.b64, mime: arq.mime, nome: arq.nome })
+          : await this.api('POST', '/ia/roteiro-extrair', { url: r.arquivoUrl });
         if (!resp || !resp.doc) throw new Error('a IA não devolveu o documento');
         // o que a IA não achou fica vazio; cliente/título do card preenchem o resto
         const base = this.samRotDocPadrao(r);

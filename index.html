@@ -3194,12 +3194,14 @@
                           <!-- ROTEIRO PRONTO → IA PREENCHE (Dinho 12/08): carrega o
                                arquivo que a equipe já escreveu e pede pra IA jogar nos
                                campos do documento, pra revisão antes do PDF. -->
-                          <label class="btn btn-sm btn-ghost" :style="rotIaBusy===r.id+':up' ? 'cursor:wait;opacity:.55;pointer-events:none' : 'cursor:pointer'" :title="r.arquivoNome ? ('carregado: '+r.arquivoNome+' — clique pra trocar') : 'Carregar o roteiro pronto (PDF, imagem ou texto)'">
+                          <label class="btn btn-sm btn-ghost" :style="rotIaBusy===r.id+':up' ? 'cursor:wait;opacity:.55;pointer-events:none' : 'cursor:pointer'" :title="rotArquivos[r.id] ? ('carregado: '+rotArquivos[r.id].nome+' — clique pra trocar') : 'Carregar o roteiro pronto (PDF, imagem ou texto)'">
                             <i class="ph ph-upload-simple ic-ph"></i>
-                            <span x-text="rotIaBusy===r.id+':up' ? '…' : (r.arquivoUrl ? 'Trocar' : 'Carregar')"></span>
+                            <span x-text="rotIaBusy===r.id+':up' ? '…' : (rotArquivos[r.id] ? 'Trocar' : 'Carregar')"></span>
                             <input type="file" accept=".pdf,.txt,.md,image/*" @change="carregarRoteiroArquivo($event, r)" style="display:none">
                           </label>
-                          <button class="btn btn-sm" x-show="r.arquivoUrl" :disabled="rotIaBusy===r.id+':ia'" @click="roteiroIaPreencher(r)" title="A IA lê o arquivo carregado e preenche os campos do documento">
+                          <!-- o arquivo mora na memória da aba: se recarregar, o botão
+                               volta pra "Carregar" em vez de mentir que ainda está lá -->
+                          <button class="btn btn-sm" x-show="!!rotArquivos[r.id] || !!r.arquivoUrl" :disabled="rotIaBusy===r.id+':ia'" @click="roteiroIaPreencher(r)" title="A IA lê o arquivo carregado e preenche os campos do documento">
                             <i class="ph ph-sparkle ic-ph"></i> <span x-text="rotIaBusy===r.id+':ia' ? 'Lendo…' : 'IA preencher'"></span>
                           </button>
                           <button class="btn btn-sm btn-primary" @click="samRotEditar(r)" title="Preencher o documento e gerar o PDF do cliente"><i class="ph ph-file-pdf ic-ph"></i> Documento</button>
@@ -6805,7 +6807,7 @@
     </div>
   </div>
 
-<script src="js/app.js?v=454"></script>
+<script src="js/app.js?v=455"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
