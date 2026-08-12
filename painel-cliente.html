@@ -875,7 +875,7 @@
         var stBadge=function(st){st=String(st||'').toUpperCase();if(st==='ENABLED'||st==='ACTIVE')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#EAF3DE;color:#27500A">ATIVA</span>';if(st==='PAUSED')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#FEF3E2;color:#92400E">PAUSADA</span>';return st?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--hair);color:var(--mut)">'+esc(st)+'</span>':'—';};
         var gcamps=(gr.campanhas||[]).filter(function(c){var st=String(c.status||'').toUpperCase();return st==='ENABLED'||(c.gasto||0)>0||(c.impressoes||0)>0||(c.conversoes||0)>0;});
         if(gcamps.length){
-          gc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+gcamps.length+'+dica('Campanhas do Google com entrega no período. Contatos conta as conversões de contato; Outras conv. reúne o que a conta marca como conversão mas não é contato nem compra, como visualização de página.')+''</div>'+
+          gc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+gcamps.length+dica('Campanhas do Google com entrega no período. Contatos conta as conversões de contato; Outras conv. reúne o que a conta marca como conversão mas não é contato nem compra, como visualização de página.')+'</div>'+
             // COERÊNCIA (Dinho 07/08): a coluna tem que falar a MESMA língua do card
             // de cima. Antes o card mostrava 5 contatos e a tabela 16.956 conversões
             // (page view contada como conversão no Hospital Evangélico).
@@ -958,7 +958,7 @@
           var temSaida=mcamps.some(function(c){return (c.saidas||0)>0;});
           var colRes=temConversa?'Conversas':(temSaida?'Foram para a página':'Conversas');
           var valRes=function(c){ return temConversa?(c.conversas!=null?fInt(c.conversas):'—'):(temSaida?fInt(c.saidas||0):'—'); };
-          mc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+mcamps.length+'+dica('Campanhas do Facebook/Instagram com entrega no período. Campanha que não rodou nesses dias não aparece aqui.')+''</div>'+
+          mc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+mcamps.length+dica('Campanhas do Facebook/Instagram com entrega no período. Campanha que não rodou nesses dias não aparece aqui.')+'</div>'+
             '<table><tr><th>Campanha</th>'+(mTemMetrica?'<th>Status</th>':'')+'<th class="n">Orçamento/dia</th>'+(mTemMetrica?'<th class="n">Investido</th><th class="n">'+colRes+'</th>':'')+'</tr>'+
             mcamps.map(function(c){return '<tr><td class="k">'+esc(c.nome)+'</td>'+
               (mTemMetrica?'<td style="text-align:center">'+stBadgeM(c.status)+'</td>':'')+
