@@ -2006,18 +2006,23 @@ document.addEventListener('alpine:init', () => {
     //   texto solto        → itálico
     _rotFalaHtml(txt) {
       const esc = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-      const OURO = '#c9a93d', CINZA = '#777';
+      // cores medidas no documento de referência (RT-2026-518, feito no Word):
+      // rótulo da nota #8a7526, texto da nota #999 itálico, fala #1f1f1f itálico.
       return String(txt || '').split(/\n/).map((linha) => {
         const l = linha.trim();
         if (!l) return '';
         let m = l.match(/^nota(?:\s+de\s+grava[çc][ãa]o)?\s*[:·]\s*(.+)$/i);
-        if (m) return `<p class="fl"><span style="color:${OURO};font-weight:700">NOTA DE GRAVAÇÃO</span> <span style="color:${CINZA};font-style:italic">· ${esc(m[1])}</span></p>`;
+        if (m) return `<p class="fl nota-g"><span class="rot-nota">NOTA DE GRAVAÇÃO ·</span> ${esc(m[1])}</p>`;
         m = l.match(/^([0-9A-ZÀ-ÿ][0-9A-ZÀ-Ý ··]{1,38}?)\s*[:·]\s+(.+)$/);
-        if (m && m[1] === m[1].toUpperCase()) return `<p class="fl"><span style="color:${OURO};font-weight:700">${esc(m[1].trim())}</span> · ${esc(m[2])}</p>`;
+        if (m && m[1] === m[1].toUpperCase()) return `<p class="fl nota-g"><span class="rot-nota">${esc(m[1].trim())} ·</span> ${esc(m[2])}</p>`;
         m = l.match(/^([A-ZÀ-Ý][\wÀ-ÿ]{1,18}(?:\s+[A-ZÀ-Ýa-zà-ÿ]{1,18})?)\s*:\s+(.+)$/);
-        if (m) return `<p class="fl"><b>${esc(m[1])}:</b> <i>${esc(m[2])}</i></p>`;
-        return `<p class="fl"><i>${esc(l)}</i></p>`;
+        if (m) return `<p class="fl fala"><b>${esc(m[1])}:</b> ${esc(this._aspas(m[2]))}</p>`;
+        return `<p class="fl fala">${esc(this._aspas(l))}</p>`;
       }).join('');
+    },
+    // Aspas curvas “ ”, como no documento de referência (o Word converte sozinho).
+    _aspas(s) {
+      return String(s == null ? '' : s).replace(/"([^"]*)"/g, '“$1”');
     },
     // HTML do PDF — espelho do documento oficial (Letter, margem 1in, Inter).
     samRotPdfHtml(r) {
@@ -2035,13 +2040,17 @@ document.addEventListener('alpine:init', () => {
       const temF = pecas.some((p) => p.resumoFormato), temD = pecas.some((p) => p.resumoDuracao), temE = pecas.some((p) => p.resumoElenco);
       const sumario = pecas.map((p, i) => `<tr><td class="c">${nn(i + 1)}</td><td><b>${esc(p.nome)}</b></td>${temF ? `<td>${esc(p.resumoFormato)}</td>` : ''}${temD ? `<td>${esc(p.resumoDuracao)}</td>` : ''}${temE ? `<td>${esc(p.resumoElenco)}</td>` : ''}</tr>`).join('');
       const blocos = pecas.map((p, i) => {
+        // Vídeo sem falas (só trilha): a coluna FALA sai inteira, como no
+        // documento de referência RT-2026-518 (vídeo 03, "Bastidores").
+        const temFala = (p.cenas || []).some((c) => String(c.fala || '').trim());
         const cenas = (p.cenas || []).map((c, j) => `<tr>
           <td class="cn">${nn(j + 1)}</td><td class="tp">${esc(c.tempo)}</td>
           <td><b>${esc(c.acao)}</b>${c.desc ? '<br>' + esc(c.desc) : ''}</td>
-          <td>${this._rotFalaHtml(c.fala)}</td></tr>`).join('');
+          ${temFala ? `<td>${this._rotFalaHtml(c.fala)}</td>` : ''}</tr>`).join('');
         // Ficha só com os campos preenchidos: rótulo sem valor deixava a linha
-        // desalinhada (o valor aparecia sob a coluna errada).
-        const fCampos = [['FORMATO', p.formato], ['DURAÇÃO', p.duracao], ['ELENCO', p.elenco], ['LOCAÇÃO', p.locacao]].filter((x) => x[1]);
+        // desalinhada (o valor aparecia sob a coluna errada). O 4º rótulo é
+        // variável — na referência vira "ÁUDIO" no vídeo sem falas.
+        const fCampos = [['FORMATO', p.formato], ['DURAÇÃO', p.duracao], ['ELENCO', p.elenco], [p.locacaoRotulo || 'LOCAÇÃO', p.locacao]].filter((x) => x[1]);
         const ficha = fCampos.length ? `<table class="ficha"><tr>${fCampos.map((x) => `<td class="rot">${esp(x[0])}</td>`).join('')}</tr>
           <tr>${fCampos.map((x) => `<td>${esc(x[1])}</td>`).join('')}</tr></table>` : '';
         return `<section class="pc">
@@ -2049,69 +2058,92 @@ document.addEventListener('alpine:init', () => {
             <div class="faixa"><div class="vn">${esp('VÍDEO')} &nbsp; ${nn(i + 1)}</div><h2>${esc(p.nome)}</h2></div>
             ${ficha}
           </div>
-          ${p.direcao ? `<h3>DIREÇÃO GERAL</h3><ul>${lista(p.direcao)}</ul>` : ''}
-          <table class="cenas"><thead><tr><th>CENA</th><th>TEMPO</th><th>AÇÃO E CÂMERA</th><th>FALA</th></tr></thead><tbody>${cenas}</tbody></table>
+          ${p.direcao ? `<h3 class="barra">DIREÇÃO GERAL</h3><ul>${lista(p.direcao)}</ul>` : ''}
+          <table class="cenas${temFala ? '' : ' sf'}"><thead><tr><th>CENA</th><th>TEMPO</th><th>AÇÃO E CÂMERA</th>${temFala ? '<th>FALA</th>' : ''}</tr></thead><tbody>${cenas}</tbody></table>
+          ${p.referencia ? `<p class="ref"><span class="ref-lb">${esc(p.referenciaRotulo || 'REFERÊNCIA DE EDIÇÃO')}</span> <span class="ref-u">${esc(p.referencia)}</span></p>` : ''}
         </section>`;
       }).join('');
       return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <title>${esc([d.numero, d.cliente].filter(Boolean).join(' · ') || 'Roteiro')}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-  @page{size:letter;margin:1in}
+  /* ═══ ESPELHO DO DOCUMENTO DE REFERÊNCIA — RT-2026-518 (Moura e Serak) ═══
+     Medidas tiradas do PDF que a equipe produziu no Word: A4, fonte Cambria,
+     tamanhos e cores conferidos span a span. Cambria vem do Office; onde não
+     houver, Georgia é a serifada equivalente (mesma métrica e cor de página).
+     NÃO trocar por Inter — o cliente recebe este layout. */
+  @page{size:A4;margin:1.5cm 2cm 2.1cm}
   *{box-sizing:border-box}
-  body{margin:0;font:400 9pt/1.45 Inter,Roboto,Arial,sans-serif;color:#1f1f1f;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{margin:0;font:400 9.1pt/1.45 Cambria,Georgia,'Times New Roman',serif;color:#1f1f1f;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .capa{width:100%;display:block}
   .cab{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:14px}
-  .cab img{height:52px;width:auto;display:block}
+  .cab img{height:58pt;width:auto;display:block}
   .cab .num{text-align:right}
-  .cab .num .lb{font:700 10pt Inter;letter-spacing:3px;color:#1f1f1f}
-  .cab .num .n{font:700 26pt Inter;letter-spacing:-.5px;color:#2b2b2b;margin-top:2px}
-  .contato{font:400 7pt Inter;color:#777;margin:10px 0 0;line-height:1.5}
-  .regua{border:0;border-top:2px solid #a98f2f;margin:8px 0 16px}
-  .tit-lb{text-align:center;font:700 10pt Inter;letter-spacing:3px;color:#1f1f1f}
-  .tit{text-align:center;font:700 20pt Inter;letter-spacing:-.3px;margin:2px 0 20px}
+  .cab .num .lb{font:700 10pt Cambria,Georgia,serif;letter-spacing:3px;color:#1f1f1f}
+  .cab .num .n{font:700 26pt Cambria,Georgia,serif;color:#2b2b2b;margin-top:2px}
+  .contato{font:400 7.4pt Cambria,Georgia,serif;color:#777;margin:10px 0 0;line-height:1.45}
+  .regua{border:0;border-top:1.5px solid #a98f2f;margin:8px 0 16px}
+  .tit-lb{text-align:center;font:700 10pt Cambria,Georgia,serif;letter-spacing:3px;color:#1f1f1f}
+  .tit{text-align:center;font:700 20pt Cambria,Georgia,serif;margin:2px 0 20px;text-transform:uppercase}
   table{border-collapse:collapse;width:100%}
-  .ident td{padding:3px 0;vertical-align:top}
-  .ident .rot{width:150px;font:700 7pt Inter;letter-spacing:2.2px;color:#777;padding-top:5px}
-  .ident .val{font:400 9pt Inter}
+  /* identificação: linha fina embaixo de cada campo, como na referência */
+  .ident td{padding:5px 0;vertical-align:top;border-bottom:.75px solid #e2e2e2}
+  .ident .rot{width:150px;font:700 7.4pt Cambria,Georgia,serif;letter-spacing:2.2px;color:#777;padding-top:6px}
+  .ident .val{font:400 9.6pt Cambria,Georgia,serif}
   .ident .val.forte{font-weight:700;text-transform:uppercase}
-  h1.sec{font:700 11pt Inter;margin:20px 0 6px}
-  .sum th,.cenas th{background:#141414;color:#fff;font:700 7pt Inter;letter-spacing:1.2px;text-align:left;padding:5px 8px}
-  .sum td,.cenas td{border:1px solid #ddd;padding:7px 8px;vertical-align:top;font:400 9pt Inter}
-  .sum .c,.cenas .cn{font-weight:700;width:44px}
-  .cenas .tp{color:#777;font-size:8pt;width:62px}
+  /* barra dourada vertical à esquerda dos títulos de seção */
+  h1.sec,h3.barra{border-left:3px solid #c9a93d;padding-left:10px}
+  h1.sec{font:700 11pt Cambria,Georgia,serif;margin:22px 0 7px}
+  .sum th,.cenas th{background:#141414;color:#fff;font:700 7.4pt Cambria,Georgia,serif;letter-spacing:1.2px;text-align:left;padding:5px 8px}
+  /* SEM grade: só linha horizontal entre as cenas (a referência não tem
+     bordas verticais — a grade fechada deixava o documento pesado) */
+  .sum td,.cenas td{border:0;border-bottom:.75px solid #e2e2e2;padding:7px 8px;vertical-align:top;font:400 9.1pt Cambria,Georgia,serif;color:#3d3d3d}
+  .sum .c,.cenas .cn{font-weight:700;width:44px;color:#1f1f1f;font-size:9.6pt}
+  .sum td b,.cenas td b{color:#1f1f1f}
+  .cenas .tp{color:#555;font-size:8.4pt;width:62px}
   .cenas td:nth-child(3){width:34%}
-  .nota{font:italic 8pt Inter;color:#777;margin:8px 0 0;line-height:1.5}
+  .cenas.sf td:nth-child(3),.cenas.sf th:nth-child(3){width:auto}
+  .nota{font:italic 8.4pt Cambria,Georgia,serif;color:#777;margin:10px 0 0;line-height:1.45}
   /* cabeçalho preto REPETE em toda página que a tabela ocupar — sem thead as
      linhas seguiam sem CENA/TEMPO/AÇÃO/FALA no alto da página */
   thead{display:table-header-group}
-  .pc{margin-top:26px;break-inside:auto}
-  .faixa{background:#141414;color:#fff;padding:10px 14px;margin-bottom:14px}
-  .faixa .vn{font:700 7pt Inter;letter-spacing:2.5px;color:#c9a93d}
-  .faixa h2{font:700 13pt Inter;margin:3px 0 0;color:#fff;text-transform:uppercase}
-  .ficha td{padding:2px 10px 6px 0;font:400 9pt Inter;vertical-align:top}
+  /* cada vídeo abre em página nova, como no documento de referência */
+  .pc{break-before:page;page-break-before:always}
+  .faixa{background:#141414;color:#fff;padding:11px 14px;margin-bottom:14px}
+  .faixa .vn{font:700 7.4pt Cambria,Georgia,serif;letter-spacing:2.5px;color:#c9a93d}
+  .faixa h2{font:700 13pt Cambria,Georgia,serif;margin:3px 0 0;color:#fff;text-transform:uppercase}
+  .ficha{border-bottom:.75px solid #e2e2e2;margin-bottom:4px;table-layout:fixed}
+  .ficha td{padding:2px 28px 7px 0;font:400 9.1pt Cambria,Georgia,serif;vertical-align:top}
   /* nowrap: com letter-spacing o rótulo quebrava no meio ("F O R M / A T O")
      quando a LOCAÇÃO era longa e espremia as outras colunas */
-  .ficha .rot{font:700 7pt Inter;letter-spacing:2.2px;color:#777;white-space:nowrap}
-  /* respiro entre colunas: com 2 campos só, "DURAÇÃO" encostava em "LOCAÇÃO"
-     e os dois rótulos pareciam um só */
-  .ficha td{padding-right:28px}
-  .ficha td:last-child{padding-right:0;width:99%}
-  h3{font:700 10pt Inter;margin:14px 0 4px}
-  ul{margin:0 0 12px 16px;padding:0}
-  li{margin:0 0 3px;font:400 9pt Inter;line-height:1.5}
-  .fl{margin:0 0 5px;line-height:1.5}
+  .ficha .rot{font:700 7pt Cambria,Georgia,serif;letter-spacing:2.2px;color:#777;white-space:nowrap;padding-bottom:1px}
+  .ficha td:last-child{padding-right:0}
+  h3{font:700 11pt Cambria,Georgia,serif;margin:16px 0 6px}
+  ul{margin:0 0 12px 15px;padding:0}
+  li{margin:0 0 4px;font:400 9.1pt Cambria,Georgia,serif;line-height:1.45;padding-left:4px}
+  li::marker{color:#c9a93d}
+  .fl{margin:0 0 5px;line-height:1.45}
+  .fl.fala{font-style:italic;font-size:9.6pt;color:#1f1f1f}
+  .fl.nota-g{font-style:italic;font-size:8.4pt;color:#999;line-height:1.4}
+  .rot-nota{font-style:normal;font-weight:700;font-size:7pt;letter-spacing:.6px;color:#8a7526}
+  .ref{margin:10px 0 0}
+  .ref-lb{font:700 8.4pt Cambria,Georgia,serif;color:#1f1f1f;letter-spacing:.4px}
+  .ref-u{font:400 8.4pt Cambria,Georgia,serif;color:#8a7526;text-decoration:underline;margin-left:6px}
   .rodape{margin-top:26px}
-  .rodape .txt{text-align:center;font:700 8pt Inter;letter-spacing:3px;color:#777;margin-top:8px}
+  .rodape .txt{text-align:center;font:700 8pt Cambria,Georgia,serif;letter-spacing:3px;color:#777;margin-top:8px}
+  /* rodapé repetido em toda página (fixed imprime em todas): identifica o
+     documento sem depender do cabeçalho do Chrome, que sai como "about:blank" */
+  .rod-fixo{position:fixed;left:0;right:0;bottom:0;font:400 6.5pt Cambria,Georgia,serif;color:#999;letter-spacing:.3px}
   tr{break-inside:avoid;page-break-inside:avoid}
   /* faixa do vídeo + ficha andam JUNTAS: separadas, a página abria com
      "57s / Psicóloga / Consultório" solto, sem os rótulos */
   .topo-pc{break-inside:avoid;page-break-inside:avoid;break-after:avoid;page-break-after:avoid}
   .faixa,.ficha{break-after:avoid;page-break-after:avoid}
   .ficha{break-inside:avoid;page-break-inside:avoid}
-  @media screen{body{background:#eceff1}.folha{background:#fff;max-width:816px;margin:20px auto;padding:1in;box-shadow:0 2px 14px rgba(0,0,0,.18)}}
-</style></head><body><div class="folha">
+  h1.sec,h3.barra{break-after:avoid;page-break-after:avoid}
+  @media screen{body{background:#eceff1}.folha{background:#fff;max-width:21cm;margin:20px auto;padding:2cm;box-shadow:0 2px 14px rgba(0,0,0,.18)}.rod-fixo{display:none}}
+</style></head><body>
+  <div class="rod-fixo">${esc([d.cliente, d.roteiroDe, d.numero ? 'Nº ' + d.numero : ''].filter(Boolean).join(' · ').toUpperCase())}</div>
+  <div class="folha">
   <img class="capa" src="${location.origin}${location.pathname.replace(/[^/]*$/, '')}assets/faixa-roteiro.jpg" alt="">
   <div class="cab">
     <img src="${location.origin}${location.pathname.replace(/[^/]*$/, '')}assets/logo-horizontal.png" alt="Maracatu Digital">

@@ -6774,6 +6774,12 @@
                   <input class="input fs-12" x-model="p.elenco" placeholder="Erika e Mariana">
                   <input class="input fs-12" x-model="p.locacao" placeholder="Escritório Moura & Serak">
                 </div>
+                <!-- 4º rótulo é variável: no vídeo sem falas vira ÁUDIO (documento
+                     de referência RT-2026-518). Vazio = LOCAÇÃO. -->
+                <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:6px">
+                  <input class="input fs-12" x-model="p.locacaoRotulo" placeholder="rótulo do 4º campo (padrão: LOCAÇÃO)">
+                  <input class="input fs-12" x-model="p.referencia" placeholder="Referência de edição (link do reel)">
+                </div>
                 <label class="rot-l" style="display:block;margin-top:9px"><span class="lb">Direção geral <span class="text-3">(um item por linha)</span></span><textarea class="input fs-12" rows="3" x-model="p.direcao" placeholder="Linguagem descontraída, um bate-papo entre as sócias…"></textarea></label>
 
                 <div class="text-3 fs-11" style="margin:10px 0 4px">Cenas</div>
@@ -6807,7 +6813,7 @@
     </div>
   </div>
 
-<script src="js/app.js?v=459"></script>
+<script src="js/app.js?v=460"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
