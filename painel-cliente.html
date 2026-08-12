@@ -1025,6 +1025,21 @@
         {nome:'Facebook & Instagram',cor:'#EA4335',campo:'mLeads'}
       ],170,true);
       var bEv='';
+      // DE ONDE SAÍMOS → ONDE ESTAMOS (Dinho 12/08): o número que mostra o efeito
+      // do trabalho ao longo do tempo, não só a foto de hoje.
+      var pa=ev.partida;
+      if(pa && (pa.seguidores!=null || pa.engaj!=null)){
+        var dd=String(pa.data).slice(0,10).split('-');
+        var seta=function(v){ return v>0?'▲':(v<0?'▼':'•'); };
+        var cor=function(v){ return v>0?'#137333':(v<0?'#C5221F':'var(--mut)'); };
+        bEv+='<div class="sub-graf"><h3>Desde que começamos a acompanhar'+dica('Compara o primeiro registro que temos do perfil com o número de hoje. A data é a do início do acompanhamento: o Instagram não devolve seguidores e engajamento retroativos, então antes dessa data não há como reconstruir.')+' <span style="font-weight:400;color:var(--mut)">· '+dd[2]+'/'+dd[1]+'/'+dd[0]+' até hoje ('+pa.dias+' dias)</span></h3>'+
+          '<div class="tiles">'+
+            (pa.seguidores!=null?'<div class="tl"><div class="lb">Seguidores no início</div><div class="vl num">'+fInt(pa.seguidores)+'</div><div class="sub-l">hoje: <b>'+fInt(pa.seguidoresHoje)+'</b>'+
+              (pa.ganhoSeguidores!=null?' <span style="color:'+cor(pa.ganhoSeguidores)+'">'+seta(pa.ganhoSeguidores)+' '+(pa.ganhoSeguidores>0?'+':'')+fInt(pa.ganhoSeguidores)+(pa.ganhoPct!=null?' ('+fNum(pa.ganhoPct)+'%)':'')+'</span>':'')+'</div></div>':'')+
+            (pa.engaj!=null?'<div class="tl"><div class="lb">Engajamento no início</div><div class="vl num">'+fNum(pa.engaj)+'%</div><div class="sub-l">hoje: <b>'+fNum(pa.engajHoje)+'%</b>'+
+              (pa.engajHoje!=null?' <span style="color:'+cor(pa.engajHoje-pa.engaj)+'">'+seta(pa.engajHoje-pa.engaj)+' '+(pa.engajHoje-pa.engaj>0?'+':'')+fNum(Math.round((pa.engajHoje-pa.engaj)*100)/100)+' p.p.</span>':'')+'</div></div>':'')+
+          '</div></div>';
+      }
       if(gOrg) bEv+='<div class="sub-graf"><h3>Suas redes ao longo do tempo'+dica('Como alcance, seguidores e engajamento caminharam dia a dia. Cada linha usa a própria escala, porque as três têm tamanhos muito diferentes: leia o FORMATO da curva (subindo, caindo, estável), não a altura comparada.')+' <span style="font-weight:400;color:var(--mut)">· cada linha na sua própria escala (o que importa é o formato da curva)</span></h3>'+gOrg+'</div>';
       // Sem pontos suficientes, explica DESDE QUANDO existe histórico em vez de
       // desenhar uma reta (ou sumir sem dizer nada).
