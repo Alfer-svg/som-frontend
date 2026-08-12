@@ -3172,13 +3172,16 @@
                         </div>
                         <button class="btn btn-icon btn-ghost btn-sm" @click="samRemRoteiro(r)" title="Remover" style="color:var(--text-3);flex:none"><i class="ph ph-x ic-ph"></i></button>
                       </div>
-                      <div class="flex items-center justify-between" style="margin-top:8px;gap:8px">
-                        <div class="flex items-center gap-2">
+                      <!-- ⚠️ ORDEM/LAYOUT: são até 5 botões nesta fila e o card do
+                           Operacional é estreito — sem flex-wrap eles vazam por cima da
+                           coluna da direita (Dinho, 12/08). Manter o wrap nos dois níveis. -->
+                      <div class="flex items-center" style="margin-top:8px;gap:8px;flex-wrap:wrap">
+                        <div class="flex items-center gap-2" style="flex-wrap:wrap">
                           <template x-for="s in [['nao_iniciado','não iniciado','#9ca3af','var(--surface-2)'],['escrevendo','escrevendo','#B06000','#FEF7E0'],['pronto','pronto','#34A853','#E6F4EA']]" :key="'srs'+r.id+s[0]">
                             <button class="badge fs-10 fw-600" style="cursor:pointer" :style="r.status===s[0]?('background:'+s[3]+';color:'+s[2]+';outline:1.5px solid '+s[2]):'background:transparent;color:#9ca3af;outline:1px solid var(--border)'" @click="samRoteiroStatus(r,s[0])" x-text="s[1]"></button>
                           </template>
                         </div>
-                        <div class="flex items-center gap-2" style="flex:none">
+                        <div class="flex items-center gap-2" style="flex-wrap:wrap;justify-content:flex-end;margin-left:auto">
                           <template x-if="r.docUrl">
                             <button class="btn btn-sm btn-ghost" style="color:#4285F4" @click="samRoteiroDoc(r)"><i class="ph ph-file-text ic-ph"></i> Abrir no Docs</button>
                           </template>
@@ -3191,15 +3194,15 @@
                           <!-- ROTEIRO PRONTO → IA PREENCHE (Dinho 12/08): carrega o
                                arquivo que a equipe já escreveu e pede pra IA jogar nos
                                campos do documento, pra revisão antes do PDF. -->
-                          <label class="btn btn-sm btn-ghost" style="cursor:pointer" :class="rotIaBusy===r.id+':up'?'is-disabled':''" :title="r.arquivoNome ? ('carregado: '+r.arquivoNome+' — clique pra trocar') : 'Carregar o roteiro pronto (PDF, imagem ou texto)'">
+                          <label class="btn btn-sm btn-ghost" :style="rotIaBusy===r.id+':up' ? 'cursor:wait;opacity:.55;pointer-events:none' : 'cursor:pointer'" :title="r.arquivoNome ? ('carregado: '+r.arquivoNome+' — clique pra trocar') : 'Carregar o roteiro pronto (PDF, imagem ou texto)'">
                             <i class="ph ph-upload-simple ic-ph"></i>
-                            <span x-text="rotIaBusy===r.id+':up' ? '…' : (r.arquivoUrl ? 'Trocar arquivo' : 'Carregar roteiro')"></span>
+                            <span x-text="rotIaBusy===r.id+':up' ? '…' : (r.arquivoUrl ? 'Trocar' : 'Carregar')"></span>
                             <input type="file" accept=".pdf,.txt,.md,image/*" @change="carregarRoteiroArquivo($event, r)" style="display:none">
                           </label>
-                          <button class="btn btn-sm" x-show="r.arquivoUrl" :disabled="rotIaBusy===r.id+':ia'" @click="roteiroIaPreencher(r)" title="A IA lê o arquivo e preenche os campos do documento">
+                          <button class="btn btn-sm" x-show="r.arquivoUrl" :disabled="rotIaBusy===r.id+':ia'" @click="roteiroIaPreencher(r)" title="A IA lê o arquivo carregado e preenche os campos do documento">
                             <i class="ph ph-sparkle ic-ph"></i> <span x-text="rotIaBusy===r.id+':ia' ? 'Lendo…' : 'IA preencher'"></span>
                           </button>
-                          <button class="btn btn-sm btn-primary" @click="samRotEditar(r)" title="Preencher o documento e gerar o PDF do cliente"><i class="ph ph-file-pdf ic-ph"></i> Documento / PDF</button>
+                          <button class="btn btn-sm btn-primary" @click="samRotEditar(r)" title="Preencher o documento e gerar o PDF do cliente"><i class="ph ph-file-pdf ic-ph"></i> Documento</button>
                         </div>
                       </div>
                     </div>
