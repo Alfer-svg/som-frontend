@@ -207,6 +207,16 @@
   .cidlista .cl{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--hair);padding:2px 0}
   .cidlista .cl:last-child{border-bottom:0}
   .cidlista .cl span:last-child{color:var(--mut);white-space:nowrap}
+  /* AJUDA (Dinho 12/08): "?" ao lado de cada número/gráfico explicando o que é,
+     de onde vem e de que período. A caixinha é FIXA presa ao body — dentro do .tw
+     (tabela que rola) um tooltip absoluto sairia cortado. */
+  .hq{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;
+    border:1px solid var(--line);color:var(--mut);font-size:9.5px;font-weight:700;cursor:help;margin-left:5px;
+    background:#fff;vertical-align:middle;line-height:1;flex:none}
+  .hq:hover{border-color:var(--mut);color:var(--ink)}
+  #tipBox{display:none;position:fixed;z-index:70;max-width:320px;background:#1f2430;color:#fff;
+    border-radius:10px;padding:9px 11px;font-size:12px;line-height:1.5;box-shadow:0 10px 30px -8px rgba(0,0,0,.45)}
+  #tipBox.on{display:block}
   .tw-hint{font-size:11px;color:var(--mut);margin-top:5px}
   table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;margin-top:6px}
   th{text-align:left;font-size:10.5px;font-weight:700;color:var(--mut);background:#F3F1EC;padding:8px 10px}
@@ -240,7 +250,7 @@
   .lg{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px}
   .lg-i{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut);font-weight:600}
   .lg-i b{color:var(--ink);font-variant-numeric:tabular-nums}
-  .lg-d{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;
+  .lg-d{width:10px;height:10px;display:inline-block;flex:none;vertical-align:-1px;
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
   /* sem isto o PDF sai com a legenda SEM as bolinhas coloridas e ninguém sabe
      qual linha é qual (relatório quinzenal da Moura & Serak, 12/08) */
@@ -329,6 +339,8 @@
     table{font-size:11px}
     .tw{overflow:visible!important} /* no papel a tabela não pode ficar cortada */
     .tw-hint{display:none!important}
+    .hq{display:none!important}
+    #tipBox{display:none!important}
     td.temlista .cidlista{display:none!important}
     th,td{padding:5px 8px}
     #mapaCli{height:220px}
@@ -453,7 +465,20 @@
         var y=padT+plotH-(0.08+frac*0.84)*plotH;   // 8% de folga em cima e embaixo
         d+=(started?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)+' '; started=true;
       });
-      return '<path d="'+d.trim()+'" fill="none" stroke="'+s.cor+'" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>';
+      // RÓTULO NA PRÓPRIA LINHA (Dinho 12/08): a bolinha da legenda é background
+      // HTML e SOME na impressão — no PDF ficava impossível saber qual cor era o
+      // quê. Texto dentro do SVG sai sempre (as linhas do gráfico já saíam).
+      var ultimo=null;
+      vals.forEach(function(v,i){ if(v!=null) ultimo={v:v,i:i}; });
+      var rot='';
+      if(ultimo){
+        var xf=padL+((new Date(pts[ultimo.i].data+'T12:00:00').getTime()-t0)/span)*plotW;
+        var fracF=escalaComum?(ultimo.v/max):((ultimo.v-min)/amp);
+        var yf=padT+plotH-(0.08+fracF*0.84)*plotH;
+        rot='<circle cx="'+xf.toFixed(1)+'" cy="'+yf.toFixed(1)+'" r="3.2" fill="'+s.cor+'"/>'+
+            '<text x="'+(xf-7).toFixed(1)+'" y="'+(yf-7).toFixed(1)+'" font-size="11" font-weight="700" fill="'+s.cor+'" text-anchor="end">'+esc(s.nome)+'</text>';
+      }
+      return '<path d="'+d.trim()+'" fill="none" stroke="'+s.cor+'" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>'+rot;
     }).join('');
     // grade horizontal discreta
     var grade=[0,.25,.5,.75,1].map(function(f){ var y=padT+plotH*f; return '<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#EEF0F3" stroke-width="1"/>'; }).join('');
@@ -471,7 +496,7 @@
       } else {
         for(var i=pts.length-1;i>=0;i--){ if(pts[i][s.campo]!=null){ v=Number(pts[i][s.campo]); break; } }
       }
-      return '<span class="lg-i"><span class="lg-d" style="background:'+s.cor+'"></span>'+esc(s.nome)+
+      return '<span class="lg-i"><svg class="lg-d" viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="5" fill="'+s.cor+'"/></svg>'+esc(s.nome)+
         (v!=null?' <b class="num">'+(s.fmt?s.fmt(v):fInt(v))+'</b>':'')+'</span>';
     }).join('');
     return '<div class="graf"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="width:100%;height:'+H+'px">'+
@@ -554,6 +579,34 @@
       var dd=curDe.split('-'), aa=curAte.split('-');
       pel.textContent=(dd[0]===aa[0]&&dd[1]===aa[1]) ? (MESES_CAPA[parseInt(dd[1],10)-1]+' '+dd[0]) : (dd[2]+'/'+dd[1]+'/'+dd[0]+' — '+aa[2]+'/'+aa[1]+'/'+aa[0]);
     }
+  }
+
+  /** "?" com explicação — usado nos números, gráficos e tabelas do painel. */
+  function dica(txt){ return '<span class="hq" data-tip="'+esc(txt)+'">?</span>'; }
+
+  function ligarDicas(){
+    var bx=document.getElementById('tipBox');
+    if(!bx){ bx=document.createElement('div'); bx.id='tipBox'; document.body.appendChild(bx); }
+    function abrir(el){
+      var t=el.getAttribute('data-tip'); if(!t) return;
+      bx.textContent=t; bx.classList.add('on');
+      var r=el.getBoundingClientRect(), lg=Math.min(320, innerWidth-24);
+      bx.style.width=lg+'px';
+      bx.style.left=Math.max(12, Math.min(r.left-8, innerWidth-lg-12))+'px';
+      var alt=bx.offsetHeight;
+      bx.style.top=(innerHeight-r.bottom>alt+14 ? r.bottom+7 : Math.max(12, r.top-alt-7))+'px';
+    }
+    document.addEventListener('mouseover', function(e){
+      var el=e.target.closest && e.target.closest('[data-tip]');
+      if(el) abrir(el); 
+    });
+    document.addEventListener('mouseout', function(e){
+      if(e.target.closest && e.target.closest('[data-tip]')) bx.classList.remove('on');
+    });
+    document.addEventListener('click', function(e){
+      var el=e.target.closest && e.target.closest('[data-tip]');
+      if(el){ abrir(el); setTimeout(function(){bx.classList.remove('on');}, 4000); }
+    });
   }
 
   // Caixinha com as cidades agrupadas: fica no BODY (position:fixed) porque a
@@ -687,10 +740,10 @@
       var r=org.resumo, va=r.vsAnterior||{};
       var bIG='';
       bIG+=blk('igResumo','<div class="kpis">'+
-          cx('igResumo','alcance','<div class="kpi b"><div class="lb">Contas alcançadas</div><div class="vl num">'+fMil(r.alcance)+'</div>'+delta(va.alcance)+'</div>')+
-          cx('igResumo','engajamento','<div class="kpi g"><div class="lb">Engajamento</div><div class="vl num">'+fPct(r.taxaEngajamento)+'</div>'+delta(va.engaj,'vs. anterior',true)+'</div>')+
-          cx('igResumo','seguidores','<div class="kpi a"><div class="lb">Seguidores</div><div class="vl num">'+fMil(r.seguidores)+'</div>'+(r.saldoSeguidores!=null?deltaAbs(r.saldoSeguidores):'')+'</div>')+
-          cx('igResumo','publicacoes','<div class="kpi"><div class="lb">Publicações</div><div class="vl num">'+fInt(r.posts)+'</div>'+(va.posts!=null?deltaAbs(va.posts):'')+'</div>')+
+          cx('igResumo','alcance','<div class="kpi b"><div class="lb">Contas alcançadas'+dica('Quantas contas diferentes viram seu conteúdo no período. Uma pessoa que viu cinco vezes conta uma vez só.')+'</div><div class="vl num">'+fMil(r.alcance)+'</div>'+delta(va.alcance)+'</div>')+
+          cx('igResumo','engajamento','<div class="kpi g"><div class="lb">Engajamento'+dica('Percentual de quem viu e interagiu (curtida, comentário, compartilhamento, salvamento). Mede a qualidade do conteúdo, não o tamanho do alcance.')+'</div><div class="vl num">'+fPct(r.taxaEngajamento)+'</div>'+delta(va.engaj,'vs. anterior',true)+'</div>')+
+          cx('igResumo','seguidores','<div class="kpi a"><div class="lb">Seguidores'+dica('Total de seguidores do perfil na data do último acompanhamento — é uma foto do momento, não um acumulado do período.')+'</div><div class="vl num">'+fMil(r.seguidores)+'</div>'+(r.saldoSeguidores!=null?deltaAbs(r.saldoSeguidores):'')+'</div>')+
+          cx('igResumo','publicacoes','<div class="kpi"><div class="lb">Publicações'+dica('Quantidade de posts, reels e carrosséis publicados no período.')+'</div><div class="vl num">'+fInt(r.posts)+'</div>'+(va.posts!=null?deltaAbs(va.posts):'')+'</div>')+
         '</div>'+notaEquipe(lr.instagram));
 
       // qualidade das interações
@@ -753,7 +806,7 @@
       var t=mid.totais||{};
       var bMid='';
       bMid+=blk('midResumo','<div class="big3">'+
-          cx('midResumo','investimento','<div class="b3"><div class="lb">Investimento</div><div class="vl num">'+fMoney(t.investimento)+'</div><div class="em">'+
+          cx('midResumo','investimento','<div class="b3"><div class="lb">Investimento'+dica('Quanto foi investido em anúncios no período, somando Google Ads e Meta (Facebook/Instagram). É o valor gasto em mídia, sem impostos — a linha abaixo mostra o imposto que a Meta acrescenta na fatura.')+'</div><div class="vl num">'+fMoney(t.investimento)+'</div><div class="em">'+
             ((t.investidoMeta>0&&t.investidoGoogle>0)
               ? fMoney(t.investidoMeta)+' Meta + '+fMoney(t.investidoGoogle)+' Google = '+fMoney(t.investimento)
               : 'em mídia, no período')+
@@ -761,12 +814,12 @@
             (t.impostoMeta>0
               ? '<br><span style="color:#8A6D1F">+ '+fMoney(t.impostoMeta)+' de imposto Meta ('+(Number(t.impostoMetaPct).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}))+'%) · total pago '+fMoney(t.investimentoComImposto)+'</span>'
               : '')+'</div></div>')+
-          cx('midResumo','contatos','<div class="b3"><div class="lb">Contatos gerados</div><div class="vl num">'+fInt(t.contatos)+'</div><div class="em">'+fInt(t.contatosGoogle)+' Google · '+fInt(t.contatosMeta)+' Meta</div></div>')+
+          cx('midResumo','contatos','<div class="b3"><div class="lb">Contatos gerados'+dica('Pessoas que entraram em contato por causa dos anúncios: conversas iniciadas no WhatsApp/Direct (Meta) e conversões de contato do Google (ligação, formulário, WhatsApp). Não inclui compra.')+'</div><div class="vl num">'+fInt(t.contatos)+'</div><div class="em">'+fInt(t.contatosGoogle)+' Google · '+fInt(t.contatosMeta)+' Meta</div></div>')+
           // compras (ex.: "Comprar Ingresso") não entram em contatos — quadro próprio
-          (t.compras>0?cx('midResumo','compras','<div class="b3"><div class="lb">Compras registradas</div><div class="vl num">'+fInt(t.compras)+'</div><div class="em">'+(t.custoCompra!=null?fMoney(t.custoCompra)+' cada · Google':'Google')+'</div></div>'):'')+
+          (t.compras>0?cx('midResumo','compras','<div class="b3"><div class="lb">Compras registradas'+dica('Conversões da categoria COMPRA registradas pelo Google Ads no período. É o que a tag da conta marca como compra — confirme com a bilheteria/loja antes de tratar como venda fechada.')+'</div><div class="vl num">'+fInt(t.compras)+'</div><div class="em">'+(t.custoCompra!=null?fMoney(t.custoCompra)+' cada · Google':'Google')+'</div></div>'):'')+
           // clique de saída: quem realmente foi do anúncio pra página externa
-          (t.saidasMeta>0?cx('midResumo','saidas','<div class="b3"><div class="lb">Foram para a página</div><div class="vl num">'+fInt(t.saidasMeta)+'</div><div class="em">'+fInt(t.saidasPessoasMeta)+' pessoas · '+(t.custoSaidaMeta!=null?fMoney(t.custoSaidaMeta)+' cada':'')+' · Meta</div></div>'):'')+
-          cx('midResumo','custoContato','<div class="b3"><div class="lb">Custo por contato</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>')+
+          (t.saidasMeta>0?cx('midResumo','saidas','<div class="b3"><div class="lb">Foram para a página'+dica('Cliques que SAÍRAM do anúncio para a página de destino (fora do Facebook/Instagram). Diferente de "Cliques", que inclui curtir, ver mais e abrir a imagem.')+'</div><div class="vl num">'+fInt(t.saidasMeta)+'</div><div class="em">'+fInt(t.saidasPessoasMeta)+' pessoas · '+(t.custoSaidaMeta!=null?fMoney(t.custoSaidaMeta)+' cada':'')+' · Meta</div></div>'):'')+
+          cx('midResumo','custoContato','<div class="b3"><div class="lb">Custo por contato'+dica('Investimento total dividido pelo número de contatos do período. Quanto menor, mais barato saiu cada pessoa que chamou.')+'</div><div class="vl num">'+(t.custoContato?fMoney(t.custoContato):'—')+'</div><div class="em">média do período</div></div>')+
         '</div>');
 
       // ── CONSOLIDADO (Google + Meta juntos): todos os campos somáveis dos dois canais ──
@@ -775,7 +828,7 @@
       var impr=(gr.impressoes||0)+(mr.impressoes||0);
       var clq=(gr.cliques||0)+(mr.cliques||0);
       var ctrC=impr>0?(clq/impr*100):null;
-      bMid+=blk('midTotais','<div class="card"><h3>Totais Google + Meta</h3><div class="tiles">'+
+      bMid+=blk('midTotais','<div class="card"><h3>Totais Google + Meta'+dica('Soma das duas plataformas no período: quanto foi investido, quantas vezes o anúncio apareceu (impressões), quantos cliques e quantos contatos.')+'</h3><div class="tiles">'+
         cx('midTotais','investido','<div class="tl"><div class="lb">Investido</div><div class="vl num">'+fMoney(t.investimento)+'</div></div>')+
         cx('midTotais','impressoes','<div class="tl"><div class="lb">Impressões</div><div class="vl num">'+fInt(impr)+'</div></div>')+
         cx('midTotais','cliques','<div class="tl"><div class="lb">Cliques</div><div class="vl num">'+fInt(clq)+'</div></div>')+
@@ -792,11 +845,11 @@
       var dispMap={}; (((m&&m.dispositivos)||[]).concat((g&&g.dispositivos)||[])).forEach(function(x){ dispMap[x.label]=(dispMap[x.label]||0)+x.valor; });
       var disp=Object.keys(dispMap).map(function(k){return {label:k,valor:dispMap[k]};});
       if(gen.length||disp.length||idade.length){
-        var pb='<div class="card"><h3>Quem sua campanha alcança</h3><div class="two">';
-        if(gen.length) pb+='<div><div class="mh">Gênero</div>'+pizza(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
-        if(disp.length) pb+='<div><div class="mh">Dispositivo</div>'+pizza(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825',TV:'#9aa0aa'})+'</div>';
+        var pb='<div class="card"><h3>Quem sua campanha alcança'+dica('Perfil de quem foi alcançado pelos anúncios: idade, gênero e aparelho. Vem da própria plataforma, com base no público que viu.')+'</h3><div class="two">';
+        if(gen.length) pb+='<div><div class="mh">Gênero'+dica('Divisão por gênero de quem foi alcançado pelos anúncios, segundo a plataforma.')+'</div>'+pizza(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
+        if(disp.length) pb+='<div><div class="mh">Dispositivo'+dica('Aparelho usado por quem viu ou clicou no anúncio: celular, computador, tablet ou TV.')+'</div>'+pizza(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825',TV:'#9aa0aa'})+'</div>';
         pb+='</div>';
-        if(idade.length) pb+='<div class="sub-graf" style="margin-top:16px"><div class="mh">Faixa etária</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
+        if(idade.length) pb+='<div class="sub-graf" style="margin-top:16px"><div class="mh">Faixa etária'+dica('Idade de quem foi alcançado pelos anúncios no período, segundo a plataforma.')+'</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
         pb+='</div>';
         bMid+=blk('midPublico',pb+notaEquipe(lr.publico));
       }
@@ -822,7 +875,7 @@
         var stBadge=function(st){st=String(st||'').toUpperCase();if(st==='ENABLED'||st==='ACTIVE')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#EAF3DE;color:#27500A">ATIVA</span>';if(st==='PAUSED')return '<span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:#FEF3E2;color:#92400E">PAUSADA</span>';return st?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--hair);color:var(--mut)">'+esc(st)+'</span>':'—';};
         var gcamps=(gr.campanhas||[]).filter(function(c){var st=String(c.status||'').toUpperCase();return st==='ENABLED'||(c.gasto||0)>0||(c.impressoes||0)>0||(c.conversoes||0)>0;});
         if(gcamps.length){
-          gc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+gcamps.length+'</div>'+
+          gc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+gcamps.length+'+dica('Campanhas do Google com entrega no período. Contatos conta as conversões de contato; Outras conv. reúne o que a conta marca como conversão mas não é contato nem compra, como visualização de página.')+''</div>'+
             // COERÊNCIA (Dinho 07/08): a coluna tem que falar a MESMA língua do card
             // de cima. Antes o card mostrava 5 contatos e a tabela 16.956 conversões
             // (page view contada como conversão no Hospital Evangélico).
@@ -846,7 +899,7 @@
         // sem corte (classe "corte silencioso"): o servidor já manda o que converteu
         // primeiro e agrega o resto numa linha com a lista no hover.
         var kw=(g.termos||[]);
-        if(kw.length){ gc+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Contatos</th><th class="n">Custo</th></tr>'+
+        if(kw.length){ gc+='<div class="mh" style="margin:16px 0 6px">Palavras-chave que mais trouxeram gente'+dica('O que a pessoa digitou no Google antes de clicar no anúncio. A coluna Contatos conta só conversões de contato; visualização de página e outras conversões aparecem em coluna separada quando existem.')+'</div><table><tr><th>Palavra-chave</th><th class="n">Cliques</th><th class="n">Contatos</th><th class="n">Custo</th></tr>'+
           kw.map(function(x,ki){
             var tem=!!(x.detalhe&&x.detalhe.length);
             if(tem) LISTAS['kw'+ki]='<b>'+x.detalhe.length+' termos</b> · cliques no período'
@@ -858,7 +911,7 @@
         var cid=(g.cidades||[]);
         var gOculto=(modo!=='admin'&&oc.indexOf('midGoogle')>=0);
         if(cid.length){
-          gc+='<div class="mh" style="margin:18px 0 8px">Onde suas campanhas rodaram</div>';
+          gc+='<div class="mh" style="margin:18px 0 8px">Onde suas campanhas rodaram'+dica('Cidades onde o anúncio apareceu e foi clicado. As que geraram conversão vêm primeiro; o resto entra agrupado: passe o mouse em Outras cidades para ver a lista completa.')+'</div>';
           // mapa se houver coordenadas geocodificadas (só quando o bloco vai aparecer)
           var comGeo=cid.filter(function(c){return c.lat&&c.lng;});
           if(comGeo.length){ gc+='<div id="mapaCli"></div><div class="map-leg"><i></i> tamanho do círculo = volume de cliques na cidade</div>'; if(!gOculto) mapaPts=comGeo; }
@@ -905,7 +958,7 @@
           var temSaida=mcamps.some(function(c){return (c.saidas||0)>0;});
           var colRes=temConversa?'Conversas':(temSaida?'Foram para a página':'Conversas');
           var valRes=function(c){ return temConversa?(c.conversas!=null?fInt(c.conversas):'—'):(temSaida?fInt(c.saidas||0):'—'); };
-          mc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+mcamps.length+'</div>'+
+          mc+='<div class="mh" style="margin:16px 0 6px">Campanhas do período · '+mcamps.length+'+dica('Campanhas do Facebook/Instagram com entrega no período. Campanha que não rodou nesses dias não aparece aqui.')+''</div>'+
             '<table><tr><th>Campanha</th>'+(mTemMetrica?'<th>Status</th>':'')+'<th class="n">Orçamento/dia</th>'+(mTemMetrica?'<th class="n">Investido</th><th class="n">'+colRes+'</th>':'')+'</tr>'+
             mcamps.map(function(c){return '<tr><td class="k">'+esc(c.nome)+'</td>'+
               (mTemMetrica?'<td style="text-align:center">'+stBadgeM(c.status)+'</td>':'')+
@@ -963,7 +1016,7 @@
         {nome:'Facebook & Instagram',cor:'#EA4335',campo:'mLeads'}
       ],170,true);
       var bEv='';
-      if(gOrg) bEv+='<div class="sub-graf"><h3>Suas redes ao longo do tempo <span style="font-weight:400;color:var(--mut)">· cada linha na sua própria escala (o que importa é o formato da curva)</span></h3>'+gOrg+'</div>';
+      if(gOrg) bEv+='<div class="sub-graf"><h3>Suas redes ao longo do tempo'+dica('Como alcance, seguidores e engajamento caminharam dia a dia. Cada linha usa a própria escala, porque as três têm tamanhos muito diferentes: leia o FORMATO da curva (subindo, caindo, estável), não a altura comparada.')+' <span style="font-weight:400;color:var(--mut)">· cada linha na sua própria escala (o que importa é o formato da curva)</span></h3>'+gOrg+'</div>';
       // Sem pontos suficientes, explica DESDE QUANDO existe histórico em vez de
       // desenhar uma reta (ou sumir sem dizer nada).
       var aviso=function(titulo,sub,pts){
@@ -973,9 +1026,9 @@
         return '<div class="sub-graf"><h3>'+titulo+' <span style="font-weight:400;color:var(--mut)">· '+sub+'</span></h3>'+
           '<div class="sub-l">O acompanhamento diário desta conta começou em '+d1[2]+'/'+d1[1]+'. O gráfico aparece assim que houver alguns dias de histórico.</div></div>';
       };
-      if(gInv) bEv+='<div class="sub-graf"><h3>Investimento <span style="font-weight:400;color:var(--mut)">· acumulado no mês, em reais (cada mês recomeça do zero)</span></h3>'+gInv+'</div>';
+      if(gInv) bEv+='<div class="sub-graf"><h3>Investimento'+dica('Quanto foi gasto em anúncios ao longo do mês. O valor é ACUMULADO: sobe durante o mês e recomeça do zero no dia 1º.')+' <span style="font-weight:400;color:var(--mut)">· acumulado no mês, em reais (cada mês recomeça do zero)</span></h3>'+gInv+'</div>';
       else bEv+=aviso('Investimento','acumulado no mês, em reais',ptsAds);
-      if(gCtt) bEv+='<div class="sub-graf"><h3>Contatos gerados <span style="font-weight:400;color:var(--mut)">· acumulado no mês</span></h3>'+gCtt+'</div>';
+      if(gCtt) bEv+='<div class="sub-graf"><h3>Contatos gerados'+dica('Contatos acumulados no mês, dia a dia. Recomeça do zero no dia 1º.')+' <span style="font-weight:400;color:var(--mut)">· acumulado no mês</span></h3>'+gCtt+'</div>';
       else bEv+=aviso('Contatos gerados','acumulado no mês',ptsAds);
       bEv=blk('evolucao',bEv);
       if(bEv) h+='<div class="sec"><div class="sec-h"><span class="ic" style="background:#1E8E4E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg></span><h2>Evolução</h2><span class="sub">como os números caminharam</span></div>'+bEv+'</div>';
@@ -987,7 +1040,7 @@
       var bPr='';
       if(pr.google){
         var estrelas=function(n){ n=Number(n||0); var s=''; for(var i=1;i<=5;i++) s+='<span style="color:'+(i<=Math.round(n)?'#F9A825':'#DDE1E6')+'">★</span>'; return s; };
-        bPr+='<div class="kpi b" style="flex:1;min-width:270px"><div class="lb">Google Meu Negócio</div>'+
+        bPr+='<div class="kpi b" style="flex:1;min-width:270px"><div class="lb">Google Meu Negócio'+dica('Sua ficha no Google Maps e na busca: nota média, quantidade de avaliações e endereço cadastrado.')+'</div>'+
           '<div class="vl num">'+(pr.google.nota!=null?fNum(pr.google.nota):'—')+' <span style="font-size:15px">'+estrelas(pr.google.nota)+'</span></div>'+
           '<div class="sub-l">'+(pr.google.avaliacoes!=null?fInt(pr.google.avaliacoes)+' avaliações':'sem avaliações')+
           (pr.google.endereco?'<br>'+esc(pr.google.endereco):'')+'</div>'+
@@ -1036,6 +1089,7 @@
     });
     marcarTabelasRolaveis();
     ligarListaCidades();
+    ligarDicas();
     // desenha o mapa das cidades (Leaflet) depois que o DOM existe
     if(mapaPts&&mapaPts.length&&window.L) desenharMapa(mapaPts);
     // liga o filtro de período (7/15/30 dias, mês passado, este mês, personalizado)
