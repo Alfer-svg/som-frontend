@@ -807,9 +807,51 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
   function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 
   // momentum
-  const cv=$('#mom'),tip=$('#momTip');let momPts=[],momData=[],momLabels=[];
+  const cv=$('#mom'),tip=$('#momTip');let momPts=[],momData=[],momLabels=[],momModo='dia';
   function sizeC(c){const r=c.getBoundingClientRect();const d=devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return{ctx:x,w:r.width,h:r.height};}
-  function drawMom(prog){const{ctx,w,h}=sizeC(cv);ctx.clearRect(0,0,w,h);const pad={l:6,r:6,t:12,b:16};const d=momData,max=Math.max(...d)*1.08,min=Math.min(...d)*.82;
+  // SEMANA A SEMANA (Dinho 12/08): com granularidade semanal o gráfico vira BARRA
+  // — comparar blocos fechados é o que mostra o sobe e desce. A linha contínua
+  // (acumulado diário) escondia a queda: só subia e zerava na virada do mês.
+  function drawMomBarras(prog){
+    const {ctx,w,h}=sizeC(cv); ctx.clearRect(0,0,w,h);
+    const pad={l:6,r:6,t:14,b:22}, d=momData, acc=css('--blue');
+    const max=Math.max.apply(null,d)*1.12||1;
+    const larguraUtil=w-pad.l-pad.r, passo=larguraUtil/d.length, bw=Math.min(46,passo*0.62);
+    ctx.strokeStyle='rgba(0,0,0,.05)';ctx.lineWidth=1;
+    for(let g=0;g<=3;g++){const y=pad.t+(h-pad.t-pad.b)*g/3;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();}
+    momPts=[];
+    d.forEach(function(v,i){
+      const cx=pad.l+passo*(i+0.5), alt=(h-pad.t-pad.b)*(v/max)*prog, y=h-pad.b-alt;
+      momPts.push([cx,y]);
+      const grad=ctx.createLinearGradient(0,y,0,h-pad.b);
+      grad.addColorStop(0,acc); grad.addColorStop(1,hexA(acc,.55));
+      ctx.fillStyle=(i===d.length-1)?acc:grad;
+      const r=Math.min(5,bw/2);
+      ctx.beginPath();
+      ctx.moveTo(cx-bw/2,h-pad.b); ctx.lineTo(cx-bw/2,y+r);
+      ctx.quadraticCurveTo(cx-bw/2,y,cx-bw/2+r,y); ctx.lineTo(cx+bw/2-r,y);
+      ctx.quadraticCurveTo(cx+bw/2,y,cx+bw/2,y+r); ctx.lineTo(cx+bw/2,h-pad.b);
+      ctx.closePath(); ctx.fill();
+      // variação vs a semana anterior, escrita em cima da barra
+      if(i>0 && prog>0.98){
+        const ant=d[i-1]||0, dif=ant?((v-ant)/ant*100):0;
+        if(isFinite(dif)&&ant>0){
+          ctx.font='700 10px system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
+          ctx.textAlign='center';
+          ctx.fillStyle=dif>=0?'#188038':'#C5221F';
+          ctx.fillText((dif>=0?'+':'')+Math.round(dif)+'%', cx, Math.max(10,y-5));
+        }
+      }
+      if(prog>0.98){
+        ctx.font='10px system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
+        ctx.textAlign='center'; ctx.fillStyle='#9aa0aa';
+        ctx.fillText(momLabels[i]||'', cx, h-6);
+      }
+    });
+    const ml=document.getElementById('momLive'); if(ml) ml.style.display='none';
+  }
+  function drawMom(prog){ if(momModo==='semana') return drawMomBarras(prog);
+    const{ctx,w,h}=sizeC(cv);ctx.clearRect(0,0,w,h);const pad={l:6,r:6,t:12,b:16};const d=momData,max=Math.max(...d)*1.08,min=Math.min(...d)*.82;
     const X=i=>pad.l+(w-pad.l-pad.r)*(i/(d.length-1)),Y=v=>pad.t+(h-pad.t-pad.b)*(1-(v-min)/(max-min));const acc=css('--blue');
     ctx.strokeStyle='rgba(0,0,0,.05)';ctx.lineWidth=1;for(let g=0;g<=3;g++){const y=pad.t+(h-pad.t-pad.b)*g/3;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();}
     momPts=d.map((v,i)=>[X(i),Y(v)]);const n=Math.max(1,Math.floor((d.length-1)*prog)+1);
@@ -819,7 +861,9 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     const lp=momPts[Math.min(n-1,momPts.length-1)];ctx.beginPath();ctx.arc(lp[0],lp[1],4.2,0,7);ctx.fillStyle=acc;ctx.fill();ctx.beginPath();ctx.arc(lp[0],lp[1],7.5,0,7);ctx.strokeStyle=hexA(acc,.35);ctx.lineWidth=2;ctx.stroke();
     const ml=document.getElementById('momLive');if(ml&&!reduce){ml.style.display='block';ml.style.left=(cv.offsetLeft+lp[0])+'px';ml.style.top=(cv.offsetTop+lp[1])+'px';}}
   function animMom(){if(reduce){drawMom(1);return;}const t0=performance.now();(function s(now){const p=Math.min(1,(now-t0)/1000);drawMom(easeOut(p));if(p<1)requestAnimationFrame(s);})(t0);}
-  cv.addEventListener('mousemove',e=>{if(!momPts.length)return;const r=cv.getBoundingClientRect();const x=e.clientX-r.left;let bi=0,bd=1e9;momPts.forEach((p,i)=>{const dd=Math.abs(p[0]-x);if(dd<bd){bd=dd;bi=i;}});const p=momPts[bi];tip.style.left=p[0]+'px';tip.style.top=p[1]+'px';tip.style.opacity=1;tip.innerHTML=`Sem. ${momLabels[bi]} · <b>${kfmt(Math.round(momData[bi]/100*DATA[cur].alcance))}</b>`;});
+  cv.addEventListener('mousemove',e=>{if(!momPts.length)return;const r=cv.getBoundingClientRect();const x=e.clientX-r.left;let bi=0,bd=1e9;momPts.forEach((p,i)=>{const dd=Math.abs(p[0]-x);if(dd<bd){bd=dd;bi=i;}});const p=momPts[bi];tip.style.left=p[0]+'px';tip.style.top=p[1]+'px';tip.style.opacity=1;tip.innerHTML=(momModo==='semana')
+      ? `Semana de ${momLabels[bi]} · <b>${kfmt(momData[bi])}</b> pessoas`
+      : `Sem. ${momLabels[bi]} · <b>${kfmt(Math.round(momData[bi]/100*DATA[cur].alcance))}</b>`;});
   cv.addEventListener('mouseleave',()=>tip.style.opacity=0);
 
   function drawSpark(c,arr){const{ctx,w,h}=sizeC(c);ctx.clearRect(0,0,w,h);const max=Math.max(...arr),min=Math.min(...arr);const acc=css('--blue');
@@ -1259,10 +1303,24 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
     // Momentum: só desenha com histórico REAL (2+ dias de snapshot); senão avisa que está em coleta.
     var MO=api.momentum||{}; var momPanel=cv&&cv.parentNode;
     if(MO.disponivel && (MO.serie||[]).length>=2){
+      momModo=(MO.granularidade==='semana')?'semana':'dia';
       momData=MO.serie.map(function(p){return p.alcance;});
-      momLabels=MO.serie.map(function(p){return p.data;});
+      momLabels=MO.serie.map(function(p){
+        var dd=String(p.data).slice(0,10).split('-');
+        return momModo==='semana' ? (dd[2]+'/'+dd[1]) : p.data;
+      });
       animMom();
-      var mch=momPanel&&momPanel.querySelector('.chip'); if(mch)mch.textContent=(momData[momData.length-1]>=momData[0])?'crescendo':'estável';
+      var mch=momPanel&&momPanel.querySelector('.chip');
+      if(mch){
+        var ult=momData[momData.length-1], pen=momData[momData.length-2];
+        if(momModo==='semana' && pen>0){
+          var v=Math.round((ult-pen)/pen*100);
+          mch.textContent=(v>=0?'+':'')+v+'% vs semana anterior';
+          mch.style.background=v>=0?'#E6F4EA':'#FCE8E6'; mch.style.color=v>=0?'#137333':'#C5221F';
+        } else mch.textContent=(ult>=momData[0])?'crescendo':'estável';
+      }
+      var ph=momPanel&&momPanel.querySelector('h3');
+      if(ph&&momModo==='semana') ph.innerHTML='<span class="dot"></span>Alcance por semana';
     }else if(momPanel){
       cv.style.display='none'; var mlv=byId('momLive'); if(mlv)mlv.style.display='none';
       var mch2=momPanel.querySelector('.chip'); if(mch2)mch2.textContent='em coleta';
