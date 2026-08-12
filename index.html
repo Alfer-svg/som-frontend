@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=252">
+  <link rel="stylesheet" href="css/styles.css?v=253">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -3170,42 +3170,42 @@
                           <div class="fs-13 fw-600" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span x-text="r.titulo"></span><span class="text-3 fw-400" x-show="r.cliente" x-text="' · '+r.cliente"></span></div>
                           <div class="text-3 fs-11" x-show="r.captacao"><i class="ph ph-camera"></i> <span x-text="'captação '+_dBR(r.captacao)"></span></div>
                         </div>
-                        <button class="btn btn-icon btn-ghost btn-sm" @click="samRemRoteiro(r)" title="Remover" style="color:var(--text-3);flex:none"><i class="ph ph-x ic-ph"></i></button>
+                        <!-- ⚠️ AÇÕES NO MENU "⋯" (Dinho 12/08): eram até 5 botões em fila
+                             e o card do Operacional é estreito — vazavam por cima da coluna
+                             da direita. Mesmo padrão .row-menu da tabela de orçamentos.
+                             Nenhum ancestral daqui tem overflow, então `absolute` não corta
+                             (conferido no DOM — ver memória overflow-hidden-corta-dropdown). -->
+                        <div style="position:relative;flex:none" x-data="{m:false}" @click.stop>
+                          <button class="btn btn-icon btn-ghost btn-sm" @click="m=!m" title="Ações do roteiro"><i class="ph ph-dots-three ic-ph"></i></button>
+                          <div class="row-menu" x-show="m" @click.outside="m=false" x-cloak>
+                            <button @click="samRotEditar(r); m=false"><i class="ph ph-file-pdf ic-ph"></i> Documento / PDF</button>
+                            <div class="row-menu-sep"></div>
+                            <!-- ROTEIRO PRONTO → IA PREENCHE: carrega o arquivo que a equipe
+                                 já escreveu e pede pra IA jogar nos campos do documento. -->
+                            <label :style="rotIaBusy===r.id+':up' ? 'cursor:wait;opacity:.55;pointer-events:none' : 'cursor:pointer'">
+                              <i class="ph ph-upload-simple ic-ph"></i>
+                              <span x-text="rotIaBusy===r.id+':up' ? 'Carregando…' : (rotArquivos[r.id] ? 'Trocar arquivo do roteiro' : 'Carregar roteiro pronto')"></span>
+                              <input type="file" accept=".pdf,.txt,.md,image/*" @change="carregarRoteiroArquivo($event, r); m=false" style="display:none">
+                            </label>
+                            <!-- o arquivo mora na memória da aba: se recarregar, o item some
+                                 em vez de mentir que ainda está lá -->
+                            <button x-show="!!rotArquivos[r.id]" :disabled="rotIaBusy===r.id+':ia'" @click="roteiroIaPreencher(r); m=false" style="color:var(--accent)">
+                              <i class="ph ph-sparkle ic-ph"></i> <span x-text="rotIaBusy===r.id+':ia' ? 'Lendo…' : 'IA preencher o documento'"></span>
+                            </button>
+                            <div class="row-menu-sep"></div>
+                            <button x-show="r.docUrl" @click="samRoteiroDoc(r); m=false" style="color:#4285F4"><i class="ph ph-file-text ic-ph"></i> Abrir no Docs</button>
+                            <button x-show="!r.docUrl" @click="samRoteiroCriarDoc(r); m=false"><i class="ph ph-file-plus ic-ph"></i> Criar no Docs</button>
+                            <button x-show="!r.docUrl" @click="samRoteiroVincular(r); m=false" style="color:#4285F4"><i class="ph ph-link ic-ph"></i> Já tenho o doc — colar link</button>
+                            <div class="row-menu-sep"></div>
+                            <button class="danger" @click="samRemRoteiro(r); m=false"><i class="ph ph-trash ic-ph"></i> Excluir roteiro</button>
+                          </div>
+                        </div>
                       </div>
-                      <!-- ⚠️ ORDEM/LAYOUT: são até 5 botões nesta fila e o card do
-                           Operacional é estreito — sem flex-wrap eles vazam por cima da
-                           coluna da direita (Dinho, 12/08). Manter o wrap nos dois níveis. -->
-                      <div class="flex items-center" style="margin-top:8px;gap:8px;flex-wrap:wrap">
-                        <div class="flex items-center gap-2" style="flex-wrap:wrap">
-                          <template x-for="s in [['nao_iniciado','não iniciado','#9ca3af','var(--surface-2)'],['escrevendo','escrevendo','#B06000','#FEF7E0'],['pronto','pronto','#34A853','#E6F4EA']]" :key="'srs'+r.id+s[0]">
-                            <button class="badge fs-10 fw-600" style="cursor:pointer" :style="r.status===s[0]?('background:'+s[3]+';color:'+s[2]+';outline:1.5px solid '+s[2]):'background:transparent;color:#9ca3af;outline:1px solid var(--border)'" @click="samRoteiroStatus(r,s[0])" x-text="s[1]"></button>
-                          </template>
-                        </div>
-                        <div class="flex items-center gap-2" style="flex-wrap:wrap;justify-content:flex-end;margin-left:auto">
-                          <template x-if="r.docUrl">
-                            <button class="btn btn-sm btn-ghost" style="color:#4285F4" @click="samRoteiroDoc(r)"><i class="ph ph-file-text ic-ph"></i> Abrir no Docs</button>
-                          </template>
-                          <template x-if="!r.docUrl">
-                            <div class="flex items-center gap-2">
-                              <button class="btn btn-sm btn-ghost" @click="samRoteiroCriarDoc(r)"><i class="ph ph-file-plus ic-ph"></i> Criar no Docs</button>
-                              <button class="btn btn-icon btn-ghost btn-sm" @click="samRoteiroVincular(r)" title="Já tenho o doc — colar o link" style="color:#4285F4"><i class="ph ph-link ic-ph"></i></button>
-                            </div>
-                          </template>
-                          <!-- ROTEIRO PRONTO → IA PREENCHE (Dinho 12/08): carrega o
-                               arquivo que a equipe já escreveu e pede pra IA jogar nos
-                               campos do documento, pra revisão antes do PDF. -->
-                          <label class="btn btn-sm btn-ghost" :style="rotIaBusy===r.id+':up' ? 'cursor:wait;opacity:.55;pointer-events:none' : 'cursor:pointer'" :title="rotArquivos[r.id] ? ('carregado: '+rotArquivos[r.id].nome+' — clique pra trocar') : 'Carregar o roteiro pronto (PDF, imagem ou texto)'">
-                            <i class="ph ph-upload-simple ic-ph"></i>
-                            <span x-text="rotIaBusy===r.id+':up' ? '…' : (rotArquivos[r.id] ? 'Trocar' : 'Carregar')"></span>
-                            <input type="file" accept=".pdf,.txt,.md,image/*" @change="carregarRoteiroArquivo($event, r)" style="display:none">
-                          </label>
-                          <!-- o arquivo mora na memória da aba: se recarregar, o botão
-                               volta pra "Carregar" em vez de mentir que ainda está lá -->
-                          <button class="btn btn-sm" x-show="!!rotArquivos[r.id]" :disabled="rotIaBusy===r.id+':ia'" @click="roteiroIaPreencher(r)" title="A IA lê o arquivo carregado e preenche os campos do documento">
-                            <i class="ph ph-sparkle ic-ph"></i> <span x-text="rotIaBusy===r.id+':ia' ? 'Lendo…' : 'IA preencher'"></span>
-                          </button>
-                          <button class="btn btn-sm btn-primary" @click="samRotEditar(r)" title="Preencher o documento e gerar o PDF do cliente"><i class="ph ph-file-pdf ic-ph"></i> Documento</button>
-                        </div>
+                      <div class="flex items-center gap-2" style="margin-top:8px;flex-wrap:wrap">
+                        <template x-for="s in [['nao_iniciado','não iniciado','#9ca3af','var(--surface-2)'],['escrevendo','escrevendo','#B06000','#FEF7E0'],['pronto','pronto','#34A853','#E6F4EA']]" :key="'srs'+r.id+s[0]">
+                          <button class="badge fs-10 fw-600" style="cursor:pointer" :style="r.status===s[0]?('background:'+s[3]+';color:'+s[2]+';outline:1.5px solid '+s[2]):'background:transparent;color:#9ca3af;outline:1px solid var(--border)'" @click="samRoteiroStatus(r,s[0])" x-text="s[1]"></button>
+                        </template>
+                        <span class="text-3 fs-11" x-show="rotArquivos[r.id]" style="margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px"><i class="ph ph-paperclip"></i> <span x-text="rotArquivos[r.id] && rotArquivos[r.id].nome"></span></span>
                       </div>
                     </div>
                   </template>
@@ -6807,7 +6807,7 @@
     </div>
   </div>
 
-<script src="js/app.js?v=456"></script>
+<script src="js/app.js?v=457"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
