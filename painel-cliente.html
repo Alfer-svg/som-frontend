@@ -1019,12 +1019,20 @@
       if(gOrg) bEv+='<div class="sub-graf"><h3>Suas redes ao longo do tempo'+dica('Como alcance, seguidores e engajamento caminharam dia a dia. Cada linha usa a própria escala, porque as três têm tamanhos muito diferentes: leia o FORMATO da curva (subindo, caindo, estável), não a altura comparada.')+' <span style="font-weight:400;color:var(--mut)">· cada linha na sua própria escala (o que importa é o formato da curva)</span></h3>'+gOrg+'</div>';
       // Sem pontos suficientes, explica DESDE QUANDO existe histórico em vez de
       // desenhar uma reta (ou sumir sem dizer nada).
+      // A série vem da API da plataforma, então o gráfico existe desde o 1º dia de
+      // campanha. Se ainda assim vierem poucos pontos, é porque a campanha rodou
+      // pouco no período — e é ISSO que a frase deve dizer, não "o acompanhamento
+      // começou em X" (que soava como se a agência tivesse chegado ontem).
       var aviso=function(titulo,sub,pts){
         var comDado=(pts||[]).filter(function(p){return p.mGasto!=null||p.gGasto!=null||p.mLeads!=null||p.gLeads!=null;});
         if(!comDado.length) return '';
         var d1=String(comDado[0].data).slice(0,10).split('-');
+        var d2=String(comDado[comDado.length-1].data).slice(0,10).split('-');
+        var txt=comDado.length===1
+          ? 'Houve entrega em um único dia do período ('+d1[2]+'/'+d1[1]+'), então não há curva para desenhar.'
+          : 'Houve entrega em '+comDado.length+' dias do período ('+d1[2]+'/'+d1[1]+' e '+d2[2]+'/'+d2[1]+'). Com mais dias de veiculação o gráfico aparece.';
         return '<div class="sub-graf"><h3>'+titulo+' <span style="font-weight:400;color:var(--mut)">· '+sub+'</span></h3>'+
-          '<div class="sub-l">O acompanhamento diário desta conta começou em '+d1[2]+'/'+d1[1]+'. O gráfico aparece assim que houver alguns dias de histórico.</div></div>';
+          '<div class="sub-l">'+txt+'</div></div>';
       };
       if(gInv) bEv+='<div class="sub-graf"><h3>Investimento'+dica('Quanto foi gasto em anúncios ao longo do mês. O valor é ACUMULADO: sobe durante o mês e recomeça do zero no dia 1º.')+' <span style="font-weight:400;color:var(--mut)">· acumulado no mês, em reais (cada mês recomeça do zero)</span></h3>'+gInv+'</div>';
       else bEv+=aviso('Investimento','acumulado no mês, em reais',ptsAds);
