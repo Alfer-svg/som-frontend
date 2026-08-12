@@ -240,7 +240,11 @@
   .lg{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px}
   .lg-i{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut);font-weight:600}
   .lg-i b{color:var(--ink);font-variant-numeric:tabular-nums}
-  .lg-d{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+  .lg-d{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  /* sem isto o PDF sai com a legenda SEM as bolinhas coloridas e ninguém sabe
+     qual linha é qual (relatório quinzenal da Moura & Serak, 12/08) */
+  .graf svg,.graf path,.pie,.pie *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .sub-graf{margin-top:14px}
   .sub-graf h3{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 2px}
   .sub-l{font-size:12px;color:var(--mut);line-height:1.5;margin-top:6px}
@@ -411,7 +415,11 @@
   // legenda mostra o valor REAL do último ponto — sem eixo mentiroso.
   function linha(pts, series, alt, escalaComum){
     pts=(pts||[]).filter(function(p){return p&&p.data;});
-    if(pts.length<2) return '';
+    // 2 pontos viram uma RETA que não mostra evolução nenhuma e ainda ocupam meia
+    // página do relatório (caso Moura & Serak: o histórico do Meta começou no dia
+    // em que a conta foi vinculada, 11/08, e o "gráfico" saiu chapado). Abaixo de
+    // 3 pontos quem chama mostra a explicação em texto.
+    if(pts.length<3) return '';
     var W=760, H=alt||190, padL=8, padR=8, padT=14, padB=26;
     var plotW=W-padL-padR, plotH=H-padT-padB;
     var usadas=series.filter(function(s){ return pts.some(function(p){ return p[s.campo]!=null && !isNaN(p[s.campo]); }); });
@@ -948,16 +956,27 @@
       var moeda=function(v){return 'R$ '+fNum(v);};
       var gInv=linha(ptsAds,[
         {nome:'Google',cor:'#4285F4',campo:'gGasto',fmt:moeda},
-        {nome:'Meta',cor:'#7E57C2',campo:'mGasto',fmt:moeda}
+        {nome:'Facebook & Instagram',cor:'#7E57C2',campo:'mGasto',fmt:moeda}
       ],170,true);
       var gCtt=linha(ptsAds,[
         {nome:'Google',cor:'#34A853',campo:'gLeads'},
-        {nome:'Meta',cor:'#EA4335',campo:'mLeads'}
+        {nome:'Facebook & Instagram',cor:'#EA4335',campo:'mLeads'}
       ],170,true);
       var bEv='';
-      if(gOrg) bEv+='<div class="sub-graf"><h3>Suas redes ao longo do tempo</h3>'+gOrg+'</div>';
+      if(gOrg) bEv+='<div class="sub-graf"><h3>Suas redes ao longo do tempo <span style="font-weight:400;color:var(--mut)">· cada linha na sua própria escala (o que importa é o formato da curva)</span></h3>'+gOrg+'</div>';
+      // Sem pontos suficientes, explica DESDE QUANDO existe histórico em vez de
+      // desenhar uma reta (ou sumir sem dizer nada).
+      var aviso=function(titulo,sub,pts){
+        var comDado=(pts||[]).filter(function(p){return p.mGasto!=null||p.gGasto!=null||p.mLeads!=null||p.gLeads!=null;});
+        if(!comDado.length) return '';
+        var d1=String(comDado[0].data).slice(0,10).split('-');
+        return '<div class="sub-graf"><h3>'+titulo+' <span style="font-weight:400;color:var(--mut)">· '+sub+'</span></h3>'+
+          '<div class="sub-l">O acompanhamento diário desta conta começou em '+d1[2]+'/'+d1[1]+'. O gráfico aparece assim que houver alguns dias de histórico.</div></div>';
+      };
       if(gInv) bEv+='<div class="sub-graf"><h3>Investimento <span style="font-weight:400;color:var(--mut)">· acumulado no mês, em reais (cada mês recomeça do zero)</span></h3>'+gInv+'</div>';
+      else bEv+=aviso('Investimento','acumulado no mês, em reais',ptsAds);
       if(gCtt) bEv+='<div class="sub-graf"><h3>Contatos gerados <span style="font-weight:400;color:var(--mut)">· acumulado no mês</span></h3>'+gCtt+'</div>';
+      else bEv+=aviso('Contatos gerados','acumulado no mês',ptsAds);
       bEv=blk('evolucao',bEv);
       if(bEv) h+='<div class="sec"><div class="sec-h"><span class="ic" style="background:#1E8E4E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg></span><h2>Evolução</h2><span class="sub">como os números caminharam</span></div>'+bEv+'</div>';
     }
