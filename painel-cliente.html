@@ -270,6 +270,12 @@
   .legend{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:8px;font-size:11px;color:var(--mut)}
   .legend i{width:9px;height:9px;border-radius:2px;background:var(--yellow);display:inline-block}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  /* Gênero · Dispositivo · Faixa etária. Na TELA a faixa etária ocupa a linha
+     inteira embaixo; na IMPRESSÃO os três ficam lado a lado — senão a faixa
+     etária não cabe no resto da folha, é empurrada inteira e deixa meia página
+     em branco no meio do card (Dinho 12/08). */
+  .pub-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .pub-grid>.sub-graf{grid-column:1/-1;margin-top:2px}
   .emcoleta{font-size:12.5px;color:var(--mut);background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center}
   #mapaCli{height:300px;border-radius:12px;overflow:hidden;border:1px solid var(--line);z-index:0}
   .leaflet-container{font:inherit}
@@ -294,6 +300,7 @@
   @media (max-width:720px){
     .kpis{grid-template-columns:1fr 1fr} .fmts{grid-template-columns:1fr} .tiles{grid-template-columns:1fr 1fr}
     .two{grid-template-columns:1fr} .big3{grid-template-columns:1fr}
+    .pub-grid{grid-template-columns:1fr}
     /* "Compartilhamentos" não cabia em 100px e ficava cortado por cima da barra */
     .ir{grid-template-columns:120px 1fr auto;gap:8px}
     .ir .l{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -304,6 +311,9 @@
   @media print{
     /* grades lado a lado como no desktop (pizzas Gênero × Dispositivo juntas) */
     .two{grid-template-columns:1fr 1fr;gap:10px}
+    .pub-grid{grid-template-columns:repeat(3,1fr);gap:10px;align-items:start}
+    .pub-grid>.sub-graf{grid-column:auto;margin-top:0}
+    .pub-grid .pie{max-width:150px}
     .kpis{grid-template-columns:repeat(4,1fr);gap:8px}
     .tiles{grid-template-columns:repeat(3,1fr);gap:8px}
     .big3{grid-template-columns:repeat(3,1fr);gap:8px}
@@ -845,12 +855,11 @@
       var dispMap={}; (((m&&m.dispositivos)||[]).concat((g&&g.dispositivos)||[])).forEach(function(x){ dispMap[x.label]=(dispMap[x.label]||0)+x.valor; });
       var disp=Object.keys(dispMap).map(function(k){return {label:k,valor:dispMap[k]};});
       if(gen.length||disp.length||idade.length){
-        var pb='<div class="card"><h3>Quem sua campanha alcança'+dica('Perfil de quem foi alcançado pelos anúncios: idade, gênero e aparelho. Vem da própria plataforma, com base no público que viu.')+'</h3><div class="two">';
+        var pb='<div class="card"><h3>Quem sua campanha alcança'+dica('Perfil de quem foi alcançado pelos anúncios: idade, gênero e aparelho. Vem da própria plataforma, com base no público que viu.')+'</h3><div class="pub-grid">';
         if(gen.length) pb+='<div><div class="mh">Gênero'+dica('Divisão por gênero de quem foi alcançado pelos anúncios, segundo a plataforma.')+'</div>'+pizza(gen,{Mulheres:'#EA4335',Homens:'#1a73e8'})+'</div>';
         if(disp.length) pb+='<div><div class="mh">Dispositivo'+dica('Aparelho usado por quem viu ou clicou no anúncio: celular, computador, tablet ou TV.')+'</div>'+pizza(disp,{Celular:'#188038',PC:'#1a73e8',Tablet:'#F9A825',TV:'#9aa0aa'})+'</div>';
-        pb+='</div>';
-        if(idade.length) pb+='<div class="sub-graf" style="margin-top:16px"><div class="mh">Faixa etária'+dica('Idade de quem foi alcançado pelos anúncios no período, segundo a plataforma.')+'</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
-        pb+='</div>';
+        if(idade.length) pb+='<div class="sub-graf"><div class="mh">Faixa etária'+dica('Idade de quem foi alcançado pelos anúncios no período, segundo a plataforma.')+'</div>'+chartSVG(idade.map(function(x){return {label:x.label,valor:x.valor};}),'Pessoas alcançadas')+'</div>';
+        pb+='</div></div>';
         bMid+=blk('midPublico',pb+notaEquipe(lr.publico));
       }
 
