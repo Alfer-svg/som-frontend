@@ -1359,18 +1359,23 @@ if(new URLSearchParams(location.search).get('cliente')&&localStorage.getItem('so
           '<span style="color:'+cor(PI.ganho)+'">'+seta(PI.ganho)+' '+(PI.ganho>0?'+':'')+F.format(PI.ganho)+
           (PI.ganhoPct!=null?' ('+String(PI.ganhoPct).replace('.',',')+'%)':'')+'</span> em '+PI.dias+' dias';
       }
-      var engEl=$('[data-kpi=engaj]'), engT=engEl&&engEl.closest('.tile'), engDd=engT&&engT.querySelector('.d');
-      if(engDd&&PI.engaj!=null){
-        var dif=(PI.engajHoje!=null)?Math.round((PI.engajHoje-PI.engaj)*10)/10:null;
-        engDd.style.display='';
-        engDd.innerHTML='no início ('+quando+'): <b>'+String(PI.engaj).replace('.',',')+'%</b>'+
-          (dif!=null?' · <span style="color:'+cor(dif)+'">'+seta(dif)+' '+(dif>0?'+':'')+String(dif).replace('.',',')+' p.p.</span>':'');
-      }
     }
     setV('[data-kpi=engaj]',K.engajamentoPct,function(v){return String(v).replace('.',',');});
     var eng=$('[data-kpi=engaj]'); var engTile=eng&&eng.closest('.tile'); var engD=engTile&&engTile.querySelector('.d');
     if(K.engajamentoPct==null){ if(engD)engD.style.display='none'; var engV=eng&&eng.closest('.v'); if(engV)engV.textContent='—'; }
     else if(engD){ engD.textContent='média por post no Instagram'; } // "acima da média do setor" era claim do demo
+    // ⚠️ ORDEM IMPORTA: a linha acima reescreve o rodapé do card de engajamento,
+    // então o "no início" tem que vir DEPOIS dela (na primeira tentativa ficou
+    // antes e era apagado sem deixar rastro).
+    if(PI && PI.engaj!=null && engD){
+      var difE=(PI.engajHoje!=null)?Math.round((PI.engajHoje-PI.engaj)*10)/10:null;
+      var setaE=function(v){return v>0?'▲':(v<0?'▼':'•');};
+      var corE=function(v){return v>0?'#137333':(v<0?'#C5221F':'var(--mut)');};
+      var qE=String(PI.data).slice(0,10).split('-');
+      engD.style.display='';
+      engD.innerHTML='no início ('+qE[2]+'/'+qE[1]+'): <b>'+String(PI.engaj).replace('.',',')+'%</b>'+
+        (difE!=null?' · <span style="color:'+corE(difE)+'">'+setaE(difE)+' '+(difE>0?'+':'')+String(difE).replace('.',',')+' p.p.</span>':'');
+    }
     setV('[data-kpi=contatos]',K.contatos,function(v){return F.format(v);});
     // Comparativo semana a semana (Δ% vs ~7 dias atrás) — vem do backend em api.kpisVar.
     // null (filtro de período ativo ou sem histórico) → mantém o texto atual do card.
