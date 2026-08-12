@@ -3188,6 +3188,17 @@
                               <button class="btn btn-icon btn-ghost btn-sm" @click="samRoteiroVincular(r)" title="Já tenho o doc — colar o link" style="color:#4285F4"><i class="ph ph-link ic-ph"></i></button>
                             </div>
                           </template>
+                          <!-- ROTEIRO PRONTO → IA PREENCHE (Dinho 12/08): carrega o
+                               arquivo que a equipe já escreveu e pede pra IA jogar nos
+                               campos do documento, pra revisão antes do PDF. -->
+                          <label class="btn btn-sm btn-ghost" style="cursor:pointer" :class="rotIaBusy===r.id+':up'?'is-disabled':''" :title="r.arquivoNome ? ('carregado: '+r.arquivoNome+' — clique pra trocar') : 'Carregar o roteiro pronto (PDF, imagem ou texto)'">
+                            <i class="ph ph-upload-simple ic-ph"></i>
+                            <span x-text="rotIaBusy===r.id+':up' ? '…' : (r.arquivoUrl ? 'Trocar arquivo' : 'Carregar roteiro')"></span>
+                            <input type="file" accept=".pdf,.txt,.md,image/*" @change="carregarRoteiroArquivo($event, r)" style="display:none">
+                          </label>
+                          <button class="btn btn-sm" x-show="r.arquivoUrl" :disabled="rotIaBusy===r.id+':ia'" @click="roteiroIaPreencher(r)" title="A IA lê o arquivo e preenche os campos do documento">
+                            <i class="ph ph-sparkle ic-ph"></i> <span x-text="rotIaBusy===r.id+':ia' ? 'Lendo…' : 'IA preencher'"></span>
+                          </button>
                           <button class="btn btn-sm btn-primary" @click="samRotEditar(r)" title="Preencher o documento e gerar o PDF do cliente"><i class="ph ph-file-pdf ic-ph"></i> Documento / PDF</button>
                         </div>
                       </div>
@@ -6791,7 +6802,7 @@
     </div>
   </div>
 
-<script src="js/app.js?v=453"></script>
+<script src="js/app.js?v=454"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

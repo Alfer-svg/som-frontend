@@ -528,6 +528,7 @@ document.addEventListener('alpine:init', () => {
     metaBusy: false,
     logoBusy: false,
     adsMcc: null, adsMccLoading: false, metaSemVinculo: [],
+    rotIaBusy: '',
     adsLive: {},      // {clienteId: {configurado, leads, custoLead, gasto, ...}} — Google Ads (MCC) puxado ao vivo na ficha
     adsConfig: null,  // {configurado, mcc} — há credencial da agência? (carregado 1x)
     radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
@@ -4291,6 +4292,44 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       const m = (c && c.adsManual) || {};
       return { fonte: 'manual', leads: m.leads, custoLead: m.custoLead };
     },
+    // ── ROTEIRO PRONTO → DOCUMENTO (Dinho 12/08) ────────────────────────
+    // A equipe recebe o roteiro escrito (PDF do Docs) e reescrevia tudo à mão no
+    // formulário. Aqui o arquivo é carregado e a IA devolve os campos preenchidos.
+    async carregarRoteiroArquivo(e, r) {
+      const file = e.target.files && e.target.files[0]; e.target.value = '';
+      if (!file) return;
+      if (!this.cloudOk) await this.carregarCloud();
+      if (!this.cloudOk) { alert('Configure o Cloudinary primeiro (Pessoal › Armazenamento de arquivos).'); return; }
+      this.rotIaBusy = r.id + ':up';
+      try {
+        const url = await this.uploadArquivo(file);
+        if (!url) throw new Error('upload falhou');
+        r.arquivoUrl = url; r.arquivoNome = file.name || 'roteiro';
+        this._samSave('roteiros', this.samRoteiros);
+        this.mostrarToast('Roteiro carregado. Agora clique em "IA preencher".');
+      } catch (err) { alert('Não consegui carregar: ' + (err.message || err)); }
+      finally { this.rotIaBusy = ''; }
+    },
+    async roteiroIaPreencher(r) {
+      if (!r.arquivoUrl) { alert('Carregue o arquivo do roteiro primeiro.'); return; }
+      if (r.doc && !confirm('Isto substitui o que já está preenchido no documento. Continuar?')) return;
+      this.rotIaBusy = r.id + ':ia';
+      try {
+        const resp = await this.api('POST', '/ia/roteiro-extrair', { url: r.arquivoUrl });
+        if (!resp || !resp.doc) throw new Error('a IA não devolveu o documento');
+        // o que a IA não achou fica vazio; cliente/título do card preenchem o resto
+        const base = this.samRotDocPadrao(r);
+        r.doc = Object.assign(base, resp.doc, {
+          cliente: resp.doc.cliente || base.cliente,
+          projeto: resp.doc.projeto || base.projeto,
+        });
+        this._samSave('roteiros', this.samRoteiros);
+        this.samRotRef = r;   // abre o formulário pra revisão
+        this.mostrarToast('Documento preenchido pela IA — revise antes de gerar o PDF.');
+      } catch (e) { alert('Não deu pra preencher: ' + (e.message || e)); }
+      finally { this.rotIaBusy = ''; }
+    },
+
     // ── MARCA DO CLIENTE (Dinho 07/08) ──────────────────────────────────
     // `dados.logo` alimenta a bolinha da área do cliente e do painel. Existia no
     // banco e não tinha tela: 2 de 539 cadastros tinham logo. A foto do IG é o
