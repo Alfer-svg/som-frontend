@@ -2094,7 +2094,10 @@ document.addEventListener('alpine:init', () => {
   /* nowrap: com letter-spacing o rótulo quebrava no meio ("F O R M / A T O")
      quando a LOCAÇÃO era longa e espremia as outras colunas */
   .ficha .rot{font:700 7pt Inter;letter-spacing:2.2px;color:#777;white-space:nowrap}
-  .ficha td:last-child{padding-right:0}
+  /* respiro entre colunas: com 2 campos só, "DURAÇÃO" encostava em "LOCAÇÃO"
+     e os dois rótulos pareciam um só */
+  .ficha td{padding-right:28px}
+  .ficha td:last-child{padding-right:0;width:99%}
   h3{font:700 10pt Inter;margin:14px 0 4px}
   ul{margin:0 0 12px 16px;padding:0}
   li{margin:0 0 3px;font:400 9pt Inter;line-height:1.5}
