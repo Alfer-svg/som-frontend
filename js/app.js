@@ -2030,22 +2030,31 @@ document.addEventListener('alpine:init', () => {
       const lista = (txt) => String(txt || '').split(/\n/).map((s) => s.trim()).filter(Boolean).map((s) => `<li>${esc(s)}</li>`).join('');
       const ident = (rot, val, forte) => val ? `<tr><td class="rot">${esp(rot)}</td><td class="val${forte ? ' forte' : ''}">${esc(val)}</td></tr>` : '';
       const pecas = (d.pecas || []);
-      const sumario = pecas.map((p, i) => `<tr><td class="c">${nn(i + 1)}</td><td><b>${esc(p.nome)}</b></td><td>${esc(p.resumoFormato)}</td><td>${esc(p.resumoDuracao)}</td><td>${esc(p.resumoElenco)}</td></tr>`).join('');
+      // Coluna do sumário só entra se ALGUMA peça tiver o dado — senão sai uma
+      // coluna inteira em branco, com cara de erro (caso Mediar: nenhum "formato").
+      const temF = pecas.some((p) => p.resumoFormato), temD = pecas.some((p) => p.resumoDuracao), temE = pecas.some((p) => p.resumoElenco);
+      const sumario = pecas.map((p, i) => `<tr><td class="c">${nn(i + 1)}</td><td><b>${esc(p.nome)}</b></td>${temF ? `<td>${esc(p.resumoFormato)}</td>` : ''}${temD ? `<td>${esc(p.resumoDuracao)}</td>` : ''}${temE ? `<td>${esc(p.resumoElenco)}</td>` : ''}</tr>`).join('');
       const blocos = pecas.map((p, i) => {
         const cenas = (p.cenas || []).map((c, j) => `<tr>
           <td class="cn">${nn(j + 1)}</td><td class="tp">${esc(c.tempo)}</td>
           <td><b>${esc(c.acao)}</b>${c.desc ? '<br>' + esc(c.desc) : ''}</td>
           <td>${this._rotFalaHtml(c.fala)}</td></tr>`).join('');
+        // Ficha só com os campos preenchidos: rótulo sem valor deixava a linha
+        // desalinhada (o valor aparecia sob a coluna errada).
+        const fCampos = [['FORMATO', p.formato], ['DURAÇÃO', p.duracao], ['ELENCO', p.elenco], ['LOCAÇÃO', p.locacao]].filter((x) => x[1]);
+        const ficha = fCampos.length ? `<table class="ficha"><tr>${fCampos.map((x) => `<td class="rot">${esp(x[0])}</td>`).join('')}</tr>
+          <tr>${fCampos.map((x) => `<td>${esc(x[1])}</td>`).join('')}</tr></table>` : '';
         return `<section class="pc">
-          <div class="faixa"><div class="vn">${esp('VÍDEO')} &nbsp; ${nn(i + 1)}</div><h2>${esc(p.nome)}</h2></div>
-          <table class="ficha"><tr><td class="rot">${esp('FORMATO')}</td><td class="rot">${esp('DURAÇÃO')}</td><td class="rot">${esp('ELENCO')}</td><td class="rot">${esp('LOCAÇÃO')}</td></tr>
-          <tr><td>${esc(p.formato)}</td><td>${esc(p.duracao)}</td><td>${esc(p.elenco)}</td><td>${esc(p.locacao)}</td></tr></table>
+          <div class="topo-pc">
+            <div class="faixa"><div class="vn">${esp('VÍDEO')} &nbsp; ${nn(i + 1)}</div><h2>${esc(p.nome)}</h2></div>
+            ${ficha}
+          </div>
           ${p.direcao ? `<h3>DIREÇÃO GERAL</h3><ul>${lista(p.direcao)}</ul>` : ''}
-          <table class="cenas"><tr><th>CENA</th><th>TEMPO</th><th>AÇÃO E CÂMERA</th><th>FALA</th></tr>${cenas}</table>
+          <table class="cenas"><thead><tr><th>CENA</th><th>TEMPO</th><th>AÇÃO E CÂMERA</th><th>FALA</th></tr></thead><tbody>${cenas}</tbody></table>
         </section>`;
       }).join('');
       return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
-<title>${esc(d.numero)} · ${esc(d.cliente)}</title>
+<title>${esc([d.numero, d.cliente].filter(Boolean).join(' · ') || 'Roteiro')}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
@@ -2074,12 +2083,18 @@ document.addEventListener('alpine:init', () => {
   .cenas .tp{color:#777;font-size:8pt;width:62px}
   .cenas td:nth-child(3){width:34%}
   .nota{font:italic 8pt Inter;color:#777;margin:8px 0 0;line-height:1.5}
+  /* cabeçalho preto REPETE em toda página que a tabela ocupar — sem thead as
+     linhas seguiam sem CENA/TEMPO/AÇÃO/FALA no alto da página */
+  thead{display:table-header-group}
   .pc{margin-top:26px;break-inside:auto}
   .faixa{background:#141414;color:#fff;padding:10px 14px;margin-bottom:14px}
   .faixa .vn{font:700 7pt Inter;letter-spacing:2.5px;color:#c9a93d}
   .faixa h2{font:700 13pt Inter;margin:3px 0 0;color:#fff;text-transform:uppercase}
   .ficha td{padding:2px 10px 6px 0;font:400 9pt Inter;vertical-align:top}
-  .ficha .rot{font:700 7pt Inter;letter-spacing:2.2px;color:#777}
+  /* nowrap: com letter-spacing o rótulo quebrava no meio ("F O R M / A T O")
+     quando a LOCAÇÃO era longa e espremia as outras colunas */
+  .ficha .rot{font:700 7pt Inter;letter-spacing:2.2px;color:#777;white-space:nowrap}
+  .ficha td:last-child{padding-right:0}
   h3{font:700 10pt Inter;margin:14px 0 4px}
   ul{margin:0 0 12px 16px;padding:0}
   li{margin:0 0 3px;font:400 9pt Inter;line-height:1.5}
@@ -2087,24 +2102,27 @@ document.addEventListener('alpine:init', () => {
   .rodape{margin-top:26px}
   .rodape .txt{text-align:center;font:700 8pt Inter;letter-spacing:3px;color:#777;margin-top:8px}
   tr{break-inside:avoid;page-break-inside:avoid}
+  /* faixa do vídeo + ficha andam JUNTAS: separadas, a página abria com
+     "57s / Psicóloga / Consultório" solto, sem os rótulos */
+  .topo-pc{break-inside:avoid;page-break-inside:avoid;break-after:avoid;page-break-after:avoid}
   .faixa,.ficha{break-after:avoid;page-break-after:avoid}
+  .ficha{break-inside:avoid;page-break-inside:avoid}
   @media screen{body{background:#eceff1}.folha{background:#fff;max-width:816px;margin:20px auto;padding:1in;box-shadow:0 2px 14px rgba(0,0,0,.18)}}
 </style></head><body><div class="folha">
   <img class="capa" src="${location.origin}${location.pathname.replace(/[^/]*$/, '')}assets/faixa-roteiro.jpg" alt="">
   <div class="cab">
     <img src="${location.origin}${location.pathname.replace(/[^/]*$/, '')}assets/logo-horizontal.png" alt="Maracatu Digital">
-    <div class="num"><div class="lb">${esp('ROTEIRO')}</div><div class="n">Nº ${esc(d.numero)}</div></div>
+    <div class="num"><div class="lb">${esp('ROTEIRO')}</div>${d.numero ? `<div class="n">Nº ${esc(d.numero)}</div>` : ''}</div>
   </div>
   <p class="contato">CNPJ 44.258.426/0001-15 · laura@maracatumktdigital.com · (11) 96624-9876 · Av. A, 4165 - Torre 6, Sl 611 e 612 - Paiva, Cabo de Santo Agostinho - PE · CEP 54522-005</p>
   <hr class="regua">
-  <div class="tit-lb">${esp('ROTEIRO DE')}</div>
-  <div class="tit">${esc(d.roteiroDe)}</div>
+  ${d.roteiroDe ? `<div class="tit-lb">${esp('ROTEIRO DE')}</div><div class="tit">${esc(d.roteiroDe)}</div>` : '<div style="height:14px"></div>'}
   <table class="ident">
     ${ident('CLIENTE', d.cliente, true)}${ident('PROJETO', d.projeto)}${ident('PEÇAS', d.pecasResumo)}
     ${ident('EMISSÃO', d.emissao)}${ident('VÍNCULO', d.vinculo)}${ident('STATUS', d.status)}
   </table>
   <h1 class="sec">SUMÁRIO DAS PEÇAS</h1>
-  <table class="sum"><tr><th>Nº</th><th>PEÇA</th><th>FORMATO</th><th>DURAÇÃO</th><th>ELENCO</th></tr>${sumario}</table>
+  <table class="sum"><thead><tr><th>Nº</th><th>PEÇA</th>${temF ? '<th>FORMATO</th>' : ''}${temD ? '<th>DURAÇÃO</th>' : ''}${temE ? '<th>ELENCO</th>' : ''}</tr></thead><tbody>${sumario}</tbody></table>
   ${d.nota ? `<p class="nota">${esc(d.nota)}</p>` : ''}
   ${blocos}
   ${d.proximos ? `<h1 class="sec">PRÓXIMOS PASSOS</h1><ul>${lista(d.proximos)}</ul>` : ''}
