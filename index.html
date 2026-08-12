@@ -1869,7 +1869,7 @@
                     <template x-if="!logoCli(monitorCliente)"><span class="text-3 fs-11">sem logo</span></template>
                   </div>
                   <div class="flex gap-2" style="flex-wrap:wrap">
-                    <label class="btn btn-sm" style="cursor:pointer" :class="logoBusy?'is-disabled':''"><i class="ph ph-upload-simple ic-ph"></i> <span x-text="logoBusy?'…':'Subir logo'"></span><input type="file" accept="image/*" @change="subirLogoCliente($event, monitorCliente)" style="display:none"></label>
+                    <label class="btn btn-sm" :style="logoBusy ? 'cursor:wait;opacity:.55;pointer-events:none' : 'cursor:pointer'"><i class="ph ph-upload-simple ic-ph"></i> <span x-text="logoBusy?'…':'Subir logo'"></span><input type="file" accept="image/*" @change="subirLogoCliente($event, monitorCliente)" style="display:none"></label>
                     <button class="btn btn-sm" :disabled="logoBusy" @click="logoDoInstagram(monitorCliente)"><i class="ph ph-instagram-logo ic-ph"></i> Puxar da conta vinculada</button>
                     <button class="btn btn-sm" style="color:#dc2626" x-show="logoCli(monitorCliente)" :disabled="logoBusy" @click="removerLogoCliente(monitorCliente)">remover</button>
                   </div>
