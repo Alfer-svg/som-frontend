@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Meu Painel · Maracatu</title>
 <link rel="icon" href="assets/favicon.png">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet local (mesma razão do candidato.html): script de CDN síncrono no <head>
+     deixa a página em branco quando o CDN engasga. O mapa é um card, não a página. -->
+<link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css"/>
+<script src="assets/vendor/leaflet/leaflet.js"></script>
+<script>window.L||document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');</script>
 <style>
   /* ── mesmo design system do painel do candidato ── */
   :root{
