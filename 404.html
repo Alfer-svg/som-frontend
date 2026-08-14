@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOM — Maracatu Digital</title>
+<meta name="robots" content="noindex">
+<!--
+  O GitHub Pages serve ESTE arquivo para qualquer caminho que não exista mais no
+  repositório. Como o sistema inteiro saiu daqui, é ele que atende /cliente.html,
+  /candidato.html, /proposta.html e tudo o mais — e manda cada um para o mesmo
+  caminho no endereço novo, preservando parâmetros (?token=...) e âncora.
+
+  É por isso que os links de portal já enviados e o app já instalado continuam
+  funcionando mesmo com o sistema fora daqui.
+-->
+<script>
+  // O Pages publica em /som-frontend/ — tira esse prefixo antes de repassar.
+  var caminho = location.pathname.replace(/^\/som-frontend/, '');
+  location.replace('https://app.maracatumktdigital.com' + caminho + location.search + location.hash);
+</script>
+<style>body{font-family:system-ui,-apple-system,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;color:#333;background:#fafafa}a{color:#0b7}</style>
+</head>
+<body><p>Redirecionando para <a href="https://app.maracatumktdigital.com/">app.maracatumktdigital.com</a>…</p></body>
+</html>

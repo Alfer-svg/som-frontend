@@ -1,16 +1,24 @@
-# SOM — Sistema Operacional Maracatu
+# som-frontend — endereço aposentado (redirecionador)
 
-Sistema operacional interno da **Maracatu Digital Intelligence** (agência de marketing digital).
+O SOM saiu daqui em **14/08/2026**. Este repositório é público e por isso não
+guarda mais uma linha do sistema: ficou só o redirecionamento para o endereço
+próprio da Maracatu Digital.
 
-## Módulos (MVP)
-- **Dashboard** — KPIs (clientes, receita, funil, projetos, MRR, a receber/pagar).
-- **CRM** — funil de vendas em kanban (8 estágios: Novo → Contatado → Qualificado → Reunião → Proposta → Negociação → Ganho/Perdido). Lead "Ganho" vira cliente.
-- **Comercial** — cadastro de clientes com **CNPJ auto-preenchido** (BrasilAPI) + validação.
-- **Financeiro** — receitas/despesas, a receber/pagar, status pago/pendente.
-- **Operacional** — projetos em kanban por status, com serviço, responsável, prazo e progresso.
+- **Sistema:** https://app.maracatumktdigital.com
+- **Código (privado):** `Alfer-svg/som-app`
+- **API:** `api.maracatumktdigital.com`
 
-## Stack
-HTML + [Alpine.js](https://alpinejs.dev) (CDN) + CSS puro. Dados em `localStorage` (prefixo `som_`). Sem backend — MVP. Migrar pra backend/login quando precisar de multiusuário.
+## Por que não foi simplesmente apagado
 
-## Rodar
-Servir a pasta (ex.: `python3 -m http.server 8770`) e abrir `http://localhost:8770`.
+Três coisas ainda apontam para `alfer-svg.github.io/som-frontend`:
+
+1. **O aplicativo já instalado** — o endereço fica compilado dentro dele
+   (`capacitor.config.ts`, `server.url`). Quem tem o app abre por aqui, e versão
+   nova só chega depois da fila da Apple.
+2. **Links de portal já enviados** a clientes.
+3. Favoritos.
+
+O `404.html` atende qualquer caminho e repassa preservando parâmetros — é o que
+mantém esses três casos funcionando.
+
+**Quando apagar:** app novo publicado + links renovados. Estimativa: 60 dias.

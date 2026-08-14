@@ -1,8 +1,0 @@
-# Regenerados no CI (cap sync + pod install) — não commitar
-App/public
-Pods
-Podfile.lock
-DerivedData
-build
-xcuserdata
-*.xcworkspace/xcuserdata
