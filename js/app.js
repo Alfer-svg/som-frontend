@@ -662,7 +662,10 @@ document.addEventListener('alpine:init', () => {
     csLista: [], csLoading: false, csErro: '', csModal: false, csForm: {}, csRevelar: {}, // cofre-senhas global (≠ cred* por-cliente)
     podeCofre: false, // não-admin com acesso ao cofre (e-mails na config ui.cofreAcesso — ex.: Laryssa)
     // Portal do cliente (Área do Cliente / app): admin gerencia o login do cliente
-    portalModal: false, portalForm: {}, portalAcessos: [], portalLink: 'https://alfer-svg.github.io/som-frontend/cliente.html',
+    // O link que vai pro cliente usa o ENDEREÇO PRÓPRIO da Maracatu Digital
+    // (14/08/2026). Antes apontava pro alfer-svg.github.io — endereço de outra
+    // empresa, na cara do cliente, e que vai ser aposentado.
+    portalModal: false, portalForm: {}, portalAcessos: [], portalLink: 'https://app.maracatumktdigital.com/cliente.html',
     onboardings: [], onbModal: false, onbSel: {},
     onbLink: 'https://maracatumktdigital.com/onboarding',          // formulário de MARKETING (endereço Maracatu)
     onbLinkSite: 'https://maracatumktdigital.com/onboarding-site', // formulário de SITE (endereço Maracatu)
